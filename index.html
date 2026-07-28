@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Periscope Clone — прямой эфир</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- Видео-окно -->
+    <div class="stream">
+      <video id="video" autoplay playsinline muted></video>
+
+      <div id="videoPlaceholder" class="video-placeholder">
+        <div class="placeholder-icon">📡</div>
+        <p>Трансляция ещё не запущена</p>
+        <button id="goLiveBtn" class="btn-primary">Начать эфир</button>
+      </div>
+
+      <!-- верхняя панель: инфо о трансляции -->
+      <header class="top-bar">
+        <div class="broadcaster">
+          <img class="avatar" src="https://api.dicebear.com/7.x/thumbs/svg?seed=host" alt="avatar" />
+          <div class="broadcaster-info">
+            <span class="name" id="hostName">Ваш эфир</span>
+            <span class="viewers" id="viewersCount">👁 0 зрителей</span>
+          </div>
+        </div>
+        <div class="live-badge" id="liveBadge" hidden>● LIVE</div>
+        <button id="closeBtn" class="icon-btn" title="Закрыть">✕</button>
+      </header>
+
+      <!-- слой летящих сердечек -->
+      <div id="heartsLayer" class="hearts-layer"></div>
+
+      <!-- оверлей чата -->
+      <div class="chat-overlay">
+        <ul id="chatList" class="chat-list"></ul>
+      </div>
+
+      <!-- нижняя панель: ввод сообщения + лайк -->
+      <footer class="bottom-bar">
+        <form id="chatForm" class="chat-form" autocomplete="off">
+          <input
+            id="chatInput"
+            class="chat-input"
+            type="text"
+            maxlength="150"
+            placeholder="Напишите сообщение..."
+          />
+          <button type="submit" class="icon-btn send-btn" title="Отправить">➤</button>
+        </form>
+
+        <button id="likeBtn" class="like-btn" title="Нравится (или дважды тапните по видео)">
+          ❤️
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- шаблон для приветственного окна ника -->
+  <dialog id="nickDialog" class="nick-dialog">
+    <form method="dialog" id="nickForm">
+      <h2>Как вас зовут?</h2>
+      <input id="nickInput" type="text" maxlength="20" placeholder="Ваш ник" required />
+      <button type="submit" class="btn-primary">Войти в эфир</button>
+    </form>
+  </dialog>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

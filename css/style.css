@@ -1,0 +1,352 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  background: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+.app {
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b0b0f;
+}
+
+/* ---------- окно видео ---------- */
+.stream {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  height: 100dvh;
+  max-height: 900px;
+  background: #000;
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.6);
+}
+
+@media (min-width: 520px) {
+  .stream {
+    height: 90dvh;
+    border-radius: 18px;
+  }
+}
+
+#video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #111;
+}
+
+.video-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #aaa;
+  background: radial-gradient(circle at 50% 30%, #1c1c22, #050506);
+  text-align: center;
+  padding: 20px;
+}
+
+.placeholder-icon {
+  font-size: 46px;
+}
+
+/* ---------- верхняя панель ---------- */
+.top-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 12px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+  z-index: 5;
+}
+
+.broadcaster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  flex-shrink: 0;
+}
+
+.broadcaster-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.viewers {
+  color: #e4e4e4;
+  font-size: 12px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.live-badge {
+  background: #ff3b30;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.icon-btn {
+  background: rgba(0, 0, 0, 0.35);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* ---------- чат поверх видео ---------- */
+.chat-overlay {
+  position: absolute;
+  left: 0;
+  bottom: 78px;
+  width: 78%;
+  max-width: 360px;
+  max-height: 46%;
+  padding: 0 10px;
+  z-index: 4;
+  -webkit-mask-image: linear-gradient(to top, black 70%, transparent 100%);
+  mask-image: linear-gradient(to top, black 70%, transparent 100%);
+}
+
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 6px;
+  list-style: none;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.chat-list li {
+  color: #fff;
+  font-size: 13.5px;
+  line-height: 1.35;
+  background: rgba(0, 0, 0, 0.38);
+  padding: 6px 10px;
+  border-radius: 14px;
+  width: fit-content;
+  max-width: 100%;
+  word-break: break-word;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  animation: chatIn 0.25s ease-out;
+}
+
+.chat-list li .nick {
+  font-weight: 700;
+  margin-right: 5px;
+}
+
+.chat-list li.system {
+  background: transparent;
+  font-style: italic;
+  color: #cfcfcf;
+  opacity: 0.85;
+}
+
+@keyframes chatIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- летящие сердечки ---------- */
+.hearts-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 6;
+}
+
+.heart {
+  position: absolute;
+  bottom: 90px;
+  right: 26px;
+  font-size: 26px;
+  will-change: transform, opacity;
+  animation: floatHeart 3.2s ease-in forwards;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+}
+
+@keyframes floatHeart {
+  0% {
+    transform: translate(0, 0) scale(0.6) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+    transform: translate(var(--dx-start, 0px), -40px) scale(1) rotate(var(--rot, 10deg));
+  }
+  100% {
+    transform: translate(var(--dx-end, 0px), -520px) scale(0.9) rotate(var(--rot-end, -10deg));
+    opacity: 0;
+  }
+}
+
+/* ---------- нижняя панель ---------- */
+.bottom-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+  z-index: 5;
+}
+
+.chat-form {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 22px;
+  padding: 4px 6px 4px 14px;
+  backdrop-filter: blur(6px);
+}
+
+.chat-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.chat-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.send-btn {
+  background: #1e90ff;
+}
+
+.send-btn:hover {
+  background: #0d7ae6;
+}
+
+.like-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.12s ease;
+  backdrop-filter: blur(6px);
+}
+
+.like-btn:active {
+  transform: scale(0.85);
+}
+
+/* ---------- диалог ника ---------- */
+.nick-dialog {
+  border: none;
+  border-radius: 16px;
+  padding: 24px;
+  width: min(320px, 86vw);
+  background: #17171c;
+  color: #fff;
+}
+
+.nick-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.nick-dialog h2 {
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+
+#nickInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #0e0e12;
+  color: #fff;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: #1e90ff;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 22px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.btn-primary:hover {
+  background: #0d7ae6;
+}

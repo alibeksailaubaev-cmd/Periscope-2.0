@@ -1,0 +1,13 @@
+{
+  "name": "periscope-2.0",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Periscope-style live streaming UI: video window, live chat overlay, animated heart likes.",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.34.0"
+  }
+}
