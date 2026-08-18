@@ -139,6 +139,14 @@ h2{font-size:15px; font-weight:700; margin:0; letter-spacing:-.01em;}
 .bar-row .amt{text-align:right; font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500;}
 .bar-row .na{color:var(--muted); font-size:12.5px;}
 
+.kkz{border-top:1px solid var(--line); padding-top:14px; display:flex; flex-direction:column; gap:10px;}
+.kkz-lbl{font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);}
+.kkz-rows{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+.kkz-row{background:var(--surface-2); border-radius:12px; padding:12px 14px; display:flex; flex-direction:column; gap:2px;}
+.kkz-row .kv{font-family:"JetBrains Mono",monospace; font-size:17px; font-weight:700; letter-spacing:-.03em;}
+.kkz-row .kl{font-size:12px; color:var(--muted);}
+@media (max-width:900px){.kkz-rows{grid-template-columns:1fr;}}
+
 /* ---- tables ---- */
 .scroll{overflow-x:auto;}
 table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:540px;}
@@ -243,10 +251,10 @@ tr.off td{opacity:.42;}
   <div class="opts">
     <div class="opt i">
       <div class="opt-top"><span class="who">Indigo Solutions</span><span class="chip">КП</span></div>
-      <span class="scope">Оборудование подрядчика, реакция ≤2 ч, выезд ≤24 ч.</span>
+      <span class="scope">КП закрывает один объект — кормоцех. Оборудование подрядчика, реакция ≤2 ч, выезд ≤24 ч.</span>
       <span class="big n" id="oI">—</span>
       <span class="per" id="oIper">за выбранный период</span>
-      <span class="cov">Покрыт один объект — ККЗ</span>
+      <span class="cov">Только ККЗ — по остальным объектам данных у нас нет</span>
       <div class="split">
         <div><span>ККЗ · один месяц</span><b>96 600 ₸</b></div>
         <div><span>Бройлерные площадки</span><b class="none">нет в КП</b></div>
@@ -281,11 +289,15 @@ tr.off td{opacity:.42;}
 
   <div class="card">
     <div class="card-head">
-      <h2>Стоимость за выбранный период</h2>
-      <span class="hint" id="chartHint">дератизация, сопоставимый объём</span>
+      <h2>Сопоставимый объём: ККЗ и бройлерные площадки</h2>
+      <span class="hint" id="chartHint">—</span>
     </div>
     <div class="bars" id="bars"></div>
     <p class="hint" id="chartNote">—</p>
+    <div class="kkz">
+      <div class="kkz-lbl">Отдельно по ККЗ · единственный объект, по которому есть предложения обоих подрядчиков</div>
+      <div class="kkz-rows" id="kkzRows"></div>
+    </div>
   </div>
 
   <div class="card">
@@ -521,11 +533,10 @@ function render(){
   document.getElementById("uMatY").textContent =
     money((u.s.zc+u.s.pk+u.s.bot+u.s.st)*6 + (u.w.zc+u.w.pk+u.w.bot+u.w.st)*6);
 
-  // bars
+  // bars — only the two options that cover the same objects
   const rows=[
-    ["Штат УКПФ", t.staff, "var(--staff)", "13 объектов, 8 обходов/мес"],
-    ["Pest Hunters", t.hunter, "var(--hunter)", "ККЗ + 122 объекта, 1 обход/мес"],
-    ["Indigo Solutions", t.indigo, "var(--indigo)", "только ККЗ, 2 обхода/мес"]
+    ["Штат УКПФ", t.staff, "var(--staff)", "ККЗ + площадки + инкубаторий, лузга, АБК · 8 обходов/мес"],
+    ["Pest Hunters", t.hunter, "var(--hunter)", "ККЗ + 122 объекта площадок · 1 обход/мес"]
   ];
   const max=Math.max(...rows.map(r=>r[1]),1);
   document.getElementById("bars").innerHTML=rows.map(r=>
@@ -534,7 +545,14 @@ function render(){
       <span class="amt">${r[1]?money(r[1]):"—"}</span></div>`).join("");
   document.getElementById("chartHint").textContent = vat ? "цены Pest Hunters с НДС 16 %" : "цены Pest Hunters без НДС";
   document.getElementById("chartNote").textContent =
-    "Столбцы не эквивалентны по охвату: Indigo закрывает только ККЗ, поэтому его сумма самая маленькая и сравнивать её с двумя другими напрямую нельзя. Сопоставимы Pest Hunters и штат УКПФ — оба закрывают ККЗ и бройлерные площадки.";
+    "Indigo Solutions в этот график не входит: его КП закрывает только кормоцех, других данных у нас нет, и сравнивать эту сумму с полным охватом фабрики нельзя. Штат УКПФ при этом закрывает больше объектов, чем Pest Hunters, — инкубаторий, склад лузги и АБК идут сверх сравниваемого объёма.";
+  document.getElementById("kkzRows").innerHTML=[
+    ["Indigo Solutions", INDIGO_KKZ*t.n, "var(--indigo)", "96 600 ₸/мес · 2 обхода"],
+    ["Pest Hunters", PH_KKZ*t.n*t.k, "var(--hunter)", (vat?"87 000":"75 000")+" ₸/мес · 1 обход"],
+    ["Штат УКПФ", 0, "var(--staff)", "отдельной цены нет — входит в общий оклад"]
+  ].map(r=>
+    `<div class="kkz-row"><span class="kv" style="color:${r[2]}">${r[1]?money(r[1]):"в составе оклада"}</span>
+      <span class="kl">${r[0]} · ${r[3]}</span></div>`).join("");
 
   // reference prices
   document.getElementById("rPhHi").textContent = money(t.eq.hi*t.k)+" / мес";
