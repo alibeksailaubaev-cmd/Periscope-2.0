@@ -14,7 +14,7 @@ import {
    0. ФОН, СГЕНЕРИРОВАННЫЙ HIGGSFIELD (nano_banana_pro), вшит как data-URI —
    страница остаётся полностью автономной, без внешних запросов.
    ═══════════════════════════════════════════════════════════════════════════ */
-const HF_BG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABMNDhEODBMRDxEVFBMXHTAfHRoaHToqLCMwRT1JR0Q9Q0FMVm1dTFFoUkFDX4JgaHF1e3x7SlyGkIV3j214e3b/2wBDARQVFR0ZHTgfHzh2T0NPdnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnZ2dnb/wgARCALKBQADASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAAAAECBf/EABUBAQEAAAAAAAAAAAAAAAAAAAAB/9oADAMBAAIQAxAAAAHshAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABCpQlCCoAAAAAAAAAAAAAAAAAAAAAACwoBCwKlAAAEsFlAAAEsKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAABQAAAQgqKqCwLAAAsBYFgsBYKgogAAAAAAAUiiUIoSwWUAQKgsCpQAAAAAAAAAAAAAAAAAACUAAAEoAAAAAAAAAAAAAgAAUEAASwWKAAAAIKgqCoLAWCoKgoBCgAAWIoAAAAAALAWAAAUJSAAAWUAJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABLAAAAABCgAABCoAAAACUEKlAAAAAFgoAAipQAAAAAAAAAAAAABYKgWCgAAAAAAAAAAAAAAAAAAAAAAAAAAJQAAAQoAEAAAFELCwAAgAAAIAAAAAAAFgqCoKgoAKlAhZQAAAAAAAAAAAAAAABYKAAAAAAAAAAAAAAAAAlAAAAAAAAAAAAAACUAQAAAVLLAAEsAACAAQqUIKiqgqCoKlAAgABZQBYKIAoQFAAAAAAAAAAAAAAAWUJQBKAEoSiUAJQASiUAJQASiUJQAAiiUJQAlCKJQAlCUIolCKIAACKIKAiwAAgABAKAAAAAAAFICyoAAoBQIAUQAAAAAAAFAAAAAALAsCiKAAAAAAAAAAAAAAAJQAAAAAAAAAAAAAAlACAAAIAoQAEAAEAKEKgqCoKgsCpQAAACoigqUBKIAoAAAAAAAAAUAAAAABYFAAAAAAAAAAAAAAAACUAAABCgAAAAlAAAACUEsAUESxQsAQBAAgCgCAAAAAAABYKlAAAigWUBKIAoAAAAAAAAAUAAAAAsACgAAAAAAAAABLCgAAAAllAAAAAAAAAAAAAAJZRLAAFSxApLAQsBLAKILAAQFgqACoLAqUAAqCgCKBZUAogCgAAAAAAAAAABQAAAALKAAAAAACUAAAAAAAAAAAAAAAAAAAJQAAAQWUQAAEKEBABChAAgsAAAAAAABZQAACpQIoRZQCiAKlAAAAAAAAAAAAUABYAAKCKIoiiKIoiiKIoiiKIUiiKJQiiKIoiiKIoiiKIoiiKIolCKIoiiFIACLKEBAQEoBAAAAASiKAAAABSKAACgWARQAKgAAoihKJQAAigAAAAFAAAAFIoAAAAAAAAAAAAAAAJQAABKAAAAAAAAAEsFlIAQEqyQsShCoAAAAAAAAAAAAFlAAAKIWUFQACiABQAAAAAAAAAAAFAAAFICgAAAAAAAAAEFAAAAAAAAAAAAAAAAAABLAAQsSrlmrELAAAAAAAAAAAAAAAWUAAFAihFABZYAAUAAAAAAAAAAAAAUAAUJQAAAAAAAAABKAAAAACUAAASgAAAAAAAAgAAhmrmKIqwgAAAAUgAAAAAAAALKJZQABQWWBUAAWWAAKAAAAAAAAAAAAAFAAWUlgoAAACCwFlAAAEsKlAAAAJZQAAAQWUAAAQFgqCwAEKMwQoKgAgAUigACUIoiwAAAALBQAAAAoihBQAWAABQAAAAAAAAAAAAAFAAAAoAAEohSAWCgEKgsBYKQqAABZQgqCoLAWCoKgAAACiAZLlKCiCxQISiWUAAAAAAASiKJQAAAAAAUhRAFAWAALAWUAAAAAAAAAAAABQAACwWUAAILAAAAAAAAAAAAAAAAAAAACiCoFgIEkqxLKgqVYolIAAAAAWUSwAAAAAAAALAsFAIWUBKAIoAAAFgoACCkKlAAAAAAAAUAAABYKgoBBYAAAAAAAAAAAAAoAAQqCoLAAILEqyAiwBKIolAJQAABSUAAAgAACKIsoUlAAAIAUBUACFAAUASwUAAABCgAAAAAAABQAAAAKACWUgAAAAAAoQqUIKgqAAAAAAgWAQqKIQSgAAAAAgAFAKAgAAUiwAAAAAAAAALBQKAQWJQAFAAEsKAAAAAAAAAAAAFAAAAAAoAEAAAAKAILAAAAEKgAAACiCwBCwQSgBCpQAAAIAAKUAIAKAAAAAIoiiAFIsCgABZQECFAABQAASwoAAAAAAAABCgABQAAAAAFABAAACiAAAAQWAAKAEKgsAAgBCKAAAiwWUAACABVAACCiUACiKIsAAAAAAAAACgJBSUAAFgoAAEsKAAAAAAAABAqCpQFAAAAAAoIsAAEqosAAAIogAAqKIABKIsQAKgAAIoiiKJQAACAFAJSiUCwKIolACKIoiiKIAAUhSKIoSgJCiUAAACiKIoiwFIoiiKIsAAAAAAAAUoSgAAAAoAgAAqAAAEAAoAQsAARAoAQAAAAAAAAAACKAWJRRQAAAAAAAAAAAQUAAAAkWUAAAKJZQAABLBQAEKgAAAAAEKFAAqCkKlAAAKACACksAAEsAApLAAAARAolEAAAAAAAAAAAWAAFIUAUAIFIolCKIKAAAAAAAAFkigAABQAAAAASwUBAAAQqUIKgqCwtWUACAApZYAAAqUAgAqAAEAApLAAAEQAoCFIAAAAAAAAAAWJQFgUlAqIpQEoAAAASwCgAAAAAgpAAAAAKAQqUAAASwAAELACgAAAUBYLAoAAFlgAABZQCACoACACkAAABBAoACKBAAAAAAAAAWJQFhQKiUAAAUAAAABLAKAAAACKEAAAAAqUASwqUEKQsAAgsAiqgsCoKhagqUAAAWUAAWCiAAFlEogEsoBLABKqLABKJZSLECgAJQiiLAAAAAAAqJQKhVIqIoAAAABQAAAIsAoAAAAWIpIoASgAAAoiwAAAEAEKAJQhbKAAAALLBZQAACgAFAgAUAgAqASwACksAAJQEQAKAAAASwAAAUAgUlWJVgAAAAAAAAFAAASiCrAAAAFgEAAAAFJZQBAAAIBKEKhQAALAWUAAAAWCgAAoAKlAgBZQCASygEsAoBLAAAAAEiiCgAAAIsFlAAhZQWFlgAAAsBSAAAAAABQEsAAoAAAIqEoAAAAAAACAiiFILCgFgqCgACKgqUAAAWUAWUAAAogBZQCASqgEsAApKIAAAAAACBAoAAAIAUCoUgBQSiKIBZRKEsAAAAAUCACgAAAAAFiSpQAAAgqAkqxFsKJQQAqUAAWCwKAABZYAAWUAAssKAUCAFAgAIoAQAACiCwAAAABBYAsAACFgoFlhZYAWCoKgqCoFgqAAAAlACCwUKJQAlCCoKgqCoLAqQ0yNMisipKqCwAAAAAKgoAAFgqUAAsCiFgqUAAqUAqCiFgsogAqAAAhSACgJQShLAACUAIpJQAAUhQFgAAAAAAABAAAAASiC0AAAgqCwAABCoLAIqxCoAAAAAAAFlAAAAFlAAKAIAWUAApCgAogCpRKIAKiwAASiLAAKAAgAAAAQFAAWWRZQIoAAAAAAAEsAABBZQgCgUAgAAAEKgsASqgEKgAAAAAAAAAWUAAAAoAAFlAgBZQAACpQCiAFlEogAoCAAAAiwACgIsAAAAACiKQIoCoAAAAAAAAQAABBZSAC0BAAAAQABKsAAQsAAAAAAAABZRKAAAChKAAAFlgACgAAAoAKIAWUAgAoBAAAASwACgAEAAAUigIBFlAigAAAAAAAlgAAASwACgUQAAIABKsAAAQAAAAAAAFJQAAAFIoAAAAFJSAABQAAAoAWCiAFlEAAKASwAAAELACgAEsAAKlAgBRAFiKAAAAAAACAAAIAAoFELAEABKqAAAlAEsAAAKgsUShKAAAALLCpQAAsCyKAAAACgAAFAAFgqWAKlAIAAKAhSAAASwACgAAJQCFAAAJKAAAAAAAAACLABLAALQEsAEAAKgAAAAAAEolAAAAAUlCUAgsCgAAUiiKAABSAFJQAAAFAgABZQCAACgJQSwAAAllIsAoAAWAAAAFlgEAAAAAAAAASiASwCgUCASiAASqgAAAAAAABSKJQAACCgAAAUigAAsCgAAAAAAoihLCiAAAKACAAACgEsAAAJQAgBSKJQAAFIshZQEABQAAAAAAAEogIKAEAEogAoCLAAsBSLAAoigAUiolAAAAAoSgAAoAAAAAAAWUCAAAAUEAoAAEAAAAKAiwAAAAAAAAFIoCAAAAAAAAAAAAAAEsEqoACLABLAAKAASgAAAUigIAKIoiiUAAAACiUAAAACiUJQSgIAAABQARQAAiiLAAACUoCKIoiwAAAFIohSKJSAAAAAAAAAAAAAAAEoiwiqiiSiKIsJQiiKIqooioigUiiKIoAAAAAAKIoiiUAABSLAoioiiUEoAAAAAFIoiiKIoASwLAAAAAAKAllAJQAACAAAAAAAAAAAAAAAAAAAAIogpKIohSSiKIoAAKIoiiKAAAAAAAAAABSKAAgAAAAAAAAAABZQAAAACLCyiAAAAAAAAAAAAAAAAAAWAAAAUgAAAALAAAAAAAASiKIqooiiKIoiiKIoiiKIoiiKIoiiKiKJQSgAAAAAAAohSLAUSiUIsCwWUAAAAJQgqCoLAWCoLFIAAAUhSAFJYFgsCoLAWCoKgAsBYAAFgAWUJSUEAogBSAAAAAAAAAAA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";
+const HF_BG = "data:image/jpeg;base64,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";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    1. ДИЗАЙН-ТОКЕНЫ — светлая премиальная тема по умолчанию + тёмная
@@ -43,13 +43,13 @@ const THEMES = {
     glowA: "rgba(47,107,240,0.22)",
     glowB: "rgba(124,70,232,0.20)",
     glowC: "rgba(224,56,76,0.18)",
-    bgImageOpacity: 0.85,
-    bgWash: "rgba(247,249,253,0.55)",
+    bgImageOpacity: 0.95,
+    bgWash: "rgba(252,253,255,0.44)",
     blobs: [
-      "radial-gradient(closest-side, rgba(120,170,255,0.42), transparent)",
-      "radial-gradient(closest-side, rgba(186,150,255,0.36), transparent)",
-      "radial-gradient(closest-side, rgba(130,235,250,0.30), transparent)",
-      "radial-gradient(closest-side, rgba(255,176,190,0.26), transparent)",
+      "radial-gradient(closest-side, rgba(120,170,255,0.30), transparent)",
+      "radial-gradient(closest-side, rgba(186,150,255,0.26), transparent)",
+      "radial-gradient(closest-side, rgba(130,235,250,0.22), transparent)",
+      "radial-gradient(closest-side, rgba(255,196,168,0.20), transparent)",
     ],
     surface: "#ffffff",
     ground: "#eef2f9",
@@ -207,6 +207,7 @@ const ROUTES = [
   { id: "r3", from: "warehouse", to: "broiler",   label: "Склад → Бройлерные площадки",    cargo: "корма, подстилка, инвентарь", trips: 6, d: "M270,305 Q500,345 725,300", dur: 9 },
   { id: "r4", from: "incubator", to: "broiler",   label: "Инкубатор → Бройлерные площадки", cargo: "суточный молодняк",       trips: 2, d: "M613,168 Q700,188 738,236", dur: 6 },
   { id: "r5", from: "atc",       to: "incubator", label: "АТЦ → Инкубатор",                cargo: "техника после обслуживания", trips: 2, d: "M330,430 Q382,292 500,180", dur: 8 },
+  { id: "r6", from: "atc",       to: "broiler",   label: "АТЦ → Бройлерные площадки",      cargo: "техника и инвентарь",      trips: 3, d: "M375,452 Q560,358 722,386", dur: 8.5 },
 ];
 const TRIPS_TOTAL = sum(ROUTES, (r) => r.trips);
 
@@ -836,42 +837,69 @@ const nodePos = (i, n, r = R_NODE) => {
 };
 
 function Person({ T, x, y, tilt, stack, delay = 0 }) {
+  const tones = [T.blue, T.cyan, T.violet, T.amber, T.red, T.red];
   return (
     <motion.g
-      animate={{ y: [0, -3, 0], rotate: tilt }}
-      transition={{
-        y: { duration: 3.4, repeat: Infinity, ease: "easeInOut", delay },
-        rotate: { type: "spring", stiffness: 200, damping: 14 },
-      }}
-      style={{ originX: `${x}px`, originY: `${y + 30}px` }}
+      animate={{ y: [0, -2.5, 0], rotate: [tilt * 0.7, tilt, tilt * 0.7] }}
+      transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut", delay }}
+      style={{ originX: `${x}px`, originY: `${y + 36}px` }}
     >
-      {Array.from({ length: stack }).map((_, i) => (
-        <motion.rect
-          key={i}
-          initial={{ opacity: 0, y: -14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.07, type: "spring", stiffness: 260, damping: 18 }}
-          x={x - 20 + (i % 2 ? 3 : -3)} y={y - 54 - i * 8}
-          width={40} height={7} rx={3}
-          fill={i > 3 ? T.red : T.amber} opacity={0.92}
-        />
-      ))}
-      <ellipse cx={x} cy={y + 44} rx={24} ry={5} fill="#000" opacity={T.key === "dark" ? 0.35 : 0.10} />
+      {/* стопка задач, которая давит сверху */}
+      <motion.g
+        animate={{ y: [0, -2.2, 0] }}
+        transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: delay + 0.4 }}
+      >
+        {Array.from({ length: stack }).map((_, i) => {
+          const w = 46 - i * 1.8;
+          return (
+            <motion.rect
+              key={i}
+              x={x - w / 2 + (i % 2 ? 3 : -3)}
+              y={y - 50 - i * 8.5}
+              width={w}
+              height={7}
+              rx={3.5}
+              fill={tones[i % tones.length]}
+              initial={{ opacity: 0, y: -22, scale: 0.86 }}
+              animate={{ opacity: 0.9, y: 0, scale: 1 }}
+              transition={{ delay: delay + 0.3 + i * 0.12, type: "spring", stiffness: 180, damping: 15 }}
+            />
+          );
+        })}
+      </motion.g>
+
+      {/* мягкая тень */}
+      <ellipse cx={x} cy={y + 46} rx={26} ry={5.5} fill={T.text} opacity={T.key === "dark" ? 0.30 : 0.09} />
+
+      {/* корпус */}
       <path
-        d={`M ${x - 19} ${y + 42} L ${x - 17} ${y + 2} Q ${x} ${y - 12} ${x + 17} ${y + 2} L ${x + 19} ${y + 42} Z`}
-        fill={T.red} opacity={0.95}
+        d={`M ${x - 20} ${y + 44}
+            L ${x - 18} ${y + 4}
+            Q ${x - 17} ${y - 10} ${x} ${y - 12}
+            Q ${x + 17} ${y - 10} ${x + 18} ${y + 4}
+            L ${x + 20} ${y + 44} Z`}
+        fill={T.red}
+        opacity={0.94}
       />
-      <circle cx={x} cy={y - 24} r={14} fill="#e9c39c" />
       <path
-        d={`M ${x - 14} ${y - 28} Q ${x} ${y - 46} ${x + 14} ${y - 28} Q ${x + 8} ${y - 38} ${x} ${y - 38} Q ${x - 8} ${y - 38} ${x - 14} ${y - 28} Z`}
-        fill="#3a3346"
+        d={`M ${x - 20} ${y + 44} L ${x - 18} ${y + 4} Q ${x - 17} ${y - 10} ${x} ${y - 12} Z`}
+        fill="#fff"
+        opacity={0.10}
       />
+      {/* голова */}
+      <circle cx={x} cy={y - 26} r={14.5} fill="#eec6a0" />
+      <path
+        d={`M ${x - 14.5} ${y - 30} Q ${x} ${y - 48} ${x + 14.5} ${y - 30}
+            Q ${x + 8} ${y - 40} ${x} ${y - 40} Q ${x - 8} ${y - 40} ${x - 14.5} ${y - 30} Z`}
+        fill="#3d3550"
+      />
+      {/* дыхание давления */}
       <motion.circle
-        cx={x} cy={y - 4} r={38} fill="none" stroke={T.red} strokeWidth={1.3}
-        initial={{ scale: 0.85, opacity: 0.5 }}
-        animate={{ scale: [0.85, 1.25], opacity: [0.5, 0] }}
-        transition={{ duration: 1.9, repeat: Infinity, ease: "easeOut", delay }}
-        style={{ originX: `${x}px`, originY: `${y - 4}px` }}
+        cx={x} cy={y - 6} r={40} fill="none" stroke={T.red} strokeWidth={1.2}
+        initial={{ scale: 0.86, opacity: 0.45 }}
+        animate={{ scale: [0.86, 1.28], opacity: [0.45, 0] }}
+        transition={{ duration: 2.6, repeat: Infinity, ease: "easeOut", delay }}
+        style={{ originX: `${x}px`, originY: `${y - 6}px` }}
       />
     </motion.g>
   );
@@ -880,127 +908,186 @@ function Person({ T, x, y, tilt, stack, delay = 0 }) {
 function WorkloadStage({ T }) {
   const n = TASKS.length;
   const toneOf = (t) => (t.group === "crit" ? T.red : t.group === "daily" ? T.cyan : T.blue);
-  const targets = [{ x: CC.x - 46, y: CC.y + 8 }, { x: CC.x + 46, y: CC.y + 8 }];
+  const FLOW = 4.6;            // длительность полёта одной задачи
+  const step = FLOW / n;       // равномерный, непрерывный поток
 
   return (
     <div className="relative">
       <svg viewBox={`0 0 ${VB.w} ${VB.h}`} className="mx-auto block w-full" style={{ maxWidth: 820 }}>
         <defs>
-          <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={T.red} stopOpacity={T.key === "dark" ? 0.30 : 0.16} />
+          <radialGradient id="ws-glass" cx="50%" cy="38%" r="70%">
+            <stop offset="0%" stopColor={T.key === "dark" ? "#1a2237" : "#ffffff"} stopOpacity={T.key === "dark" ? 0.55 : 0.96} />
+            <stop offset="100%" stopColor={T.key === "dark" ? "#0d1424" : "#f2f6ff"} stopOpacity={T.key === "dark" ? 0.25 : 0.86} />
+          </radialGradient>
+          <radialGradient id="ws-aura" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={T.red} stopOpacity={T.key === "dark" ? 0.28 : 0.16} />
             <stop offset="100%" stopColor={T.red} stopOpacity="0" />
           </radialGradient>
-          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id="ws-ring" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor={T.blue} />
             <stop offset="50%" stopColor={T.violet} />
             <stop offset="100%" stopColor={T.cyan} />
           </linearGradient>
+          <linearGradient id="ws-meter" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={T.teal} />
+            <stop offset="100%" stopColor={T.red} />
+          </linearGradient>
         </defs>
 
+        {/* декоративные орбиты */}
         <motion.circle
-          cx={CC.x} cy={CC.y} r={R_RING}
-          fill="none" stroke="url(#ringGrad)" strokeWidth={1.4} strokeDasharray="4 10" opacity={0.6}
+          cx={CC.x} cy={CC.y} r={R_RING} fill="none" stroke="url(#ws-ring)"
+          strokeWidth={1.2} strokeDasharray="2 12" opacity={0.55}
           animate={{ rotate: 360 }}
-          transition={{ duration: 90, repeat: Infinity, ease: "linear" }}
-          style={{ originX: `${CC.x}px`, originY: `${CC.y}px` }}
-        />
-
-        {TASKS.map((t, i) => {
-          const p = nodePos(i, n);
-          const tg = targets[i % 2];
-          return (
-            <line key={`l-${t.id}`} x1={p.x} y1={p.y} x2={tg.x} y2={tg.y}
-                  stroke={toneOf(t)} strokeWidth={0.8} strokeDasharray="3 7" opacity={0.18} />
-          );
-        })}
-
-        {TASKS.map((t, i) => {
-          const p = nodePos(i, n);
-          const c = toneOf(t);
-          return (
-            <motion.g
-              key={t.id}
-              initial={{ opacity: 0, scale: 0.4 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 + i * 0.03, type: "spring", stiffness: 220, damping: 18 }}
-            >
-              <motion.circle
-                cx={p.x} cy={p.y} r={6.5} fill={c}
-                animate={{ opacity: [0.75, 1, 0.75] }}
-                transition={{ duration: 2.4, repeat: Infinity, delay: i * 0.11 }}
-                style={{ filter: T.key === "dark" ? `drop-shadow(0 0 7px ${c})` : "none" }}
-              />
-              <circle cx={p.x} cy={p.y} r={13} fill="none" stroke={c} strokeWidth={0.8} opacity={0.3} />
-            </motion.g>
-          );
-        })}
-
-        {TASKS.map((t, i) => {
-          const p = nodePos(i, n);
-          const tg = targets[i % 2];
-          const c = toneOf(t);
-          const dur = 2.1;
-          const delay = i * 0.16;
-          return (
-            <motion.g
-              key={`f-${t.id}`}
-              initial={{ x: p.x, y: p.y, opacity: 0 }}
-              animate={{
-                x: [p.x, (p.x + tg.x) / 2 + (i % 2 ? 18 : -18), tg.x],
-                y: [p.y, (p.y + tg.y) / 2 - 22, tg.y - 46],
-                opacity: [0, 1, 1, 0],
-                scale: [0.5, 1, 0.7],
-              }}
-              transition={{
-                duration: dur, repeat: Infinity, repeatDelay: 1.2, delay, ease: "easeInOut", times: [0, 0.5, 1],
-                opacity: { duration: dur, repeat: Infinity, repeatDelay: 1.2, delay, times: [0, 0.15, 0.8, 1] },
-              }}
-            >
-              <rect x={-9} y={-4} width={18} height={8} rx={3} fill={c} opacity={0.95}
-                    style={{ filter: T.key === "dark" ? `drop-shadow(0 0 6px ${c})` : "none" }} />
-            </motion.g>
-          );
-        })}
-
-        <circle cx={CC.x} cy={CC.y} r={R_CORE + 46} fill="url(#coreGlow)" pointerEvents="none" />
-        <motion.circle
-          cx={CC.x} cy={CC.y} r={R_CORE}
-          fill={T.key === "dark" ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.72)"}
-          stroke={T.red} strokeWidth={2.2}
-          animate={{ scale: [1, 1.03, 1] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 220, repeat: Infinity, ease: "linear" }}
           style={{ originX: `${CC.x}px`, originY: `${CC.y}px` }}
         />
         <motion.circle
-          cx={CC.x} cy={CC.y} r={R_CORE} fill="none" stroke={T.red} strokeWidth={1.5}
-          initial={{ scale: 1, opacity: 0.5 }}
-          animate={{ scale: [1, 1.24], opacity: [0.5, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+          cx={CC.x} cy={CC.y} r={R_RING - 26} fill="none" stroke="url(#ws-ring)"
+          strokeWidth={0.9} strokeDasharray="1 16" opacity={0.4}
+          animate={{ rotate: -360 }}
+          transition={{ duration: 300, repeat: Infinity, ease: "linear" }}
           style={{ originX: `${CC.x}px`, originY: `${CC.y}px` }}
+        />
+
+        {/* вращающийся поток задач */}
+        <motion.g
+          animate={{ rotate: 360 }}
+          transition={{ duration: 260, repeat: Infinity, ease: "linear" }}
+          style={{ originX: `${CC.x}px`, originY: `${CC.y}px` }}
+        >
+          {TASKS.map((t, i) => {
+            const p = nodePos(i, n);
+            return (
+              <line key={`l-${t.id}`} x1={p.x} y1={p.y} x2={CC.x} y2={CC.y}
+                    stroke={toneOf(t)} strokeWidth={0.7} strokeDasharray="2 8" opacity={0.16} />
+            );
+          })}
+
+          {TASKS.map((t, i) => {
+            const p = nodePos(i, n);
+            const c = toneOf(t);
+            return (
+              <motion.g
+                key={t.id}
+                initial={{ opacity: 0, scale: 0.3 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.15 + i * 0.028, type: "spring", stiffness: 190, damping: 17 }}
+              >
+                <motion.circle
+                  cx={p.x} cy={p.y} r={16} fill={c} opacity={0.10}
+                  animate={{ scale: [1, 1.25, 1] }}
+                  transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut", delay: i * 0.17 }}
+                  style={{ originX: `${p.x}px`, originY: `${p.y}px` }}
+                />
+                <circle cx={p.x} cy={p.y} r={8.5} fill={T.surface} opacity={0.9} />
+                <motion.circle
+                  cx={p.x} cy={p.y} r={6} fill={c}
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.14 }}
+                  style={{ filter: T.key === "dark" ? `drop-shadow(0 0 6px ${c})` : "none" }}
+                />
+              </motion.g>
+            );
+          })}
+
+          {/* задачи, летящие к центру — непрерывный ровный поток */}
+          {TASKS.map((t, i) => {
+            const p = nodePos(i, n);
+            const c = toneOf(t);
+            const mx = CC.x + (p.x - CC.x) * 0.5 + (p.y - CC.y) * 0.16;
+            const my = CC.y + (p.y - CC.y) * 0.5 - (p.x - CC.x) * 0.16;
+            return (
+              <motion.g
+                key={`f-${t.id}`}
+                initial={{ x: p.x, y: p.y, opacity: 0 }}
+                animate={{
+                  x: [p.x, mx, CC.x],
+                  y: [p.y, my, CC.y],
+                  opacity: [0, 0.95, 0.95, 0],
+                  scale: [0.55, 1, 0.45],
+                }}
+                transition={{
+                  duration: FLOW,
+                  repeat: Infinity,
+                  repeatDelay: 0,
+                  delay: i * step,
+                  ease: "easeInOut",
+                  times: [0, 0.5, 1],
+                  opacity: {
+                    duration: FLOW, repeat: Infinity, repeatDelay: 0, delay: i * step,
+                    times: [0, 0.18, 0.68, 0.86], ease: "easeInOut",
+                  },
+                }}
+              >
+                <rect x={-11} y={-4} width={22} height={8} rx={4} fill={c} opacity={0.96}
+                      style={{ filter: T.key === "dark" ? `drop-shadow(0 0 6px ${c})` : "none" }} />
+                <circle cx={-14} cy={0} r={1.8} fill={c} opacity={0.55} />
+              </motion.g>
+            );
+          })}
+        </motion.g>
+
+        {/* ядро: два сотрудника */}
+        <motion.circle
+          cx={CC.x} cy={CC.y} r={R_CORE + 54} fill="url(#ws-aura)"
+          animate={{ scale: [1, 1.06, 1], opacity: [0.85, 1, 0.85] }}
+          transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
+          style={{ originX: `${CC.x}px`, originY: `${CC.y}px` }}
+          pointerEvents="none"
+        />
+        <circle cx={CC.x} cy={CC.y} r={R_CORE} fill="url(#ws-glass)" />
+        <motion.circle
+          cx={CC.x} cy={CC.y} r={R_CORE} fill="none" stroke={T.red} strokeWidth={2}
+          animate={{ scale: [1, 1.018, 1], opacity: [0.75, 1, 0.75] }}
+          transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut" }}
+          style={{ originX: `${CC.x}px`, originY: `${CC.y}px` }}
+        />
+        {[0, 1].map((k) => (
+          <motion.circle
+            key={k}
+            cx={CC.x} cy={CC.y} r={R_CORE} fill="none" stroke={T.red} strokeWidth={1.2}
+            initial={{ scale: 1, opacity: 0.4 }}
+            animate={{ scale: [1, 1.3], opacity: [0.4, 0] }}
+            transition={{ duration: 3.4, repeat: Infinity, ease: "easeOut", delay: k * 1.7 }}
+            style={{ originX: `${CC.x}px`, originY: `${CC.y}px` }}
+            pointerEvents="none"
+          />
+        ))}
+
+        {/* волна «прилетевшей задачи» над головами */}
+        <motion.circle
+          cx={CC.x} cy={CC.y - 62} r={10} fill="none" stroke={T.amber} strokeWidth={1.4}
+          initial={{ scale: 0.4, opacity: 0 }}
+          animate={{ scale: [0.4, 1.8], opacity: [0.7, 0] }}
+          transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut", repeatDelay: 0.5 }}
+          style={{ originX: `${CC.x}px`, originY: `${CC.y - 62}px` }}
+          pointerEvents="none"
         />
 
         <g pointerEvents="none">
-          <Person T={T} x={CC.x - 46} y={CC.y + 8} tilt={4} stack={6} delay={0} />
-          <Person T={T} x={CC.x + 46} y={CC.y + 8} tilt={-4} stack={6} delay={0.5} />
+          <Person T={T} x={CC.x - 46} y={CC.y - 6} tilt={4} stack={6} delay={0} />
+          <Person T={T} x={CC.x + 46} y={CC.y - 6} tilt={-4} stack={6} delay={0.7} />
         </g>
 
+        {/* шкала загрузки */}
         <g pointerEvents="none">
-          <rect x={CC.x - 74} y={CC.y + 64} width={148} height={8} rx={4} fill={T.grid} />
+          <rect x={CC.x - 78} y={CC.y + 46} width={156} height={9} rx={4.5} fill={T.grid} />
           <motion.rect
-            x={CC.x - 74} y={CC.y + 64} height={8} rx={4} fill={T.teal}
-            initial={{ width: 0 }} whileInView={{ width: 80 }} viewport={{ once: true }}
-            transition={{ delay: 0.4, duration: 1, ease: EASE }}
+            x={CC.x - 78} y={CC.y + 46} height={9} rx={4.5} fill="url(#ws-meter)"
+            initial={{ width: 0 }} whileInView={{ width: 156 }} viewport={{ once: true }}
+            transition={{ duration: 1.4, ease: EASE, delay: 0.25 }}
           />
           <motion.rect
-            x={CC.x + 6} y={CC.y + 64} height={8} rx={4} fill={T.red}
-            initial={{ width: 0 }} animate={{ width: 68, opacity: [1, 0.55, 1] }}
-            transition={{
-              width: { delay: 1, duration: 1, ease: EASE },
-              opacity: { duration: 1.6, repeat: Infinity, ease: "easeInOut" },
-            }}
+            x={CC.x + 6} y={CC.y + 46} width={72} height={9} rx={4.5} fill={T.red}
+            animate={{ opacity: [0.3, 0.85, 0.3] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
           />
-          <text x={CC.x} y={CC.y + 90} textAnchor="middle" fontSize="11" fontWeight="600" fill={T.red}>
+          <line x1={CC.x + 6} y1={CC.y + 41} x2={CC.x + 6} y2={CC.y + 60}
+                stroke={T.text} strokeWidth={1} opacity={0.32} />
+          <text x={CC.x + 6} y={CC.y + 72} textAnchor="middle" fontSize="8.5" fill={T.faint}>норма 100%</text>
+          <text x={CC.x} y={CC.y + 86} textAnchor="middle" fontSize="12.5" fontWeight="700" fill={T.red}>
             загрузка {METRICS.load}%
           </text>
         </g>
@@ -1008,7 +1095,7 @@ function WorkloadStage({ T }) {
         <text x={CC.x} y={22} textAnchor="middle" fontSize="11.5" fontWeight="700" letterSpacing="2.2" fill={T.faint}>
           {TASKS.length} НАПРАВЛЕНИЙ · {METRICS.demandWeek} НОРМО-ЧАСОВ
         </text>
-        <text x={CC.x} y={CC.y - R_CORE - 14} textAnchor="middle" fontSize="10" fontWeight="700" letterSpacing="1.4" fill={T.red}>
+        <text x={CC.x} y={CC.y - R_CORE - 16} textAnchor="middle" fontSize="10" fontWeight="700" letterSpacing="1.4" fill={T.red}>
           РЕСУРС · {STAFF} ЧЕЛ.
         </text>
         <text x={CC.x} y={VB.h - 16} textAnchor="middle" fontSize="11" fill={T.faint}>
@@ -1020,7 +1107,7 @@ function WorkloadStage({ T }) {
         initial={{ opacity: 0, x: 24 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
-        transition={{ delay: 0.5, duration: 0.6, ease: EASE }}
+        transition={{ delay: 0.4, duration: 0.6, ease: EASE }}
         className="absolute right-0 top-4 w-[248px] rounded-2xl p-4 backdrop-blur-2xl"
         style={{ background: T.solid, border: `1px solid ${T.red}55`, boxShadow: `0 24px 50px -22px ${T.glowC}` }}
       >
@@ -1037,7 +1124,7 @@ function WorkloadStage({ T }) {
             className="h-full rounded-full"
             style={{ background: `linear-gradient(90deg, ${T.teal}, ${T.red})` }}
             initial={{ width: 0 }} whileInView={{ width: "100%" }} viewport={{ once: true }}
-            transition={{ duration: 0.9, ease: EASE }}
+            transition={{ duration: 1.1, ease: EASE }}
           />
         </div>
         <div className="mt-3 flex items-start gap-2 text-[11.5px] leading-snug" style={{ color: T.muted }}>
