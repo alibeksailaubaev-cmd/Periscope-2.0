@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Periscope 2.0 — камера фиксации очков</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👓</text></svg>">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">👓</span>
+    <div>
+      <h1>Periscope <span>{{ version }}</span></h1>
+      <p>Камера фиксации людей в очках</p>
+    </div>
+  </div>
+  <div class="topbar-meta">
+    <span class="chip" title="Движок детекции лиц">CV: <b id="backend">{{ backend }}</b></span>
+    <span class="chip" title="Кадров в секунду">FPS: <b id="fps">0.0</b></span>
+    <span class="chip" title="Разрешение потока">Кадр: <b id="resolution">—</b></span>
+    <span class="pill pill-idle" id="conn-pill"><i></i><span id="conn-text">Не подключено</span></span>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ===================== Видео ===================== -->
+  <section class="card video-card">
+    <div class="card-head">
+      <h2>Прямая трансляция</h2>
+      <div class="card-head-actions">
+        <button class="btn btn-ghost" id="btn-snapshot" title="Сохранить текущий кадр">📸 Снимок</button>
+        <button class="btn btn-ghost" id="btn-fullscreen" title="Во весь экран">⛶</button>
+      </div>
+    </div>
+
+    <div class="video-wrap" id="video-wrap">
+      <img id="stream" src="{{ url_for('video_feed') }}" alt="Видеопоток">
+      <div class="video-badges">
+        <span class="badge badge-live" id="live-badge">● LIVE</span>
+        <span class="badge" id="faces-badge">Лиц: 0</span>
+      </div>
+    </div>
+
+    <div class="status-plate status-idle" id="status-plate">
+      <span class="status-dot"></span>
+      <span class="status-text" id="status-text">Ожидание подключения</span>
+      <span class="status-extra" id="status-extra"></span>
+    </div>
+  </section>
+
+  <!-- ===================== Панель управления ===================== -->
+  <aside class="card control-card">
+    <div class="card-head"><h2>Подключение</h2></div>
+
+    <label class="field-label" for="source">Источник видео (URL или номер камеры)</label>
+    <div class="field-row">
+      <input type="text" id="source" value="{{ settings.source }}" spellcheck="false"
+             placeholder="0  ·  http://192.168.0.10:8080/video  ·  rtsp://...">
+      <button class="btn btn-primary" id="btn-connect">Подключить</button>
+    </div>
+    <div class="presets">
+      <button class="tag" data-source="0">Веб-камера 0</button>
+      <button class="tag" data-source="1">Веб-камера 1</button>
+      <button class="tag" data-source="http://192.168.0.10:8080/video">IP Webcam</button>
+      <button class="tag" data-source="rtsp://user:pass@192.168.0.64:554/Streaming/Channels/101">RTSP</button>
+    </div>
+    <div class="field-row">
+      <button class="btn btn-danger wide" id="btn-disconnect">Остановить поток</button>
+    </div>
+    <p class="hint" id="conn-message">Поток не запущен</p>
+
+    <div class="card-head separated"><h2>Параметры детекции</h2></div>
+
+    <label class="field-label" for="cooldown">
+      Задержка между снимками: <b id="cooldown-value">{{ settings.cooldown }}</b> сек
+    </label>
+    <input type="range" id="cooldown" min="1" max="30" step="0.5" value="{{ settings.cooldown }}">
+
+    <label class="field-label" for="sensitivity">
+      Чувствительность к очкам: <b id="sensitivity-value">{{ (settings.sensitivity * 100) | round | int }}</b>%
+    </label>
+    <input type="range" id="sensitivity" min="0" max="100" step="5"
+           value="{{ (settings.sensitivity * 100) | round | int }}">
+
+    <label class="field-label" for="stable">
+      Подтверждение: <b id="stable-value">{{ settings.min_stable_frames }}</b> кадра подряд
+    </label>
+    <input type="range" id="stable" min="1" max="10" step="1" value="{{ settings.min_stable_frames }}">
+
+    <div class="switch-row">
+      <label class="switch">
+        <input type="checkbox" id="autosave" {% if settings.autosave %}checked{% endif %}>
+        <span class="slider"></span> Автоснимки при обнаружении
+      </label>
+      <label class="switch">
+        <input type="checkbox" id="mirror" {% if settings.mirror %}checked{% endif %}>
+        <span class="slider"></span> Зеркальный кадр
+      </label>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat"><span class="stat-value" id="stat-total">0</span><span class="stat-label">всего фиксаций</span></div>
+      <div class="stat"><span class="stat-value" id="stat-today">0</span><span class="stat-label">за сегодня</span></div>
+      <div class="stat"><span class="stat-value" id="stat-uptime">0:00</span><span class="stat-label">время работы</span></div>
+    </div>
+  </aside>
+
+  <!-- ===================== Галерея ===================== -->
+  <section class="card gallery-card">
+    <div class="card-head">
+      <h2>Последние фиксации</h2>
+      <span class="muted" id="gallery-count"></span>
+    </div>
+    <div class="gallery" id="gallery">
+      <p class="empty">Пока ничего не зафиксировано. Подключите камеру и покажите человека в очках.</p>
+    </div>
+  </section>
+
+  <!-- ===================== Журнал ===================== -->
+  <section class="card log-card">
+    <div class="card-head">
+      <h2>Журнал событий</h2>
+      <div class="card-head-actions">
+        <a class="btn btn-ghost" href="/api/export.csv">⬇ CSV</a>
+        <a class="btn btn-ghost" href="/api/export.json">⬇ JSON</a>
+        <button class="btn btn-ghost danger-text" id="btn-clear">Очистить</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th style="width:70px">ID</th>
+            <th style="width:180px">Дата и время</th>
+            <th style="width:150px">Статус</th>
+            <th>Имя файла фото</th>
+            <th style="width:150px">Уверенность</th>
+            <th style="width:110px">Фото</th>
+          </tr>
+        </thead>
+        <tbody id="log-body">
+          <tr class="empty-row"><td colspan="6">Записей пока нет</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  Снимки сохраняются в <code>static/captures/</code>, журнал — в
+  <code>events_log.json</code> и <code>events.csv</code>.
+</footer>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox-close" id="lightbox-close">✕</button>
+  <figure>
+    <img id="lightbox-img" src="" alt="Снимок">
+    <figcaption id="lightbox-caption"></figcaption>
+  </figure>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
