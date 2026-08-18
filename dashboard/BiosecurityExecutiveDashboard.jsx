@@ -28,11 +28,11 @@ const THEMES = {
     text: "#221f18",
     muted: "#575146",
     faint: "#837c6b",
-    panel: "rgba(252,250,243,0.92)",
-    panelHi: "#fdfbf5",
-    solid: "#fdfbf5",
-    border: "rgba(60,52,30,0.16)",
-    borderHi: "rgba(60,52,30,0.30)",
+    panel: "linear-gradient(180deg, rgba(0,163,163,0.075), rgba(0,163,163,0.015)), #fbfdfb",
+    panelHi: "linear-gradient(180deg, rgba(0,163,163,0.12), rgba(0,163,163,0.03)), #fbfdfb",
+    solid: "#fbfdfb",
+    border: "rgba(0,118,117,0.24)",
+    borderHi: "rgba(0,118,117,0.42)",
     grid: "rgba(60,52,30,0.10)",
     blue: "#1f6f87",
     violet: "#7c4f86",
@@ -174,7 +174,7 @@ const CONTOURS = {
   external: {
     id: "external",
     title: "Внешний контур",
-    sub: "граница территории — риск останавливается здесь",
+    sub: "",
     items: EXTERNAL,
     demand: METRICS.extDemand,
     covered: METRICS.extCovered,
@@ -184,7 +184,7 @@ const CONTOURS = {
   internal: {
     id: "internal",
     title: "Внутренний контур",
-    sub: "процессы и перемещения внутри объекта",
+    sub: "",
     items: INTERNAL,
     demand: METRICS.intDemand,
     covered: METRICS.intCovered,
@@ -737,7 +737,7 @@ function ContourCard({ T, contour, active, onClick, side }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[18px] font-semibold" style={{ color: T.text }}>{C.title}</div>
-          <div className="text-[14px]" style={{ color: T.faint }}>{C.sub}</div>
+          {C.sub ? <div className="text-[14px]" style={{ color: T.faint }}>{C.sub}</div> : null}
         </div>
         <div className="text-right">
           <div className="font-mono text-[13.5px]" style={{ color: T.faint }}>направлений</div>
@@ -1853,7 +1853,7 @@ function ExternalFlowScene({ T }) {
   const pw = useTransform(time, (t) => ((t + CYCLE * 0.78) % CYCLE) / CYCLE);
 
   const zones = [
-    { x: 130, label: "ВНЕШНЯЯ ЗОНА",   sub: "подъезд транспорта",     tone: T.faint },
+    { x: 130, label: "ВНЕШНЯЯ ЗОНА",   sub: "въезд транспорта",     tone: T.faint },
     { x: 347, label: "ДЕЗБАРЬЕР",      sub: "обработка транспорта",   tone: T.cyan },
     { x: 600, label: "САНПРОПУСКНИК",  sub: "допуск и входной контроль", tone: T.violet },
     { x: 880, label: "ВНУТРЕННЯЯ ЗОНА", sub: "склады предприятия",    tone: T.teal },
@@ -2269,18 +2269,13 @@ export default function BiosecurityExecutiveDashboard() {
         {/* ── ДВА КОНТУРА ─────────────────────────────────────────────── */}
         <div className="mt-5">
           <Panel T={T}>
-            <SectionHead
-              T={T}
-              eyebrow="Ядро модели"
-              title="Два контура защиты — нажмите, чтобы раскрыть состав"
-              right={
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
-                     style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
-                  <ArrowRight size={13} color={T.violet} />
-                  {open ? `открыт: ${CONTOURS[open].title.toLowerCase()}` : "оба контура свёрнуты"}
-                </div>
-              }
-            />
+            <div className="mb-4 flex justify-end">
+              <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
+                   style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
+                <ArrowRight size={13} color={T.cyan} />
+                {open ? `открыт: ${CONTOURS[open].title.toLowerCase()}` : "оба контура свёрнуты"}
+              </div>
+            </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <ContourCard T={T} contour="external" side="left"
                            active={open === "external"}
