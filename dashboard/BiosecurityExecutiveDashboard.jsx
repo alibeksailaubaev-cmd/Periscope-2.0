@@ -25,8 +25,8 @@ const THEMES = {
     key: "light",
     bg: "#f7f9fd",
     text: "#0b1220",
-    muted: "#55637d",
-    faint: "#8794ad",
+    muted: "#44536c",
+    faint: "#6c7c94",
     panel: "rgba(255,255,255,0.80)",
     panelHi: "rgba(255,255,255,0.95)",
     solid: "rgba(255,255,255,0.97)",
@@ -58,8 +58,8 @@ const THEMES = {
     key: "dark",
     bg: "#05070f",
     text: "#e9eefb",
-    muted: "#8f9bb8",
-    faint: "#5d6884",
+    muted: "#a3aec8",
+    faint: "#7b8aa6",
     panel: "rgba(255,255,255,0.045)",
     panelHi: "rgba(255,255,255,0.075)",
     solid: "rgba(11,15,28,0.90)",
@@ -104,40 +104,40 @@ const GROUPS = {
    для квартальных и месячных работ); cov — фактический охват в процентах (данные службы). */
 const TASKS = [
   // ── ВНЕШНИЙ КОНТУР (12 направлений) ──────────────────────────────────────
-  { id: "ext_audit",   name: "Аудит внешних направлений",              icon: ClipboardCheck, group: "crit",  contour: "external", hours: 6.0, cov: 28.57, freq: "ежеквартально", note: "Аудит контрагентов и внешних процессов на соответствие требованиям ББ" },
-  { id: "ext_appr",    name: "Согласования: документы и допуски",      icon: FileText,       group: "reg",   contour: "external", hours: 4.5, cov: 100,   freq: "непрерывно",    note: "Заявки на въезд и проход, допуски, переписка со службами предприятия" },
-  { id: "ext_entry",   name: "Входной поток: люди и транспорт",        icon: DoorOpen,       group: "daily", contour: "external", hours: 6.0, cov: 100,   freq: "ежедневно",     note: "Санпропускник, проходная, контроль въезда на территорию" },
-  { id: "ext_raw",     name: "Входной контроль сырья и ТМЦ",           icon: Package,        group: "daily", contour: "external", hours: 6.0, cov: 20,    freq: "ежедневно",     note: "Тентование, целостность тары, санитарное состояние партии до разгрузки" },
-  { id: "ext_contr",   name: "Подрядчики",                             icon: Users,          group: "reg",   contour: "external", hours: 1.5, cov: 100,   freq: "по событию",    note: "Допуск подрядных организаций, инструктаж и контроль на объекте" },
-  { id: "ext_supp",    name: "Поставщики",                             icon: Boxes,          group: "crit",  contour: "external", hours: 3.0, cov: 30,    freq: "ежемесячно",    note: "Санитарный статус поставщика, оценка площадки отгрузки" },
-  { id: "ext_lph",     name: "ЛПХ сотрудников",                        icon: Home,           group: "crit",  contour: "external", hours: 3.0, cov: 30,    freq: "ежемесячно",    note: "Учёт личных подсобных хозяйств — риск заноса возбудителя извне" },
-  { id: "ext_epi",     name: "Эпизоотическая ситуация в регионе",      icon: Siren,          group: "crit",  contour: "external", hours: 1.5, cov: 80,    freq: "мониторинг",    note: "Мониторинг очагов, усиление режима на внешней границе" },
-  { id: "ext_pest",    name: "Внешний пест-контроль",                  icon: Bug,            group: "daily", contour: "external", hours: 1.5, cov: 80,    freq: "еженедельно",   note: "Барьер по периметру: грызуны, синантропная птица, насекомые" },
-  { id: "ext_wash",    name: "Санобработка транспорта под шрот и жмых", icon: Droplets,      group: "crit",  contour: "external", hours: 4.0, cov: 0,     freq: "ежедневно",     note: "НОВАЯ ЗАДАЧА · обработка внешнего транспорта перед погрузкой сырья", isNew: true },
-  { id: "ext_contract",name: "Контроль исполнения договоров",          icon: BadgeCheck,     group: "reg",   contour: "external", hours: 1.5, cov: 0,     freq: "ежеквартально", note: "НОВАЯ ЗАДАЧА · проверка закупок и поставок на требования ББ и санитарии", isNew: true },
-  { id: "ext_vnd",     name: "ВНД: требования к сырью и ТМЦ",          icon: FileText,       group: "reg",   contour: "external", hours: 2.5, cov: 0,     freq: "проект",        note: "НОВАЯ ЗАДАЧА · разработка внутреннего нормативного документа", isNew: true },
+  { id: "ext_audit",   name: "Аудит внешних направлений",              icon: ClipboardCheck, group: "crit",  contour: "external", hours: 11.0, cov: 28.57, freq: "ежеквартально", note: "Аудит контрагентов и внешних процессов на соответствие требованиям ББ" },
+  { id: "ext_appr",    name: "Согласования: документы и допуски",      icon: FileText,       group: "reg",   contour: "external", hours: 8.0, cov: 100,   freq: "непрерывно",    note: "Заявки на въезд и проход, допуски, переписка со службами предприятия" },
+  { id: "ext_entry",   name: "Входной поток: люди и транспорт",        icon: DoorOpen,       group: "daily", contour: "external", hours: 11.0, cov: 100,   freq: "ежедневно",     note: "Санпропускник, проходная, контроль въезда на территорию" },
+  { id: "ext_raw",     name: "Входной контроль сырья и ТМЦ",           icon: Package,        group: "daily", contour: "external", hours: 11.0, cov: 20,    freq: "ежедневно",     note: "Тентование, целостность тары, санитарное состояние партии до разгрузки" },
+  { id: "ext_contr",   name: "Подрядчики",                             icon: Users,          group: "reg",   contour: "external", hours: 3.0, cov: 100,   freq: "по событию",    note: "Допуск подрядных организаций, инструктаж и контроль на объекте" },
+  { id: "ext_supp",    name: "Поставщики",                             icon: Boxes,          group: "crit",  contour: "external", hours: 5.5, cov: 30,    freq: "ежемесячно",    note: "Санитарный статус поставщика, оценка площадки отгрузки" },
+  { id: "ext_lph",     name: "ЛПХ сотрудников",                        icon: Home,           group: "crit",  contour: "external", hours: 5.5, cov: 30,    freq: "ежемесячно",    note: "Учёт личных подсобных хозяйств — риск заноса возбудителя извне" },
+  { id: "ext_epi",     name: "Эпизоотическая ситуация в регионе",      icon: Siren,          group: "crit",  contour: "external", hours: 3.0, cov: 80,    freq: "мониторинг",    note: "Мониторинг очагов, усиление режима на внешней границе" },
+  { id: "ext_pest",    name: "Внешний пест-контроль",                  icon: Bug,            group: "daily", contour: "external", hours: 3.0, cov: 80,    freq: "еженедельно",   note: "Барьер по периметру: грызуны, синантропная птица, насекомые" },
+  { id: "ext_wash",    name: "Санобработка транспорта под шрот и жмых", icon: Droplets,      group: "crit",  contour: "external", hours: 7.0, cov: 0,     freq: "ежедневно",     note: "НОВАЯ ЗАДАЧА · обработка внешнего транспорта перед погрузкой сырья", isNew: true },
+  { id: "ext_contract",name: "Контроль исполнения договоров",          icon: BadgeCheck,     group: "reg",   contour: "external", hours: 3.0, cov: 0,     freq: "ежеквартально", note: "НОВАЯ ЗАДАЧА · проверка закупок и поставок на требования ББ и санитарии", isNew: true },
+  { id: "ext_vnd",     name: "ВНД: требования к сырью и ТМЦ",          icon: FileText,       group: "reg",   contour: "external", hours: 4.5, cov: 0,     freq: "проект",        note: "НОВАЯ ЗАДАЧА · разработка внутреннего нормативного документа", isNew: true },
 
   // ── ВНУТРЕННИЙ КОНТУР (14 направлений) ───────────────────────────────────
-  { id: "int_rep",     name: "Отчётность",                             icon: FileText,       group: "reg",   contour: "internal", hours: 3.5, cov: 100,   freq: "ежедневно",     note: "Журналы, сводки, обязательная документация службы" },
-  { id: "int_train",   name: "Обучение персонала",                     icon: GraduationCap,  group: "reg",   contour: "internal", hours: 2.5, cov: 60,    freq: "ежемесячно",    note: "Очное обучение нормам биобезопасности и санитарии" },
-  { id: "int_brief",   name: "Инструктажи",                            icon: Megaphone,      group: "reg",   contour: "internal", hours: 1.5, cov: 100,   freq: "еженедельно",   note: "Инструктажи на местах по цехам и участкам" },
-  { id: "int_verify",  name: "Верификация мойки и дезинфекции",        icon: BadgeCheck,     group: "daily", contour: "internal", hours: 3.5, cov: 100,   freq: "ежедневно",     note: "Контроль качества обработки оборудования и помещений" },
-  { id: "int_lab",     name: "Анализ лабораторных данных",             icon: FlaskConical,   group: "reg",   contour: "internal", hours: 2.0, cov: 100,   freq: "еженедельно",   note: "Смывы, пробы, интерпретация протоколов лаборатории" },
-  { id: "int_mids",    name: "Учёт МиДС",                              icon: Droplets,       group: "daily", contour: "internal", hours: 2.0, cov: 85,    freq: "еженедельно",   note: "Моющие и дезинфицирующие средства: остатки, расход, сроки" },
-  { id: "int_husk",    name: "Склад лузги",                            icon: Layers,         group: "daily", contour: "internal", hours: 1.0, cov: 100,   freq: "еженедельно",   note: "Требования ББ и санитарии к зоне хранения подстилки" },
-  { id: "int_atc",     name: "АТЦ — автотранспортный цех",             icon: Car,            group: "crit",  contour: "internal", hours: 3.0, cov: 60,    freq: "еженедельно",   note: "Санитарное состояние техники и помещений цеха" },
-  { id: "int_barrier", name: "Внутренние дезбарьеры",                  icon: ShieldCheck,    group: "daily", contour: "internal", hours: 5.0, cov: 50,    freq: "ежедневно",     note: "Концентрации, чистота, графики очистки и замены растворов" },
-  { id: "int_bio",     name: "Биоотходы и перевозка падежа",           icon: Siren,          group: "crit",  contour: "internal", hours: 1.5, cov: 100,   freq: "ежедневно",     note: "Обращение с биологическими отходами, требования к перевозке" },
-  { id: "int_audit",   name: "Аудиты внутренних площадок",             icon: ClipboardCheck, group: "crit",  contour: "internal", hours: 6.0, cov: 30,    freq: "ежемесячно",    note: "Плановые проверки площадок на требования ББ и санитарии" },
-  { id: "int_manure",  name: "Пометохранилище",                        icon: Warehouse,      group: "daily", contour: "internal", hours: 1.0, cov: 100,   freq: "еженедельно",   note: "Требования ББ и санитарии к зоне накопления помёта" },
-  { id: "int_epi",     name: "Внутренняя эпизоотическая ситуация",     icon: Radar,          group: "crit",  contour: "internal", hours: 1.5, cov: 100,   freq: "мониторинг",    note: "Контроль эпизоотического благополучия внутри контура" },
-  { id: "int_vnd",     name: "ВНД: внутренние требования ББ",          icon: FileText,       group: "reg",   contour: "internal", hours: 3.0, cov: 0,     freq: "проект",        note: "НОВАЯ ЗАДАЧА · разработка внутреннего нормативного документа", isNew: true },
+  { id: "int_rep",     name: "Отчётность",                             icon: FileText,       group: "reg",   contour: "internal", hours: 6.5, cov: 100,   freq: "ежедневно",     note: "Журналы, сводки, обязательная документация службы" },
+  { id: "int_train",   name: "Обучение персонала",                     icon: GraduationCap,  group: "reg",   contour: "internal", hours: 4.5, cov: 60,    freq: "ежемесячно",    note: "Очное обучение нормам биобезопасности и санитарии" },
+  { id: "int_brief",   name: "Инструктажи",                            icon: Megaphone,      group: "reg",   contour: "internal", hours: 3.0, cov: 100,   freq: "еженедельно",   note: "Инструктажи на местах по цехам и участкам" },
+  { id: "int_verify",  name: "Верификация мойки и дезинфекции",        icon: BadgeCheck,     group: "daily", contour: "internal", hours: 6.5, cov: 100,   freq: "ежедневно",     note: "Контроль качества обработки оборудования и помещений" },
+  { id: "int_lab",     name: "Анализ лабораторных данных",             icon: FlaskConical,   group: "reg",   contour: "internal", hours: 3.5, cov: 100,   freq: "еженедельно",   note: "Смывы, пробы, интерпретация протоколов лаборатории" },
+  { id: "int_mids",    name: "Учёт МиДС",                              icon: Droplets,       group: "daily", contour: "internal", hours: 3.5, cov: 85,    freq: "еженедельно",   note: "Моющие и дезинфицирующие средства: остатки, расход, сроки" },
+  { id: "int_husk",    name: "Склад лузги",                            icon: Layers,         group: "daily", contour: "internal", hours: 2.0, cov: 100,   freq: "еженедельно",   note: "Требования ББ и санитарии к зоне хранения подстилки" },
+  { id: "int_atc",     name: "АТЦ — автотранспортный цех",             icon: Car,            group: "crit",  contour: "internal", hours: 5.5, cov: 60,    freq: "еженедельно",   note: "Санитарное состояние техники и помещений цеха" },
+  { id: "int_barrier", name: "Внутренние дезбарьеры",                  icon: ShieldCheck,    group: "daily", contour: "internal", hours: 9.0, cov: 50,    freq: "ежедневно",     note: "Концентрации, чистота, графики очистки и замены растворов" },
+  { id: "int_bio",     name: "Биоотходы и перевозка падежа",           icon: Siren,          group: "crit",  contour: "internal", hours: 3.0, cov: 100,   freq: "ежедневно",     note: "Обращение с биологическими отходами, требования к перевозке" },
+  { id: "int_audit",   name: "Аудиты внутренних площадок",             icon: ClipboardCheck, group: "crit",  contour: "internal", hours: 11.0, cov: 30,    freq: "ежемесячно",    note: "Плановые проверки площадок на требования ББ и санитарии" },
+  { id: "int_manure",  name: "Пометохранилище",                        icon: Warehouse,      group: "daily", contour: "internal", hours: 2.0, cov: 100,   freq: "еженедельно",   note: "Требования ББ и санитарии к зоне накопления помёта" },
+  { id: "int_epi",     name: "Внутренняя эпизоотическая ситуация",     icon: Radar,          group: "crit",  contour: "internal", hours: 3.0, cov: 100,   freq: "мониторинг",    note: "Контроль эпизоотического благополучия внутри контура" },
+  { id: "int_vnd",     name: "ВНД: внутренние требования ББ",          icon: FileText,       group: "reg",   contour: "internal", hours: 4.5, cov: 0,     freq: "проект",        note: "НОВАЯ ЗАДАЧА · разработка внутреннего нормативного документа", isNew: true },
 ];
 
 // фактически закрываемый объём в нормо-часах выводится из процента охвата
 TASKS.forEach((t) => { t.covered = Math.round(t.hours * t.cov) / 100; });
 
-const STAFF = 1;               // действующий штат службы
+const STAFF = 2;               // действующий штат службы
 const HOURS_PER_STAFF = 40;    // нормо-часов в неделю на одного специалиста
 
 const sum = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
@@ -196,16 +196,16 @@ const CONTOURS = {
 const PERIODS = {
   day:   { id: "day",   label: "День",   k: 1 / 5, unit: "нормо-часов",
            categories: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"],
-           demand: [1.5, 2.2, 2.4, 1.7, 1.3, 2.3, 2.5, 1.7],
-           capacity: [1, 1, 1, 1, 1, 1, 1, 1] },
+           demand: [2.6, 4.0, 4.4, 3.1, 2.3, 4.2, 4.6, 3.4],
+           capacity: [2, 2, 2, 2, 2, 2, 2, 2] },
   week:  { id: "week",  label: "Неделя", k: 1, unit: "нормо-часов",
            categories: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
-           demand: [15, 16, 14, 15, 14, 3, 1],
-           capacity: [8, 8, 8, 8, 8, 0, 0] },
+           demand: [28, 30, 26, 29, 27, 2, 1],
+           capacity: [16, 16, 16, 16, 16, 0, 0] },
   month: { id: "month", label: "Месяц",  k: 4.2, unit: "нормо-часов",
            categories: ["Неделя 1", "Неделя 2", "Неделя 3", "Неделя 4", "Неделя 5"],
-           demand: [79, 83, 75, 82, 9],
-           capacity: [40, 40, 40, 40, 8] },
+           demand: [147, 153, 140, 150, 11],
+           capacity: [80, 80, 80, 80, 16] },
 };
 
 /* Карта внутреннего контура: объекты и маршруты перемещений */
@@ -214,7 +214,7 @@ const SITES = {
   atc:       { id: "atc",       name: "АТЦ",                   sub: "транспортный цех",  x: 300, y: 470, w: 150, h: 80,  icon: Car },
   incubator: { id: "incubator", name: "Инкубатор",             sub: "суточный молодняк",     x: 545, y: 135, w: 136, h: 84,  icon: Egg },
   broiler:   { id: "broiler",   name: "Бройлерные площадки",   sub: "3 корпуса",             x: 825, y: 300, w: 200, h: 240, icon: Bird },
-  office:    { id: "office",    name: "Офис",                  sub: `${STAFF} специалист — постоянно здесь`, x: 575, y: 458, w: 210, h: 92, icon: Building2 },
+  office:    { id: "office",    name: "Офис",                  sub: `${STAFF} специалиста — постоянно здесь`, x: 575, y: 458, w: 210, h: 92, icon: Building2 },
 };
 
 const ROUTES = [
@@ -347,10 +347,10 @@ function SectionHead({ T, eyebrow, title, right }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <div className="font-mono text-[10.5px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
+        <div className="font-mono text-[12px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
           {eyebrow}
         </div>
-        <h2 className="mt-1 text-[18px] font-semibold" style={{ color: T.text }}>{title}</h2>
+        <h2 className="mt-1 text-[19px] font-semibold" style={{ color: T.text }}>{title}</h2>
       </div>
       {right}
     </div>
@@ -397,10 +397,10 @@ function Header({ T, period, setPeriod, theme, setTheme, onOpenCase }) {
           <ShieldAlert size={22} color="#fff" />
         </motion.div>
         <div>
-          <div className="mb-1 font-mono text-[10.5px] uppercase tracking-[0.22em]" style={{ color: T.faint }}>
+          <div className="mb-1 font-mono text-[12px] uppercase tracking-[0.22em]" style={{ color: T.faint }}>
             Отдел биобезопасности · Executive dashboard
           </div>
-          <h1 className="text-[22px] font-semibold leading-tight tracking-tight sm:text-[27px]" style={{ color: T.text }}>
+          <h1 className="text-[23px] font-semibold leading-tight tracking-tight sm:text-[28px]" style={{ color: T.text }}>
             Мониторинг биобезопасности и нагрузка персонала
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -409,11 +409,11 @@ function Header({ T, period, setPeriod, theme, setTheme, onOpenCase }) {
               style={{ background: `${T.red}14`, border: `1px solid ${T.red}55` }}
             >
               <PulseDot color={T.red} />
-              <span className="text-[12px] font-semibold" style={{ color: T.red }}>Критическая перегрузка</span>
-              <span className="font-mono text-[10px] tracking-wider" style={{ color: T.red, opacity: 0.7 }}>CRITICAL RISK</span>
+              <span className="text-[13.5px] font-semibold" style={{ color: T.red }}>Критическая перегрузка</span>
+              <span className="font-mono text-[11.5px] tracking-wider" style={{ color: T.red, opacity: 0.7 }}>CRITICAL RISK</span>
             </div>
             <div
-              className="flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[10.5px]"
+              className="flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[12px]"
               style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}
             >
               <Clock size={12} /> обновлено сейчас
@@ -428,7 +428,7 @@ function Header({ T, period, setPeriod, theme, setTheme, onOpenCase }) {
             <button
               key={p.id}
               onClick={() => setPeriod(p.id)}
-              className="relative rounded-lg px-3.5 py-1.5 text-[12.5px] font-medium transition-colors"
+              className="relative rounded-lg px-3.5 py-1.5 text-[14px] font-medium transition-colors"
               style={{ color: period === p.id ? "#fff" : T.muted }}
             >
               {period === p.id && (
@@ -470,7 +470,7 @@ function Header({ T, period, setPeriod, theme, setTheme, onOpenCase }) {
           onClick={onOpenCase}
           whileHover={{ y: -2, scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14.5px] font-semibold text-white"
           style={{
             background: `linear-gradient(135deg, ${T.red}, ${T.violet})`,
             boxShadow: `0 18px 38px -16px ${T.glowC}`,
@@ -510,18 +510,18 @@ function StatCard({ T, item, index }) {
         <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ background: `${item.color}1f`, color: item.color }}>
           <Icon size={15} />
         </div>
-        <span className="text-[12px]" style={{ color: T.muted }}>{item.label}</span>
+        <span className="text-[13.5px]" style={{ color: T.muted }}>{item.label}</span>
       </div>
       <div className="relative mt-3 flex items-baseline gap-1.5">
         <span
-          className="text-[34px] font-semibold leading-none tracking-tight"
+          className="text-[36px] font-semibold leading-none tracking-tight"
           style={{ color: item.color, textShadow: T.key === "dark" ? `0 0 26px ${item.color}55` : "none" }}
         >
           {item.prefix || ""}{fmt(v)}
         </span>
-        <span className="text-[13px] font-medium" style={{ color: T.faint }}>{item.suffix}</span>
+        <span className="text-[14.5px] font-medium" style={{ color: T.faint }}>{item.suffix}</span>
       </div>
-      <div className="relative mt-2 text-[11.5px] leading-snug" style={{ color: T.faint }}>{item.note}</div>
+      <div className="relative mt-2 text-[13px] leading-snug" style={{ color: T.faint }}>{item.note}</div>
       {item.progress != null && (
         <div className="relative mt-3 h-1.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
           <motion.div
@@ -613,7 +613,7 @@ function ExternalScene({ T, active }) {
         animate={{ opacity: active ? [0.10, 0.22, 0.10] : 0.07 }}
         transition={{ duration: 2, repeat: Infinity }}
       />
-      <text x="160" y="128" textAnchor="middle" fontSize="10.5" fill={T.faint}>
+      <text x="160" y="128" textAnchor="middle" fontSize="12" fill={T.faint}>
         всё, что заходит на территорию, проходит здесь
       </text>
     </svg>
@@ -658,10 +658,10 @@ function InternalScene({ T, active }) {
         <g key={n.label}>
           <rect x={n.x - 15} y={n.y - 10} width="30" height="20" rx="5"
                 fill={active ? `${T.cyan}22` : T.grid} stroke={c} strokeWidth="1.1" />
-          <text x={n.x} y={n.y + 22} textAnchor="middle" fontSize="8.5" fill={T.faint}>{n.label}</text>
+          <text x={n.x} y={n.y + 22} textAnchor="middle" fontSize="10" fill={T.faint}>{n.label}</text>
         </g>
       ))}
-      <text x="160" y="140" textAnchor="middle" fontSize="10.5" fill={T.faint}>
+      <text x="160" y="140" textAnchor="middle" fontSize="12" fill={T.faint}>
         {TRIPS_TOTAL} перемещений в сутки между зонами
       </text>
     </svg>
@@ -699,12 +699,12 @@ function ContourCard({ T, contour, active, onClick, side }) {
           <Icon size={19} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[16px] font-semibold" style={{ color: T.text }}>{C.title}</div>
-          <div className="text-[11.5px]" style={{ color: T.faint }}>{C.sub}</div>
+          <div className="text-[17px] font-semibold" style={{ color: T.text }}>{C.title}</div>
+          <div className="text-[13px]" style={{ color: T.faint }}>{C.sub}</div>
         </div>
         <div className="text-right">
-          <div className="font-mono text-[11px]" style={{ color: T.faint }}>направлений</div>
-          <div className="text-[20px] font-semibold leading-none" style={{ color: accent }}>{C.items.length}</div>
+          <div className="font-mono text-[12.5px]" style={{ color: T.faint }}>направлений</div>
+          <div className="text-[21px] font-semibold leading-none" style={{ color: accent }}>{C.items.length}</div>
         </div>
         <motion.span animate={{ rotate: active ? 180 : 0 }} transition={{ duration: 0.3 }} style={{ color: T.faint }}>
           <ChevronDown size={16} />
@@ -717,7 +717,7 @@ function ContourCard({ T, contour, active, onClick, side }) {
 
       <div className="relative mt-1 flex items-center gap-3">
         <div className="flex-1">
-          <div className="mb-1 flex justify-between font-mono text-[10px]" style={{ color: T.faint }}>
+          <div className="mb-1 flex justify-between font-mono text-[11.5px]" style={{ color: T.faint }}>
             <span>покрытие</span>
             <span>{fmt(C.covered, 1)} из {fmt(C.demand, 1)} ч/нед</span>
           </div>
@@ -732,7 +732,7 @@ function ContourCard({ T, contour, active, onClick, side }) {
             />
           </div>
         </div>
-        <div className="text-[19px] font-semibold" style={{ color: C.coverage < 60 ? T.red : T.amber }}>
+        <div className="text-[20px] font-semibold" style={{ color: C.coverage < 60 ? T.red : T.amber }}>
           {C.coverage}%
         </div>
       </div>
@@ -759,11 +759,11 @@ function ContourTaskList({ T, contour }) {
     >
       <div className="pt-5">
         <div className="mb-4 flex flex-wrap items-center gap-2.5">
-          <span className="rounded-lg px-2.5 py-1 text-[12px] font-semibold" style={{ background: `${accent}1a`, color: accent }}>
+          <span className="rounded-lg px-2.5 py-1 text-[13.5px] font-semibold" style={{ background: `${accent}1a`, color: accent }}>
             {C.title}
           </span>
-          <span className="text-[12px]" style={{ color: T.muted }}>
-            {C.items.length} направлений · {C.demand} нормо-часов в неделю · закрыто {C.coverage}%
+          <span className="text-[13.5px]" style={{ color: T.muted }}>
+            {C.items.length} направлений · {fmt(C.demand, 1)} нормо-часов в неделю · закрыто {C.coverage}%
           </span>
         </div>
 
@@ -779,9 +779,9 @@ function ContourTaskList({ T, contour }) {
                   <div className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: `${tone}1f`, color: tone }}>
                     <GIcon size={14} />
                   </div>
-                  <span className="text-[13px] font-semibold" style={{ color: T.text }}>{g.title}</span>
-                  <span className="font-mono text-[10.5px]" style={{ color: T.faint }}>
-                    {g.items.length} · {gh} ч/нед · закрыто {Math.round((gc / gh) * 100)}%
+                  <span className="text-[14.5px] font-semibold" style={{ color: T.text }}>{g.title}</span>
+                  <span className="font-mono text-[12px]" style={{ color: T.faint }}>
+                    {g.items.length} · {fmt(gh, 1)} ч/нед · закрыто {Math.round((gc / gh) * 100)}%
                   </span>
                   <div className="h-px flex-1" style={{ background: T.border }} />
                 </div>
@@ -806,8 +806,8 @@ function ContourTaskList({ T, contour }) {
                             <Icon size={15} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-[12.5px] font-semibold leading-tight" style={{ color: T.text }}>{t.name}</div>
-                            <div className="mt-0.5 text-[11px] leading-snug" style={{ color: T.faint }}>{t.note}</div>
+                            <div className="text-[14px] font-semibold leading-tight" style={{ color: T.text }}>{t.name}</div>
+                            <div className="mt-0.5 text-[12.5px] leading-snug" style={{ color: T.faint }}>{t.note}</div>
                           </div>
                         </div>
                         <div className="mt-2.5 flex items-center gap-2">
@@ -818,11 +818,11 @@ function ContourTaskList({ T, contour }) {
                               transition={{ delay: delay + 0.15, duration: 0.7, ease: EASE }}
                             />
                           </div>
-                          <span className="font-mono text-[10px]" style={{ color: state }}>{pct}%</span>
+                          <span className="font-mono text-[11.5px]" style={{ color: state }}>{pct}%</span>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[9.5px]" style={{ background: T.grid, color: T.faint }}>{t.freq}</span>
-                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[9.5px]" style={{ background: T.grid, color: T.faint }}>{t.hours} ч/нед</span>
+                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[11px]" style={{ background: T.grid, color: T.faint }}>{t.freq}</span>
+                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[11px]" style={{ background: T.grid, color: T.faint }}>{fmt(t.hours, 1)} ч/нед</span>
                         </div>
                       </motion.div>
                     );
@@ -866,7 +866,7 @@ function Person({ T, x, y, tilt, stack, delay = 0 }) {
         transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: delay + 0.4 }}
       >
         {Array.from({ length: stack }).map((_, i) => {
-          const w = 46 - i * 1.8;
+          const w = 36 - i * 1.4;
           return (
             <motion.rect
               key={i}
@@ -944,11 +944,9 @@ function GhostPerson({ T, x, y }) {
         />
         <circle cx={x} cy={y - 26} r={14.5} fill="none" stroke={T.teal} strokeWidth={1.6} strokeDasharray="5 5" />
       </motion.g>
-      <circle cx={x + 20} cy={y - 34} r={11} fill={T.teal} />
-      <text x={x + 20} y={y - 30} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff">+1</text>
-      <text x={x} y={y - 54} textAnchor="middle" fontSize="9.5" fontWeight="700" letterSpacing="0.6" fill={T.teal}>
-        ВАКАНСИЯ
-      </text>
+      <circle cx={x + 16} cy={y - 36} r={10} fill={T.teal} opacity={0.9} />
+      <path d={`M ${x + 16} ${y - 41} L ${x + 16} ${y - 31} M ${x + 11} ${y - 36} L ${x + 21} ${y - 36}`}
+            stroke="#fff" strokeWidth={2.2} strokeLinecap="round" />
     </motion.g>
   );
 }
@@ -1115,8 +1113,14 @@ function WorkloadStage({ T }) {
         />
 
         <g pointerEvents="none">
-          <Person T={T} x={CC.x - 38} y={CC.y - 6} tilt={5} stack={7} delay={0} />
-          <GhostPerson T={T} x={CC.x + 46} y={CC.y - 6} />
+          <Person T={T} x={CC.x - 68} y={CC.y - 6} tilt={5} stack={7} delay={0} />
+          <Person T={T} x={CC.x - 23} y={CC.y - 6} tilt={4} stack={7} delay={0.6} />
+          <GhostPerson T={T} x={CC.x + 24} y={CC.y - 6} />
+          <GhostPerson T={T} x={CC.x + 68} y={CC.y - 6} />
+          <text x={CC.x + 46} y={CC.y - 62} textAnchor="middle" fontSize="11"
+                fontWeight="700" letterSpacing="0.6" fill={T.teal}>
+            ВАКАНСИИ +{METRICS.gap}
+          </text>
         </g>
 
         {/* шкала загрузки */}
@@ -1134,19 +1138,22 @@ function WorkloadStage({ T }) {
           />
           <line x1={CC.x + 6} y1={CC.y + 41} x2={CC.x + 6} y2={CC.y + 60}
                 stroke={T.text} strokeWidth={1} opacity={0.32} />
-          <text x={CC.x + 6} y={CC.y + 72} textAnchor="middle" fontSize="8.5" fill={T.faint}>норма 100%</text>
-          <text x={CC.x} y={CC.y + 86} textAnchor="middle" fontSize="12.5" fontWeight="700" fill={T.red}>
+          <text x={CC.x + 6} y={CC.y + 72} textAnchor="middle" fontSize="10" fill={T.faint}>норма 100%</text>
+          <text x={CC.x} y={CC.y + 86} textAnchor="middle" fontSize="14" fontWeight="700" fill={T.red}>
             загрузка {METRICS.load}%
           </text>
         </g>
 
-        <text x={CC.x} y={22} textAnchor="middle" fontSize="11.5" fontWeight="700" letterSpacing="2.2" fill={T.faint}>
-          {TASKS.length} НАПРАВЛЕНИЙ · {METRICS.demandWeek} НОРМО-ЧАСОВ
+        <text x={CC.x} y={22} textAnchor="middle" fontSize="13" fontWeight="700" letterSpacing="2.2" fill={T.faint}>
+          {TASKS.length} НАПРАВЛЕНИЙ · {fmt(METRICS.demandWeek, 0)} НОРМО-ЧАСОВ
         </text>
-        <text x={CC.x} y={CC.y - R_CORE - 16} textAnchor="middle" fontSize="10" fontWeight="700" letterSpacing="1.4" fill={T.red}>
-          РЕСУРС · {STAFF} ЧЕЛ.
+        <text x={CC.x - 52} y={CC.y - R_CORE - 16} textAnchor="middle" fontSize="11.5" fontWeight="700" letterSpacing="1.2" fill={T.red}>
+          ЕСТЬ · {STAFF} ЧЕЛ.
         </text>
-        <text x={CC.x} y={VB.h - 16} textAnchor="middle" fontSize="11" fill={T.faint}>
+        <text x={CC.x + 56} y={CC.y - R_CORE - 16} textAnchor="middle" fontSize="11.5" fontWeight="700" letterSpacing="1.2" fill={T.teal}>
+          НУЖНО ЕЩЁ · {METRICS.gap}
+        </text>
+        <text x={CC.x} y={VB.h - 16} textAnchor="middle" fontSize="12.5" fill={T.faint}>
           дефицит {METRICS.deficitHours} нормо-часов в неделю — задачи не исчезают, они копятся
         </text>
       </svg>
@@ -1161,11 +1168,11 @@ function WorkloadStage({ T }) {
       >
         <div className="flex items-center gap-2">
           <Gauge size={15} color={T.red} />
-          <span className="text-[12px] font-semibold" style={{ color: T.red }}>Виджет перегрузки</span>
+          <span className="text-[13.5px] font-semibold" style={{ color: T.red }}>Виджет перегрузки</span>
         </div>
         <div className="mt-2 flex items-end gap-2">
-          <span className="text-[30px] font-semibold leading-none" style={{ color: T.red }}>{METRICS.load}%</span>
-          <span className="pb-1 text-[11px]" style={{ color: T.muted }}>загрузка</span>
+          <span className="text-[32px] font-semibold leading-none" style={{ color: T.red }}>{METRICS.load}%</span>
+          <span className="pb-1 text-[12.5px]" style={{ color: T.muted }}>загрузка</span>
         </div>
         <div className="mt-2.5 h-1.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
           <motion.div
@@ -1175,7 +1182,7 @@ function WorkloadStage({ T }) {
             transition={{ duration: 1.1, ease: EASE }}
           />
         </div>
-        <div className="mt-3 flex items-start gap-2 text-[11.5px] leading-snug" style={{ color: T.muted }}>
+        <div className="mt-3 flex items-start gap-2 text-[13px] leading-snug" style={{ color: T.muted }}>
           <AlertTriangle size={13} color={T.amber} className="mt-0.5 shrink-0" />
           Риск пропуска критических задач: {METRICS.critWeak} из{" "}
           {TASKS.filter((t) => t.group === "crit").length} критических направлений закрыты менее чем наполовину.
@@ -1186,8 +1193,8 @@ function WorkloadStage({ T }) {
             { l: "требуется", v: `${METRICS.demandWeek} ч`, c: T.red },
           ].map((x) => (
             <div key={x.l} className="rounded-lg px-2.5 py-1.5" style={{ background: T.panel, border: `1px solid ${T.border}` }}>
-              <div className="font-mono text-[9.5px] uppercase tracking-wider" style={{ color: T.faint }}>{x.l}</div>
-              <div className="text-[14px] font-semibold" style={{ color: x.c }}>{x.v}</div>
+              <div className="font-mono text-[11px] uppercase tracking-wider" style={{ color: T.faint }}>{x.l}</div>
+              <div className="text-[15.5px] font-semibold" style={{ color: x.c }}>{x.v}</div>
             </div>
           ))}
         </div>
@@ -1234,8 +1241,8 @@ function SiteBlock({ T, site, accent, isOffice }) {
             <Icon size={16} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: T.text, lineHeight: 1.15 }}>{site.name}</div>
-            <div style={{ fontSize: 10, color: T.faint, lineHeight: 1.2 }}>{site.sub}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: T.text, lineHeight: 1.15 }}>{site.name}</div>
+            <div style={{ fontSize: 11.5, color: T.faint, lineHeight: 1.2 }}>{site.sub}</div>
           </div>
         </div>
       </foreignObject>
@@ -1257,7 +1264,7 @@ function LogisticsMap({ T }) {
               fill={T.ground} stroke={T.border} strokeWidth="1.4" />
         <rect x="24" y="24" width="952" height="512" rx="22"
               fill="none" stroke={accent} strokeWidth="1.2" strokeDasharray="8 8" opacity="0.35" />
-        <text x="44" y="50" fontSize="10.5" fontWeight="700" letterSpacing="2" fill={T.faint}>
+        <text x="44" y="50" fontSize="12" fontWeight="700" letterSpacing="2" fill={T.faint}>
           ВНУТРЕННИЙ КОНТУР · ТЕРРИТОРИЯ ОБЪЕКТА
         </text>
 
@@ -1283,13 +1290,13 @@ function LogisticsMap({ T }) {
             <rect x={729} y={y - 17 + 5} width={196} height={34} rx={9} fill="#0b1220" opacity={T.key === "dark" ? 0.3 : 0.06} />
             <rect x={725} y={y - 17} width={196} height={34} rx={9} fill={T.surface} stroke={accent} strokeWidth="1.2" />
             <rect x={725} y={y - 17} width={196} height={6} rx={3} fill={accent} opacity="0.45" />
-            <text x={823} y={y + 9} textAnchor="middle" fontSize="11" fill={T.muted}>корпус {i + 1}</text>
+            <text x={823} y={y + 9} textAnchor="middle" fontSize="12.5" fill={T.muted}>корпус {i + 1}</text>
           </g>
         ))}
-        <text x={823} y={444} textAnchor="middle" fontSize="12.5" fontWeight="600" fill={T.text}>
+        <text x={823} y={444} textAnchor="middle" fontSize="14" fontWeight="600" fill={T.text}>
           Бройлерные площадки
         </text>
-        <text x={823} y={460} textAnchor="middle" fontSize="10" fill={T.faint}>3 корпуса</text>
+        <text x={823} y={460} textAnchor="middle" fontSize="11.5" fill={T.faint}>3 корпуса</text>
 
         {/* объекты */}
         <SiteBlock T={T} site={SITES.warehouse} accent={accent} />
@@ -1306,7 +1313,7 @@ function LogisticsMap({ T }) {
               transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.3 }}
               style={{ originX: `${m.x}px`, originY: `${m.y}px` }}
             />
-            <text x={m.x} y={m.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff">!</text>
+            <text x={m.x} y={m.y + 4} textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#fff">!</text>
             <motion.circle
               cx={m.x} cy={m.y} r={9} fill="none" stroke={T.red} strokeWidth={1.4}
               initial={{ scale: 1, opacity: 0.6 }}
@@ -1317,20 +1324,25 @@ function LogisticsMap({ T }) {
           </g>
         ))}
 
-        {/* действующий специалист и незакрытая вторая единица */}
-        <motion.g animate={{ y: [0, -2.5, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-          <circle cx={office.x + 42} cy={office.y - 10} r={9} fill={T.red} />
-          <path d={`M ${office.x + 31} ${office.y + 14} L ${office.x + 32} ${office.y} Q ${office.x + 42} ${office.y - 5} ${office.x + 52} ${office.y} L ${office.x + 53} ${office.y + 14} Z`}
-                fill={T.red} opacity={0.92} />
-        </motion.g>
-        <motion.g animate={{ opacity: [0.4, 0.85, 0.4] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}>
-          <circle cx={office.x + 78} cy={office.y - 10} r={9} fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
-          <path d={`M ${office.x + 67} ${office.y + 14} L ${office.x + 68} ${office.y} Q ${office.x + 78} ${office.y - 5} ${office.x + 88} ${office.y} L ${office.x + 89} ${office.y + 14} Z`}
-                fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
-        </motion.g>
-        <text x={office.x + 78} y={office.y + 27} textAnchor="middle" fontSize="8.5" fontWeight="600" fill={T.teal}>+1</text>
+        {/* два действующих специалиста и две незакрытые единицы */}
+        {[office.x + 22, office.x + 47].map((px, i) => (
+          <motion.g key={px} animate={{ y: [0, -2.5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}>
+            <circle cx={px} cy={office.y - 10} r={8} fill={T.red} />
+            <path d={`M ${px - 10} ${office.y + 13} L ${px - 9} ${office.y} Q ${px} ${office.y - 5} ${px + 9} ${office.y} L ${px + 10} ${office.y + 13} Z`}
+                  fill={T.red} opacity={0.92} />
+          </motion.g>
+        ))}
+        {[office.x + 74, office.x + 99].map((px, i) => (
+          <motion.g key={px} animate={{ opacity: [0.4, 0.85, 0.4] }}
+                    transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}>
+            <circle cx={px} cy={office.y - 10} r={8} fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
+            <path d={`M ${px - 10} ${office.y + 13} L ${px - 9} ${office.y} Q ${px} ${office.y - 5} ${px + 9} ${office.y} L ${px + 10} ${office.y + 13} Z`}
+                  fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
+          </motion.g>
+        ))}
+        <text x={office.x + 86} y={office.y + 27} textAnchor="middle" fontSize="10"
+              fontWeight="700" fill={T.teal}>+{METRICS.gap}</text>
 
         {/* «разрываются»: силуэты уходят к объектам и растворяются */}
         {ghostTargets.map((s, i) => (
@@ -1367,7 +1379,7 @@ function LogisticsMap({ T }) {
         )}
 
         {/* подписи маршрутов */}
-        <text x="500" y="552" textAnchor="middle" fontSize="11" fill={T.faint}>
+        <text x="500" y="552" textAnchor="middle" fontSize="12.5" fill={T.faint}>
           {ROUTES.length} постоянных маршрута · {TRIPS_TOTAL} перемещений в сутки · каждое — пересечение зон
         </text>
       </svg>
@@ -1395,12 +1407,196 @@ function LogisticsMap({ T }) {
               <Route size={14} />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[12.5px] font-semibold" style={{ color: T.text }}>{r.label}</div>
-              <div className="truncate text-[11px]" style={{ color: T.faint }}>{r.cargo}</div>
+              <div className="truncate text-[14px] font-semibold" style={{ color: T.text }}>{r.label}</div>
+              <div className="truncate text-[12.5px]" style={{ color: T.faint }}>{r.cargo}</div>
             </div>
             <div className="text-right">
-              <div className="font-mono text-[13px] font-semibold" style={{ color: T.text }}>{r.trips}</div>
-              <div className="font-mono text-[9.5px]" style={{ color: T.faint }}>рейса/сут</div>
+              <div className="font-mono text-[14.5px] font-semibold" style={{ color: T.text }}>{r.trips}</div>
+              <div className="font-mono text-[11px]" style={{ color: T.faint }}>рейса/сут</div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   9b. СРАВНЕНИЕ: ДЕЙСТВУЮЩИЙ ШТАТ ПРОТИВ УСИЛЕННОГО
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const ROLES = [
+  { n: 1, title: "Входной контроль периметра", hours: 36.0, now: true,
+    duties: "Проходная, согласования, подрядчики, входной контроль сырья и ТМЦ, внешний пест-контроль" },
+  { n: 2, title: "Внешние риски и контрагенты", hours: 36.5, now: true,
+    duties: "Санобработка транспорта под шрот и жмых, аудит контрагентов, поставщики, ЛПХ, эпизоотия, ВНД по сырью" },
+  { n: 3, title: "Внутренний операционный контроль", hours: 34.5, now: false,
+    duties: "Дезбарьеры, верификация мойки, МиДС, АТЦ, склад лузги, пометохранилище, биоотходы" },
+  { n: 4, title: "Аудит, ВНД и лаборатория", hours: 36.0, now: false,
+    duties: "Аудиты внутренних площадок, разработка ВНД, лабораторные данные, обучение, инструктажи, отчётность" },
+];
+
+function StaffingComparison({ T }) {
+  const cap1 = STAFF * HOURS_PER_STAFF;                       // 80
+  const cap2 = METRICS.requiredStaff * HOURS_PER_STAFF;       // 160
+  const done1 = METRICS.coveredNow;                           // 81,7
+  const perHead1 = Math.round((done1 / STAFF) * 10) / 10;     // 40,9
+  const perHead2 = Math.round((METRICS.demandWeek / METRICS.requiredStaff) * 10) / 10;
+  const loadAfter = Math.round((METRICS.demandWeek / cap2) * 100);
+
+  const rows = [
+    { l: "Ресурс службы",            a: `${cap1} ч/нед`,  b: `${cap2} ч/нед`, hint: `${STAFF} × ${HOURS_PER_STAFF} ч → ${METRICS.requiredStaff} × ${HOURS_PER_STAFF} ч` },
+    { l: "Требуется по регламенту",  a: `${METRICS.demandWeek} ч`, b: `${METRICS.demandWeek} ч`, hint: "объём задач не меняется" },
+    { l: "Фактически закрывается",   a: `${fmt(done1, 1)} ч`, b: `${METRICS.demandWeek} ч`, hint: "весь регламент выполняется" },
+    { l: "Нагрузка на человека",     a: `${fmt(perHead1, 1)} ч`, b: `${fmt(perHead2, 1)} ч`, hint: `норма ${HOURS_PER_STAFF} ч` },
+    { l: "Загрузка службы",          a: `${METRICS.load}%`, b: `${loadAfter}%`, hint: "норма 100%" },
+    { l: "Охват направлений",        a: `${METRICS.coverage}%`, b: "100%", hint: `из ${TASKS.length} направлений` },
+    { l: "Направлений с охватом 0%", a: `${METRICS.uncovered}`, b: "0", hint: "полностью открытые риски" },
+  ];
+
+  return (
+    <div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr]">
+        {/* СЕЙЧАС */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.55, ease: EASE }}
+          className="rounded-2xl p-5"
+          style={{ background: `${T.red}0d`, border: `1.5px solid ${T.red}55`, boxShadow: T.shadow }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="grid h-9 w-9 place-items-center rounded-xl" style={{ background: `${T.red}1f`, color: T.red }}>
+              <Users size={17} />
+            </div>
+            <div>
+              <div className="text-[16px] font-semibold" style={{ color: T.text }}>Сейчас · {STAFF} специалиста</div>
+              <div className="text-[13px]" style={{ color: T.muted }}>ресурс {cap1} ч в неделю</div>
+            </div>
+          </div>
+          <div className="mt-4 flex items-end gap-2">
+            <span className="text-[42px] font-semibold leading-none" style={{ color: T.red }}>{METRICS.load}%</span>
+            <span className="pb-1.5 text-[13px]" style={{ color: T.muted }}>загрузка</span>
+          </div>
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
+            <motion.div className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${T.amber}, ${T.red})` }}
+                        initial={{ width: 0 }} whileInView={{ width: "100%" }} viewport={{ once: true }}
+                        transition={{ duration: 1, ease: EASE }} />
+          </div>
+          <p className="mt-3 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>
+            Двое закрывают <b style={{ color: T.text }}>{fmt(done1, 1)} ч</b> из {METRICS.demandWeek} —
+            это по <b style={{ color: T.text }}>{fmt(perHead1, 1)} ч</b> на человека, уже сверх нормы 40 ч.
+            Остальное не выполняется: охват <b style={{ color: T.red }}>{METRICS.coverage}%</b>.
+          </p>
+        </motion.div>
+
+        {/* стрелка */}
+        <div className="flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7 }} whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }} transition={{ delay: 0.3, type: "spring", stiffness: 240, damping: 18 }}
+            className="flex items-center gap-2 rounded-full px-4 py-2.5"
+            style={{ background: `linear-gradient(135deg, ${T.teal}, ${T.blue})`, boxShadow: `0 16px 34px -16px ${T.glowA}` }}
+          >
+            <UserPlus size={16} color="#fff" />
+            <span className="text-[15px] font-semibold text-white">+{METRICS.gap} специалиста</span>
+          </motion.div>
+        </div>
+
+        {/* ПОСЛЕ */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }} transition={{ duration: 0.55, ease: EASE, delay: 0.1 }}
+          className="rounded-2xl p-5"
+          style={{ background: `${T.teal}0d`, border: `1.5px solid ${T.teal}55`, boxShadow: T.shadow }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="grid h-9 w-9 place-items-center rounded-xl" style={{ background: `${T.teal}1f`, color: T.teal }}>
+              <ShieldCheck size={17} />
+            </div>
+            <div>
+              <div className="text-[16px] font-semibold" style={{ color: T.text }}>
+                После найма · {METRICS.requiredStaff} специалиста
+              </div>
+              <div className="text-[13px]" style={{ color: T.muted }}>ресурс {cap2} ч в неделю</div>
+            </div>
+          </div>
+          <div className="mt-4 flex items-end gap-2">
+            <span className="text-[42px] font-semibold leading-none" style={{ color: T.teal }}>{loadAfter}%</span>
+            <span className="pb-1.5 text-[13px]" style={{ color: T.muted }}>загрузка</span>
+          </div>
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
+            <motion.div className="h-full rounded-full" style={{ background: T.teal }}
+                        initial={{ width: 0 }} whileInView={{ width: `${loadAfter}%` }} viewport={{ once: true }}
+                        transition={{ duration: 1, ease: EASE, delay: 0.2 }} />
+          </div>
+          <p className="mt-3 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>
+            Четверо закрывают <b style={{ color: T.text }}>все {METRICS.demandWeek} ч</b> —
+            по <b style={{ color: T.text }}>{fmt(perHead2, 1)} ч</b> на человека, с резервом
+            на отпуска и больничные. Охват <b style={{ color: T.teal }}>100%</b>,
+            открытых рисков не остаётся.
+          </p>
+        </motion.div>
+      </div>
+
+      {/* построчное сравнение */}
+      <div className="mt-4 overflow-hidden rounded-2xl" style={{ border: `1px solid ${T.border}`, background: T.panel }}>
+        {rows.map((r, i) => (
+          <motion.div
+            key={r.l}
+            initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ delay: i * 0.05, duration: 0.4 }}
+            className="grid items-center gap-3 px-4 py-3 sm:grid-cols-[1.4fr_1fr_1fr]"
+            style={{ borderTop: i ? `1px solid ${T.border}` : "none" }}
+          >
+            <div>
+              <div className="text-[14px] font-medium" style={{ color: T.text }}>{r.l}</div>
+              <div className="text-[12px]" style={{ color: T.faint }}>{r.hint}</div>
+            </div>
+            <div className="text-[16px] font-semibold" style={{ color: T.red }}>{r.a}</div>
+            <div className="flex items-center gap-2">
+              <ArrowRight size={14} color={T.faint} />
+              <span className="text-[16px] font-semibold" style={{ color: T.teal }}>{r.b}</span>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* роли */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {ROLES.map((r, i) => (
+          <motion.div
+            key={r.n}
+            initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ delay: i * 0.07, duration: 0.45, ease: EASE }}
+            whileHover={{ y: -4 }}
+            className="rounded-2xl p-4"
+            style={{
+              background: T.panel,
+              border: `1px solid ${r.now ? T.border : `${T.teal}66`}`,
+              boxShadow: T.shadow,
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="grid h-8 w-8 place-items-center rounded-lg"
+                   style={{ background: r.now ? `${T.blue}1a` : `${T.teal}1a`, color: r.now ? T.blue : T.teal }}>
+                <span className="text-[13px] font-semibold">{r.n}</span>
+              </div>
+              <span className="rounded-md px-2 py-0.5 text-[11px] font-semibold"
+                    style={{ background: r.now ? T.grid : `${T.teal}1a`, color: r.now ? T.muted : T.teal }}>
+                {r.now ? "есть" : "нужен"}
+              </span>
+            </div>
+            <div className="mt-2.5 text-[14px] font-semibold leading-tight" style={{ color: T.text }}>{r.title}</div>
+            <div className="mt-1 text-[12.5px] leading-snug" style={{ color: T.faint }}>{r.duties}</div>
+            <div className="mt-3 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: T.grid }}>
+                <motion.div className="h-full rounded-full" style={{ background: r.now ? T.blue : T.teal }}
+                            initial={{ width: 0 }} whileInView={{ width: `${(r.hours / HOURS_PER_STAFF) * 100}%` }}
+                            viewport={{ once: true }} transition={{ delay: 0.2 + i * 0.07, duration: 0.8, ease: EASE }} />
+              </div>
+              <span className="font-mono text-[12px] font-semibold" style={{ color: T.text }}>
+                {fmt(r.hours, 1)} ч
+              </span>
             </div>
           </motion.div>
         ))}
@@ -1417,7 +1613,7 @@ function LogisticsMap({ T }) {
    ровно под подъезжающую машину.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const GATE = { w: 1040, h: 300 };
+const GATE = { w: 1040, h: 342 };
 const ROAD_Y = 210;
 const CYCLE = 11000;                      // длительность полного проезда, мс
 
@@ -1520,6 +1716,31 @@ function SprayArch({ T, ps }) {
   );
 }
 
+/* Персонал: проход через санпропускник (люди идут своей дорожкой) */
+const WALK_P = [0, 0.30, 0.42, 0.60, 1];
+const WALK_X = [-50, 552, 578, 640, 1140];
+const WALK_Y = 268;
+
+function Walker({ T, p, shade }) {
+  const x = useTransform(p, WALK_P, WALK_X);
+  const step = useTransform(p, (v) => Math.abs(Math.sin(v * 60)) * -2.2);
+  const suit = useTransform(p, [0.30, 0.46], [T.faint, T.violet], { clamp: true });
+  const ok = useTransform(p, [0.44, 0.50, 0.94, 1], [0, 1, 1, 0]);
+  return (
+    <motion.g style={{ x }}>
+      <motion.g style={{ y: step }}>
+        <ellipse cx={0} cy={16} rx={11} ry={3} fill={T.text} opacity={T.key === "dark" ? 0.28 : 0.10} />
+        <motion.circle cx={0} cy={-16} r={6.5} style={{ fill: suit }} />
+        <motion.path d="M -8 14 L -7 -4 Q 0 -9 7 -4 L 8 14 Z" style={{ fill: suit }} opacity={0.92} />
+        <motion.g style={{ opacity: ok }}>
+          <circle cx={12} cy={-24} r={8} fill={T.teal} />
+          <path d="M 8 -24 L 11 -21 L 16 -28" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        </motion.g>
+      </motion.g>
+    </motion.g>
+  );
+}
+
 function Checkpoint({ T, ps }) {
   // шлагбаум поднимается под ту машину, которая подъехала
   const boom = useTransform(ps, (vals) => -74 * Math.max(...vals.map((v) => ramp(v, 0.54, 0.60, 0.80, 0.86))));
@@ -1547,8 +1768,8 @@ function Checkpoint({ T, ps }) {
         <rect x={404} y={80} width={112} height={42} rx={9} fill={T.surface} stroke={T.teal} strokeWidth={1.4} />
         <circle cx={424} cy={101} r={10} fill={T.teal} opacity={0.18} />
         <path d="M 419 101 L 422 105 L 429 97" fill="none" stroke={T.teal} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        <text x={442} y={97} fontSize="10" fontWeight="600" fill={T.text}>допуск оформлен</text>
-        <text x={442} y={111} fontSize="9" fill={T.faint}>документы проверены</text>
+        <text x={442} y={97} fontSize="11.5" fontWeight="600" fill={T.text}>допуск оформлен</text>
+        <text x={442} y={111} fontSize="10.5" fill={T.faint}>документы проверены</text>
       </motion.g>
     </g>
   );
@@ -1558,6 +1779,7 @@ function ExternalFlowScene({ T }) {
   const time = useTime();
   const p1 = useTransform(time, (t) => (t % CYCLE) / CYCLE);
   const p2 = useTransform(time, (t) => ((t + CYCLE * 0.5) % CYCLE) / CYCLE);
+  const pw = useTransform(time, (t) => ((t + CYCLE * 0.78) % CYCLE) / CYCLE);
 
   const zones = [
     { x: 130, label: "ВНЕШНЯЯ ЗОНА",   sub: "подъезд транспорта",     tone: T.faint },
@@ -1596,9 +1818,16 @@ function ExternalFlowScene({ T }) {
           <rect x={st.x - 48} y={110} width={96} height={72} rx={9} fill={T.surface} stroke={T.teal} strokeWidth={1.2} />
           <rect x={st.x - 48} y={110} width={96} height={8} rx={4} fill={T.teal} opacity={0.5} />
           <rect x={st.x - 24} y={148} width={48} height={34} rx={3} fill={T.teal} opacity={0.18} />
-          <text x={st.x} y={200} textAnchor="middle" fontSize="10.5" fontWeight="600" fill={T.text}>{st.name}</text>
+          <text x={st.x} y={200} textAnchor="middle" fontSize="12" fontWeight="600" fill={T.text}>{st.name}</text>
         </g>
       ))}
+
+      {/* пешеходная дорожка персонала */}
+      <rect x={0} y={WALK_Y - 16} width={GATE.w} height={40} fill={T.key === "dark" ? "#141b28" : "#e8ecf3"} />
+      <rect x={556} y={WALK_Y - 16} width={38} height={40} fill={T.violet} opacity={0.16} />
+      <text x={430} y={WALK_Y + 36} textAnchor="middle" fontSize="12" fill={T.violet} fontWeight="600">
+        проход персонала
+      </text>
 
       <SprayArch T={T} ps={[p1, p2]} />
       <Checkpoint T={T} ps={[p1, p2]} />
@@ -1608,18 +1837,24 @@ function ExternalFlowScene({ T }) {
         <Kamaz T={T} p={p2} />
       </g>
 
+      <g style={{ transform: `translateY(${WALK_Y}px)` }}>
+        <Walker T={T} p={p1} />
+        <Walker T={T} p={pw} />
+        <Walker T={T} p={p2} />
+      </g>
+
       {/* подписи зон */}
       {zones.map((z) => (
         <g key={z.label}>
-          <text x={z.x} y={26} textAnchor="middle" fontSize="10.5" fontWeight="700" letterSpacing="1.6" fill={z.tone}>
+          <text x={z.x} y={26} textAnchor="middle" fontSize="12" fontWeight="700" letterSpacing="1.6" fill={z.tone}>
             {z.label}
           </text>
-          <text x={z.x} y={42} textAnchor="middle" fontSize="10" fill={T.faint}>{z.sub}</text>
+          <text x={z.x} y={42} textAnchor="middle" fontSize="11.5" fill={T.faint}>{z.sub}</text>
         </g>
       ))}
 
-      <text x={GATE.w / 2} y={GATE.h - 6} textAnchor="middle" fontSize="10.5" fill={T.faint}>
-        каждый заезд — обработка, проверка документов и входной контроль груза
+      <text x={GATE.w / 2} y={GATE.h - 8} textAnchor="middle" fontSize="13" fill={T.faint}>
+        транспорт и персонал заходят на территорию только через обработку и входной контроль
       </text>
     </svg>
   );
@@ -1671,11 +1906,11 @@ function ExternalFlowVideo({ T }) {
                      style={{ background: `${tone}1a`, color: tone }}>
                   <Icon size={14} />
                 </div>
-                <span className="font-mono text-[10px]" style={{ color: T.faint }}>{sc.t}</span>
-                <span className="ml-auto font-mono text-[11px] font-semibold" style={{ color: tone }}>{sc.cov}</span>
+                <span className="font-mono text-[11.5px]" style={{ color: T.faint }}>{sc.t}</span>
+                <span className="ml-auto font-mono text-[12.5px] font-semibold" style={{ color: tone }}>{sc.cov}</span>
               </div>
-              <div className="mt-2 text-[12.5px] font-semibold leading-tight" style={{ color: T.text }}>{sc.title}</div>
-              <div className="mt-0.5 text-[11px] leading-snug" style={{ color: T.faint }}>{sc.d}</div>
+              <div className="mt-2 text-[14px] font-semibold leading-tight" style={{ color: T.text }}>{sc.title}</div>
+              <div className="mt-0.5 text-[12.5px] leading-snug" style={{ color: T.faint }}>{sc.d}</div>
             </motion.div>
           );
         })}
@@ -1683,7 +1918,7 @@ function ExternalFlowVideo({ T }) {
 
       {hasVideo && (
         <div className="mt-4">
-          <div className="mb-2 flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em]"
+          <div className="mb-2 flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.14em]"
                style={{ color: T.faint }}>
             <Truck size={12} /> видеоверсия ролика
           </div>
@@ -1788,22 +2023,22 @@ function ChartPanel({ T, period, open }) {
         categories: P.categories,
         lineColor: T.border,
         tickColor: "transparent",
-        labels: { style: { color: T.faint, fontSize: "11px" } },
+        labels: { style: { color: T.faint, fontSize: "12.5px" } },
         crosshair: { color: T.border, width: 1, dashStyle: "Dash" },
       },
       yAxis: {
-        title: { text: P.unit, style: { color: T.faint, fontSize: "10px" } },
+        title: { text: P.unit, style: { color: T.faint, fontSize: "13px" } },
         gridLineColor: T.grid,
-        labels: { style: { color: T.faint, fontSize: "11px" } },
+        labels: { style: { color: T.faint, fontSize: "12.5px" } },
       },
       legend: {
-        itemStyle: { color: T.muted, fontWeight: "500", fontSize: "11.5px" },
+        itemStyle: { color: T.muted, fontWeight: "500", fontSize: "13px" },
         itemHoverStyle: { color: T.text },
         symbolRadius: 3, align: "left", margin: 18,
       },
       tooltip: {
         shared: true, backgroundColor: T.solid, borderColor: T.borderHi, borderRadius: 12,
-        shadow: false, style: { color: T.text, fontSize: "12px" }, valueSuffix: " ч",
+        shadow: false, style: { color: T.text, fontSize: "13.5px" }, valueSuffix: " ч",
       },
       plotOptions: {
         series: { animation: { duration: 800 }, states: { hover: { lineWidthPlus: 1 }, inactive: { opacity: 0.35 } } },
@@ -1824,9 +2059,9 @@ function CaseModal({ T, onClose }) {
   const loadAfter = Math.round((METRICS.demandWeek / (METRICS.requiredStaff * HOURS_PER_STAFF)) * 100);
   const args = [
     { icon: Layers, color: T.violet, title: "Объём не соответствует ресурсу",
-      text: `${TASKS.length} направлений требуют ${METRICS.demandWeek} нормо-часов в неделю. Физическая ёмкость одного специалиста — ${METRICS.capacityWeek} часов. Дефицит ${METRICS.deficitHours} часов еженедельно.` },
+      text: `${TASKS.length} направлений требуют ${METRICS.demandWeek} нормо-часов в неделю. Физическая ёмкость ${STAFF} специалистов — ${METRICS.capacityWeek} часов. Дефицит ${METRICS.deficitHours} часов еженедельно.` },
     { icon: ShieldAlert, color: T.red, title: `Внешний контур закрыт на ${METRICS.extCoverage}%`,
-      text: `Единственный специалист закрывает лишь ${METRICS.extCoverage}% внешнего контура — границы, на которой риск должен останавливаться до входа на территорию. Санобработка транспорта под шрот и жмых не выполняется вовсе.` },
+      text: `Двое закрывают лишь ${METRICS.extCoverage}% внешнего контура — границы, на которой риск должен останавливаться до входа на территорию. Санобработка транспорта под шрот и жмых не выполняется вовсе.` },
     { icon: Route, color: T.cyan, title: `${TRIPS_TOTAL} перемещений в сутки внутри контура`,
       text: `Склад, инкубатор, АТЦ и бройлерные площадки связаны ${ROUTES.length} постоянными маршрутами. Каждый рейс — пересечение зон, которое должно сопровождаться контролем. Двое из офиса физически не успевают.` },
     { icon: UserPlus, color: T.teal, title: `Требуется +${METRICS.gap} штатные единицы`,
@@ -1853,23 +2088,23 @@ function CaseModal({ T, onClose }) {
           <X size={15} />
         </button>
 
-        <div className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
+        <div className="flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
           <PulseDot color={T.red} size={7} /> обоснование расширения штата
         </div>
-        <h2 className="mt-2.5 text-[24px] font-semibold leading-tight" style={{ color: T.text }}>
+        <h2 className="mt-2.5 text-[25px] font-semibold leading-tight" style={{ color: T.text }}>
           Аргументация для руководства
         </h2>
 
         <div className="mt-5 rounded-2xl p-5"
              style={{ background: `linear-gradient(135deg, ${T.glowC}, ${T.glowB})`, border: `1px solid ${T.red}44` }}>
-          <p className="text-[15px] leading-relaxed" style={{ color: T.text }}>
-            Действующий <b>штат из {STAFF} специалиста</b> закрывает только{" "}
+          <p className="text-[16px] leading-relaxed" style={{ color: T.text }}>
+            Действующий <b>штат из {STAFF} специалистов</b> закрывает только{" "}
             <b style={{ color: T.red }}>{METRICS.extCoverage}%</b> обязательного внешнего контура.
             Требуется расширение штата минимум на{" "}
             <b style={{ color: T.teal }}>{METRICS.gap} единицы</b> для исключения сбоев.
           </p>
           <div className="mt-4">
-            <div className="mb-1.5 flex justify-between font-mono text-[10.5px]" style={{ color: T.muted }}>
+            <div className="mb-1.5 flex justify-between font-mono text-[12px]" style={{ color: T.muted }}>
               <span>покрытие внешнего контура</span>
               <span>{METRICS.extCoverage}% из 100%</span>
             </div>
@@ -1896,10 +2131,10 @@ function CaseModal({ T, onClose }) {
                   <Icon size={17} />
                 </div>
                 <div>
-                  <div className="text-[13.5px] font-semibold" style={{ color: T.text }}>
+                  <div className="text-[15px] font-semibold" style={{ color: T.text }}>
                     {String(i + 1).padStart(2, "0")} · {a.title}
                   </div>
-                  <div className="mt-1 text-[12.5px] leading-relaxed" style={{ color: T.muted }}>{a.text}</div>
+                  <div className="mt-1 text-[14px] leading-relaxed" style={{ color: T.muted }}>{a.text}</div>
                 </div>
               </motion.div>
             );
@@ -1908,11 +2143,11 @@ function CaseModal({ T, onClose }) {
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
-                         className="flex items-center gap-2 rounded-xl px-5 py-3 text-[13px] font-semibold text-white"
+                         className="flex items-center gap-2 rounded-xl px-5 py-3 text-[14.5px] font-semibold text-white"
                          style={{ background: `linear-gradient(135deg, ${T.teal}, ${T.blue})`, boxShadow: `0 18px 36px -16px ${T.glowA}` }}>
             <Check size={15} /> Согласовать +{METRICS.gap} ставки
           </motion.button>
-          <button onClick={onClose} className="rounded-xl px-5 py-3 text-[13px] font-medium"
+          <button onClick={onClose} className="rounded-xl px-5 py-3 text-[14.5px] font-medium"
                   style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
             Вернуться к дашборду
           </button>
@@ -1945,14 +2180,14 @@ export default function BiosecurityExecutiveDashboard() {
   const loadAfter = Math.round((METRICS.demandWeek / (METRICS.requiredStaff * HOURS_PER_STAFF)) * 100);
 
   const stats = [
-    { label: "Загрузка специалиста", value: METRICS.load, suffix: "%", color: T.red, progress: 100, icon: Gauge,
-      note: `при норме 100% — переработка ${METRICS.load - 100} п.п.` },
+    { label: "Загрузка службы", value: METRICS.load, suffix: "%", color: T.red, progress: 100, icon: Gauge,
+      note: `${STAFF} специалиста · переработка ${METRICS.load - 100} п.п. к норме` },
     { label: "Покрытие внешнего контура", value: METRICS.extCoverage, suffix: "%", color: T.amber, progress: METRICS.extCoverage, icon: ShieldCheck,
       note: `${EXTERNAL.length} направлений на границе территории` },
     { label: `Объём задач · ${P.label.toLowerCase()}`, value: demand, suffix: "ч", color: T.violet, progress: 100, icon: Activity,
       note: `ёмкость службы — ${capacity} ч` },
     { label: "Дефицит штата", value: METRICS.gap, prefix: "+", suffix: "ед.", color: T.teal, progress: (METRICS.gap / METRICS.requiredStaff) * 100, icon: UserPlus,
-      note: `требуется ${METRICS.requiredStaff} специалиста вместо ${STAFF}; охват вырастет до 100%` },
+      note: `нужно ${METRICS.requiredStaff} вместо ${STAFF}; охват вырастет до 100%` },
   ];
 
   return (
@@ -1975,7 +2210,7 @@ export default function BiosecurityExecutiveDashboard() {
               eyebrow="Ядро модели"
               title="Два контура защиты — нажмите, чтобы раскрыть состав"
               right={
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[11.5px]"
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
                   <ArrowRight size={13} color={T.violet} />
                   {open ? `открыт: ${CONTOURS[open].title.toLowerCase()}` : "оба контура свёрнуты"}
@@ -2000,8 +2235,27 @@ export default function BiosecurityExecutiveDashboard() {
         <div className="mt-5">
           <Panel T={T}>
             <SectionHead T={T} eyebrow="Куда всё это приходит"
-                         title="Весь объём обоих контуров садится на одного специалиста" />
+                         title={`Весь объём обоих контуров садится на ${STAFF} специалистов`} />
             <WorkloadStage T={T} />
+          </Panel>
+        </div>
+
+        {/* ── СРАВНЕНИЕ ШТАТА ─────────────────────────────────────────── */}
+        <div className="mt-5">
+          <Panel T={T}>
+            <SectionHead
+              T={T}
+              eyebrow="Расчёт по найму"
+              title={`Сейчас ${STAFF} специалиста · требуется ${METRICS.requiredStaff}`}
+              right={
+                <div className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-[13px]"
+                     style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
+                  <Clock size={14} color={T.violet} />
+                  норма {HOURS_PER_STAFF} ч в неделю на человека
+                </div>
+              }
+            />
+            <StaffingComparison T={T} />
           </Panel>
         </div>
 
@@ -2013,7 +2267,7 @@ export default function BiosecurityExecutiveDashboard() {
               eyebrow="Внешний контур · видеоматериал"
               title="Входной контроль внешнего периметра: от дороги до складов"
               right={
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[11.5px]"
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
                   <ArrowRight size={13} color={T.violet} />
                   дезбарьер · санпропускник · склады
@@ -2043,8 +2297,8 @@ export default function BiosecurityExecutiveDashboard() {
                       <div key={x.l} className="flex items-center gap-2 rounded-xl px-3 py-2"
                            style={{ background: T.panel, border: `1px solid ${T.border}` }}>
                         <Icon size={13} color={x.c} />
-                        <span className="text-[15px] font-semibold" style={{ color: x.c }}>{x.v}</span>
-                        <span className="text-[11px]" style={{ color: T.faint }}>{x.l}</span>
+                        <span className="text-[16px] font-semibold" style={{ color: x.c }}>{x.v}</span>
+                        <span className="text-[12.5px]" style={{ color: T.faint }}>{x.l}</span>
                       </div>
                     );
                   })}
@@ -2069,9 +2323,9 @@ export default function BiosecurityExecutiveDashboard() {
                               style={{ background: T.panel, border: `1px solid ${T.border}` }}>
                     <div className="flex items-center gap-2">
                       <Icon size={15} color={x.c} />
-                      <span className="text-[12.5px] font-semibold" style={{ color: T.text }}>{x.t}</span>
+                      <span className="text-[14px] font-semibold" style={{ color: T.text }}>{x.t}</span>
                     </div>
-                    <p className="mt-1.5 text-[12px] leading-relaxed" style={{ color: T.muted }}>{x.d}</p>
+                    <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>{x.d}</p>
                   </motion.div>
                 );
               })}
@@ -2087,7 +2341,7 @@ export default function BiosecurityExecutiveDashboard() {
               eyebrow="Аналитика нагрузки"
               title={`Входящий объём против физической ёмкости · ${P.label.toLowerCase()}`}
               right={
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[11.5px]"
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
                   <ArrowRight size={13} color={T.violet} />
                   {open === "external"
@@ -2110,15 +2364,15 @@ export default function BiosecurityExecutiveDashboard() {
                             viewport={{ once: true }} transition={{ delay: i * 0.07, duration: 0.5 }}
                             className="flex items-center justify-between rounded-xl px-4 py-3"
                             style={{ background: T.panel, border: `1px solid ${T.border}` }}>
-                  <span className="text-[12px]" style={{ color: T.muted }}>{x.l}</span>
-                  <span className="text-[17px] font-semibold" style={{ color: x.c }}>{x.v}</span>
+                  <span className="text-[13.5px]" style={{ color: T.muted }}>{x.l}</span>
+                  <span className="text-[18px] font-semibold" style={{ color: x.c }}>{x.v}</span>
                 </motion.div>
               ))}
             </div>
           </Panel>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-[11px]" style={{ color: T.faint }}>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-[12.5px]" style={{ color: T.faint }}>
           <span>
             Расчёт по {TASKS.length} направлениям · норма {HOURS_PER_STAFF} ч/нед на специалиста ·
             все показатели вычисляются из единой таблицы задач
