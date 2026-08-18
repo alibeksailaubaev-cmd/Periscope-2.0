@@ -10,7 +10,7 @@ __pycache__/
 .venv-test/
 venv/
 models/
-static/captures/
+static/captures/*
 events_log.json
 events.csv
 !static/captures/.gitkeep
