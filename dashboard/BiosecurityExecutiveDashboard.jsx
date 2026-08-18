@@ -1410,6 +1410,116 @@ function LogisticsMap({ T }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   10b. РОЛИК «ВХОДНОЙ КОНТРОЛЬ ВНЕШНЕГО ПЕРИМЕТРА»
+   Файл кладётся рядом со страницей: assets/external-flow.mp4
+   Если файла нет (или страница открыта там, где внешние медиа запрещены) —
+   показывается раскадровка сцен вместо плеера.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const VIDEO_SRC = "assets/external-flow.mp4";
+
+const STORYBOARD = [
+  { t: "00:00", icon: Truck,       title: "Подъезд транспорта",        d: "Колонна с сырьём, ТМЦ и препаратами идёт к периметру" },
+  { t: "00:06", icon: FileText,    title: "Заявка и допуск",           d: "Документарный барьер: без отметки службы шлагбаум закрыт" },
+  { t: "00:14", icon: Droplets,    title: "Дезбарьер",                 d: "Обработка колёс, ходовой и тента, контроль концентрации" },
+  { t: "00:24", icon: DoorOpen,    title: "Санпропускник людей",       d: "Водитель и экспедитор: смена одежды, обработка, журнал" },
+  { t: "00:32", icon: Package,     title: "Входной контроль ТМЦ",      d: "Тентование, целостность тары, отбор проб — охват 20%", weak: true },
+  { t: "00:42", icon: ShieldCheck, title: "Санобработка под шрот",     d: "Площадка обработки пуста — задача не закрыта, 0%", weak: true },
+  { t: "00:50", icon: Warehouse,   title: "Допуск на склады",          d: "Проверенный транспорт заезжает к докам складов и ветаптеки" },
+];
+
+function ExternalFlowVideo({ T }) {
+  const [ok, setOk] = useState(true);
+
+  return (
+    <div>
+      <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr]">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: EASE }}
+          className="relative overflow-hidden rounded-2xl"
+          style={{
+            background: T.ground,
+            border: `1px solid ${T.border}`,
+            boxShadow: T.shadow,
+            aspectRatio: "16 / 9",
+          }}
+        >
+          {ok ? (
+            <video
+              src={VIDEO_SRC}
+              autoPlay muted loop playsInline controls
+              onError={() => setOk(false)}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
+              <motion.div
+                className="grid h-14 w-14 place-items-center rounded-2xl"
+                style={{ background: `${T.violet}1f`, color: T.violet }}
+                animate={{ scale: [1, 1.06, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Truck size={26} />
+              </motion.div>
+              <div className="text-[14px] font-semibold" style={{ color: T.text }}>
+                Ролик подключается файлом
+              </div>
+              <div className="max-w-[380px] text-[12.5px] leading-relaxed" style={{ color: T.muted }}>
+                Положите видео рядом со страницей по пути{" "}
+                <code style={{
+                  fontFamily: "ui-monospace, monospace", fontSize: "11.5px",
+                  background: T.grid, borderRadius: 5, padding: "1px 6px", color: T.text,
+                }}>
+                  {VIDEO_SRC}
+                </code>{" "}
+                — плеер включится автоматически. Справа — раскадровка тех же сцен.
+              </div>
+            </div>
+          )}
+        </motion.div>
+
+        <div className="flex flex-col gap-2">
+          {STORYBOARD.map((sc, i) => {
+            const Icon = sc.icon;
+            const tone = sc.weak ? T.red : T.violet;
+            return (
+              <motion.div
+                key={sc.t}
+                initial={{ opacity: 0, x: 16 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05, duration: 0.42, ease: EASE }}
+                whileHover={{ x: -3 }}
+                className="flex items-start gap-3 rounded-xl px-3.5 py-2.5"
+                style={{
+                  background: sc.weak ? `${T.red}0d` : T.panel,
+                  border: `1px solid ${sc.weak ? `${T.red}55` : T.border}`,
+                }}
+              >
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg"
+                     style={{ background: `${tone}1a`, color: tone }}>
+                  <Icon size={14} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-mono text-[10.5px]" style={{ color: T.faint }}>{sc.t}</span>
+                    <span className="text-[12.5px] font-semibold" style={{ color: T.text }}>{sc.title}</span>
+                  </div>
+                  <div className="text-[11.5px] leading-snug" style={{ color: T.faint }}>{sc.d}</div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    11. АНАЛИТИКА HIGHCHARTS
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -1709,6 +1819,25 @@ export default function BiosecurityExecutiveDashboard() {
             <SectionHead T={T} eyebrow="Куда всё это приходит"
                          title="Весь объём обоих контуров садится на одного специалиста" />
             <WorkloadStage T={T} />
+          </Panel>
+        </div>
+
+        {/* ── РОЛИК ВНЕШНЕГО ПОТОКА ───────────────────────────────────── */}
+        <div className="mt-5">
+          <Panel T={T}>
+            <SectionHead
+              T={T}
+              eyebrow="Внешний контур · видеоматериал"
+              title="Ролик «Входной контроль внешнего периметра»"
+              right={
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[11.5px]"
+                     style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
+                  <ArrowRight size={13} color={T.violet} />
+                  7 сцен · 45–60 секунд
+                </div>
+              }
+            />
+            <ExternalFlowVideo T={T} />
           </Panel>
         </div>
 

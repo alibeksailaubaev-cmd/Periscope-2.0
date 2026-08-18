@@ -8,6 +8,7 @@
 - `BiosecurityExecutiveDashboard.jsx` — компонент в одном файле (React + Framer Motion + Highcharts + lucide-react + Tailwind). Готов к вставке в Claude Artifact или в любой React/Vite/Next проект.
 - `report.html` — аналитическая записка для руководства: расчёт нагрузки, узкие места и ТЗ на два ролика.
 - `dashboard.html` — автономная сборка (все библиотеки и фон внутри, без CDN и внешних запросов). Открывается двойным кликом.
+- `assets/external-flow.mp4` — **не в репозитории**: скачайте ролик из карточки Higgsfield и положите сюда, дашборд подхватит его автоматически (см. `assets/ГДЕ-ВИДЕО.md`).
 - `assets/higgsfield-bg.b64.txt` — светлый премиальный фон, сгенерированный Higgsfield (nano_banana_pro), сжат в JPEG 1.9 КБ и вшит в компонент как data-URI.
 
 ## Зависимости для проекта
