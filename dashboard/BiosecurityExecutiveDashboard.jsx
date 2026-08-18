@@ -23,36 +23,37 @@ const HF_BG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABYPERMRDh
 const THEMES = {
   light: {
     key: "light",
-    bg: "#f7f9fd",
-    text: "#0b1220",
-    muted: "#44536c",
-    faint: "#6c7c94",
-    panel: "rgba(255,255,255,0.80)",
-    panelHi: "rgba(255,255,255,0.95)",
-    solid: "rgba(255,255,255,0.97)",
-    border: "rgba(12,20,38,0.08)",
-    borderHi: "rgba(12,20,38,0.17)",
-    grid: "rgba(12,20,38,0.06)",
-    blue: "#2f6bf0",
-    violet: "#7c46e8",
-    cyan: "#0e9fc0",
-    red: "#e0384c",
-    amber: "#c9821a",
-    teal: "#0f9b8a",
-    shadow: "0 22px 50px -30px rgba(20,35,80,0.35)",
-    glowA: "rgba(47,107,240,0.22)",
-    glowB: "rgba(124,70,232,0.20)",
-    glowC: "rgba(224,56,76,0.18)",
-    bgImageOpacity: 0.95,
-    bgWash: "rgba(252,253,255,0.44)",
+    /* фирменная палитра: песочный фон, бирюзовый акцент, графитовый текст */
+    bg: "#e7dec4",
+    text: "#221f18",
+    muted: "#575146",
+    faint: "#837c6b",
+    panel: "rgba(252,250,243,0.92)",
+    panelHi: "#fdfbf5",
+    solid: "#fdfbf5",
+    border: "rgba(60,52,30,0.16)",
+    borderHi: "rgba(60,52,30,0.30)",
+    grid: "rgba(60,52,30,0.10)",
+    blue: "#1f6f87",
+    violet: "#7c4f86",
+    cyan: "#00a3a3",
+    red: "#b23a2c",
+    amber: "#b0741a",
+    teal: "#00908f",
+    shadow: "0 1px 2px rgba(60,50,25,0.06), 0 16px 34px -22px rgba(60,50,25,0.45)",
+    glowA: "rgba(0,163,163,0.22)",
+    glowB: "rgba(124,79,134,0.18)",
+    glowC: "rgba(178,58,44,0.18)",
+    bgImageOpacity: 0.22,
+    bgWash: "rgba(231,222,196,0.88)",
     blobs: [
-      "radial-gradient(closest-side, rgba(120,170,255,0.30), transparent)",
-      "radial-gradient(closest-side, rgba(186,150,255,0.26), transparent)",
-      "radial-gradient(closest-side, rgba(130,235,250,0.22), transparent)",
-      "radial-gradient(closest-side, rgba(255,196,168,0.20), transparent)",
+      "radial-gradient(closest-side, rgba(0,163,163,0.20), transparent)",
+      "radial-gradient(closest-side, rgba(176,116,26,0.16), transparent)",
+      "radial-gradient(closest-side, rgba(0,144,143,0.14), transparent)",
+      "radial-gradient(closest-side, rgba(178,58,44,0.10), transparent)",
     ],
-    surface: "#ffffff",
-    ground: "#eef2f9",
+    surface: "#fdfbf5",
+    ground: "#ddd3b6",
   },
   dark: {
     key: "dark",
@@ -323,6 +324,58 @@ function PremiumBackground({ T }) {
   );
 }
 
+/* Фирменная орнаментальная полоса (только светлая тема, широкие экраны) */
+function BrandRail({ T }) {
+  if (T.key !== "light") return null;
+  const glyphs = [
+    // солнце
+    <g key="sun"><circle cx="14" cy="14" r="5.5" fill="none" stroke="#fff" strokeWidth="2.2" />
+      {Array.from({ length: 8 }).map((_, i) => {
+        const a = (i / 8) * Math.PI * 2;
+        return <line key={i} x1={14 + Math.cos(a) * 8} y1={14 + Math.sin(a) * 8}
+                     x2={14 + Math.cos(a) * 11} y2={14 + Math.sin(a) * 11}
+                     stroke="#fff" strokeWidth="2" strokeLinecap="round" />;
+      })}</g>,
+    // спираль
+    <path key="spiral" d="M14 6 A8 8 0 1 1 6 14 A8 8 0 0 1 20 14 A5 5 0 1 1 11 14"
+          fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />,
+    // тюльпан
+    <path key="tulip" d="M14 23 L14 14 M14 14 Q5 12 7 5 Q14 8 14 14 Q14 8 21 5 Q23 12 14 14"
+          fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />,
+    // ромб
+    <g key="rhomb"><path d="M14 4 L24 14 L14 24 L4 14 Z" fill="none" stroke="#fff" strokeWidth="2.2" />
+      <circle cx="14" cy="14" r="3" fill="#fff" /></g>,
+    // птица
+    <path key="bird" d="M6 18 Q10 10 17 11 L22 7 L20 13 Q22 18 15 20 Z"
+          fill="none" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round" />,
+    // волна
+    <path key="wave" d="M4 14 Q9 6 14 14 Q19 22 24 14"
+          fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />,
+    // капля
+    <path key="drop" d="M14 4 Q22 13 18 19 Q14 24 10 19 Q6 13 14 4 Z"
+          fill="none" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round" />,
+    // круг в круге
+    <g key="ring"><circle cx="14" cy="14" r="9" fill="none" stroke="#fff" strokeWidth="2.2" />
+      <circle cx="14" cy="14" r="3.5" fill="#fff" /></g>,
+  ];
+  return (
+    <div className="pointer-events-none fixed left-0 top-0 z-10 hidden xl:block">
+      {[...glyphs, ...glyphs.slice(0, 6)].map((g, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, x: -14 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15 + i * 0.06, duration: 0.5, ease: EASE }}
+          style={{ width: 42, height: 42, background: T.cyan }}
+          className="grid place-items-center"
+        >
+          <svg viewBox="0 0 28 28" width="21" height="21">{g}</svg>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    5. ПРИМИТИВЫ
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -391,7 +444,7 @@ function Header({ T, period, setPeriod, theme, setTheme }) {
           transition={{ type: "spring", stiffness: 300, damping: 18 }}
           className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl"
           style={{
-            background: `linear-gradient(135deg, ${T.blue}, ${T.violet})`,
+            background: `linear-gradient(135deg, ${T.cyan}, ${T.teal})`,
             boxShadow: `0 14px 32px -10px ${T.glowA}`,
           }}
         >
@@ -399,7 +452,7 @@ function Header({ T, period, setPeriod, theme, setTheme }) {
         </motion.div>
         <div>
           <div className="mb-1 font-mono text-[13px] uppercase tracking-[0.22em]" style={{ color: T.faint }}>
-            Отдел биобезопасности · Executive dashboard
+            Aitas UKPF · Усть-Каменогорская птицефабрика · служба биобезопасности
           </div>
           <h1 className="text-[24px] font-semibold leading-tight tracking-tight sm:text-[30px]" style={{ color: T.text }}>
             Мониторинг биобезопасности и нагрузка персонала
@@ -432,7 +485,7 @@ function Header({ T, period, setPeriod, theme, setTheme }) {
                   layoutId="period-pill"
                   className="absolute inset-0 rounded-lg"
                   style={{
-                    background: `linear-gradient(135deg, ${T.blue}, ${T.violet})`,
+                    background: `linear-gradient(135deg, ${T.cyan}, ${T.teal})`,
                     boxShadow: `0 8px 22px -8px ${T.glowA}`,
                   }}
                   transition={{ type: "spring", stiffness: 420, damping: 34 }}
@@ -1514,7 +1567,7 @@ function StaffingComparison({ T }) {
             initial={{ opacity: 0, scale: 0.7 }} whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }} transition={{ delay: 0.3, type: "spring", stiffness: 240, damping: 18 }}
             className="flex items-center gap-2 rounded-full px-4 py-2.5"
-            style={{ background: `linear-gradient(135deg, ${T.teal}, ${T.blue})`, boxShadow: `0 16px 34px -16px ${T.glowA}` }}
+            style={{ background: `linear-gradient(135deg, ${T.cyan}, ${T.teal})`, boxShadow: `0 16px 34px -16px ${T.glowA}` }}
           >
             <UserPlus size={16} color="#fff" />
             <span className="text-[16px] font-semibold text-white">+{METRICS.gap} специалиста</span>
@@ -2204,6 +2257,7 @@ export default function BiosecurityExecutiveDashboard() {
   return (
     <div className="relative min-h-screen w-full" style={{ color: T.text }}>
       <PremiumBackground T={T} />
+      <BrandRail T={T} />
 
       <div className="relative mx-auto max-w-[1280px] px-4 py-8 sm:px-7 sm:py-10">
         <Header T={T} period={period} setPeriod={setPeriod} theme={theme} setTheme={setTheme} />
