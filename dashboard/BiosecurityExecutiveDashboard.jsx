@@ -194,15 +194,15 @@ const CONTOURS = {
 
 /* Периоды: день = неделя / 5 рабочих дней, месяц = неделя × 4.2 (21 рабочий день) */
 const PERIODS = {
-  day:   { id: "day",   label: "День",   k: 1 / 5, unit: "нормо-часов",
+  day:   { id: "day",   label: "День",   k: 1 / 5, unit: "часов работы",
            categories: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"],
            demand: [2.6, 4.0, 4.4, 3.1, 2.3, 4.2, 4.6, 3.4],
            capacity: [2, 2, 2, 2, 2, 2, 2, 2] },
-  week:  { id: "week",  label: "Неделя", k: 1, unit: "нормо-часов",
+  week:  { id: "week",  label: "Неделя", k: 1, unit: "часов работы",
            categories: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
            demand: [28, 30, 26, 29, 27, 2, 1],
            capacity: [16, 16, 16, 16, 16, 0, 0] },
-  month: { id: "month", label: "Месяц",  k: 4.2, unit: "нормо-часов",
+  month: { id: "month", label: "Месяц",  k: 4.2, unit: "часов работы",
            categories: ["Неделя 1", "Неделя 2", "Неделя 3", "Неделя 4", "Неделя 5"],
            demand: [147, 153, 140, 150, 11],
            capacity: [80, 80, 80, 80, 16] },
@@ -212,25 +212,26 @@ const PERIODS = {
 const SITES = {
   warehouse: { id: "warehouse", name: "Склад",                 sub: "корма, подстилка, ТМЦ", x: 185, y: 285, w: 170, h: 104, icon: Warehouse },
   atc:       { id: "atc",       name: "АТЦ",                   sub: "транспортный цех",  x: 300, y: 470, w: 150, h: 80,  icon: Car },
-  incubator: { id: "incubator", name: "Инкубатор",             sub: "суточный молодняк",     x: 545, y: 135, w: 136, h: 84,  icon: Egg },
+  incubator: { id: "incubator", name: "Инкубатор",             sub: "МиДС, запчасти, ТМЦ",     x: 562, y: 132, w: 186, h: 92,  icon: Egg },
   broiler:   { id: "broiler",   name: "Бройлерные площадки",   sub: "3 корпуса",             x: 825, y: 300, w: 200, h: 240, icon: Bird },
-  office:    { id: "office",    name: "Офис",                  sub: `${STAFF} специалиста — постоянно здесь`, x: 575, y: 458, w: 210, h: 92, icon: Building2 },
+  office:    { id: "office",    name: "Офисные помещения",     sub: "административная зона", x: 560, y: 458, w: 280, h: 92, icon: Building2 },
 };
 
 const ROUTES = [
-  { id: "r1", from: "warehouse", to: "incubator", label: "Склад → Инкубатор",              cargo: "корма и подстилка",        trips: 4, d: "M270,255 Q380,190 477,155", dur: 7.5 },
+  { id: "r1", from: "warehouse", to: "incubator", label: "Склад → Инкубатор",              cargo: "корма и подстилка",        trips: 4, d: "M270,255 Q380,190 466,150", dur: 7.5 },
   { id: "r2", from: "warehouse", to: "atc",       label: "Склад → АТЦ",                    cargo: "запчасти и ТМЦ",           trips: 3, d: "M200,337 Q214,398 280,432", dur: 5.5 },
   { id: "r3", from: "warehouse", to: "broiler",   label: "Склад → Бройлерные площадки",    cargo: "корма, подстилка, инвентарь", trips: 6, d: "M270,305 Q500,345 725,300", dur: 9 },
-  { id: "r4", from: "incubator", to: "broiler",   label: "Инкубатор → Бройлерные площадки", cargo: "суточный молодняк",       trips: 2, d: "M613,168 Q700,188 738,236", dur: 6 },
-  { id: "r5", from: "atc",       to: "incubator", label: "АТЦ → Инкубатор",                cargo: "техника после обслуживания", trips: 2, d: "M330,430 Q382,292 500,180", dur: 8 },
+  { id: "r4", from: "incubator", to: "broiler",   label: "Инкубатор → Бройлерные площадки", cargo: "суточный молодняк",       trips: 2, d: "M658,168 Q712,192 738,236", dur: 6 },
+  { id: "r5", from: "atc",       to: "incubator", label: "АТЦ → Инкубатор",                cargo: "техника после обслуживания", trips: 2, d: "M330,430 Q392,300 494,178", dur: 8 },
   { id: "r6", from: "atc",       to: "broiler",   label: "АТЦ → Бройлерные площадки",      cargo: "техника и инвентарь",      trips: 3, d: "M375,452 Q560,358 722,386", dur: 8.5 },
+  { id: "r7", from: "warehouse", to: "office",    label: "Склад → Офисные помещения",      cargo: "ТМЦ, канцелярия, вода",    trips: 2, d: "M252,335 Q320,415 416,438", dur: 7 },
 ];
 const TRIPS_TOTAL = sum(ROUTES, (r) => r.trips);
 
 /* Точки, где физически нужен специалист, но его нет */
 const MARKERS = [
   { id: "warehouse", x: 262, y: 236 },
-  { id: "incubator", x: 606, y: 96 },
+  { id: "incubator", x: 628, y: 92 },
   { id: "broiler",   x: 908, y: 190 },
   { id: "atc",       x: 366, y: 434 },
 ];
@@ -662,7 +663,7 @@ function InternalScene({ T, active }) {
         </g>
       ))}
       <text x="160" y="140" textAnchor="middle" fontSize="12" fill={T.faint}>
-        {TRIPS_TOTAL} перемещений в сутки между зонами
+        перемещения между зонами внутри контура
       </text>
     </svg>
   );
@@ -1231,7 +1232,7 @@ function SiteBlock({ T, site, accent, isOffice }) {
       <rect x={x} y={y} width={site.w} height={site.h} rx={12}
             fill={T.surface} stroke={isOffice ? T.red : accent} strokeWidth={isOffice ? 2 : 1.3} opacity={0.98} />
       <rect x={x} y={y} width={site.w} height={10} rx={5} fill={isOffice ? T.red : accent} opacity={0.5} />
-      <foreignObject x={x + 10} y={y + 18} width={site.w - (isOffice ? 92 : 20)} height={site.h - 26}>
+      <foreignObject x={x + 10} y={y + 18} width={site.w - (isOffice ? 118 : 20)} height={site.h - 26}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>
           <div style={{
             width: 30, height: 30, borderRadius: 9, flexShrink: 0,
@@ -1325,7 +1326,7 @@ function LogisticsMap({ T }) {
         ))}
 
         {/* два действующих специалиста и две незакрытые единицы */}
-        {[office.x + 22, office.x + 47].map((px, i) => (
+        {[office.x + 42, office.x + 66].map((px, i) => (
           <motion.g key={px} animate={{ y: [0, -2.5, 0] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}>
             <circle cx={px} cy={office.y - 10} r={8} fill={T.red} />
@@ -1333,7 +1334,7 @@ function LogisticsMap({ T }) {
                   fill={T.red} opacity={0.92} />
           </motion.g>
         ))}
-        {[office.x + 74, office.x + 99].map((px, i) => (
+        {[office.x + 92, office.x + 116].map((px, i) => (
           <motion.g key={px} animate={{ opacity: [0.4, 0.85, 0.4] }}
                     transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.4 }}>
             <circle cx={px} cy={office.y - 10} r={8} fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
@@ -1341,7 +1342,7 @@ function LogisticsMap({ T }) {
                   fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
           </motion.g>
         ))}
-        <text x={office.x + 86} y={office.y + 27} textAnchor="middle" fontSize="10"
+        <text x={office.x + 104} y={office.y + 27} textAnchor="middle" fontSize="10"
               fontWeight="700" fill={T.teal}>+{METRICS.gap}</text>
 
         {/* «разрываются»: силуэты уходят к объектам и растворяются */}
@@ -1380,7 +1381,7 @@ function LogisticsMap({ T }) {
 
         {/* подписи маршрутов */}
         <text x="500" y="552" textAnchor="middle" fontSize="12.5" fill={T.faint}>
-          {ROUTES.length} постоянных маршрута · {TRIPS_TOTAL} перемещений в сутки · каждое — пересечение зон
+          каждое перемещение между зонами — точка входного контроля
         </text>
       </svg>
 
@@ -1410,10 +1411,7 @@ function LogisticsMap({ T }) {
               <div className="truncate text-[14px] font-semibold" style={{ color: T.text }}>{r.label}</div>
               <div className="truncate text-[12.5px]" style={{ color: T.faint }}>{r.cargo}</div>
             </div>
-            <div className="text-right">
-              <div className="font-mono text-[14.5px] font-semibold" style={{ color: T.text }}>{r.trips}</div>
-              <div className="font-mono text-[11px]" style={{ color: T.faint }}>рейса/сут</div>
-            </div>
+
           </motion.div>
         ))}
       </div>
@@ -1454,8 +1452,45 @@ function StaffingComparison({ T }) {
     { l: "Направлений с охватом 0%", a: `${METRICS.uncovered}`, b: "0", hint: "полностью открытые риски" },
   ];
 
+  const deficit = Math.round((METRICS.demandWeek - done1) * 10) / 10;
+  const rates = Math.round((deficit / HOURS_PER_STAFF) * 100) / 100;
+
+  const chain = [
+    { n: "01", t: "Объём работы", v: `${fmt(METRICS.demandWeek, 0)} ч/нед`, c: T.violet,
+      d: `${TASKS.length} направлений регламента: ${fmt(METRICS.extDemand, 1)} ч внешний контур + ${fmt(METRICS.intDemand, 1)} ч внутренний` },
+    { n: "02", t: "Ресурс службы", v: `${cap1} ч/нед`, c: T.blue,
+      d: `${STAFF} специалиста × ${HOURS_PER_STAFF} ч — это весь физический фонд рабочего времени` },
+    { n: "03", t: "Часы расходуются полностью", v: `${fmt(done1, 1)} ч`, c: T.amber,
+      d: `по ${fmt(perHead1, 1)} ч на человека — уже с переработкой; дело не в темпе работы, а в объёме` },
+    { n: "04", t: "Но объём закрыт лишь на", v: `${METRICS.coverage}%`, c: T.red,
+      d: `${METRICS.uncovered} направления не выполняются вовсе, ещё ${METRICS.weakSpots - METRICS.uncovered} закрыты меньше чем наполовину` },
+    { n: "05", t: "Дефицит", v: `${fmt(deficit, 1)} ч/нед`, c: T.red,
+      d: `${fmt(METRICS.demandWeek, 0)} − ${fmt(done1, 1)} = ${fmt(deficit, 1)} ч, это ${fmt(rates, 2).replace(".", ",")} ставки` },
+    { n: "06", t: "Требуется штат", v: `${METRICS.requiredStaff} чел.`, c: T.teal,
+      d: `${fmt(METRICS.demandWeek, 0)} ÷ ${HOURS_PER_STAFF} = ${fmt(METRICS.demandWeek / HOURS_PER_STAFF, 1)} → округление вверх даёт ${METRICS.requiredStaff}, то есть +${METRICS.gap} к текущим ${STAFF}` },
+  ];
+
   return (
     <div>
+      <div className="mb-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+        {chain.map((c, i) => (
+          <motion.div
+            key={c.n}
+            initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.42, ease: EASE }}
+            className="rounded-xl p-4"
+            style={{ background: T.panel, border: `1px solid ${T.border}` }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[12px] font-semibold" style={{ color: T.faint }}>{c.n}</span>
+              <span className="text-[19px] font-semibold" style={{ color: c.c }}>{c.v}</span>
+            </div>
+            <div className="mt-1.5 text-[14px] font-semibold" style={{ color: T.text }}>{c.t}</div>
+            <div className="mt-1 text-[12.5px] leading-snug" style={{ color: T.muted }}>{c.d}</div>
+          </motion.div>
+        ))}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[1fr_auto_1fr]">
         {/* СЕЙЧАС */}
         <motion.div
@@ -1483,9 +1518,10 @@ function StaffingComparison({ T }) {
                         transition={{ duration: 1, ease: EASE }} />
           </div>
           <p className="mt-3 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>
-            Двое закрывают <b style={{ color: T.text }}>{fmt(done1, 1)} ч</b> из {METRICS.demandWeek} —
-            это по <b style={{ color: T.text }}>{fmt(perHead1, 1)} ч</b> на человека, уже сверх нормы 40 ч.
-            Остальное не выполняется: охват <b style={{ color: T.red }}>{METRICS.coverage}%</b>.
+            Рабочее время израсходовано полностью — по <b style={{ color: T.text }}>{fmt(perHead1, 1)} ч</b>{" "}
+            на человека, уже с переработкой. Но этих часов хватает только на
+            <b style={{ color: T.red }}> {METRICS.coverage}%</b> регламентного объёма:
+            задачи закрыты по времени, а не по существу.
           </p>
         </motion.div>
 
@@ -2284,51 +2320,10 @@ export default function BiosecurityExecutiveDashboard() {
             <SectionHead
               T={T}
               eyebrow="Внутренний контур · логистика"
-              title="Перемещения между зонами — и два человека, которые должны быть везде"
-              right={
-                <div className="flex flex-wrap gap-2">
-                  {[
-                    { l: "маршрутов", v: ROUTES.length, c: T.cyan, i: Route },
-                    { l: "рейсов в сутки", v: TRIPS_TOTAL, c: T.violet, i: Truck },
-                    { l: "точек контроля", v: 4, c: T.red, i: MapPin },
-                  ].map((x) => {
-                    const Icon = x.i;
-                    return (
-                      <div key={x.l} className="flex items-center gap-2 rounded-xl px-3 py-2"
-                           style={{ background: T.panel, border: `1px solid ${T.border}` }}>
-                        <Icon size={13} color={x.c} />
-                        <span className="text-[16px] font-semibold" style={{ color: x.c }}>{x.v}</span>
-                        <span className="text-[12.5px]" style={{ color: T.faint }}>{x.l}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              }
+              title="Внутренний входной контроль: от склада до БП, инкубатора, АТЦ и офисных помещений"
             />
             <div className="overflow-x-auto">
               <LogisticsMap T={T} />
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {[
-                { t: "Что происходит", d: `${TRIPS_TOTAL} перемещений в сутки между складом, инкубатором, АТЦ и площадками.`, c: T.cyan, i: Truck },
-                { t: "Где должен быть специалист", d: "На каждой точке погрузки и выгрузки: контроль обработки техники, тары и маршрута.", c: T.amber, i: MapPin },
-                { t: "Где он на самом деле", d: `В офисе: согласования, входной поток и отчётность — ${TASKS.filter((t) => ["ext_appr", "ext_entry", "int_rep"].includes(t.id)).reduce((a, t) => a + t.hours, 0)} ч в неделю непрерывной оперативной текучки.`, c: T.red, i: Building2 },
-              ].map((x, i) => {
-                const Icon = x.i;
-                return (
-                  <motion.div key={x.t}
-                              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
-                              viewport={{ once: true }} transition={{ delay: 0.06 * i, duration: 0.45, ease: EASE }}
-                              className="rounded-2xl p-4"
-                              style={{ background: T.panel, border: `1px solid ${T.border}` }}>
-                    <div className="flex items-center gap-2">
-                      <Icon size={15} color={x.c} />
-                      <span className="text-[14px] font-semibold" style={{ color: T.text }}>{x.t}</span>
-                    </div>
-                    <p className="mt-1.5 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>{x.d}</p>
-                  </motion.div>
-                );
-              })}
             </div>
           </Panel>
         </div>
@@ -2339,7 +2334,7 @@ export default function BiosecurityExecutiveDashboard() {
             <SectionHead
               T={T}
               eyebrow="Аналитика нагрузки"
-              title={`Входящий объём против физической ёмкости · ${P.label.toLowerCase()}`}
+              title={`Сколько работы приходит и сколько служба успевает · ${P.label.toLowerCase()}`}
               right={
                 <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
@@ -2352,12 +2347,43 @@ export default function BiosecurityExecutiveDashboard() {
                 </div>
               }
             />
+            <div className="mb-4 grid gap-2.5 sm:grid-cols-3">
+              {[
+                { c: T.violet, dash: false, t: "Фиолетовая линия", d: "сколько работы приходит по регламенту — все проверки, обходы, документы, которые положено выполнить" },
+                { c: T.teal, dash: true, t: "Зелёный пунктир", d: `сколько физически могут сделать ${STAFF} специалиста — 8 часов в день на человека, больше в сутках нет` },
+                { c: T.red, dash: false, t: "Разрыв между ними", d: "работа, до которой никто не дошёл: непроверенные партии, пропущенные обходы, несделанные аудиты" },
+              ].map((x, i) => (
+                <motion.div
+                  key={x.t}
+                  initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.4 }}
+                  className="rounded-xl px-3.5 py-3"
+                  style={{ background: T.panel, border: `1px solid ${T.border}` }}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <svg width="26" height="10" style={{ flexShrink: 0 }}>
+                      <line x1="1" y1="5" x2="25" y2="5" stroke={x.c} strokeWidth="3"
+                            strokeLinecap="round" strokeDasharray={x.dash ? "5 4" : undefined} />
+                    </svg>
+                    <span className="text-[14px] font-semibold" style={{ color: T.text }}>{x.t}</span>
+                  </div>
+                  <div className="mt-1.5 text-[12.5px] leading-snug" style={{ color: T.muted }}>{x.d}</div>
+                </motion.div>
+              ))}
+            </div>
+
             <ChartPanel T={T} period={period} open={open} />
+
+            <p className="mt-3 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>
+              Всё, что на графике выше зелёного пунктира, — <b style={{ color: T.text }}>не выполняется</b>.
+              Двое расходуют свой ресурс полностью, поэтому дело не в темпе работы: физически
+              нельзя сделать {METRICS.demandWeek} часов силами {METRICS.capacityWeek}-часовой службы.
+            </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {[
-                { l: "Пиковая перегрузка", v: `${Math.max(...P.demand.map((d, i) => (P.capacity[i] ? Math.round((d / P.capacity[i]) * 100) : 0)))}%`, c: T.red },
-                { l: "Недоработано за период", v: `${Math.round(METRICS.deficitHours * P.k)} ч`, c: T.amber },
-                { l: `Загрузка после +${METRICS.gap} ставок`, v: `${loadAfter}%`, c: T.teal },
+                { l: "Самый тяжёлый день недели", v: `${Math.max(...P.demand.map((d, i) => (P.capacity[i] ? Math.round((d / P.capacity[i]) * 100) : 0)))}%`, c: T.red },
+                { l: "Не сделано за период", v: `${Math.round(METRICS.deficitHours * P.k)} ч`, c: T.amber },
+                { l: `Станет после +${METRICS.gap} человек`, v: `${loadAfter}%`, c: T.teal },
               ].map((x, i) => (
                 <motion.div key={x.l}
                             initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
