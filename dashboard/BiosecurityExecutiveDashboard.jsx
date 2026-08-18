@@ -111,11 +111,11 @@ const TASKS = [
   { id: "ext_contr",   name: "Подрядчики",                             icon: Users,          group: "reg",   contour: "external", hours: 3.0, cov: 100,   freq: "по событию",    note: "Допуск подрядных организаций, инструктаж и контроль на объекте" },
   { id: "ext_supp",    name: "Поставщики",                             icon: Boxes,          group: "crit",  contour: "external", hours: 5.5, cov: 30,    freq: "ежемесячно",    note: "Санитарный статус поставщика, оценка площадки отгрузки" },
   { id: "ext_lph",     name: "ЛПХ сотрудников",                        icon: Home,           group: "crit",  contour: "external", hours: 5.5, cov: 30,    freq: "ежемесячно",    note: "Учёт личных подсобных хозяйств — риск заноса возбудителя извне" },
-  { id: "ext_epi",     name: "Эпизоотическая ситуация в регионе",      icon: Siren,          group: "crit",  contour: "external", hours: 3.0, cov: 80,    freq: "мониторинг",    note: "Мониторинг очагов, усиление режима на внешней границе" },
+  { id: "ext_epi",     name: "Ситуация по заболеваниям в регионе",     icon: Siren,          group: "crit",  contour: "external", hours: 3.0, cov: 80,    freq: "мониторинг",    note: "Мониторинг очагов в регионе, усиление режима на внешней границе" },
   { id: "ext_pest",    name: "Внешний пест-контроль",                  icon: Bug,            group: "daily", contour: "external", hours: 3.0, cov: 80,    freq: "еженедельно",   note: "Барьер по периметру: грызуны, синантропная птица, насекомые" },
-  { id: "ext_wash",    name: "Санобработка транспорта под шрот и жмых", icon: Droplets,      group: "crit",  contour: "external", hours: 7.0, cov: 0,     freq: "ежедневно",     note: "НОВАЯ ЗАДАЧА · обработка внешнего транспорта перед погрузкой сырья", isNew: true },
-  { id: "ext_contract",name: "Контроль исполнения договоров",          icon: BadgeCheck,     group: "reg",   contour: "external", hours: 3.0, cov: 0,     freq: "ежеквартально", note: "НОВАЯ ЗАДАЧА · проверка закупок и поставок на требования ББ и санитарии", isNew: true },
-  { id: "ext_vnd",     name: "ВНД: требования к сырью и ТМЦ",          icon: FileText,       group: "reg",   contour: "external", hours: 4.5, cov: 0,     freq: "проект",        note: "НОВАЯ ЗАДАЧА · разработка внутреннего нормативного документа", isNew: true },
+  { id: "ext_wash",    name: "Санобработка транспорта до погрузки сырья для ККЗ", icon: Droplets,      group: "crit",  contour: "external", hours: 7.0, cov: 0,     freq: "ежедневно",     note: "Обработка транспорта до погрузки сырья для ККЗ", isNew: true },
+  { id: "ext_contract",name: "Контроль исполнения договоров",          icon: BadgeCheck,     group: "reg",   contour: "external", hours: 3.0, cov: 0,     freq: "ежеквартально", note: "Проверка закупок и поставок на требования ББ и санитарии", isNew: true },
+  { id: "ext_vnd",     name: "ВНД: требования к сырью и ТМЦ",          icon: FileText,       group: "reg",   contour: "external", hours: 4.5, cov: 0,     freq: "проект",        note: "Разработка внутреннего нормативного документа", isNew: true },
 
   // ── ВНУТРЕННИЙ КОНТУР (14 направлений) ───────────────────────────────────
   { id: "int_rep",     name: "Отчётность",                             icon: FileText,       group: "reg",   contour: "internal", hours: 6.5, cov: 100,   freq: "ежедневно",     note: "Журналы, сводки, обязательная документация службы" },
@@ -130,8 +130,8 @@ const TASKS = [
   { id: "int_bio",     name: "Биоотходы и перевозка падежа",           icon: Siren,          group: "crit",  contour: "internal", hours: 3.0, cov: 100,   freq: "ежедневно",     note: "Обращение с биологическими отходами, требования к перевозке" },
   { id: "int_audit",   name: "Аудиты внутренних площадок",             icon: ClipboardCheck, group: "crit",  contour: "internal", hours: 11.0, cov: 30,    freq: "ежемесячно",    note: "Плановые проверки площадок на требования ББ и санитарии" },
   { id: "int_manure",  name: "Пометохранилище",                        icon: Warehouse,      group: "daily", contour: "internal", hours: 2.0, cov: 100,   freq: "еженедельно",   note: "Требования ББ и санитарии к зоне накопления помёта" },
-  { id: "int_epi",     name: "Внутренняя эпизоотическая ситуация",     icon: Radar,          group: "crit",  contour: "internal", hours: 3.0, cov: 100,   freq: "мониторинг",    note: "Контроль эпизоотического благополучия внутри контура" },
-  { id: "int_vnd",     name: "ВНД: внутренние требования ББ",          icon: FileText,       group: "reg",   contour: "internal", hours: 4.5, cov: 0,     freq: "проект",        note: "НОВАЯ ЗАДАЧА · разработка внутреннего нормативного документа", isNew: true },
+  { id: "int_epi",     name: "Контроль ситуации внутри объекта",       icon: Radar,          group: "crit",  contour: "internal", hours: 3.0, cov: 100,   freq: "мониторинг",    note: "Контроль благополучия по заболеваниям внутри контура" },
+  { id: "int_vnd",     name: "ВНД: внутренние требования ББ",          icon: FileText,       group: "reg",   contour: "internal", hours: 4.5, cov: 0,     freq: "проект",        note: "Разработка внутреннего нормативного документа", isNew: true },
 ];
 
 // фактически закрываемый объём в нормо-часах выводится из процента охвата
@@ -213,12 +213,12 @@ const SITES = {
   warehouse: { id: "warehouse", name: "Склад",                 sub: "корма, подстилка, ТМЦ", x: 185, y: 285, w: 170, h: 104, icon: Warehouse },
   atc:       { id: "atc",       name: "АТЦ",                   sub: "транспортный цех",  x: 300, y: 470, w: 150, h: 80,  icon: Car },
   incubator: { id: "incubator", name: "Инкубатор",             sub: "МиДС, запчасти, ТМЦ",     x: 562, y: 132, w: 186, h: 92,  icon: Egg },
-  broiler:   { id: "broiler",   name: "Бройлерные площадки",   sub: "3 корпуса",             x: 825, y: 300, w: 200, h: 240, icon: Bird },
-  office:    { id: "office",    name: "Офисные помещения",     sub: "административная зона", x: 560, y: 458, w: 280, h: 92, icon: Building2 },
+  broiler:   { id: "broiler",   name: "Бройлерные площадки",   sub: "",                      x: 825, y: 300, w: 200, h: 240, icon: Bird },
+  office:    { id: "office",    name: "Офис",                  sub: `${STAFF} специалиста`, x: 560, y: 458, w: 280, h: 92, icon: Building2 },
 };
 
 const ROUTES = [
-  { id: "r1", from: "warehouse", to: "incubator", label: "Склад → Инкубатор",              cargo: "корма и подстилка",        trips: 4, d: "M270,255 Q380,190 466,150", dur: 7.5 },
+  { id: "r1", from: "warehouse", to: "incubator", label: "Склад → Инкубатор",              cargo: "МиДС, оборудование, ветпрепараты",        trips: 4, d: "M270,255 Q380,190 466,150", dur: 7.5 },
   { id: "r2", from: "warehouse", to: "atc",       label: "Склад → АТЦ",                    cargo: "запчасти и ТМЦ",           trips: 3, d: "M200,337 Q214,398 280,432", dur: 5.5 },
   { id: "r3", from: "warehouse", to: "broiler",   label: "Склад → Бройлерные площадки",    cargo: "корма, подстилка, инвентарь", trips: 6, d: "M270,305 Q500,345 725,300", dur: 9 },
   { id: "r4", from: "incubator", to: "broiler",   label: "Инкубатор → Бройлерные площадки", cargo: "суточный молодняк",       trips: 2, d: "M658,168 Q712,192 738,236", dur: 6 },
@@ -348,10 +348,10 @@ function SectionHead({ T, eyebrow, title, right }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <div className="font-mono text-[12px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
+        <div className="font-mono text-[13px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
           {eyebrow}
         </div>
-        <h2 className="mt-1 text-[19px] font-semibold" style={{ color: T.text }}>{title}</h2>
+        <h2 className="mt-1 text-[20px] font-semibold" style={{ color: T.text }}>{title}</h2>
       </div>
       {right}
     </div>
@@ -377,7 +377,7 @@ function Panel({ T, children, className = "", delay = 0 }) {
    6. ХЕДЕР
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function Header({ T, period, setPeriod, theme, setTheme, onOpenCase }) {
+function Header({ T, period, setPeriod, theme, setTheme }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -18 }}
@@ -398,38 +398,33 @@ function Header({ T, period, setPeriod, theme, setTheme, onOpenCase }) {
           <ShieldAlert size={22} color="#fff" />
         </motion.div>
         <div>
-          <div className="mb-1 font-mono text-[12px] uppercase tracking-[0.22em]" style={{ color: T.faint }}>
+          <div className="mb-1 font-mono text-[13px] uppercase tracking-[0.22em]" style={{ color: T.faint }}>
             Отдел биобезопасности · Executive dashboard
           </div>
-          <h1 className="text-[23px] font-semibold leading-tight tracking-tight sm:text-[28px]" style={{ color: T.text }}>
+          <h1 className="text-[24px] font-semibold leading-tight tracking-tight sm:text-[30px]" style={{ color: T.text }}>
             Мониторинг биобезопасности и нагрузка персонала
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <div
-              className="flex items-center gap-2.5 rounded-full px-3 py-1.5"
-              style={{ background: `${T.red}14`, border: `1px solid ${T.red}55` }}
+              className="flex items-center gap-2.5 rounded-full px-3.5 py-1.5"
+              style={{ background: T.panel, border: `1px solid ${T.border}` }}
             >
-              <PulseDot color={T.red} />
-              <span className="text-[13.5px] font-semibold" style={{ color: T.red }}>Критическая перегрузка</span>
-              <span className="font-mono text-[11.5px] tracking-wider" style={{ color: T.red, opacity: 0.7 }}>CRITICAL RISK</span>
-            </div>
-            <div
-              className="flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[12px]"
-              style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}
-            >
-              <Clock size={12} /> обновлено сейчас
+              <Users size={13} color={T.muted} />
+              <span className="text-[14.5px] font-medium" style={{ color: T.muted }}>
+                {TASKS.length} направлений · {STAFF} специалиста · норма {HOURS_PER_STAFF} ч/нед
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div className="flex shrink-0 items-center gap-2.5">
         <div className="flex rounded-xl p-1 backdrop-blur-xl" style={{ background: T.panel, border: `1px solid ${T.border}` }}>
           {Object.values(PERIODS).map((p) => (
             <button
               key={p.id}
               onClick={() => setPeriod(p.id)}
-              className="relative rounded-lg px-3.5 py-1.5 text-[14px] font-medium transition-colors"
+              className="relative rounded-lg px-3.5 py-1.5 text-[15px] font-medium transition-colors"
               style={{ color: period === p.id ? "#fff" : T.muted }}
             >
               {period === p.id && (
@@ -467,19 +462,7 @@ function Header({ T, period, setPeriod, theme, setTheme, onOpenCase }) {
           </AnimatePresence>
         </button>
 
-        <motion.button
-          onClick={onOpenCase}
-          whileHover={{ y: -2, scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[14.5px] font-semibold text-white"
-          style={{
-            background: `linear-gradient(135deg, ${T.red}, ${T.violet})`,
-            boxShadow: `0 18px 38px -16px ${T.glowC}`,
-          }}
-        >
-          <TrendingUp size={15} />
-          Аргументация для руководства
-        </motion.button>
+
       </div>
     </motion.div>
   );
@@ -511,18 +494,18 @@ function StatCard({ T, item, index }) {
         <div className="grid h-8 w-8 place-items-center rounded-lg" style={{ background: `${item.color}1f`, color: item.color }}>
           <Icon size={15} />
         </div>
-        <span className="text-[13.5px]" style={{ color: T.muted }}>{item.label}</span>
+        <span className="text-[14.5px]" style={{ color: T.muted }}>{item.label}</span>
       </div>
       <div className="relative mt-3 flex items-baseline gap-1.5">
         <span
-          className="text-[36px] font-semibold leading-none tracking-tight"
+          className="text-[38px] font-semibold leading-none tracking-tight"
           style={{ color: item.color, textShadow: T.key === "dark" ? `0 0 26px ${item.color}55` : "none" }}
         >
           {item.prefix || ""}{fmt(v)}
         </span>
-        <span className="text-[14.5px] font-medium" style={{ color: T.faint }}>{item.suffix}</span>
+        <span className="text-[15.5px] font-medium" style={{ color: T.faint }}>{item.suffix}</span>
       </div>
-      <div className="relative mt-2 text-[13px] leading-snug" style={{ color: T.faint }}>{item.note}</div>
+      <div className="relative mt-2 text-[14px] leading-snug" style={{ color: T.faint }}>{item.note}</div>
       {item.progress != null && (
         <div className="relative mt-3 h-1.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
           <motion.div
@@ -614,7 +597,7 @@ function ExternalScene({ T, active }) {
         animate={{ opacity: active ? [0.10, 0.22, 0.10] : 0.07 }}
         transition={{ duration: 2, repeat: Infinity }}
       />
-      <text x="160" y="128" textAnchor="middle" fontSize="12" fill={T.faint}>
+      <text x="160" y="128" textAnchor="middle" fontSize="13" fill={T.faint}>
         всё, что заходит на территорию, проходит здесь
       </text>
     </svg>
@@ -659,10 +642,10 @@ function InternalScene({ T, active }) {
         <g key={n.label}>
           <rect x={n.x - 15} y={n.y - 10} width="30" height="20" rx="5"
                 fill={active ? `${T.cyan}22` : T.grid} stroke={c} strokeWidth="1.1" />
-          <text x={n.x} y={n.y + 22} textAnchor="middle" fontSize="10" fill={T.faint}>{n.label}</text>
+          <text x={n.x} y={n.y + 22} textAnchor="middle" fontSize="11" fill={T.faint}>{n.label}</text>
         </g>
       ))}
-      <text x="160" y="140" textAnchor="middle" fontSize="12" fill={T.faint}>
+      <text x="160" y="140" textAnchor="middle" fontSize="13" fill={T.faint}>
         перемещения между зонами внутри контура
       </text>
     </svg>
@@ -700,12 +683,12 @@ function ContourCard({ T, contour, active, onClick, side }) {
           <Icon size={19} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[17px] font-semibold" style={{ color: T.text }}>{C.title}</div>
-          <div className="text-[13px]" style={{ color: T.faint }}>{C.sub}</div>
+          <div className="text-[18px] font-semibold" style={{ color: T.text }}>{C.title}</div>
+          <div className="text-[14px]" style={{ color: T.faint }}>{C.sub}</div>
         </div>
         <div className="text-right">
-          <div className="font-mono text-[12.5px]" style={{ color: T.faint }}>направлений</div>
-          <div className="text-[21px] font-semibold leading-none" style={{ color: accent }}>{C.items.length}</div>
+          <div className="font-mono text-[13.5px]" style={{ color: T.faint }}>направлений</div>
+          <div className="text-[22px] font-semibold leading-none" style={{ color: accent }}>{C.items.length}</div>
         </div>
         <motion.span animate={{ rotate: active ? 180 : 0 }} transition={{ duration: 0.3 }} style={{ color: T.faint }}>
           <ChevronDown size={16} />
@@ -718,7 +701,7 @@ function ContourCard({ T, contour, active, onClick, side }) {
 
       <div className="relative mt-1 flex items-center gap-3">
         <div className="flex-1">
-          <div className="mb-1 flex justify-between font-mono text-[11.5px]" style={{ color: T.faint }}>
+          <div className="mb-1 flex justify-between font-mono text-[12.5px]" style={{ color: T.faint }}>
             <span>покрытие</span>
             <span>{fmt(C.covered, 1)} из {fmt(C.demand, 1)} ч/нед</span>
           </div>
@@ -733,7 +716,7 @@ function ContourCard({ T, contour, active, onClick, side }) {
             />
           </div>
         </div>
-        <div className="text-[20px] font-semibold" style={{ color: C.coverage < 60 ? T.red : T.amber }}>
+        <div className="text-[21px] font-semibold" style={{ color: C.coverage < 60 ? T.red : T.amber }}>
           {C.coverage}%
         </div>
       </div>
@@ -760,10 +743,10 @@ function ContourTaskList({ T, contour }) {
     >
       <div className="pt-5">
         <div className="mb-4 flex flex-wrap items-center gap-2.5">
-          <span className="rounded-lg px-2.5 py-1 text-[13.5px] font-semibold" style={{ background: `${accent}1a`, color: accent }}>
+          <span className="rounded-lg px-2.5 py-1 text-[14.5px] font-semibold" style={{ background: `${accent}1a`, color: accent }}>
             {C.title}
           </span>
-          <span className="text-[13.5px]" style={{ color: T.muted }}>
+          <span className="text-[14.5px]" style={{ color: T.muted }}>
             {C.items.length} направлений · {fmt(C.demand, 1)} нормо-часов в неделю · закрыто {C.coverage}%
           </span>
         </div>
@@ -780,8 +763,8 @@ function ContourTaskList({ T, contour }) {
                   <div className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: `${tone}1f`, color: tone }}>
                     <GIcon size={14} />
                   </div>
-                  <span className="text-[14.5px] font-semibold" style={{ color: T.text }}>{g.title}</span>
-                  <span className="font-mono text-[12px]" style={{ color: T.faint }}>
+                  <span className="text-[15.5px] font-semibold" style={{ color: T.text }}>{g.title}</span>
+                  <span className="font-mono text-[13px]" style={{ color: T.faint }}>
                     {g.items.length} · {fmt(gh, 1)} ч/нед · закрыто {Math.round((gc / gh) * 100)}%
                   </span>
                   <div className="h-px flex-1" style={{ background: T.border }} />
@@ -807,8 +790,8 @@ function ContourTaskList({ T, contour }) {
                             <Icon size={15} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-[14px] font-semibold leading-tight" style={{ color: T.text }}>{t.name}</div>
-                            <div className="mt-0.5 text-[12.5px] leading-snug" style={{ color: T.faint }}>{t.note}</div>
+                            <div className="text-[15px] font-semibold leading-tight" style={{ color: T.text }}>{t.name}</div>
+                            <div className="mt-0.5 text-[13.5px] leading-snug" style={{ color: T.faint }}>{t.note}</div>
                           </div>
                         </div>
                         <div className="mt-2.5 flex items-center gap-2">
@@ -819,11 +802,11 @@ function ContourTaskList({ T, contour }) {
                               transition={{ delay: delay + 0.15, duration: 0.7, ease: EASE }}
                             />
                           </div>
-                          <span className="font-mono text-[11.5px]" style={{ color: state }}>{pct}%</span>
+                          <span className="font-mono text-[12.5px]" style={{ color: state }}>{pct}%</span>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[11px]" style={{ background: T.grid, color: T.faint }}>{t.freq}</span>
-                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[11px]" style={{ background: T.grid, color: T.faint }}>{fmt(t.hours, 1)} ч/нед</span>
+                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[12px]" style={{ background: T.grid, color: T.faint }}>{t.freq}</span>
+                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[12px]" style={{ background: T.grid, color: T.faint }}>{fmt(t.hours, 1)} ч/нед</span>
                         </div>
                       </motion.div>
                     );
@@ -867,7 +850,7 @@ function Person({ T, x, y, tilt, stack, delay = 0 }) {
         transition={{ duration: 3.6, repeat: Infinity, ease: "easeInOut", delay: delay + 0.4 }}
       >
         {Array.from({ length: stack }).map((_, i) => {
-          const w = 36 - i * 1.4;
+          const w = 38 - i * 1.6;
           return (
             <motion.rect
               key={i}
@@ -878,7 +861,7 @@ function Person({ T, x, y, tilt, stack, delay = 0 }) {
               rx={3.5}
               fill={tones[i % tones.length]}
               initial={{ opacity: 0, y: -22, scale: 0.86 }}
-              animate={{ opacity: 0.9, y: 0, scale: 1 }}
+              animate={{ opacity: 0.88, y: 0, scale: 1 }}
               transition={{ delay: delay + 0.3 + i * 0.12, type: "spring", stiffness: 180, damping: 15 }}
             />
           );
@@ -895,13 +878,13 @@ function Person({ T, x, y, tilt, stack, delay = 0 }) {
             Q ${x - 17} ${y - 10} ${x} ${y - 12}
             Q ${x + 17} ${y - 10} ${x + 18} ${y + 4}
             L ${x + 20} ${y + 44} Z`}
-        fill={T.red}
-        opacity={0.94}
+        fill={T.blue}
+        opacity={0.92}
       />
       <path
         d={`M ${x - 20} ${y + 44} L ${x - 18} ${y + 4} Q ${x - 17} ${y - 10} ${x} ${y - 12} Z`}
         fill="#fff"
-        opacity={0.10}
+        opacity={0.16}
       />
       {/* голова */}
       <circle cx={x} cy={y - 26} r={14.5} fill="#eec6a0" />
@@ -1114,47 +1097,45 @@ function WorkloadStage({ T }) {
         />
 
         <g pointerEvents="none">
-          <Person T={T} x={CC.x - 68} y={CC.y - 6} tilt={5} stack={7} delay={0} />
-          <Person T={T} x={CC.x - 23} y={CC.y - 6} tilt={4} stack={7} delay={0.6} />
-          <GhostPerson T={T} x={CC.x + 24} y={CC.y - 6} />
-          <GhostPerson T={T} x={CC.x + 68} y={CC.y - 6} />
-          <text x={CC.x + 46} y={CC.y - 62} textAnchor="middle" fontSize="11"
+          <Person T={T} x={CC.x - 68} y={CC.y - 2} tilt={5} stack={7} delay={0} />
+          <Person T={T} x={CC.x - 23} y={CC.y - 2} tilt={4} stack={7} delay={0.6} />
+          <GhostPerson T={T} x={CC.x + 24} y={CC.y - 2} />
+          <GhostPerson T={T} x={CC.x + 68} y={CC.y - 2} />
+
+          <line x1={CC.x} y1={CC.y - 70} x2={CC.x} y2={CC.y + 42}
+                stroke={T.borderHi} strokeWidth={1} strokeDasharray="3 6" opacity={0.7} />
+          <text x={CC.x - 52} y={CC.y + 56} textAnchor="middle" fontSize="12.5"
+                fontWeight="700" letterSpacing="0.6" fill={T.blue}>
+            ЕСТЬ {STAFF}
+          </text>
+          <text x={CC.x + 52} y={CC.y + 56} textAnchor="middle" fontSize="12.5"
                 fontWeight="700" letterSpacing="0.6" fill={T.teal}>
-            ВАКАНСИИ +{METRICS.gap}
+            НУЖНО +{METRICS.gap}
           </text>
         </g>
 
         {/* шкала загрузки */}
         <g pointerEvents="none">
-          <rect x={CC.x - 78} y={CC.y + 46} width={156} height={9} rx={4.5} fill={T.grid} />
+          <rect x={CC.x - 78} y={CC.y + 72} width={156} height={9} rx={4.5} fill={T.grid} />
           <motion.rect
-            x={CC.x - 78} y={CC.y + 46} height={9} rx={4.5} fill="url(#ws-meter)"
+            x={CC.x - 78} y={CC.y + 72} height={9} rx={4.5} fill="url(#ws-meter)"
             initial={{ width: 0 }} whileInView={{ width: 156 }} viewport={{ once: true }}
             transition={{ duration: 1.4, ease: EASE, delay: 0.25 }}
           />
           <motion.rect
-            x={CC.x + 6} y={CC.y + 46} width={72} height={9} rx={4.5} fill={T.red}
+            x={CC.x + 6} y={CC.y + 72} width={72} height={9} rx={4.5} fill={T.red}
             animate={{ opacity: [0.3, 0.85, 0.3] }}
             transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
           />
-          <line x1={CC.x + 6} y1={CC.y + 41} x2={CC.x + 6} y2={CC.y + 60}
-                stroke={T.text} strokeWidth={1} opacity={0.32} />
-          <text x={CC.x + 6} y={CC.y + 72} textAnchor="middle" fontSize="10" fill={T.faint}>норма 100%</text>
-          <text x={CC.x} y={CC.y + 86} textAnchor="middle" fontSize="14" fontWeight="700" fill={T.red}>
-            загрузка {METRICS.load}%
-          </text>
+          <line x1={CC.x + 6} y1={CC.y + 67} x2={CC.x + 6} y2={CC.y + 86}
+                stroke={T.text} strokeWidth={1} opacity={0.3} />
+          <text x={CC.x + 6} y={CC.y + 99} textAnchor="middle" fontSize="11.5" fill={T.faint}>норма 100%</text>
         </g>
 
-        <text x={CC.x} y={22} textAnchor="middle" fontSize="13" fontWeight="700" letterSpacing="2.2" fill={T.faint}>
+        <text x={CC.x} y={22} textAnchor="middle" fontSize="14" fontWeight="700" letterSpacing="2.2" fill={T.faint}>
           {TASKS.length} НАПРАВЛЕНИЙ · {fmt(METRICS.demandWeek, 0)} НОРМО-ЧАСОВ
         </text>
-        <text x={CC.x - 52} y={CC.y - R_CORE - 16} textAnchor="middle" fontSize="11.5" fontWeight="700" letterSpacing="1.2" fill={T.red}>
-          ЕСТЬ · {STAFF} ЧЕЛ.
-        </text>
-        <text x={CC.x + 56} y={CC.y - R_CORE - 16} textAnchor="middle" fontSize="11.5" fontWeight="700" letterSpacing="1.2" fill={T.teal}>
-          НУЖНО ЕЩЁ · {METRICS.gap}
-        </text>
-        <text x={CC.x} y={VB.h - 16} textAnchor="middle" fontSize="12.5" fill={T.faint}>
+        <text x={CC.x} y={VB.h - 16} textAnchor="middle" fontSize="13.5" fill={T.faint}>
           дефицит {METRICS.deficitHours} нормо-часов в неделю — задачи не исчезают, они копятся
         </text>
       </svg>
@@ -1169,11 +1150,11 @@ function WorkloadStage({ T }) {
       >
         <div className="flex items-center gap-2">
           <Gauge size={15} color={T.red} />
-          <span className="text-[13.5px] font-semibold" style={{ color: T.red }}>Виджет перегрузки</span>
+          <span className="text-[14.5px] font-semibold" style={{ color: T.red }}>Виджет перегрузки</span>
         </div>
         <div className="mt-2 flex items-end gap-2">
-          <span className="text-[32px] font-semibold leading-none" style={{ color: T.red }}>{METRICS.load}%</span>
-          <span className="pb-1 text-[12.5px]" style={{ color: T.muted }}>загрузка</span>
+          <span className="text-[34px] font-semibold leading-none" style={{ color: T.red }}>{METRICS.load}%</span>
+          <span className="pb-1 text-[13.5px]" style={{ color: T.muted }}>загрузка</span>
         </div>
         <div className="mt-2.5 h-1.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
           <motion.div
@@ -1183,7 +1164,7 @@ function WorkloadStage({ T }) {
             transition={{ duration: 1.1, ease: EASE }}
           />
         </div>
-        <div className="mt-3 flex items-start gap-2 text-[13px] leading-snug" style={{ color: T.muted }}>
+        <div className="mt-3 flex items-start gap-2 text-[14px] leading-snug" style={{ color: T.muted }}>
           <AlertTriangle size={13} color={T.amber} className="mt-0.5 shrink-0" />
           Риск пропуска критических задач: {METRICS.critWeak} из{" "}
           {TASKS.filter((t) => t.group === "crit").length} критических направлений закрыты менее чем наполовину.
@@ -1194,8 +1175,8 @@ function WorkloadStage({ T }) {
             { l: "требуется", v: `${METRICS.demandWeek} ч`, c: T.red },
           ].map((x) => (
             <div key={x.l} className="rounded-lg px-2.5 py-1.5" style={{ background: T.panel, border: `1px solid ${T.border}` }}>
-              <div className="font-mono text-[11px] uppercase tracking-wider" style={{ color: T.faint }}>{x.l}</div>
-              <div className="text-[15.5px] font-semibold" style={{ color: x.c }}>{x.v}</div>
+              <div className="font-mono text-[12px] uppercase tracking-wider" style={{ color: T.faint }}>{x.l}</div>
+              <div className="text-[16.5px] font-semibold" style={{ color: x.c }}>{x.v}</div>
             </div>
           ))}
         </div>
@@ -1242,8 +1223,8 @@ function SiteBlock({ T, site, accent, isOffice }) {
             <Icon size={16} />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: T.text, lineHeight: 1.15 }}>{site.name}</div>
-            <div style={{ fontSize: 11.5, color: T.faint, lineHeight: 1.2 }}>{site.sub}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: T.text, lineHeight: 1.15 }}>{site.name}</div>
+            {site.sub ? <div style={{ fontSize: 12.5, color: T.faint, lineHeight: 1.2 }}>{site.sub}</div> : null}
           </div>
         </div>
       </foreignObject>
@@ -1265,7 +1246,7 @@ function LogisticsMap({ T }) {
               fill={T.ground} stroke={T.border} strokeWidth="1.4" />
         <rect x="24" y="24" width="952" height="512" rx="22"
               fill="none" stroke={accent} strokeWidth="1.2" strokeDasharray="8 8" opacity="0.35" />
-        <text x="44" y="50" fontSize="12" fontWeight="700" letterSpacing="2" fill={T.faint}>
+        <text x="44" y="50" fontSize="13" fontWeight="700" letterSpacing="2" fill={T.faint}>
           ВНУТРЕННИЙ КОНТУР · ТЕРРИТОРИЯ ОБЪЕКТА
         </text>
 
@@ -1291,13 +1272,12 @@ function LogisticsMap({ T }) {
             <rect x={729} y={y - 17 + 5} width={196} height={34} rx={9} fill="#0b1220" opacity={T.key === "dark" ? 0.3 : 0.06} />
             <rect x={725} y={y - 17} width={196} height={34} rx={9} fill={T.surface} stroke={accent} strokeWidth="1.2" />
             <rect x={725} y={y - 17} width={196} height={6} rx={3} fill={accent} opacity="0.45" />
-            <text x={823} y={y + 9} textAnchor="middle" fontSize="12.5" fill={T.muted}>корпус {i + 1}</text>
+            <text x={823} y={y + 9} textAnchor="middle" fontSize="13.5" fill={T.muted}>корпус {i + 1}</text>
           </g>
         ))}
-        <text x={823} y={444} textAnchor="middle" fontSize="14" fontWeight="600" fill={T.text}>
+        <text x={823} y={444} textAnchor="middle" fontSize="15" fontWeight="600" fill={T.text}>
           Бройлерные площадки
         </text>
-        <text x={823} y={460} textAnchor="middle" fontSize="11.5" fill={T.faint}>3 корпуса</text>
 
         {/* объекты */}
         <SiteBlock T={T} site={SITES.warehouse} accent={accent} />
@@ -1314,7 +1294,7 @@ function LogisticsMap({ T }) {
               transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.3 }}
               style={{ originX: `${m.x}px`, originY: `${m.y}px` }}
             />
-            <text x={m.x} y={m.y + 4} textAnchor="middle" fontSize="12.5" fontWeight="700" fill="#fff">!</text>
+            <text x={m.x} y={m.y + 4} textAnchor="middle" fontSize="13.5" fontWeight="700" fill="#fff">!</text>
             <motion.circle
               cx={m.x} cy={m.y} r={9} fill="none" stroke={T.red} strokeWidth={1.4}
               initial={{ scale: 1, opacity: 0.6 }}
@@ -1342,7 +1322,7 @@ function LogisticsMap({ T }) {
                   fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
           </motion.g>
         ))}
-        <text x={office.x + 104} y={office.y + 27} textAnchor="middle" fontSize="10"
+        <text x={office.x + 104} y={office.y + 27} textAnchor="middle" fontSize="11"
               fontWeight="700" fill={T.teal}>+{METRICS.gap}</text>
 
         {/* «разрываются»: силуэты уходят к объектам и растворяются */}
@@ -1380,7 +1360,7 @@ function LogisticsMap({ T }) {
         )}
 
         {/* подписи маршрутов */}
-        <text x="500" y="552" textAnchor="middle" fontSize="12.5" fill={T.faint}>
+        <text x="500" y="552" textAnchor="middle" fontSize="13.5" fill={T.faint}>
           каждое перемещение между зонами — точка входного контроля
         </text>
       </svg>
@@ -1408,8 +1388,8 @@ function LogisticsMap({ T }) {
               <Route size={14} />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[14px] font-semibold" style={{ color: T.text }}>{r.label}</div>
-              <div className="truncate text-[12.5px]" style={{ color: T.faint }}>{r.cargo}</div>
+              <div className="truncate text-[15px] font-semibold" style={{ color: T.text }}>{r.label}</div>
+              <div className="truncate text-[13.5px]" style={{ color: T.faint }}>{r.cargo}</div>
             </div>
 
           </motion.div>
@@ -1427,7 +1407,7 @@ const ROLES = [
   { n: 1, title: "Входной контроль периметра", hours: 36.0, now: true,
     duties: "Проходная, согласования, подрядчики, входной контроль сырья и ТМЦ, внешний пест-контроль" },
   { n: 2, title: "Внешние риски и контрагенты", hours: 36.5, now: true,
-    duties: "Санобработка транспорта под шрот и жмых, аудит контрагентов, поставщики, ЛПХ, эпизоотия, ВНД по сырью" },
+    duties: "Санобработка транспорта до погрузки сырья, аудит контрагентов, поставщики, ЛПХ, ситуация в регионе, ВНД по сырью" },
   { n: 3, title: "Внутренний операционный контроль", hours: 34.5, now: false,
     duties: "Дезбарьеры, верификация мойки, МиДС, АТЦ, склад лузги, пометохранилище, биоотходы" },
   { n: 4, title: "Аудит, ВНД и лаборатория", hours: 36.0, now: false,
@@ -1439,14 +1419,17 @@ function StaffingComparison({ T }) {
   const cap2 = METRICS.requiredStaff * HOURS_PER_STAFF;       // 160
   const done1 = METRICS.coveredNow;                           // 81,7
   const perHead1 = Math.round((done1 / STAFF) * 10) / 10;     // 40,9
-  const perHead2 = Math.round((METRICS.demandWeek / METRICS.requiredStaff) * 10) / 10;
+  // фактическая нагрузка на человека считается с коэффициентом невыходов
+  // (отпуска, больничные, обучение) — 6,4% рабочего времени в году
+  const ABSENCE = 0.064;
+  const perHead2 = Math.round((METRICS.demandWeek / (METRICS.requiredStaff * (1 - ABSENCE))) * 10) / 10;
   const loadAfter = Math.round((METRICS.demandWeek / cap2) * 100);
 
   const rows = [
     { l: "Ресурс службы",            a: `${cap1} ч/нед`,  b: `${cap2} ч/нед`, hint: `${STAFF} × ${HOURS_PER_STAFF} ч → ${METRICS.requiredStaff} × ${HOURS_PER_STAFF} ч` },
     { l: "Требуется по регламенту",  a: `${METRICS.demandWeek} ч`, b: `${METRICS.demandWeek} ч`, hint: "объём задач не меняется" },
     { l: "Фактически закрывается",   a: `${fmt(done1, 1)} ч`, b: `${METRICS.demandWeek} ч`, hint: "весь регламент выполняется" },
-    { l: "Нагрузка на человека",     a: `${fmt(perHead1, 1)} ч`, b: `${fmt(perHead2, 1)} ч`, hint: `норма ${HOURS_PER_STAFF} ч` },
+    { l: "Нагрузка на человека",     a: `${fmt(perHead1, 1)} ч`, b: `${fmt(perHead2, 1)} ч`, hint: `норма ${HOURS_PER_STAFF} ч; после найма — с учётом отпусков и больничных` },
     { l: "Загрузка службы",          a: `${METRICS.load}%`, b: `${loadAfter}%`, hint: "норма 100%" },
     { l: "Охват направлений",        a: `${METRICS.coverage}%`, b: "100%", hint: `из ${TASKS.length} направлений` },
     { l: "Направлений с охватом 0%", a: `${METRICS.uncovered}`, b: "0", hint: "полностью открытые риски" },
@@ -1482,11 +1465,11 @@ function StaffingComparison({ T }) {
             style={{ background: T.panel, border: `1px solid ${T.border}` }}
           >
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[12px] font-semibold" style={{ color: T.faint }}>{c.n}</span>
-              <span className="text-[19px] font-semibold" style={{ color: c.c }}>{c.v}</span>
+              <span className="font-mono text-[13px] font-semibold" style={{ color: T.faint }}>{c.n}</span>
+              <span className="text-[20px] font-semibold" style={{ color: c.c }}>{c.v}</span>
             </div>
-            <div className="mt-1.5 text-[14px] font-semibold" style={{ color: T.text }}>{c.t}</div>
-            <div className="mt-1 text-[12.5px] leading-snug" style={{ color: T.muted }}>{c.d}</div>
+            <div className="mt-1.5 text-[15px] font-semibold" style={{ color: T.text }}>{c.t}</div>
+            <div className="mt-1 text-[13.5px] leading-snug" style={{ color: T.muted }}>{c.d}</div>
           </motion.div>
         ))}
       </div>
@@ -1504,20 +1487,20 @@ function StaffingComparison({ T }) {
               <Users size={17} />
             </div>
             <div>
-              <div className="text-[16px] font-semibold" style={{ color: T.text }}>Сейчас · {STAFF} специалиста</div>
-              <div className="text-[13px]" style={{ color: T.muted }}>ресурс {cap1} ч в неделю</div>
+              <div className="text-[17px] font-semibold" style={{ color: T.text }}>Сейчас · {STAFF} специалиста</div>
+              <div className="text-[14px]" style={{ color: T.muted }}>ресурс {cap1} ч в неделю</div>
             </div>
           </div>
           <div className="mt-4 flex items-end gap-2">
-            <span className="text-[42px] font-semibold leading-none" style={{ color: T.red }}>{METRICS.load}%</span>
-            <span className="pb-1.5 text-[13px]" style={{ color: T.muted }}>загрузка</span>
+            <span className="text-[44px] font-semibold leading-none" style={{ color: T.red }}>{METRICS.load}%</span>
+            <span className="pb-1.5 text-[14px]" style={{ color: T.muted }}>загрузка</span>
           </div>
           <div className="mt-3 h-2.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
             <motion.div className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${T.amber}, ${T.red})` }}
                         initial={{ width: 0 }} whileInView={{ width: "100%" }} viewport={{ once: true }}
                         transition={{ duration: 1, ease: EASE }} />
           </div>
-          <p className="mt-3 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>
+          <p className="mt-3 text-[14.5px] leading-relaxed" style={{ color: T.muted }}>
             Рабочее время израсходовано полностью — по <b style={{ color: T.text }}>{fmt(perHead1, 1)} ч</b>{" "}
             на человека, уже с переработкой. Но этих часов хватает только на
             <b style={{ color: T.red }}> {METRICS.coverage}%</b> регламентного объёма:
@@ -1534,7 +1517,7 @@ function StaffingComparison({ T }) {
             style={{ background: `linear-gradient(135deg, ${T.teal}, ${T.blue})`, boxShadow: `0 16px 34px -16px ${T.glowA}` }}
           >
             <UserPlus size={16} color="#fff" />
-            <span className="text-[15px] font-semibold text-white">+{METRICS.gap} специалиста</span>
+            <span className="text-[16px] font-semibold text-white">+{METRICS.gap} специалиста</span>
           </motion.div>
         </div>
 
@@ -1550,26 +1533,25 @@ function StaffingComparison({ T }) {
               <ShieldCheck size={17} />
             </div>
             <div>
-              <div className="text-[16px] font-semibold" style={{ color: T.text }}>
+              <div className="text-[17px] font-semibold" style={{ color: T.text }}>
                 После найма · {METRICS.requiredStaff} специалиста
               </div>
-              <div className="text-[13px]" style={{ color: T.muted }}>ресурс {cap2} ч в неделю</div>
+              <div className="text-[14px]" style={{ color: T.muted }}>ресурс {cap2} ч в неделю</div>
             </div>
           </div>
           <div className="mt-4 flex items-end gap-2">
-            <span className="text-[42px] font-semibold leading-none" style={{ color: T.teal }}>{loadAfter}%</span>
-            <span className="pb-1.5 text-[13px]" style={{ color: T.muted }}>загрузка</span>
+            <span className="text-[44px] font-semibold leading-none" style={{ color: T.teal }}>{loadAfter}%</span>
+            <span className="pb-1.5 text-[14px]" style={{ color: T.muted }}>загрузка</span>
           </div>
           <div className="mt-3 h-2.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
             <motion.div className="h-full rounded-full" style={{ background: T.teal }}
                         initial={{ width: 0 }} whileInView={{ width: `${loadAfter}%` }} viewport={{ once: true }}
                         transition={{ duration: 1, ease: EASE, delay: 0.2 }} />
           </div>
-          <p className="mt-3 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>
+          <p className="mt-3 text-[14.5px] leading-relaxed" style={{ color: T.muted }}>
             Четверо закрывают <b style={{ color: T.text }}>все {METRICS.demandWeek} ч</b> —
-            по <b style={{ color: T.text }}>{fmt(perHead2, 1)} ч</b> на человека, с резервом
-            на отпуска и больничные. Охват <b style={{ color: T.teal }}>100%</b>,
-            открытых рисков не остаётся.
+            по <b style={{ color: T.text }}>{fmt(perHead2, 1)} ч</b> на человека с учётом отпусков
+            и больничных. Охват <b style={{ color: T.teal }}>100%</b>, открытых рисков не остаётся.
           </p>
         </motion.div>
       </div>
@@ -1585,13 +1567,13 @@ function StaffingComparison({ T }) {
             style={{ borderTop: i ? `1px solid ${T.border}` : "none" }}
           >
             <div>
-              <div className="text-[14px] font-medium" style={{ color: T.text }}>{r.l}</div>
-              <div className="text-[12px]" style={{ color: T.faint }}>{r.hint}</div>
+              <div className="text-[15px] font-medium" style={{ color: T.text }}>{r.l}</div>
+              <div className="text-[13px]" style={{ color: T.faint }}>{r.hint}</div>
             </div>
-            <div className="text-[16px] font-semibold" style={{ color: T.red }}>{r.a}</div>
+            <div className="text-[17px] font-semibold" style={{ color: T.red }}>{r.a}</div>
             <div className="flex items-center gap-2">
               <ArrowRight size={14} color={T.faint} />
-              <span className="text-[16px] font-semibold" style={{ color: T.teal }}>{r.b}</span>
+              <span className="text-[17px] font-semibold" style={{ color: T.teal }}>{r.b}</span>
             </div>
           </motion.div>
         ))}
@@ -1615,22 +1597,22 @@ function StaffingComparison({ T }) {
             <div className="flex items-center justify-between">
               <div className="grid h-8 w-8 place-items-center rounded-lg"
                    style={{ background: r.now ? `${T.blue}1a` : `${T.teal}1a`, color: r.now ? T.blue : T.teal }}>
-                <span className="text-[13px] font-semibold">{r.n}</span>
+                <span className="text-[14px] font-semibold">{r.n}</span>
               </div>
-              <span className="rounded-md px-2 py-0.5 text-[11px] font-semibold"
+              <span className="rounded-md px-2 py-0.5 text-[12px] font-semibold"
                     style={{ background: r.now ? T.grid : `${T.teal}1a`, color: r.now ? T.muted : T.teal }}>
                 {r.now ? "есть" : "нужен"}
               </span>
             </div>
-            <div className="mt-2.5 text-[14px] font-semibold leading-tight" style={{ color: T.text }}>{r.title}</div>
-            <div className="mt-1 text-[12.5px] leading-snug" style={{ color: T.faint }}>{r.duties}</div>
+            <div className="mt-2.5 text-[15px] font-semibold leading-tight" style={{ color: T.text }}>{r.title}</div>
+            <div className="mt-1 text-[13.5px] leading-snug" style={{ color: T.faint }}>{r.duties}</div>
             <div className="mt-3 flex items-center gap-2">
               <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: T.grid }}>
                 <motion.div className="h-full rounded-full" style={{ background: r.now ? T.blue : T.teal }}
                             initial={{ width: 0 }} whileInView={{ width: `${(r.hours / HOURS_PER_STAFF) * 100}%` }}
                             viewport={{ once: true }} transition={{ delay: 0.2 + i * 0.07, duration: 0.8, ease: EASE }} />
               </div>
-              <span className="font-mono text-[12px] font-semibold" style={{ color: T.text }}>
+              <span className="font-mono text-[13px] font-semibold" style={{ color: T.text }}>
                 {fmt(r.hours, 1)} ч
               </span>
             </div>
@@ -1804,8 +1786,8 @@ function Checkpoint({ T, ps }) {
         <rect x={404} y={80} width={112} height={42} rx={9} fill={T.surface} stroke={T.teal} strokeWidth={1.4} />
         <circle cx={424} cy={101} r={10} fill={T.teal} opacity={0.18} />
         <path d="M 419 101 L 422 105 L 429 97" fill="none" stroke={T.teal} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-        <text x={442} y={97} fontSize="11.5" fontWeight="600" fill={T.text}>допуск оформлен</text>
-        <text x={442} y={111} fontSize="10.5" fill={T.faint}>документы проверены</text>
+        <text x={442} y={97} fontSize="12.5" fontWeight="600" fill={T.text}>допуск оформлен</text>
+        <text x={442} y={111} fontSize="11.5" fill={T.faint}>документы проверены</text>
       </motion.g>
     </g>
   );
@@ -1854,14 +1836,14 @@ function ExternalFlowScene({ T }) {
           <rect x={st.x - 48} y={110} width={96} height={72} rx={9} fill={T.surface} stroke={T.teal} strokeWidth={1.2} />
           <rect x={st.x - 48} y={110} width={96} height={8} rx={4} fill={T.teal} opacity={0.5} />
           <rect x={st.x - 24} y={148} width={48} height={34} rx={3} fill={T.teal} opacity={0.18} />
-          <text x={st.x} y={200} textAnchor="middle" fontSize="12" fontWeight="600" fill={T.text}>{st.name}</text>
+          <text x={st.x} y={200} textAnchor="middle" fontSize="13" fontWeight="600" fill={T.text}>{st.name}</text>
         </g>
       ))}
 
       {/* пешеходная дорожка персонала */}
       <rect x={0} y={WALK_Y - 16} width={GATE.w} height={40} fill={T.key === "dark" ? "#141b28" : "#e8ecf3"} />
       <rect x={556} y={WALK_Y - 16} width={38} height={40} fill={T.violet} opacity={0.16} />
-      <text x={430} y={WALK_Y + 36} textAnchor="middle" fontSize="12" fill={T.violet} fontWeight="600">
+      <text x={430} y={WALK_Y + 36} textAnchor="middle" fontSize="13" fill={T.violet} fontWeight="600">
         проход персонала
       </text>
 
@@ -1882,14 +1864,14 @@ function ExternalFlowScene({ T }) {
       {/* подписи зон */}
       {zones.map((z) => (
         <g key={z.label}>
-          <text x={z.x} y={26} textAnchor="middle" fontSize="12" fontWeight="700" letterSpacing="1.6" fill={z.tone}>
+          <text x={z.x} y={26} textAnchor="middle" fontSize="13" fontWeight="700" letterSpacing="1.6" fill={z.tone}>
             {z.label}
           </text>
-          <text x={z.x} y={42} textAnchor="middle" fontSize="11.5" fill={T.faint}>{z.sub}</text>
+          <text x={z.x} y={42} textAnchor="middle" fontSize="12.5" fill={T.faint}>{z.sub}</text>
         </g>
       ))}
 
-      <text x={GATE.w / 2} y={GATE.h - 8} textAnchor="middle" fontSize="13" fill={T.faint}>
+      <text x={GATE.w / 2} y={GATE.h - 8} textAnchor="middle" fontSize="14" fill={T.faint}>
         транспорт и персонал заходят на территорию только через обработку и входной контроль
       </text>
     </svg>
@@ -1900,12 +1882,12 @@ function ExternalFlowScene({ T }) {
 const VIDEO_SRC = "assets/external-flow.mp4";
 
 const STORYBOARD = [
-  { t: "01", icon: Truck,       title: "Подъезд транспорта",   d: "Сырьё, ТМЦ, препараты идут к периметру", cov: "100%", ok: true },
+  { t: "01", icon: Truck,       title: "Въезд транспорта",     d: "Сырьё, ТМЦ, препараты идут к периметру", cov: "100%", ok: true },
   { t: "02", icon: FileText,    title: "Заявка и допуск",      d: "Без отметки службы шлагбаум закрыт",     cov: "100%", ok: true },
   { t: "03", icon: Droplets,    title: "Дезбарьер",            d: "Колёса, ходовая, тент, контроль концентрации", cov: "100%", ok: true },
   { t: "04", icon: DoorOpen,    title: "Санпропускник людей",  d: "Смена одежды, обработка, журнал",        cov: "100%", ok: true },
   { t: "05", icon: Package,     title: "Входной контроль ТМЦ", d: "Тентование, тара, отбор проб",           cov: "20%",  ok: false },
-  { t: "06", icon: ShieldCheck, title: "Санобработка под шрот", d: "Обработка перед погрузкой сырья",       cov: "0%",   ok: false },
+  { t: "06", icon: ShieldCheck, title: "Санобработка до погрузки", d: "Обработка транспорта под сырьё для ККЗ",       cov: "0%",   ok: false },
   { t: "07", icon: Warehouse,   title: "Допуск на склады",     d: "Заезд к докам складов и ветаптеки",      cov: "100%", ok: true },
 ];
 
@@ -1942,11 +1924,11 @@ function ExternalFlowVideo({ T }) {
                      style={{ background: `${tone}1a`, color: tone }}>
                   <Icon size={14} />
                 </div>
-                <span className="font-mono text-[11.5px]" style={{ color: T.faint }}>{sc.t}</span>
-                <span className="ml-auto font-mono text-[12.5px] font-semibold" style={{ color: tone }}>{sc.cov}</span>
+                <span className="font-mono text-[12.5px]" style={{ color: T.faint }}>{sc.t}</span>
+                <span className="ml-auto font-mono text-[13.5px] font-semibold" style={{ color: tone }}>{sc.cov}</span>
               </div>
-              <div className="mt-2 text-[14px] font-semibold leading-tight" style={{ color: T.text }}>{sc.title}</div>
-              <div className="mt-0.5 text-[12.5px] leading-snug" style={{ color: T.faint }}>{sc.d}</div>
+              <div className="mt-2 text-[15px] font-semibold leading-tight" style={{ color: T.text }}>{sc.title}</div>
+              <div className="mt-0.5 text-[13.5px] leading-snug" style={{ color: T.faint }}>{sc.d}</div>
             </motion.div>
           );
         })}
@@ -1954,7 +1936,7 @@ function ExternalFlowVideo({ T }) {
 
       {hasVideo && (
         <div className="mt-4">
-          <div className="mb-2 flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.14em]"
+          <div className="mb-2 flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.14em]"
                style={{ color: T.faint }}>
             <Truck size={12} /> видеоверсия ролика
           </div>
@@ -2059,13 +2041,13 @@ function ChartPanel({ T, period, open }) {
         categories: P.categories,
         lineColor: T.border,
         tickColor: "transparent",
-        labels: { style: { color: T.faint, fontSize: "12.5px" } },
+        labels: { style: { color: T.faint, fontSize: "14.5px" } },
         crosshair: { color: T.border, width: 1, dashStyle: "Dash" },
       },
       yAxis: {
         title: { text: P.unit, style: { color: T.faint, fontSize: "13px" } },
         gridLineColor: T.grid,
-        labels: { style: { color: T.faint, fontSize: "12.5px" } },
+        labels: { style: { color: T.faint, fontSize: "14.5px" } },
       },
       legend: {
         itemStyle: { color: T.muted, fontWeight: "500", fontSize: "13px" },
@@ -2074,7 +2056,7 @@ function ChartPanel({ T, period, open }) {
       },
       tooltip: {
         shared: true, backgroundColor: T.solid, borderColor: T.borderHi, borderRadius: 12,
-        shadow: false, style: { color: T.text, fontSize: "13.5px" }, valueSuffix: " ч",
+        shadow: false, style: { color: T.text, fontSize: "14.5px" }, valueSuffix: " ч",
       },
       plotOptions: {
         series: { animation: { duration: 800 }, states: { hover: { lineWidthPlus: 1 }, inactive: { opacity: 0.35 } } },
@@ -2124,23 +2106,23 @@ function CaseModal({ T, onClose }) {
           <X size={15} />
         </button>
 
-        <div className="flex items-center gap-2 font-mono text-[12px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
+        <div className="flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
           <PulseDot color={T.red} size={7} /> обоснование расширения штата
         </div>
-        <h2 className="mt-2.5 text-[25px] font-semibold leading-tight" style={{ color: T.text }}>
+        <h2 className="mt-2.5 text-[26px] font-semibold leading-tight" style={{ color: T.text }}>
           Аргументация для руководства
         </h2>
 
         <div className="mt-5 rounded-2xl p-5"
              style={{ background: `linear-gradient(135deg, ${T.glowC}, ${T.glowB})`, border: `1px solid ${T.red}44` }}>
-          <p className="text-[16px] leading-relaxed" style={{ color: T.text }}>
+          <p className="text-[17px] leading-relaxed" style={{ color: T.text }}>
             Действующий <b>штат из {STAFF} специалистов</b> закрывает только{" "}
             <b style={{ color: T.red }}>{METRICS.extCoverage}%</b> обязательного внешнего контура.
             Требуется расширение штата минимум на{" "}
             <b style={{ color: T.teal }}>{METRICS.gap} единицы</b> для исключения сбоев.
           </p>
           <div className="mt-4">
-            <div className="mb-1.5 flex justify-between font-mono text-[12px]" style={{ color: T.muted }}>
+            <div className="mb-1.5 flex justify-between font-mono text-[13px]" style={{ color: T.muted }}>
               <span>покрытие внешнего контура</span>
               <span>{METRICS.extCoverage}% из 100%</span>
             </div>
@@ -2167,10 +2149,10 @@ function CaseModal({ T, onClose }) {
                   <Icon size={17} />
                 </div>
                 <div>
-                  <div className="text-[15px] font-semibold" style={{ color: T.text }}>
+                  <div className="text-[16px] font-semibold" style={{ color: T.text }}>
                     {String(i + 1).padStart(2, "0")} · {a.title}
                   </div>
-                  <div className="mt-1 text-[14px] leading-relaxed" style={{ color: T.muted }}>{a.text}</div>
+                  <div className="mt-1 text-[15px] leading-relaxed" style={{ color: T.muted }}>{a.text}</div>
                 </div>
               </motion.div>
             );
@@ -2179,11 +2161,11 @@ function CaseModal({ T, onClose }) {
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <motion.button whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}
-                         className="flex items-center gap-2 rounded-xl px-5 py-3 text-[14.5px] font-semibold text-white"
+                         className="flex items-center gap-2 rounded-xl px-5 py-3 text-[15.5px] font-semibold text-white"
                          style={{ background: `linear-gradient(135deg, ${T.teal}, ${T.blue})`, boxShadow: `0 18px 36px -16px ${T.glowA}` }}>
             <Check size={15} /> Согласовать +{METRICS.gap} ставки
           </motion.button>
-          <button onClick={onClose} className="rounded-xl px-5 py-3 text-[14.5px] font-medium"
+          <button onClick={onClose} className="rounded-xl px-5 py-3 text-[15.5px] font-medium"
                   style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
             Вернуться к дашборду
           </button>
@@ -2201,14 +2183,7 @@ export default function BiosecurityExecutiveDashboard() {
   const [theme, setTheme] = useState("light");
   const [period, setPeriod] = useState("week");
   const [open, setOpen] = useState("external");   // 'external' | 'internal' | null
-  const [showCase, setShowCase] = useState(false);
   const T = THEMES[theme];
-
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") setShowCase(false); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
 
   const P = PERIODS[period];
   const demand = Math.round(METRICS.demandWeek * P.k);
@@ -2231,8 +2206,7 @@ export default function BiosecurityExecutiveDashboard() {
       <PremiumBackground T={T} />
 
       <div className="relative mx-auto max-w-[1280px] px-4 py-8 sm:px-7 sm:py-10">
-        <Header T={T} period={period} setPeriod={setPeriod} theme={theme} setTheme={setTheme}
-                onOpenCase={() => setShowCase(true)} />
+        <Header T={T} period={period} setPeriod={setPeriod} theme={theme} setTheme={setTheme} />
 
         <div className="mt-7 flex flex-wrap gap-4">
           {stats.map((s, i) => <StatCard key={s.label} T={T} item={s} index={i} />)}
@@ -2246,7 +2220,7 @@ export default function BiosecurityExecutiveDashboard() {
               eyebrow="Ядро модели"
               title="Два контура защиты — нажмите, чтобы раскрыть состав"
               right={
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px]"
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
                   <ArrowRight size={13} color={T.violet} />
                   {open ? `открыт: ${CONTOURS[open].title.toLowerCase()}` : "оба контура свёрнуты"}
@@ -2270,8 +2244,8 @@ export default function BiosecurityExecutiveDashboard() {
         {/* ── НАГРУЗКА САДИТСЯ НА ДВОИХ ───────────────────────────────── */}
         <div className="mt-5">
           <Panel T={T}>
-            <SectionHead T={T} eyebrow="Куда всё это приходит"
-                         title={`Весь объём обоих контуров садится на ${STAFF} специалистов`} />
+            <SectionHead T={T} eyebrow="Распределение нагрузки"
+                         title={`Весь объём задач распределяется на ${STAFF} специалистов`} />
             <WorkloadStage T={T} />
           </Panel>
         </div>
@@ -2284,7 +2258,7 @@ export default function BiosecurityExecutiveDashboard() {
               eyebrow="Расчёт по найму"
               title={`Сейчас ${STAFF} специалиста · требуется ${METRICS.requiredStaff}`}
               right={
-                <div className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-[13px]"
+                <div className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-[14px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
                   <Clock size={14} color={T.violet} />
                   норма {HOURS_PER_STAFF} ч в неделю на человека
@@ -2303,7 +2277,7 @@ export default function BiosecurityExecutiveDashboard() {
               eyebrow="Внешний контур · видеоматериал"
               title="Входной контроль внешнего периметра: от дороги до складов"
               right={
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px]"
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
                   <ArrowRight size={13} color={T.violet} />
                   дезбарьер · санпропускник · склады
@@ -2336,7 +2310,7 @@ export default function BiosecurityExecutiveDashboard() {
               eyebrow="Аналитика нагрузки"
               title={`Сколько работы приходит и сколько служба успевает · ${P.label.toLowerCase()}`}
               right={
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[13px]"
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
                   <ArrowRight size={13} color={T.violet} />
                   {open === "external"
@@ -2365,16 +2339,16 @@ export default function BiosecurityExecutiveDashboard() {
                       <line x1="1" y1="5" x2="25" y2="5" stroke={x.c} strokeWidth="3"
                             strokeLinecap="round" strokeDasharray={x.dash ? "5 4" : undefined} />
                     </svg>
-                    <span className="text-[14px] font-semibold" style={{ color: T.text }}>{x.t}</span>
+                    <span className="text-[15px] font-semibold" style={{ color: T.text }}>{x.t}</span>
                   </div>
-                  <div className="mt-1.5 text-[12.5px] leading-snug" style={{ color: T.muted }}>{x.d}</div>
+                  <div className="mt-1.5 text-[13.5px] leading-snug" style={{ color: T.muted }}>{x.d}</div>
                 </motion.div>
               ))}
             </div>
 
             <ChartPanel T={T} period={period} open={open} />
 
-            <p className="mt-3 text-[13.5px] leading-relaxed" style={{ color: T.muted }}>
+            <p className="mt-3 text-[14.5px] leading-relaxed" style={{ color: T.muted }}>
               Всё, что на графике выше зелёного пунктира, — <b style={{ color: T.text }}>не выполняется</b>.
               Двое расходуют свой ресурс полностью, поэтому дело не в темпе работы: физически
               нельзя сделать {METRICS.demandWeek} часов силами {METRICS.capacityWeek}-часовой службы.
@@ -2390,15 +2364,15 @@ export default function BiosecurityExecutiveDashboard() {
                             viewport={{ once: true }} transition={{ delay: i * 0.07, duration: 0.5 }}
                             className="flex items-center justify-between rounded-xl px-4 py-3"
                             style={{ background: T.panel, border: `1px solid ${T.border}` }}>
-                  <span className="text-[13.5px]" style={{ color: T.muted }}>{x.l}</span>
-                  <span className="text-[18px] font-semibold" style={{ color: x.c }}>{x.v}</span>
+                  <span className="text-[14.5px]" style={{ color: T.muted }}>{x.l}</span>
+                  <span className="text-[19px] font-semibold" style={{ color: x.c }}>{x.v}</span>
                 </motion.div>
               ))}
             </div>
           </Panel>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-[12.5px]" style={{ color: T.faint }}>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-[13.5px]" style={{ color: T.faint }}>
           <span>
             Расчёт по {TASKS.length} направлениям · норма {HOURS_PER_STAFF} ч/нед на специалиста ·
             все показатели вычисляются из единой таблицы задач
@@ -2407,9 +2381,6 @@ export default function BiosecurityExecutiveDashboard() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {showCase && <CaseModal T={T} onClose={() => setShowCase(false)} />}
-      </AnimatePresence>
     </div>
   );
 }
