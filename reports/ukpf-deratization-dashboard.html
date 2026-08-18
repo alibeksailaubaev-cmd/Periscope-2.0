@@ -98,11 +98,21 @@ h2{font-size:15px; font-weight:700; margin:0; letter-spacing:-.01em;}
   background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
   padding:20px; box-shadow:var(--sh); display:flex; flex-direction:column; gap:3px; position:relative;
 }
-.opt::before{content:""; position:absolute; left:20px; right:20px; top:0; height:2px; border-radius:0 0 3px 3px;}
+.opt::before{content:""; position:absolute; left:0; top:18px; bottom:18px; width:3px; border-radius:0 3px 3px 0;}
 .opt.i::before{background:var(--indigo);} .opt.h::before{background:var(--hunter);} .opt.s::before{background:var(--staff);}
+.opt.i .chip{color:var(--indigo); border-color:var(--indigo);}
+.opt.h .chip{color:var(--hunter); border-color:var(--hunter);}
+.opt.s{background:var(--staff-bg); border-color:var(--staff);}
+.opt.s .chip{color:var(--staff); border-color:var(--staff);}
+.opt.s .split{border-top-color:var(--staff);}
+.opt-top{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;}
 .opt .who{font-size:13px; font-weight:700; letter-spacing:-.01em;}
+.chip{font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  padding:3px 8px; border-radius:999px; color:var(--muted); border:1px solid var(--line-2); white-space:nowrap;}
+.opt .cov{font-size:12px; color:var(--muted); margin-top:7px; padding-left:9px; border-left:2px solid var(--line-2);}
+.opt .split b.none{color:var(--muted); font-weight:400;}
 .opt.i .who{color:var(--indigo);} .opt.h .who{color:var(--hunter);} .opt.s .who{color:var(--staff);}
-.opt .scope{font-size:12.5px; color:var(--muted); min-height:34px; margin-bottom:8px;}
+.opt .scope{font-size:12.5px; color:var(--muted); min-height:34px; margin-bottom:10px;}
 .opt .big{font-family:"JetBrains Mono",monospace; font-size:27px; font-weight:700; letter-spacing:-.035em; font-variant-numeric:tabular-nums;}
 .opt .per{font-size:12.5px; color:var(--muted);}
 .opt .split{
@@ -205,9 +215,9 @@ tr.off td{opacity:.42;}
 <div class="wrap">
 
   <header>
-    <div class="eyebrow">АО «Усть-Каменогорская птицефабрика» · дератизация 2026–2027</div>
-    <h1>Три варианта: два подрядчика<br>и <em>собственный штат</em></h1>
-    <p class="lede">Indigo Solutions и Pest Hunters — по их коммерческим предложениям. Штат УКПФ — по внутреннему расчёту норм, цен и фонда оплаты труда. Снимите галочки с месяцев, чтобы посмотреть любой период года.</p>
+    <div class="eyebrow">АО «Усть-Каменогорская птицефабрика» · 2026–2027</div>
+    <h1>Сравнение дератизации</h1>
+    <p class="lede">Два коммерческих предложения и собственная штатная служба. Снимите галочки с месяцев, чтобы пересчитать любой период года.</p>
   </header>
 
   <div class="rail">
@@ -232,36 +242,39 @@ tr.off td{opacity:.42;}
 
   <div class="opts">
     <div class="opt i">
-      <span class="who">Indigo Solutions</span>
-      <span class="scope">Только ККЗ (кормоцех). Оборудование подрядчика, реакция ≤2 ч, выезд ≤24 ч.</span>
+      <div class="opt-top"><span class="who">Indigo Solutions</span><span class="chip">КП</span></div>
+      <span class="scope">Оборудование подрядчика, реакция ≤2 ч, выезд ≤24 ч.</span>
       <span class="big n" id="oI">—</span>
       <span class="per" id="oIper">за выбранный период</span>
+      <span class="cov">Покрыт один объект — ККЗ</span>
       <div class="split">
-        <div><span>ККЗ, дератизация</span><b>96 600 ₸/мес</b></div>
-        <div><span>Бройлерные площадки</span><b>нет в КП</b></div>
-        <div><span>Инкубаторий, лузга, АБК</span><b>нет в КП</b></div>
+        <div><span>ККЗ · один месяц</span><b>96 600 ₸</b></div>
+        <div><span>Бройлерные площадки</span><b class="none">нет в КП</b></div>
+        <div><span>Инкубаторий, лузга, АБК</span><b class="none">нет в КП</b></div>
       </div>
     </div>
     <div class="opt h">
-      <span class="who">Pest Hunters</span>
-      <span class="scope">ККЗ + 122 бройлерных объекта. Цена зависит от месяца и от того, чьё оборудование.</span>
+      <div class="opt-top"><span class="who">Pest Hunters</span><span class="chip">КП</span></div>
+      <span class="scope">Цена зависит от месяца и от того, чьё оборудование стоит на площадках.</span>
       <span class="big n" id="oH">—</span>
       <span class="per" id="oHper">за выбранный период</span>
+      <span class="cov" id="oHcov">ККЗ + 122 бройлерных объекта</span>
       <div class="split">
-        <div><span>ККЗ, дератизация</span><b>75 000 ₸/мес</b></div>
-        <div><span>Площадки, мар–ноя</span><b id="phHi">—</b></div>
-        <div><span>Площадки, дек–фев</span><b id="phLo">—</b></div>
+        <div><span>ККЗ · один месяц</span><b>75 000 ₸</b></div>
+        <div><span>Все 122 объекта · месяц мар–ноя</span><b id="phHi">—</b></div>
+        <div><span>Все 122 объекта · месяц дек–фев</span><b id="phLo">—</b></div>
       </div>
     </div>
     <div class="opt s">
-      <span class="who">Штат УКПФ · 2 дератизатора</span>
-      <span class="scope">ККЗ, инкубаторий, склад лузги, АБК и все 8 площадок. Присутствие 5/2, 8 обходов в месяц.</span>
+      <div class="opt-top"><span class="who">Штат УКПФ · 2 дератизатора</span><span class="chip">наш расчёт</span></div>
+      <span class="scope">Присутствие 5/2, восемь обходов в месяц, 1 525 приманочных точек.</span>
       <span class="big n" id="oS">—</span>
       <span class="per" id="oSper">за выбранный период</span>
+      <span class="cov">13 объектов: ККЗ, инкубаторий, лузга, АБК, 8 площадок</span>
       <div class="split">
-        <div><span>Месяц апр–сен</span><b id="uS">—</b></div>
-        <div><span>Месяц окт–мар</span><b id="uW">—</b></div>
-        <div><span>Объектов покрыто</span><b>13</b></div>
+        <div><span>Один месяц апр–сен</span><b id="uS">—</b></div>
+        <div><span>Один месяц окт–мар</span><b id="uW">—</b></div>
+        <div><span>Материалы за год</span><b id="uMatY">—</b></div>
       </div>
     </div>
   </div>
@@ -321,6 +334,24 @@ tr.off td{opacity:.42;}
       </table>
     </div>
     <p class="hint">С октября по март 1-й и 2-й контуры не заряжаются — расход Зерноцида и брикетов Pest Killer падает до нуля, а 3-й контур заряжается двойным объёмом: <b class="n">268 → 536</b> клеевых станций в месяц, то есть <b class="n">42 880 → 85 760 ₸</b>.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Расход материалов — за месяц и за год</h2>
+      <span class="hint">натуральный расход и деньги</span>
+    </div>
+    <div class="scroll">
+      <table style="min-width:780px;">
+        <thead><tr>
+          <th>Материал</th><th class="n">Месяц апр–сен</th><th class="n">Месяц окт–мар</th>
+          <th class="n">За выбранный период</th><th class="n">За полный год</th><th class="n">Год, ₸</th>
+        </tr></thead>
+        <tbody id="tbUse"></tbody>
+        <tfoot id="tfUse"></tfoot>
+      </table>
+    </div>
+    <p class="hint">Натуральный расход считается на 8 обходов в месяц. Зимой 1-й и 2-й контуры не заряжаются, поэтому яды и бутылки за октябрь–март равны нулю, а клеевых станций уходит вдвое больше.</p>
   </div>
 
   <div class="card">
@@ -481,10 +512,14 @@ function render(){
   document.getElementById("oS").textContent = money(t.staff);
   const per = t.n===12 ? "за полный год" : `за ${t.n} выбранных мес`;
   ["oIper","oHper","oSper"].forEach(id=>document.getElementById(id).textContent=per);
-  document.getElementById("phHi").textContent = money(t.eq.hi*t.k)+"/мес";
-  document.getElementById("phLo").textContent = money(t.eq.lo*t.k)+"/мес";
+  document.getElementById("phHi").textContent = money(t.eq.hi*t.k);
+  document.getElementById("phLo").textContent = money(t.eq.lo*t.k);
+  document.getElementById("oHcov").textContent =
+    "ККЗ + 122 бройлерных объекта · " + (vat ? "цены с НДС 16 %" : "цены без НДС");
   document.getElementById("uS").textContent = money(u.s.total);
   document.getElementById("uW").textContent = money(u.w.total);
+  document.getElementById("uMatY").textContent =
+    money((u.s.zc+u.s.pk+u.s.bot+u.s.st)*6 + (u.w.zc+u.w.pk+u.w.bot+u.w.st)*6);
 
   // bars
   const rows=[
@@ -523,6 +558,23 @@ function render(){
   document.getElementById("tfSites").innerHTML=
     `<tr><td>Итого</td><td>${T.c1}</td><td>${T.c2}</td><td>${T.c3}</td><td>${T.c1+T.c2+T.c3}</td>
       <td>${kg(T.pk)}</td><td>${kg(T.zc)}</td><td>${money(u.s.pk+u.s.zc)}</td><td>${money(u.s.st)}</td></tr>`;
+
+  // consumption
+  const USE=[
+    ["Зерноцид","кг",T.zc,0,u.pZ],
+    ["Pest Killer, брикеты","кг",T.pk,0,u.pPK],
+    ["Клеевые станции 3-го контура","шт",T.c3,T.c3*2,u.pSt],
+    ["Бутылки","шт",u.s.bottles,0,u.pB]
+  ];
+  const unit=(v,e)=>(v===0?'<span class="muted">0</span>':(Number.isInteger(v)?v:v.toFixed(1).replace(".",","))+" "+e);
+  document.getElementById("tbUse").innerHTML=USE.map(r=>{
+    const per=r[2]*t.nS+r[3]*t.nW, yr=r[2]*6+r[3]*6;
+    return `<tr><td>${r[0]}</td><td class="n">${unit(r[2],r[1])}</td><td class="n">${unit(r[3],r[1])}</td>
+      <td class="n">${unit(per,r[1])}</td><td class="n">${unit(yr,r[1])}</td><td class="n">${money(yr*r[4])}</td></tr>`;
+  }).join("");
+  const yrCost=USE.reduce((a,r)=>a+(r[2]*6+r[3]*6)*r[4],0);
+  document.getElementById("tfUse").innerHTML=
+    `<tr><td>Материалы, итого</td><td></td><td></td><td></td><td></td><td>${money(yrCost)}</td></tr>`;
 
   // ledger
   const L=[
