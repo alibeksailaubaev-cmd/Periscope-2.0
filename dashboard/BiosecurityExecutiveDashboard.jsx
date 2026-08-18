@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useTime, useTransform } from "framer-motion";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import {
@@ -1410,111 +1410,294 @@ function LogisticsMap({ T }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   10b. РОЛИК «ВХОДНОЙ КОНТРОЛЬ ВНЕШНЕГО ПЕРИМЕТРА»
-   Файл кладётся рядом со страницей: assets/external-flow.mp4
-   Если файла нет (или страница открыта там, где внешние медиа запрещены) —
-   показывается раскадровка сцен вместо плеера.
+   10b. АНИМАЦИЯ «ВХОДНОЙ КОНТРОЛЬ ВНЕШНЕГО ПЕРИМЕТРА»
+   КамАЗ подъезжает извне → дезбарьер с распылом → санпропускник и шлагбаум →
+   заезд на внутренние склады. Все фазы синхронизированы одним таймером, так что
+   форсунки работают ровно тогда, когда машина под аркой, а шлагбаум поднимается
+   ровно под подъезжающую машину.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+const GATE = { w: 1040, h: 300 };
+const ROAD_Y = 210;
+const CYCLE = 11000;                      // длительность полного проезда, мс
+
+/* ключевые фазы проезда: доля цикла → координата X */
+const RUN_P = [0, 0.20, 0.34, 0.46, 0.56, 0.66, 0.82, 1];
+const RUN_X = [-110, 275, 400, 470, 495, 495, 800, 1160];
+
+function Kamaz({ T, p }) {
+  const x = useTransform(p, RUN_P, RUN_X);
+  // кузов «грязный» до арки и чистый после обработки
+  const body = useTransform(p, [0.20, 0.36], [T.faint, T.blue], { clamp: true });
+  const tarp = useTransform(p, [0.20, 0.36], ["#9aa5b8", "#dfe9fb"], { clamp: true });
+  const okMark = useTransform(p, [0.34, 0.40, 0.94, 1], [0, 1, 1, 0]);
+  const bounce = useTransform(p, (v) => Math.sin(v * 90) * 0.7);
+
+  return (
+    <motion.g style={{ x }}>
+      <motion.g style={{ y: bounce }}>
+        <ellipse cx={-6} cy={16} rx={44} ry={5} fill={T.text} opacity={T.key === "dark" ? 0.3 : 0.10} />
+        {/* кузов с тентом */}
+        <motion.rect x={-44} y={-16} width={50} height={26} rx={3} style={{ fill: body }} />
+        <motion.path d="M -44 -16 Q -19 -34 6 -16 Z" style={{ fill: tarp }} />
+        <rect x={-44} y={-16} width={50} height={26} rx={3} fill="none" stroke={T.text} strokeWidth={0.8} opacity={0.18} />
+        {/* кабина */}
+        <motion.rect x={8} y={-14} width={24} height={24} rx={5} style={{ fill: body }} />
+        <rect x={13} y={-10} width={15} height={11} rx={2.5} fill={T.key === "dark" ? "#cfe0ff" : "#eaf1ff"} opacity={0.95} />
+        {/* колёса */}
+        {[-32, -16, 22].map((cx) => (
+          <g key={cx}>
+            <circle cx={cx} cy={11} r={7.5} fill={T.key === "dark" ? "#0d1424" : "#26303f"} />
+            <circle cx={cx} cy={11} r={3} fill={T.key === "dark" ? "#4c5a72" : "#8b98ac"} />
+          </g>
+        ))}
+        {/* отметка «обработан» */}
+        <motion.g style={{ opacity: okMark }}>
+          <circle cx={-19} cy={-42} r={11} fill={T.teal} />
+          <path d="M -24 -42 L -21 -38 L -14 -46" fill="none" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+        </motion.g>
+      </motion.g>
+    </motion.g>
+  );
+}
+
+/* активность узла: 0 вне окна, 1 внутри, с плавными фронтами */
+const ramp = (v, a, b, c, d) => {
+  if (v <= a || v >= d) return 0;
+  if (v < b) return (v - a) / (b - a);
+  if (v <= c) return 1;
+  return (d - v) / (d - c);
+};
+
+function SprayArch({ T, ps }) {
+  // форсунки работают, пока хоть одна машина находится под аркой
+  const on = useTransform(ps, (vals) => Math.max(...vals.map((v) => ramp(v, 0.18, 0.21, 0.35, 0.38))));
+  const jets = [310, 330, 350, 370, 390];
+  return (
+    <g>
+      {/* опоры и балка */}
+      <rect x={296} y={96} width={102} height={13} rx={5} fill={T.cyan} opacity={0.85} />
+      <rect x={296} y={104} width={12} height={112} rx={4} fill={T.cyan} opacity={0.5} />
+      <rect x={386} y={104} width={12} height={112} rx={4} fill={T.cyan} opacity={0.5} />
+      {/* распыл сверху */}
+      <motion.g style={{ opacity: on }}>
+        {jets.map((jx, i) => (
+          <g key={jx}>
+            <circle cx={jx} cy={112} r={2.4} fill={T.cyan} />
+            <motion.path
+              d={`M ${jx} 114 L ${jx - 9} 200 L ${jx + 9} 200 Z`}
+              fill={T.cyan}
+              animate={{ opacity: [0.06, 0.30, 0.06] }}
+              transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut", delay: i * 0.09 }}
+            />
+            {[0, 1, 2].map((k) => (
+              <motion.circle
+                key={k} cx={jx} r={1.7} fill={T.cyan}
+                animate={{ cy: [120, 200], opacity: [0.9, 0] }}
+                transition={{ duration: 0.7, repeat: Infinity, ease: "easeIn", delay: i * 0.09 + k * 0.23 }}
+              />
+            ))}
+          </g>
+        ))}
+        {/* боковые форсунки по колёсам */}
+        {[[300, 1], [394, -1]].map(([sx, dir]) => (
+          <g key={sx}>
+            {[168, 190].map((sy, i) => (
+              <motion.path
+                key={sy}
+                d={`M ${sx} ${sy} L ${sx + dir * 46} ${sy - 9} L ${sx + dir * 46} ${sy + 9} Z`}
+                fill={T.cyan}
+                animate={{ opacity: [0.05, 0.26, 0.05] }}
+                transition={{ duration: 0.75, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
+              />
+            ))}
+          </g>
+        ))}
+        {/* лужа под аркой */}
+        <ellipse cx={347} cy={216} rx={58} ry={6} fill={T.cyan} opacity={0.22} />
+      </motion.g>
+    </g>
+  );
+}
+
+function Checkpoint({ T, ps }) {
+  // шлагбаум поднимается под ту машину, которая подъехала
+  const boom = useTransform(ps, (vals) => -74 * Math.max(...vals.map((v) => ramp(v, 0.54, 0.60, 0.80, 0.86))));
+  const doc = useTransform(ps, (vals) => Math.max(...vals.map((v) => ramp(v, 0.54, 0.58, 0.74, 0.80))));
+  return (
+    <g>
+      {/* будка санпропускника */}
+      <rect x={588} y={128} width={74} height={82} rx={9} fill={T.surface} stroke={T.border} strokeWidth={1.2} />
+      <rect x={588} y={128} width={74} height={9} rx={4} fill={T.violet} opacity={0.55} />
+      <rect x={600} y={150} width={26} height={22} rx={3} fill={T.blue} opacity={0.22} />
+      <circle cx={643} cy={162} r={7} fill={T.violet} opacity={0.85} />
+      <path d="M 635 186 L 636 172 Q 643 167 650 172 L 651 186 Z" fill={T.violet} opacity={0.8} />
+
+      {/* стойка и стрела шлагбаума */}
+      <rect x={556} y={150} width={9} height={66} rx={4} fill={T.amber} />
+      <motion.g style={{ rotate: boom, originX: "560px", originY: "154px" }}>
+        <rect x={556} y={149} width={116} height={9} rx={4.5} fill={T.amber} />
+        {[572, 600, 628, 652].map((sx, i) => (
+          <rect key={sx} x={sx} y={149} width={14} height={9} fill={i % 2 ? "#fff" : T.red} opacity={0.9} />
+        ))}
+      </motion.g>
+
+      {/* карточка допуска */}
+      <motion.g style={{ opacity: doc }}>
+        <rect x={404} y={80} width={112} height={42} rx={9} fill={T.surface} stroke={T.teal} strokeWidth={1.4} />
+        <circle cx={424} cy={101} r={10} fill={T.teal} opacity={0.18} />
+        <path d="M 419 101 L 422 105 L 429 97" fill="none" stroke={T.teal} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <text x={442} y={97} fontSize="10" fontWeight="600" fill={T.text}>допуск оформлен</text>
+        <text x={442} y={111} fontSize="9" fill={T.faint}>документы проверены</text>
+      </motion.g>
+    </g>
+  );
+}
+
+function ExternalFlowScene({ T }) {
+  const time = useTime();
+  const p1 = useTransform(time, (t) => (t % CYCLE) / CYCLE);
+  const p2 = useTransform(time, (t) => ((t + CYCLE * 0.5) % CYCLE) / CYCLE);
+
+  const zones = [
+    { x: 130, label: "ВНЕШНЯЯ ЗОНА",   sub: "подъезд транспорта",     tone: T.faint },
+    { x: 347, label: "ДЕЗБАРЬЕР",      sub: "обработка транспорта",   tone: T.cyan },
+    { x: 600, label: "САНПРОПУСКНИК",  sub: "допуск и входной контроль", tone: T.violet },
+    { x: 880, label: "ВНУТРЕННЯЯ ЗОНА", sub: "склады предприятия",    tone: T.teal },
+  ];
+
+  const stores = [
+    { x: 740, name: "Склад ТМЦ" },
+    { x: 856, name: "Ветаптека" },
+    { x: 972, name: "Склад МиДС" },
+  ];
+
+  return (
+    <svg viewBox={`0 0 ${GATE.w} ${GATE.h}`} className="w-full" style={{ minWidth: 760 }}>
+      {/* фон зон */}
+      <rect x={0} y={0} width={430} height={GATE.h} fill={T.grid} opacity={0.45} />
+      <rect x={676} y={0} width={364} height={GATE.h} fill={T.teal} opacity={T.key === "dark" ? 0.07 : 0.06} />
+      <line x1={676} y1={0} x2={676} y2={GATE.h} stroke={T.teal} strokeWidth={1.4} strokeDasharray="7 7" opacity={0.6} />
+
+      {/* дорога */}
+      <rect x={0} y={ROAD_Y - 34} width={GATE.w} height={64} fill={T.key === "dark" ? "#171f2e" : "#dfe4ec"} />
+      <motion.g
+        animate={{ x: [0, -48] }}
+        transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+      >
+        {Array.from({ length: 24 }).map((_, i) => (
+          <rect key={i} x={i * 48} y={ROAD_Y - 4} width={26} height={3} rx={1.5} fill={T.surface} opacity={0.75} />
+        ))}
+      </motion.g>
+
+      {/* склады */}
+      {stores.map((st) => (
+        <g key={st.name}>
+          <rect x={st.x - 48} y={110} width={96} height={72} rx={9} fill={T.surface} stroke={T.teal} strokeWidth={1.2} />
+          <rect x={st.x - 48} y={110} width={96} height={8} rx={4} fill={T.teal} opacity={0.5} />
+          <rect x={st.x - 24} y={148} width={48} height={34} rx={3} fill={T.teal} opacity={0.18} />
+          <text x={st.x} y={200} textAnchor="middle" fontSize="10.5" fontWeight="600" fill={T.text}>{st.name}</text>
+        </g>
+      ))}
+
+      <SprayArch T={T} ps={[p1, p2]} />
+      <Checkpoint T={T} ps={[p1, p2]} />
+
+      <g style={{ transform: `translateY(${ROAD_Y}px)` }}>
+        <Kamaz T={T} p={p1} />
+        <Kamaz T={T} p={p2} />
+      </g>
+
+      {/* подписи зон */}
+      {zones.map((z) => (
+        <g key={z.label}>
+          <text x={z.x} y={26} textAnchor="middle" fontSize="10.5" fontWeight="700" letterSpacing="1.6" fill={z.tone}>
+            {z.label}
+          </text>
+          <text x={z.x} y={42} textAnchor="middle" fontSize="10" fill={T.faint}>{z.sub}</text>
+        </g>
+      ))}
+
+      <text x={GATE.w / 2} y={GATE.h - 6} textAnchor="middle" fontSize="10.5" fill={T.faint}>
+        каждый заезд — обработка, проверка документов и входной контроль груза
+      </text>
+    </svg>
+  );
+}
+
+/* Опциональный плеер: включается, если рядом лежит assets/external-flow.mp4 */
 const VIDEO_SRC = "assets/external-flow.mp4";
 
 const STORYBOARD = [
-  { t: "00:00", icon: Truck,       title: "Подъезд транспорта",        d: "Колонна с сырьём, ТМЦ и препаратами идёт к периметру" },
-  { t: "00:06", icon: FileText,    title: "Заявка и допуск",           d: "Документарный барьер: без отметки службы шлагбаум закрыт" },
-  { t: "00:14", icon: Droplets,    title: "Дезбарьер",                 d: "Обработка колёс, ходовой и тента, контроль концентрации" },
-  { t: "00:24", icon: DoorOpen,    title: "Санпропускник людей",       d: "Водитель и экспедитор: смена одежды, обработка, журнал" },
-  { t: "00:32", icon: Package,     title: "Входной контроль ТМЦ",      d: "Тентование, целостность тары, отбор проб — охват 20%", weak: true },
-  { t: "00:42", icon: ShieldCheck, title: "Санобработка под шрот",     d: "Площадка обработки пуста — задача не закрыта, 0%", weak: true },
-  { t: "00:50", icon: Warehouse,   title: "Допуск на склады",          d: "Проверенный транспорт заезжает к докам складов и ветаптеки" },
+  { t: "01", icon: Truck,       title: "Подъезд транспорта",   d: "Сырьё, ТМЦ, препараты идут к периметру", cov: "100%", ok: true },
+  { t: "02", icon: FileText,    title: "Заявка и допуск",      d: "Без отметки службы шлагбаум закрыт",     cov: "100%", ok: true },
+  { t: "03", icon: Droplets,    title: "Дезбарьер",            d: "Колёса, ходовая, тент, контроль концентрации", cov: "100%", ok: true },
+  { t: "04", icon: DoorOpen,    title: "Санпропускник людей",  d: "Смена одежды, обработка, журнал",        cov: "100%", ok: true },
+  { t: "05", icon: Package,     title: "Входной контроль ТМЦ", d: "Тентование, тара, отбор проб",           cov: "20%",  ok: false },
+  { t: "06", icon: ShieldCheck, title: "Санобработка под шрот", d: "Обработка перед погрузкой сырья",       cov: "0%",   ok: false },
+  { t: "07", icon: Warehouse,   title: "Допуск на склады",     d: "Заезд к докам складов и ветаптеки",      cov: "100%", ok: true },
 ];
 
 function ExternalFlowVideo({ T }) {
-  const [ok, setOk] = useState(true);
+  const [hasVideo, setHasVideo] = useState(true);
 
   return (
     <div>
-      <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr]">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, ease: EASE }}
-          className="relative overflow-hidden rounded-2xl"
-          style={{
-            background: T.ground,
-            border: `1px solid ${T.border}`,
-            boxShadow: T.shadow,
-            aspectRatio: "16 / 9",
-          }}
-        >
-          {ok ? (
-            <video
-              src={VIDEO_SRC}
-              autoPlay muted loop playsInline controls
-              onError={() => setOk(false)}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            />
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
-              <motion.div
-                className="grid h-14 w-14 place-items-center rounded-2xl"
-                style={{ background: `${T.violet}1f`, color: T.violet }}
-                animate={{ scale: [1, 1.06, 1] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <Truck size={26} />
-              </motion.div>
-              <div className="text-[14px] font-semibold" style={{ color: T.text }}>
-                Ролик подключается файлом
-              </div>
-              <div className="max-w-[380px] text-[12.5px] leading-relaxed" style={{ color: T.muted }}>
-                Положите видео рядом со страницей по пути{" "}
-                <code style={{
-                  fontFamily: "ui-monospace, monospace", fontSize: "11.5px",
-                  background: T.grid, borderRadius: 5, padding: "1px 6px", color: T.text,
-                }}>
-                  {VIDEO_SRC}
-                </code>{" "}
-                — плеер включится автоматически. Справа — раскадровка тех же сцен.
-              </div>
-            </div>
-          )}
-        </motion.div>
+      <div className="overflow-x-auto rounded-2xl"
+           style={{ background: T.panelHi, border: `1px solid ${T.border}` }}>
+        <ExternalFlowScene T={T} />
+      </div>
 
-        <div className="flex flex-col gap-2">
-          {STORYBOARD.map((sc, i) => {
-            const Icon = sc.icon;
-            const tone = sc.weak ? T.red : T.violet;
-            return (
-              <motion.div
-                key={sc.t}
-                initial={{ opacity: 0, x: 16 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05, duration: 0.42, ease: EASE }}
-                whileHover={{ x: -3 }}
-                className="flex items-start gap-3 rounded-xl px-3.5 py-2.5"
-                style={{
-                  background: sc.weak ? `${T.red}0d` : T.panel,
-                  border: `1px solid ${sc.weak ? `${T.red}55` : T.border}`,
-                }}
-              >
+      <div className="mt-4 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+        {STORYBOARD.map((sc, i) => {
+          const Icon = sc.icon;
+          const tone = sc.ok ? T.violet : T.red;
+          return (
+            <motion.div
+              key={sc.t}
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05, duration: 0.42, ease: EASE }}
+              whileHover={{ y: -3 }}
+              className="rounded-xl px-3.5 py-3"
+              style={{
+                background: sc.ok ? T.panel : `${T.red}0f`,
+                border: `1px solid ${sc.ok ? T.border : `${T.red}55`}`,
+              }}
+            >
+              <div className="flex items-center gap-2.5">
                 <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg"
                      style={{ background: `${tone}1a`, color: tone }}>
                   <Icon size={14} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="font-mono text-[10.5px]" style={{ color: T.faint }}>{sc.t}</span>
-                    <span className="text-[12.5px] font-semibold" style={{ color: T.text }}>{sc.title}</span>
-                  </div>
-                  <div className="text-[11.5px] leading-snug" style={{ color: T.faint }}>{sc.d}</div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                <span className="font-mono text-[10px]" style={{ color: T.faint }}>{sc.t}</span>
+                <span className="ml-auto font-mono text-[11px] font-semibold" style={{ color: tone }}>{sc.cov}</span>
+              </div>
+              <div className="mt-2 text-[12.5px] font-semibold leading-tight" style={{ color: T.text }}>{sc.title}</div>
+              <div className="mt-0.5 text-[11px] leading-snug" style={{ color: T.faint }}>{sc.d}</div>
+            </motion.div>
+          );
+        })}
       </div>
+
+      {hasVideo && (
+        <div className="mt-4">
+          <div className="mb-2 flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em]"
+               style={{ color: T.faint }}>
+            <Truck size={12} /> видеоверсия ролика
+          </div>
+          <video
+            src={VIDEO_SRC}
+            autoPlay muted loop playsInline controls
+            onError={() => setHasVideo(false)}
+            style={{
+              width: "100%", maxWidth: 720, borderRadius: 16, display: "block",
+              border: `1px solid ${T.border}`, boxShadow: T.shadow,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -1828,12 +2011,12 @@ export default function BiosecurityExecutiveDashboard() {
             <SectionHead
               T={T}
               eyebrow="Внешний контур · видеоматериал"
-              title="Ролик «Входной контроль внешнего периметра»"
+              title="Входной контроль внешнего периметра: от дороги до складов"
               right={
                 <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[11.5px]"
                      style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
                   <ArrowRight size={13} color={T.violet} />
-                  7 сцен · 45–60 секунд
+                  дезбарьер · санпропускник · склады
                 </div>
               }
             />
