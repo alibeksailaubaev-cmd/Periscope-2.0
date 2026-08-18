@@ -123,6 +123,19 @@ h2{font-size:15px; font-weight:700; margin:0; letter-spacing:-.01em;}
 .opt .split b{font-family:"JetBrains Mono",monospace; font-weight:500; color:var(--ink-2); font-variant-numeric:tabular-nums;}
 .gap-note{font-size:12.5px; color:var(--hunter); font-weight:600;}
 
+.seg{display:inline-flex; gap:3px; padding:3px; border-radius:999px;
+  background:var(--surface); border:1px solid var(--staff); margin-bottom:8px; align-self:flex-start;}
+.seg button{
+  border:0; background:transparent; color:var(--staff); cursor:pointer; font-family:inherit;
+  font-size:11.5px; font-weight:600; padding:5px 11px; border-radius:999px; white-space:nowrap;
+  transition:background .14s ease, color .14s ease;
+}
+.seg button[aria-pressed="true"]{background:var(--staff); color:var(--surface);}
+.seg button:focus-visible{outline:2px solid var(--staff); outline-offset:2px;}
+.seg.tight{margin-bottom:0;} .seg.tight button{padding:4px 11px;}
+.head-row{display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;}
+.head-lbl{font-size:12px; color:var(--muted); font-weight:600;}
+
 /* ---- card ---- */
 .card{
   background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
@@ -136,6 +149,11 @@ h2{font-size:15px; font-weight:700; margin:0; letter-spacing:-.01em;}
 .bar-row{display:grid; grid-template-columns:190px 1fr 128px; align-items:center; gap:14px; font-size:13.5px;}
 .bar-track{height:22px; border-radius:6px; background:var(--surface-2); overflow:hidden;}
 .bar-fill{height:100%; border-radius:6px; transition:width .3s cubic-bezier(.2,.7,.3,1);}
+.bar-stack{display:flex; height:100%; border-radius:6px; overflow:hidden;}
+.bar-seg{height:100%; transition:width .3s cubic-bezier(.2,.7,.3,1);}
+.bar-legend{display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--muted); padding-left:204px;}
+.bar-legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; vertical-align:-1px;}
+@media (max-width:900px){.bar-legend{padding-left:0;}}
 .bar-row .amt{text-align:right; font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500;}
 .bar-row .na{color:var(--muted); font-size:12.5px;}
 
@@ -195,7 +213,7 @@ summary:focus-visible{outline:2px solid var(--staff); outline-offset:-2px; borde
 .vs .vn{font-family:"JetBrains Mono",monospace; font-size:20px; font-weight:700; color:var(--staff); letter-spacing:-.03em;}
 .vs .vl{font-size:12px; color:var(--muted); margin-top:3px;}
 
-.facts{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+.facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(158px,1fr)); gap:12px;}
 .fact{background:var(--surface-2); border-radius:12px; padding:13px 15px; display:flex; flex-direction:column; gap:2px;}
 .fact .fv{font-family:"JetBrains Mono",monospace; font-size:20px; font-weight:700; letter-spacing:-.03em;}
 .fact .fl{font-size:12px; color:var(--muted);}
@@ -274,8 +292,20 @@ tr.off td{opacity:.42;}
       </div>
     </div>
     <div class="opt s">
-      <div class="opt-top"><span class="who">Штат УКПФ · 2 дератизатора</span><span class="chip">наш расчёт</span></div>
-      <span class="scope">Присутствие 5/2, восемь обходов в месяц, 1 525 приманочных точек.</span>
+      <div class="opt-top"><span class="who" id="staffWho">Штат УКПФ</span><span class="chip">наш расчёт</span></div>
+      <span class="scope" id="staffScope">Присутствие 5/2, восемь обходов в месяц, 1 525 приманочных точек.</span>
+      <div class="seg" role="group" aria-label="Что показывать в сумме штата">
+        <button data-view="all"  aria-pressed="true">Всё</button>
+        <button data-view="pay"  aria-pressed="false">Зарплата</button>
+        <button data-view="mat"  aria-pressed="false">Материалы</button>
+      </div>
+      <div class="head-row">
+        <span class="head-lbl">Численность</span>
+        <div class="seg tight" role="group" aria-label="Численность штата">
+          <button data-head="2">2 дератизатора</button>
+          <button data-head="4" aria-pressed="true">4 дератизатора</button>
+        </div>
+      </div>
       <span class="big n" id="oS">—</span>
       <span class="per" id="oSper">за выбранный период</span>
       <span class="cov">13 объектов: ККЗ, инкубаторий, лузга, АБК, 8 площадок</span>
@@ -324,7 +354,7 @@ tr.off td{opacity:.42;}
   <div class="card">
     <div class="card-head">
       <h2>Служба и режим работы</h2>
-      <span class="hint">2 дератизатора в штате, график 5/2</span>
+      <span class="hint" id="crewHint">—</span>
     </div>
     <div class="facts" id="facts"></div>
     <p class="hint">Одна и та же зарплата закрывает 13 объектов: ККЗ, инкубаторий, склад лузги, АБК и восемь бройлерных площадок — А, Б, В (Восточка), Г, Д, Е, Ж и Айыртау. Фонд оплаты труда фиксирован и не растёт от количества обслуживаемых точек, поэтому расширение зоны обслуживания добавляет к бюджету только яды и станции.</p>
@@ -399,7 +429,7 @@ tr.off td{opacity:.42;}
     <summary>Параметры расчёта и допущения</summary>
     <div class="det-body">
       <div class="inputs">
-        <div class="inp"><label for="iSalary">ЗП двух дератизаторов, ₸/мес</label><input id="iSalary" type="number" value="516976" step="1000"></div>
+        <div class="inp"><label for="iSalary">Оклад одного дератизатора, ₸/мес</label><input id="iSalary" type="number" value="258488" step="1000"></div>
         <div class="inp"><label for="iZerno">Зерноцид, ₸/кг</label><input id="iZerno" type="number" value="740" step="10"></div>
         <div class="inp"><label for="iPk">Pest Killer брикеты, ₸/кг</label><input id="iPk" type="number" value="3642.5" step="50"></div>
         <div class="inp"><label for="iStation">Клеевая станция 3-го контура, ₸/шт</label><input id="iStation" type="number" value="160" step="10"></div>
@@ -460,7 +490,7 @@ const PH={own:{hi:3172000,lo:2074000}, ukpf:{hi:2806000,lo:1830000}};
 const VAT=1.16;
 
 let picked=new Set(MONTHS.map((_,i)=>i));
-let vat=false, eqUkpf=true;
+let vat=false, eqUkpf=true, staffView="all", head=4;
 
 const money=v=>Math.round(v).toLocaleString("ru-RU").replace(/ /g," ")+" ₸";
 const mln=v=>(v/1e6).toFixed(2).replace(".",",")+" млн ₸";
@@ -469,7 +499,7 @@ const kg=v=>(Number.isInteger(v)?v:v.toFixed(1).replace(".",","))+" кг";
 const num=id=>parseFloat(document.getElementById(id).value)||0;
 
 function ukpfMonths(){
-  const salary=num("iSalary"), pZ=num("iZerno"), pPK=num("iPk"),
+  const perPerson=num("iSalary"), salary=perPerson*head, pZ=num("iZerno"), pPK=num("iPk"),
         pSt=num("iStation"), pB=num("iBottlePrice"), nB=num("iBottles");
   const mk=w=>{
     const zcKg=w?0:T.zc, pkKg=w?0:T.pk, bot=w?0:nB, st=w?T.c3*2:T.c3;
@@ -477,7 +507,7 @@ function ukpfMonths(){
     o.total=o.salary+o.zc+o.pk+o.bot+o.st;
     return o;
   };
-  return {s:mk(false), w:mk(true), pZ, pPK, pSt, pB, salary};
+  return {s:mk(false), w:mk(true), pZ, pPK, pSt, pB, salary, perPerson};
 }
 
 function totals(){
@@ -521,9 +551,22 @@ function render(){
   // option cards
   document.getElementById("oI").textContent = money(t.indigo);
   document.getElementById("oH").textContent = money(t.hunter);
-  document.getElementById("oS").textContent = money(t.staff);
+  const pay=u.salary*t.n, mat=t.staff-pay;
+  const staffShown = staffView==="pay" ? pay : staffView==="mat" ? mat : t.staff;
+  document.getElementById("oS").textContent = money(staffShown);
+  document.querySelectorAll(".seg button[data-view]").forEach(b=>
+    b.setAttribute("aria-pressed", String(b.dataset.view===staffView)));
+  document.querySelectorAll(".seg button[data-head]").forEach(b=>
+    b.setAttribute("aria-pressed", String(+b.dataset.head===head)));
+  const people = head+" "+(head>=5?"дератизаторов":"дератизатора");
+  document.getElementById("staffWho").textContent = "Штат УКПФ · "+people;
+  document.getElementById("staffScope").textContent =
+    `Присутствие 5/2, восемь обходов в месяц, 1 525 приманочных точек — на ${people}.`;
+  document.getElementById("crewHint").textContent = people+" в штате, график 5/2";
   const per = t.n===12 ? "за полный год" : `за ${t.n} выбранных мес`;
-  ["oIper","oHper","oSper"].forEach(id=>document.getElementById(id).textContent=per);
+  ["oIper","oHper"].forEach(id=>document.getElementById(id).textContent=per);
+  document.getElementById("oSper").textContent =
+    (staffView==="pay" ? "фонд оплаты труда, " : staffView==="mat" ? "яды и станции, " : "") + per;
   document.getElementById("phHi").textContent = money(t.eq.hi*t.k);
   document.getElementById("phLo").textContent = money(t.eq.lo*t.k);
   document.getElementById("oHcov").textContent =
@@ -539,10 +582,21 @@ function render(){
     ["Pest Hunters", t.hunter, "var(--hunter)", "ККЗ + 122 объекта площадок · 1 обход/мес"]
   ];
   const max=Math.max(...rows.map(r=>r[1]),1);
+  const track=r=> r[0].startsWith("Штат")
+    ? `<span class="bar-track"><span class="bar-stack" style="width:${(r[1]/max*100).toFixed(2)}%">
+         <span class="bar-seg" style="width:${(pay/(r[1]||1)*100).toFixed(2)}%;background:var(--staff)"></span>
+         <span class="bar-seg" style="width:${(mat/(r[1]||1)*100).toFixed(2)}%;background:color-mix(in srgb, var(--staff) 42%, var(--surface))"></span>
+       </span></span>`
+    : `<span class="bar-track"><span class="bar-fill" style="width:${(r[1]/max*100).toFixed(2)}%;background:${r[2]}"></span></span>`;
   document.getElementById("bars").innerHTML=rows.map(r=>
     `<div class="bar-row"><span>${r[0]}<br><span class="na">${r[3]}</span></span>
-      <span class="bar-track"><span class="bar-fill" style="width:${(r[1]/max*100).toFixed(2)}%;background:${r[2]}"></span></span>
-      <span class="amt">${r[1]?money(r[1]):"—"}</span></div>`).join("");
+      ${track(r)}
+      <span class="amt">${r[1]?money(r[1]):"—"}</span></div>`).join("")
+    + `<div class="bar-legend">
+        <span><i style="background:var(--staff)"></i>Зарплата ${money(pay)}</span>
+        <span><i style="background:color-mix(in srgb, var(--staff) 42%, var(--surface))"></i>Яды и станции ${money(mat)}</span>
+        <span><i style="background:var(--hunter)"></i>Счёт подрядчика</span>
+       </div>`;
   document.getElementById("chartHint").textContent = vat ? "цены Pest Hunters с НДС 16 %" : "цены Pest Hunters без НДС";
   document.getElementById("chartNote").textContent =
     "Indigo Solutions в этот график не входит: его КП закрывает только кормоцех, других данных у нас нет, и сравнивать эту сумму с полным охватом фабрики нельзя. Штат УКПФ при этом закрывает больше объектов, чем Pest Hunters, — инкубаторий, склад лузги и АБК идут сверх сравниваемого объёма.";
@@ -563,6 +617,7 @@ function render(){
     [int(T.c1+T.c2+T.c3), "приманочных точек на 8 площадках"],
     ["8", "обходов в месяц, по 2 в неделю"],
     [kg(T.pk+T.zc), "ядоприманок в месяц в тёплый сезон"],
+    [String(head), "дератизатора в штате, график 5/2"],
     ["13", "объектов закрывает штат"]
   ].map(f=>`<div class="fact"><span class="fv">${f[0]}</span><span class="fl">${f[1]}</span></div>`).join("");
 
@@ -596,7 +651,7 @@ function render(){
 
   // ledger
   const L=[
-    ["Зарплата 2 дератизаторов","2 чел., 5/2",money(u.salary/2)+" / чел",u.s.salary,u.w.salary],
+    ["Фонд оплаты труда",head+" чел., 5/2",money(u.perPerson)+" / чел",u.s.salary,u.w.salary],
     ["Зерноцид",kg(T.zc)+" / мес",money(u.pZ)+" / кг",u.s.zc,u.w.zc],
     ["Pest Killer, брикеты",kg(T.pk)+" / мес",money(u.pPK)+" / кг",u.s.pk,u.w.pk],
     ["Бутылки",int(u.s.bottles)+" шт / мес",money(u.pB)+" / шт",u.s.bot,u.w.bot],
@@ -658,6 +713,12 @@ document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click"
   if(p==="summer") picked=new Set(MONTHS.map((m,i)=>m.w?null:i).filter(i=>i!==null));
   if(p==="winter") picked=new Set(MONTHS.map((m,i)=>m.w?i:null).filter(i=>i!==null));
   render();
+}));
+document.querySelectorAll(".seg button[data-view]").forEach(b=>b.addEventListener("click",()=>{
+  staffView=b.dataset.view; render();
+}));
+document.querySelectorAll(".seg button[data-head]").forEach(b=>b.addEventListener("click",()=>{
+  head=+b.dataset.head; render();
 }));
 document.getElementById("btnVat").addEventListener("click",()=>{vat=!vat; render();});
 document.getElementById("btnEq").addEventListener("click",()=>{eqUkpf=!eqUkpf; render();});
