@@ -1,308 +1,336 @@
 <title>Дератизация УКПФ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap">
 
 <style>
 :root{
-  --paper:#F4F6F2;
+  --paper:#F4F5F7;
   --surface:#FFFFFF;
-  --surface-2:#EDF0EA;
-  --ink:#131A18;
-  --ink-soft:#3D4A46;
-  --muted:#6E7A75;
-  --line:#DDE3DC;
-  --line-strong:#C4CDC2;
+  --surface-2:#ECEEF1;
+  --ink:#0E1418;
+  --ink-2:#404B53;
+  --muted:#727E87;
+  --line:#DCE0E5;
+  --line-2:#C2C9D0;
 
-  --pine:#1B6B57;        /* тёплый сезон */
-  --pine-soft:#E2F0EA;
-  --steel:#35678F;       /* зимний сезон */
-  --steel-soft:#E4EDF5;
-  --clay:#9C5A0E;        /* допущения */
-  --clay-soft:#F7EEDF;
+  --indigo:#4A4FA8;   --indigo-bg:#EAEAF6;
+  --hunter:#A8501C;   --hunter-bg:#F7EBE2;
+  --staff:#0B6E5F;    --staff-bg:#E2F0EC;
 
-  --season:var(--pine);
-  --season-soft:var(--pine-soft);
-
-  --r:14px;
-  --shadow:0 1px 2px rgba(19,26,24,.05), 0 10px 28px -18px rgba(19,26,24,.35);
+  --r:16px;
+  --sh:0 1px 1px rgba(14,20,24,.04), 0 12px 32px -22px rgba(14,20,24,.5);
 }
-:root[data-season="winter"]{ --season:var(--steel); --season-soft:var(--steel-soft); }
-
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --paper:#0E1412;
-    --surface:#161E1B;
-    --surface-2:#1D2723;
-    --ink:#E8EEE9;
-    --ink-soft:#BAC6C0;
-    --muted:#8C9A93;
-    --line:#2A3733;
-    --line-strong:#3A4A44;
-    --pine:#5FCBA8;
-    --pine-soft:#16342B;
-    --steel:#7FB4E0;
-    --steel-soft:#152836;
-    --clay:#E0A85C;
-    --clay-soft:#2E2213;
-    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.9);
+    --paper:#0C1013; --surface:#141A1E; --surface-2:#1C242A;
+    --ink:#E9EDF0; --ink-2:#B6C0C7; --muted:#8A959D;
+    --line:#28323A; --line-2:#3A4750;
+    --indigo:#9EA2E8; --indigo-bg:#1D2040;
+    --hunter:#E09A62; --hunter-bg:#33210F;
+    --staff:#4FCBAF;  --staff-bg:#0E332C;
+    --sh:0 1px 1px rgba(0,0,0,.5), 0 12px 32px -22px #000;
   }
 }
 :root[data-theme="dark"]{
-  --paper:#0E1412;
-  --surface:#161E1B;
-  --surface-2:#1D2723;
-  --ink:#E8EEE9;
-  --ink-soft:#BAC6C0;
-  --muted:#8C9A93;
-  --line:#2A3733;
-  --line-strong:#3A4A44;
-  --pine:#5FCBA8;
-  --pine-soft:#16342B;
-  --steel:#7FB4E0;
-  --steel-soft:#152836;
-  --clay:#E0A85C;
-  --clay-soft:#2E2213;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.9);
+  --paper:#0C1013; --surface:#141A1E; --surface-2:#1C242A;
+  --ink:#E9EDF0; --ink-2:#B6C0C7; --muted:#8A959D;
+  --line:#28323A; --line-2:#3A4750;
+  --indigo:#9EA2E8; --indigo-bg:#1D2040;
+  --hunter:#E09A62; --hunter-bg:#33210F;
+  --staff:#4FCBAF;  --staff-bg:#0E332C;
+  --sh:0 1px 1px rgba(0,0,0,.5), 0 12px 32px -22px #000;
 }
 
 *{box-sizing:border-box;}
 body{
-  margin:0;
-  background:var(--paper);
-  color:var(--ink);
-  font-family:"Source Sans 3", system-ui, sans-serif;
-  font-size:15.5px;
-  line-height:1.5;
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Instrument Sans", system-ui, sans-serif; font-size:15px; line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
-.n{font-family:"IBM Plex Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums;}
-.wrap{max-width:1180px; margin:0 auto; padding:26px 18px 64px; display:flex; flex-direction:column; gap:20px;}
+.n{font-family:"JetBrains Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums; letter-spacing:-.02em;}
+.wrap{max-width:1140px; margin:0 auto; padding:30px 18px 70px; display:flex; flex-direction:column; gap:18px;}
 
-h1,h2,h3{font-family:"Archivo", system-ui, sans-serif; margin:0; text-wrap:balance; letter-spacing:-.02em;}
-h1{font-size:clamp(25px,3.4vw,36px); font-weight:800; line-height:1.1;}
-h2{font-size:17px; font-weight:700;}
-.eyebrow{
-  font-family:"Archivo", sans-serif; font-size:11px; font-weight:700;
-  letter-spacing:.13em; text-transform:uppercase; color:var(--season);
+h1{
+  font-family:"Instrument Serif", Georgia, serif; font-weight:400;
+  font-size:clamp(30px,4.6vw,50px); line-height:1.02; letter-spacing:-.015em; margin:0; text-wrap:balance;
 }
-.lede{color:var(--muted); max-width:62ch; margin:6px 0 0;}
+h1 em{font-style:italic; color:var(--staff);}
+h2{font-size:15px; font-weight:700; margin:0; letter-spacing:-.01em;}
+.eyebrow{font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:12px;}
+.lede{color:var(--muted); max-width:60ch; margin:10px 0 0; font-size:14.5px;}
 
-/* ---------- header + season switch ---------- */
-.head{display:flex; justify-content:space-between; align-items:flex-end; gap:22px; flex-wrap:wrap;}
-.switch{
-  display:inline-flex; background:var(--surface-2); border:1px solid var(--line);
-  border-radius:999px; padding:4px; gap:4px;
+/* ---- month rail ---- */
+.rail{
+  position:sticky; top:0; z-index:20; background:var(--surface); border:1px solid var(--line);
+  border-radius:var(--r); padding:14px 16px; box-shadow:var(--sh);
+  display:flex; flex-direction:column; gap:12px;
 }
-.switch button{
-  font-family:"Archivo",sans-serif; font-size:13px; font-weight:600;
-  border:0; background:transparent; color:var(--muted);
-  padding:9px 16px; border-radius:999px; cursor:pointer; white-space:nowrap;
-  transition:background .16s ease, color .16s ease;
-}
-.switch button:hover{color:var(--ink);}
-.switch button[aria-pressed="true"]{background:var(--season); color:var(--paper);}
-.switch button:focus-visible{outline:2px solid var(--season); outline-offset:2px;}
-
-/* ---------- season ribbon ---------- */
-.ribbon{display:grid; grid-template-columns:repeat(12,1fr); gap:4px;}
+.rail-top{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+.rail-lbl{font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);}
+.months{display:grid; grid-template-columns:repeat(12,1fr); gap:6px;}
 .mo{
-  border-radius:8px; padding:9px 4px; text-align:center;
-  font-family:"IBM Plex Mono",monospace; font-size:11.5px; font-weight:500;
-  border:1px solid var(--line); background:var(--surface); color:var(--muted);
+  border:1px solid var(--line-2); background:var(--surface); color:var(--muted);
+  border-radius:10px; padding:9px 2px 8px; cursor:pointer; text-align:center;
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; font-weight:500;
+  transition:background .14s ease, color .14s ease, border-color .14s ease;
+  display:flex; flex-direction:column; gap:3px; align-items:center;
 }
-.mo.w{background:var(--steel-soft); border-color:var(--steel); color:var(--steel);}
-.mo.s{background:var(--pine-soft); border-color:var(--pine); color:var(--pine);}
-.mo.active{box-shadow:inset 0 0 0 2px var(--season);}
+.mo:hover{border-color:var(--staff);}
+.mo .dot{width:5px; height:5px; border-radius:50%; background:var(--line-2);}
+.mo[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+.mo[aria-pressed="true"] .dot{background:var(--staff);}
+.mo[aria-pressed="true"].w .dot{background:var(--indigo);}
+.mo:focus-visible{outline:2px solid var(--staff); outline-offset:2px;}
+.mini{
+  border:1px solid var(--line-2); background:var(--surface); color:var(--ink-2);
+  border-radius:999px; padding:6px 13px; font-size:12.5px; font-weight:600; cursor:pointer;
+  font-family:inherit;
+}
+.mini:hover{border-color:var(--ink); color:var(--ink);}
+.mini[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+.mini-row{display:flex; gap:7px; flex-wrap:wrap; align-items:center;}
+.sel-count{font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--muted);}
 
-/* ---------- cards ---------- */
+/* ---- option cards ---- */
+.opts{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.opt{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+  padding:20px; box-shadow:var(--sh); display:flex; flex-direction:column; gap:3px; position:relative;
+}
+.opt::before{content:""; position:absolute; left:20px; right:20px; top:0; height:2px; border-radius:0 0 3px 3px;}
+.opt.i::before{background:var(--indigo);} .opt.h::before{background:var(--hunter);} .opt.s::before{background:var(--staff);}
+.opt .who{font-size:13px; font-weight:700; letter-spacing:-.01em;}
+.opt.i .who{color:var(--indigo);} .opt.h .who{color:var(--hunter);} .opt.s .who{color:var(--staff);}
+.opt .scope{font-size:12.5px; color:var(--muted); min-height:34px; margin-bottom:8px;}
+.opt .big{font-family:"JetBrains Mono",monospace; font-size:27px; font-weight:700; letter-spacing:-.035em; font-variant-numeric:tabular-nums;}
+.opt .per{font-size:12.5px; color:var(--muted);}
+.opt .split{
+  margin-top:12px; padding-top:11px; border-top:1px solid var(--line);
+  display:flex; flex-direction:column; gap:5px; font-size:12.5px; color:var(--muted);
+}
+.opt .split div{display:flex; justify-content:space-between; gap:8px;}
+.opt .split b{font-family:"JetBrains Mono",monospace; font-weight:500; color:var(--ink-2); font-variant-numeric:tabular-nums;}
+.gap-note{font-size:12.5px; color:var(--hunter); font-weight:600;}
+
+/* ---- card ---- */
 .card{
   background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
-  padding:20px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;
+  padding:20px; box-shadow:var(--sh); display:flex; flex-direction:column; gap:14px;
 }
 .card-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap;}
-.card-head .hint{color:var(--muted); font-size:13px;}
+.hint{color:var(--muted); font-size:12.5px;}
 
-.kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
-.kpi{
-  background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
-  padding:16px 18px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:4px;
-  position:relative; overflow:hidden;
-}
-.kpi::before{content:""; position:absolute; inset:0 auto 0 0; width:3px; background:var(--season);}
-.kpi .k-l{font-size:12.5px; color:var(--muted); font-family:"Archivo",sans-serif; font-weight:600; letter-spacing:.02em;}
-.kpi .k-v{font-family:"IBM Plex Mono",monospace; font-size:25px; font-weight:600; letter-spacing:-.02em; font-variant-numeric:tabular-nums;}
-.kpi .k-s{font-size:12.5px; color:var(--muted);}
+/* ---- bars ---- */
+.bars{display:flex; flex-direction:column; gap:13px;}
+.bar-row{display:grid; grid-template-columns:190px 1fr 128px; align-items:center; gap:14px; font-size:13.5px;}
+.bar-track{height:22px; border-radius:6px; background:var(--surface-2); overflow:hidden;}
+.bar-fill{height:100%; border-radius:6px; transition:width .3s cubic-bezier(.2,.7,.3,1);}
+.bar-row .amt{text-align:right; font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; font-weight:500;}
+.bar-row .na{color:var(--muted); font-size:12.5px;}
 
-/* ---------- tables ---------- */
-.scroll{overflow-x:auto; margin:0 -4px; padding:0 4px;}
-table{width:100%; border-collapse:collapse; font-size:14px; min-width:560px;}
-th,td{padding:10px 12px; text-align:right; border-bottom:1px solid var(--line);}
+/* ---- tables ---- */
+.scroll{overflow-x:auto;}
+table{width:100%; border-collapse:collapse; font-size:13.5px; min-width:540px;}
+th,td{padding:10px 12px; text-align:right; border-bottom:1px solid var(--line); vertical-align:top;}
 th:first-child,td:first-child{text-align:left;}
 thead th{
-  font-family:"Archivo",sans-serif; font-size:11px; font-weight:700; letter-spacing:.07em;
-  text-transform:uppercase; color:var(--muted); background:var(--surface-2);
-  border-bottom:1px solid var(--line-strong); white-space:nowrap;
+  font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--muted); border-bottom:1px solid var(--line-2); white-space:nowrap;
 }
+th.ci{color:var(--indigo);} th.ch{color:var(--hunter);} th.cs{color:var(--staff);}
 tbody td:first-child{font-weight:600;}
 tbody tr:hover td{background:var(--surface-2);}
-td.n, th.n{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;}
-tfoot td{
-  font-weight:700; border-top:2px solid var(--ink); border-bottom:none;
-  font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;
-}
-tfoot td:first-child{font-family:"Archivo",sans-serif; letter-spacing:.01em;}
-.col-hi{background:var(--season-soft);}
-.zero{color:var(--muted);}
+td.n,th.n{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums;}
+tfoot td{font-weight:700; border-top:1.5px solid var(--ink); border-bottom:none; font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums;}
+tfoot td:first-child{font-family:inherit;}
+.muted{color:var(--muted); font-weight:400;}
 
-.tag{
-  display:inline-block; font-family:"Archivo",sans-serif; font-size:10.5px; font-weight:700;
-  letter-spacing:.06em; text-transform:uppercase; padding:3px 8px; border-radius:999px;
+details{border:1px solid var(--line); border-radius:var(--r); background:var(--surface); box-shadow:var(--sh);}
+summary{
+  padding:16px 20px; cursor:pointer; font-weight:700; font-size:14px; list-style:none;
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
 }
-.tag.s{background:var(--pine-soft); color:var(--pine);}
-.tag.w{background:var(--steel-soft); color:var(--steel);}
-.tag.a{background:var(--clay-soft); color:var(--clay);}
+summary::-webkit-details-marker{display:none;}
+summary::after{content:"＋"; color:var(--muted); font-weight:400;}
+details[open] summary::after{content:"－";}
+summary:focus-visible{outline:2px solid var(--staff); outline-offset:-2px; border-radius:var(--r);}
+.det-body{padding:0 20px 20px; display:flex; flex-direction:column; gap:16px;}
 
-/* ---------- ledger ---------- */
-.two{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
-.formula{
-  background:var(--surface-2); border:1px dashed var(--line-strong); border-radius:var(--r);
-  padding:16px 18px; font-family:"IBM Plex Mono",monospace; font-size:13.5px; line-height:1.9;
-  overflow-x:auto;
-}
-.formula b{color:var(--season);}
-
-.note{
-  background:var(--clay-soft); border:1px solid color-mix(in srgb, var(--clay) 35%, transparent);
-  border-radius:var(--r); padding:14px 18px; font-size:13.5px; color:var(--ink-soft);
-}
-.note ul{margin:8px 0 0; padding-left:18px;} .note li{margin:3px 0;}
-
-.inputs{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
-.inp{display:flex; flex-direction:column; gap:6px;}
-.inp label{font-size:12.5px; color:var(--muted); font-family:"Archivo",sans-serif; font-weight:600;}
+.inputs{display:grid; grid-template-columns:repeat(3,1fr); gap:12px;}
+.inp{display:flex; flex-direction:column; gap:5px;}
+.inp label{font-size:12px; color:var(--muted); font-weight:600;}
 .inp input{
-  font-family:"IBM Plex Mono",monospace; font-size:14px; padding:9px 11px;
-  border:1px solid var(--line-strong); border-radius:10px;
-  background:var(--surface); color:var(--ink);
+  font-family:"JetBrains Mono",monospace; font-size:13.5px; padding:8px 10px;
+  border:1px solid var(--line-2); border-radius:9px; background:var(--surface); color:var(--ink); width:100%;
 }
-.inp input:focus-visible{outline:2px solid var(--season); outline-offset:1px; border-color:var(--season);}
+.inp input:focus-visible{outline:2px solid var(--staff); outline-offset:1px;}
 
-.bars{display:flex; flex-direction:column; gap:10px;}
-.bar-row{display:grid; grid-template-columns:150px 1fr 108px; align-items:center; gap:12px; font-size:13.5px;}
-.bar-track{height:12px; border-radius:999px; background:var(--surface-2); overflow:hidden;}
-.bar-fill{height:100%; border-radius:999px; transition:width .25s ease;}
-.bar-row .amt{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums;}
+.verdict{
+  background:var(--ink); color:var(--paper); border-radius:var(--r); padding:26px 28px;
+  display:flex; flex-direction:column; gap:14px;
+}
+.verdict h2{font-family:"Instrument Serif",Georgia,serif; font-weight:400; font-size:26px; letter-spacing:-.01em;}
+.verdict p{margin:0; color:var(--line-2); font-size:14.5px; max-width:72ch;}
+.verdict .vg{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:4px;}
+.vs{border:1px solid rgba(128,140,150,.35); border-radius:12px; padding:14px 16px;}
+.vs .vn{font-family:"JetBrains Mono",monospace; font-size:20px; font-weight:700; color:var(--staff); letter-spacing:-.03em;}
+.vs .vl{font-size:12px; color:var(--muted); margin-top:3px;}
 
-footer{color:var(--muted); font-size:12.5px; text-align:center; padding-top:8px;}
+.facts{display:grid; grid-template-columns:repeat(4,1fr); gap:12px;}
+.fact{background:var(--surface-2); border-radius:12px; padding:13px 15px; display:flex; flex-direction:column; gap:2px;}
+.fact .fv{font-family:"JetBrains Mono",monospace; font-size:20px; font-weight:700; letter-spacing:-.03em;}
+.fact .fl{font-size:12px; color:var(--muted);}
+.formula{
+  background:var(--surface-2); border-radius:12px; padding:15px 17px;
+  font-family:"JetBrains Mono",monospace; font-size:13px; line-height:2; overflow-x:auto; white-space:nowrap;
+}
+.formula b{color:var(--staff);}
+tr.off td{opacity:.42;}
+.foot{color:var(--muted); font-size:12px; line-height:1.7;}
+.foot b{color:var(--ink-2);}
 
 @media (max-width:900px){
-  .kpis{grid-template-columns:repeat(2,1fr);}
-  .two{grid-template-columns:1fr;}
+  .opts{grid-template-columns:1fr;}
+  .months{grid-template-columns:repeat(6,1fr);}
+  .bar-row{grid-template-columns:120px 1fr 104px; font-size:12.5px;}
   .inputs{grid-template-columns:1fr 1fr;}
-  .ribbon{grid-template-columns:repeat(6,1fr);}
-  .bar-row{grid-template-columns:110px 1fr 92px; font-size:12.5px;}
+  .facts{grid-template-columns:1fr 1fr;}
+  .verdict .vg{grid-template-columns:1fr;}
+  .rail{position:static;}
 }
-@media (prefers-reduced-motion: reduce){*{transition:none !important;}}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;}}
 </style>
 
 <div class="wrap">
 
-  <header class="head">
-    <div>
-      <div class="eyebrow" id="eyebrow">Сезон · тёплый период</div>
-      <h1>Дератизация УКПФ — штатная служба</h1>
-      <p class="lede">Бройлерные площадки, ККЗ, инкубаторий, склад лузги и АБК. 2 дератизатора в штате, 8 обходов в месяц (2 в неделю). Все суммы переключаются между летним и зимним режимом обработки.</p>
-    </div>
-    <div class="switch" role="group" aria-label="Сезон">
-      <button id="btnS" aria-pressed="true">Апрель — сентябрь</button>
-      <button id="btnW" aria-pressed="false">Октябрь — март</button>
-    </div>
+  <header>
+    <div class="eyebrow">АО «Усть-Каменогорская птицефабрика» · дератизация 2026–2027</div>
+    <h1>Три варианта: два подрядчика<br>и <em>собственный штат</em></h1>
+    <p class="lede">Indigo Solutions и Pest Hunters — по их коммерческим предложениям. Штат УКПФ — по внутреннему расчёту норм, цен и фонда оплаты труда. Снимите галочки с месяцев, чтобы посмотреть любой период года.</p>
   </header>
 
-  <div class="kpis">
-    <div class="kpi"><span class="k-l">Бюджет месяца</span><span class="k-v n" id="kMonth">—</span><span class="k-s" id="kMonthSub">—</span></div>
-    <div class="kpi"><span class="k-l">Расходники месяца</span><span class="k-v n" id="kCons">—</span><span class="k-s" id="kConsSub">—</span></div>
-    <div class="kpi"><span class="k-l">Точек обслуживается</span><span class="k-v n" id="kPts">—</span><span class="k-s" id="kPtsSub">—</span></div>
-    <div class="kpi"><span class="k-l">Бюджет года</span><span class="k-v n" id="kYear">—</span><span class="k-s">6 мес лето + 6 мес зима</span></div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <h2>Два режима работы в году</h2>
-      <span class="hint">Зимой 1-й и 2-й контуры не заряжаются — работает только 3-й</span>
+  <div class="rail">
+    <div class="rail-top">
+      <span class="rail-lbl">Период расчёта</span>
+      <span class="sel-count" id="selCount">—</span>
     </div>
-    <div class="ribbon" id="ribbon"></div>
-    <div class="two">
-      <div class="formula">
-        <span class="tag s">Апрель — сентябрь</span><br>
-        1-й контур · заряжается<br>
-        2-й контур · Зерноцид + Pest Killer<br>
-        3-й контур · клеевые, <b>268 шт/мес</b>
+    <div class="months" id="months"></div>
+    <div class="rail-top">
+      <div class="mini-row">
+        <button class="mini" data-preset="all">Весь год</button>
+        <button class="mini" data-preset="summer">Апр — сен</button>
+        <button class="mini" data-preset="winter">Окт — мар</button>
+        <button class="mini" data-preset="none">Снять всё</button>
       </div>
-      <div class="formula">
-        <span class="tag w">Октябрь — март</span><br>
-        1-й контур · не заряжается<br>
-        2-й контур · не заряжается, яд <b>0 кг</b><br>
-        3-й контур · клеевые ×2, <b>536 шт/мес</b>
+      <div class="mini-row">
+        <button class="mini" id="btnVat" aria-pressed="false">НДС 16 %</button>
+        <button class="mini" id="btnEq" aria-pressed="true">Оборудование УКПФ</button>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-head">
-      <h2>Приманочные станции по площадкам и контурам</h2>
-      <span class="hint">шт · последний столбец меняется по сезону</span>
+  <div class="opts">
+    <div class="opt i">
+      <span class="who">Indigo Solutions</span>
+      <span class="scope">Только ККЗ (кормоцех). Оборудование подрядчика, реакция ≤2 ч, выезд ≤24 ч.</span>
+      <span class="big n" id="oI">—</span>
+      <span class="per" id="oIper">за выбранный период</span>
+      <div class="split">
+        <div><span>ККЗ, дератизация</span><b>96 600 ₸/мес</b></div>
+        <div><span>Бройлерные площадки</span><b>нет в КП</b></div>
+        <div><span>Инкубаторий, лузга, АБК</span><b>нет в КП</b></div>
+      </div>
     </div>
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Площадка</th><th class="n">1-й контур</th><th class="n">2-й контур</th>
-            <th class="n">3-й контур (фонд)</th><th class="n">Всего точек</th>
-            <th class="n col-hi" id="thUse">Заряжается в месяц</th>
-          </tr>
-        </thead>
-        <tbody id="tbStations"></tbody>
-        <tfoot id="tfStations"></tfoot>
-      </table>
+    <div class="opt h">
+      <span class="who">Pest Hunters</span>
+      <span class="scope">ККЗ + 122 бройлерных объекта. Цена зависит от месяца и от того, чьё оборудование.</span>
+      <span class="big n" id="oH">—</span>
+      <span class="per" id="oHper">за выбранный период</span>
+      <div class="split">
+        <div><span>ККЗ, дератизация</span><b>75 000 ₸/мес</b></div>
+        <div><span>Площадки, мар–ноя</span><b id="phHi">—</b></div>
+        <div><span>Площадки, дек–фев</span><b id="phLo">—</b></div>
+      </div>
     </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <h2>Расход ядоприманок</h2>
-      <span class="hint" id="poisonHint">кг на 1 обработку в месяц</span>
-    </div>
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Площадка</th>
-            <th class="n">Pest Killer, брикеты, кг</th><th class="n">Зерноцид, кг</th>
-            <th class="n">Pest Killer, ₸</th><th class="n">Зерноцид, ₸</th><th class="n col-hi">Итого ₸</th>
-          </tr>
-        </thead>
-        <tbody id="tbPoison"></tbody>
-        <tfoot id="tfPoison"></tfoot>
-      </table>
-    </div>
-    <div id="winterPoison" class="note" hidden>
-      <b>Зимний режим:</b> 1-й и 2-й контуры не заряжаются, поэтому расход Зерноцида и брикетов Pest Killer в октябре — марте равен нулю. Затраты сезона — только клеевые станции 3-го контура и фонд оплаты труда.
+    <div class="opt s">
+      <span class="who">Штат УКПФ · 2 дератизатора</span>
+      <span class="scope">ККЗ, инкубаторий, склад лузги, АБК и все 8 площадок. Присутствие 5/2, 8 обходов в месяц.</span>
+      <span class="big n" id="oS">—</span>
+      <span class="per" id="oSper">за выбранный период</span>
+      <div class="split">
+        <div><span>Месяц апр–сен</span><b id="uS">—</b></div>
+        <div><span>Месяц окт–мар</span><b id="uW">—</b></div>
+        <div><span>Объектов покрыто</span><b>13</b></div>
+      </div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-head">
-      <h2>Бюджет месяца — структура</h2>
-      <span class="hint" id="ledgerHint">—</span>
+      <h2>Стоимость за выбранный период</h2>
+      <span class="hint" id="chartHint">дератизация, сопоставимый объём</span>
     </div>
     <div class="bars" id="bars"></div>
+    <p class="hint" id="chartNote">—</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Ориентир: что просят подрядчики</h2>
+      <span class="hint">только цифры из КП — внутреннюю структуру их себестоимости мы не знаем</span>
+    </div>
     <div class="scroll">
-      <table>
-        <thead>
-          <tr><th>Статья</th><th class="n">Объём</th><th class="n">Цена за ед.</th><th class="n">Лето, ₸/мес</th><th class="n">Зима, ₸/мес</th><th class="n col-hi">Год, ₸</th></tr>
-        </thead>
+      <table style="min-width:520px;">
+        <thead><tr><th>Позиция из КП</th><th>Охват</th><th class="n">Цена</th></tr></thead>
+        <tbody>
+          <tr><td>Indigo Solutions · дератизация</td><td>ККЗ (кормоцех)</td><td class="n">96 600 ₸/мес</td></tr>
+          <tr><td>Pest Hunters · дератизация</td><td>ККЗ (кормоцех)</td><td class="n">75 000 ₸/мес</td></tr>
+          <tr><td>Pest Hunters · дератизация, мар–ноя</td><td>122 бройлерных объекта</td><td class="n" id="rPhHi">—</td></tr>
+          <tr><td>Pest Hunters · дератизация, дек–фев</td><td>122 бройлерных объекта</td><td class="n" id="rPhLo">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Предложения по инкубаторию, складу лузги и АБК ни в одном КП нет. Дезинсекция в сравнение не входит: у Pest Hunters это отдельные 70 000 ₸/мес по ККЗ и 2 196 000 ₸ за обработку площадок раз в 40 дней, у Indigo её в КП нет.</p>
+  </div>
+
+  <div class="eyebrow" style="margin:14px 0 -4px;">Детальный расчёт · собственная служба дератизации</div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Служба и режим работы</h2>
+      <span class="hint">2 дератизатора в штате, график 5/2</span>
+    </div>
+    <div class="facts" id="facts"></div>
+    <p class="hint">Одна и та же зарплата закрывает 13 объектов: ККЗ, инкубаторий, склад лузги, АБК и восемь бройлерных площадок — А, Б, В (Восточка), Г, Д, Е, Ж и Айыртау. Фонд оплаты труда фиксирован и не растёт от количества обслуживаемых точек, поэтому расширение зоны обслуживания добавляет к бюджету только яды и станции.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Станции, контуры и нормы ядов по площадкам</h2>
+      <span class="hint">точки — шт, расход — на обработку в тёплом сезоне</span>
+    </div>
+    <div class="scroll">
+      <table style="min-width:760px;">
+        <thead><tr>
+          <th>Площадка</th><th class="n">1-й контур</th><th class="n">2-й контур</th><th class="n">3-й контур</th><th class="n">Всего точек</th>
+          <th class="n">Pest Killer</th><th class="n">Зерноцид</th><th class="n">Яды, ₸/мес</th><th class="n">Станции 3 к., ₸/мес</th>
+        </tr></thead>
+        <tbody id="tbSites"></tbody>
+        <tfoot id="tfSites"></tfoot>
+      </table>
+    </div>
+    <p class="hint">С октября по март 1-й и 2-й контуры не заряжаются — расход Зерноцида и брикетов Pest Killer падает до нуля, а 3-й контур заряжается двойным объёмом: <b class="n">268 → 536</b> клеевых станций в месяц, то есть <b class="n">42 880 → 85 760 ₸</b>.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Себестоимость месяца по статьям</h2>
+      <span class="hint">последний столбец — сумма по выбранным месяцам</span>
+    </div>
+    <div class="scroll">
+      <table style="min-width:620px;">
+        <thead><tr><th>Статья</th><th class="n">Объём</th><th class="n">Цена за ед.</th><th class="n">Апр — сен, ₸/мес</th><th class="n">Окт — мар, ₸/мес</th><th class="n">За период, ₸</th></tr></thead>
         <tbody id="tbLedger"></tbody>
         <tfoot id="tfLedger"></tfoot>
       </table>
@@ -312,222 +340,260 @@ footer{color:var(--muted); font-size:12.5px; text-align:center; padding-top:8px;
 
   <div class="card">
     <div class="card-head">
-      <h2>Параметры расчёта</h2>
-      <span class="hint">Меняйте значения — весь дашборд пересчитается</span>
-    </div>
-    <div class="inputs">
-      <div class="inp"><label for="iSalary">ЗП двух дератизаторов, ₸/мес</label><input id="iSalary" type="number" value="516976" step="1000"></div>
-      <div class="inp"><label for="iZerno">Зерноцид, ₸/кг</label><input id="iZerno" type="number" value="740" step="10"></div>
-      <div class="inp"><label for="iPk">Pest Killer брикеты, ₸/кг <span class="tag a">допущение</span></label><input id="iPk" type="number" value="3642.5" step="50"></div>
-      <div class="inp"><label for="iStation">Станция 3-го контура (клеевая), ₸/шт</label><input id="iStation" type="number" value="160" step="10"></div>
-      <div class="inp"><label for="iBottlePrice">Бутылка, ₸/шт</label><input id="iBottlePrice" type="number" value="68" step="1"></div>
-      <div class="inp"><label for="iBottles">Бутылки, шт/мес (лето) <span class="tag a">допущение</span></label><input id="iBottles" type="number" value="40" step="5"></div>
-    </div>
-    <div class="note">
-      <b>Что взято как допущение и требует подтверждения:</b>
-      <ul>
-        <li>Цена брикетов Pest Killer — 3 642,5 ₸/кг (перенесена из расчёта по ККЗ, отдельной цены в исходных данных нет).</li>
-        <li>Норма расхода бутылок — 40 шт/мес в тёплый сезон; зимой, при незаряжаемых 1–2 контурах, принята нулевой.</li>
-        <li>Клеевые станции 3-го контура считаются полностью расходуемыми: заряжается весь фонд каждый месяц (зимой — двойной).</li>
-        <li>Цены станций 1-го и 2-го контура не заданы — разовый CapEx на дооснащение этих контуров в расчёт не входит.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head">
-      <h2>Что закрывает фонд оплаты труда</h2>
-      <span class="hint">Одна и та же зарплата — 13 объектов</span>
+      <h2>Помесячная развёртка</h2>
+      <span class="hint">снятые месяцы в сумму не входят</span>
     </div>
     <div class="scroll">
-      <table style="min-width:460px;">
-        <thead><tr><th>Объект</th><th>Покрытие</th><th class="n">Наценка аутсорсинга</th></tr></thead>
-        <tbody>
-          <tr><td>ККЗ (кормоцех)</td><td style="text-align:right">включено в оклад</td><td class="n">0 ₸</td></tr>
-          <tr><td>Инкубаторий</td><td style="text-align:right">включено в оклад</td><td class="n">0 ₸</td></tr>
-          <tr><td>Склад лузги</td><td style="text-align:right">включено в оклад</td><td class="n">0 ₸</td></tr>
-          <tr><td>АБК</td><td style="text-align:right">включено в оклад</td><td class="n">0 ₸</td></tr>
-          <tr><td>8 бройлерных площадок</td><td style="text-align:right">включено в оклад</td><td class="n">0 ₸</td></tr>
-        </tbody>
+      <table style="min-width:620px;">
+        <thead><tr><th>Месяц</th><th>Режим</th><th class="n">Зарплата</th><th class="n">Яды и бутылки</th><th class="n">Станции</th><th class="n">Итого</th></tr></thead>
+        <tbody id="tbCal"></tbody>
+        <tfoot id="tfCal"></tfoot>
       </table>
     </div>
-    <p class="lede" style="max-width:none;">У подрядчика каждый дополнительный объект — отдельный договор и отдельная строка бюджета. В штатной схеме фонд оплаты труда фиксирован: расширение зоны обслуживания с одного ККЗ до всех 13 объектов не добавляет к зарплатной части ни тенге, растёт только стоимость ядов и станций.</p>
   </div>
 
-  <footer>АО «Усть-Каменогорская птицефабрика» · внутренний расчёт штатной дератизации · 8 обходов/мес, присутствие 5/2</footer>
+  <details>
+    <summary>Параметры расчёта и допущения</summary>
+    <div class="det-body">
+      <div class="inputs">
+        <div class="inp"><label for="iSalary">ЗП двух дератизаторов, ₸/мес</label><input id="iSalary" type="number" value="516976" step="1000"></div>
+        <div class="inp"><label for="iZerno">Зерноцид, ₸/кг</label><input id="iZerno" type="number" value="740" step="10"></div>
+        <div class="inp"><label for="iPk">Pest Killer брикеты, ₸/кг</label><input id="iPk" type="number" value="3642.5" step="50"></div>
+        <div class="inp"><label for="iStation">Клеевая станция 3-го контура, ₸/шт</label><input id="iStation" type="number" value="160" step="10"></div>
+        <div class="inp"><label for="iBottlePrice">Бутылка, ₸/шт</label><input id="iBottlePrice" type="number" value="68" step="1"></div>
+        <div class="inp"><label for="iBottles">Бутылки, шт/мес (тёплый сезон)</label><input id="iBottles" type="number" value="40" step="5"></div>
+      </div>
+      <p class="hint">Цена брикетов Pest Killer 3 642,5 ₸/кг перенесена из расчёта по ККЗ — в исходных нормах её нет. Расход бутылок 40 шт/мес принят для тёплого сезона, зимой нулевой. Клеевые станции 3-го контура считаются полностью расходуемыми каждый месяц. Разовый CapEx на дооснащение 1-го и 2-го контуров не считается: цены этих станций не заданы.</p>
+    </div>
+  </details>
+
+  <div class="verdict">
+    <h2 id="vTitle">—</h2>
+    <p id="vText">—</p>
+    <div class="vg">
+      <div class="vs"><div class="vn n" id="vn1">—</div><div class="vl">Экономия штата против Pest Hunters за выбранный период</div></div>
+      <div class="vs"><div class="vn n" id="vn2">—</div><div class="vl">Обходов в месяц у штата против 1 у Pest Hunters</div></div>
+      <div class="vs"><div class="vn n">13</div><div class="vl">Объектов закрывает один и тот же фонд оплаты труда</div></div>
+    </div>
+  </div>
+
+  <p class="foot">
+    <b>Источники.</b> Indigo Solutions — КП от 17.08.2026: ККЗ, дератизация, 96 600 ₸/мес, оборудование подрядчика.
+    Pest Hunters — КП №26/12 на 2026–2027: ККЗ 145 000 ₸/мес (дезинсекция 70 000 + дератизация 75 000, без НДС);
+    дератизация 122 бройлерных объектов — мар–ноя 3 172 000 ₸/мес и дек–фев 2 074 000 ₸/мес своим оборудованием,
+    либо 2 806 000 ₸/мес и 1 830 000 ₸/мес уже установленным оборудованием заказчика (без НДС).<br>
+    <b>Расхождение в КП Pest Hunters.</b> Для варианта «своё оборудование» 122 × 25 000 = 3 050 000 ₸, а в таблице стоит 3 172 000 ₸ —
+    это соответствует цене 26 000 ₸ за объект. В расчёте использована сумма из КП; цену за единицу стоит уточнить у подрядчика.<br>
+    <b>Допущения по УКПФ.</b> Цена брикетов Pest Killer 3 642,5 ₸/кг перенесена из расчёта по ККЗ — в исходных данных её нет.
+    Расход бутылок 40 шт/мес принят для тёплого сезона, зимой нулевой. Клеевые станции 3-го контура считаются полностью
+    расходуемыми каждый месяц. Разовый CapEx на дооснащение 1-го и 2-го контуров не считается — цены этих станций не заданы.
+  </p>
 </div>
 
 <script>
-const SITES = [
-  {name:"А",            c1:13, c2:147, c3:20, pk:2,   zc:2},
-  {name:"Б",            c1:17, c2:146, c3:20, pk:2,   zc:2},
-  {name:"В / Восточка", c1:50, c2:239, c3:30, pk:3.5, zc:3},
-  {name:"Г",            c1:17, c2:88,  c3:80, pk:2,   zc:1},
-  {name:"Д",            c1:15, c2:69,  c3:64, pk:1.5, zc:1},
-  {name:"Е",            c1:13, c2:147, c3:20, pk:2,   zc:2},
-  {name:"Ж",            c1:17, c2:73,  c3:10, pk:1,   zc:1},
-  {name:"Айыртау (БП)", c1:19, c2:187, c3:24, pk:3,   zc:3}
+const SITES=[
+ {n:"А",c1:13,c2:147,c3:20,pk:2,zc:2},
+ {n:"Б",c1:17,c2:146,c3:20,pk:2,zc:2},
+ {n:"В / Восточка",c1:50,c2:239,c3:30,pk:3.5,zc:3},
+ {n:"Г",c1:17,c2:88,c3:80,pk:2,zc:1},
+ {n:"Д",c1:15,c2:69,c3:64,pk:1.5,zc:1},
+ {n:"Е",c1:13,c2:147,c3:20,pk:2,zc:2},
+ {n:"Ж",c1:17,c2:73,c3:10,pk:1,zc:1},
+ {n:"Айыртау (БП)",c1:19,c2:187,c3:24,pk:3,zc:3}
 ];
-const MONTHS = ["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
-const WINTER_MONTHS = [0,1,2,9,10,11];   // окт—мар
-const SUMMER_N = 6, WINTER_N = 6;
+const T=["c1","c2","c3","pk","zc"].reduce((a,k)=>(a[k]=SITES.reduce((s,x)=>s+x[k],0),a),{});
 
-const sum = k => SITES.reduce((a,s)=>a+s[k],0);
-const T = {c1:sum("c1"), c2:sum("c2"), c3:sum("c3"), pk:sum("pk"), zc:sum("zc")};
+// 0=Янв … 11=Дек. winter — режим УКПФ (окт–мар). phLow — низкий тариф Pest Hunters (дек–фев).
+const MONTHS=[
+ {s:"Янв",w:true, phLow:true},  {s:"Фев",w:true, phLow:true},  {s:"Мар",w:true, phLow:false},
+ {s:"Апр",w:false,phLow:false}, {s:"Май",w:false,phLow:false}, {s:"Июн",w:false,phLow:false},
+ {s:"Июл",w:false,phLow:false}, {s:"Авг",w:false,phLow:false}, {s:"Сен",w:false,phLow:false},
+ {s:"Окт",w:true, phLow:false}, {s:"Ноя",w:true, phLow:false}, {s:"Дек",w:true, phLow:true}
+];
 
-let season = "summer";
+const INDIGO_KKZ=96600;
+const PH_KKZ=75000;
+const PH={own:{hi:3172000,lo:2074000}, ukpf:{hi:2806000,lo:1830000}};
+const VAT=1.16;
 
-const money = v => Math.round(v).toLocaleString("ru-RU").replace(/ /g," ") + " ₸";
-const int   = v => Math.round(v).toLocaleString("ru-RU").replace(/ /g," ");
-const kg    = v => (Number.isInteger(v) ? v : v.toFixed(1).replace(".",",")) + " кг";
-const val   = id => parseFloat(document.getElementById(id).value) || 0;
+let picked=new Set(MONTHS.map((_,i)=>i));
+let vat=false, eqUkpf=true;
 
-function model(){
-  const salary=val("iSalary"), pZ=val("iZerno"), pPK=val("iPk"),
-        pSt=val("iStation"), pB=val("iBottlePrice"), nB=val("iBottles");
+const money=v=>Math.round(v).toLocaleString("ru-RU").replace(/ /g," ")+" ₸";
+const mln=v=>(v/1e6).toFixed(2).replace(".",",")+" млн ₸";
+const int=v=>Math.round(v).toLocaleString("ru-RU").replace(/ /g," ");
+const kg=v=>(Number.isInteger(v)?v:v.toFixed(1).replace(".",","))+" кг";
+const num=id=>parseFloat(document.getElementById(id).value)||0;
 
-  const s = {
-    label:"Лето", zcKg:T.zc, pkKg:T.pk, bottles:nB, stations:T.c3,
-    points:T.c1+T.c2+T.c3
+function ukpfMonths(){
+  const salary=num("iSalary"), pZ=num("iZerno"), pPK=num("iPk"),
+        pSt=num("iStation"), pB=num("iBottlePrice"), nB=num("iBottles");
+  const mk=w=>{
+    const zcKg=w?0:T.zc, pkKg=w?0:T.pk, bot=w?0:nB, st=w?T.c3*2:T.c3;
+    const o={salary, zc:zcKg*pZ, pk:pkKg*pPK, bot:bot*pB, st:st*pSt, zcKg, pkKg, bottles:bot, stations:st};
+    o.total=o.salary+o.zc+o.pk+o.bot+o.st;
+    return o;
   };
-  const w = {
-    label:"Зима", zcKg:0, pkKg:0, bottles:0, stations:T.c3*2,
-    points:T.c3*2
-  };
-  [s,w].forEach(x=>{
-    x.zc = x.zcKg*pZ; x.pk = x.pkKg*pPK; x.bot = x.bottles*pB; x.st = x.stations*pSt;
-    x.cons = x.zc + x.pk + x.bot;
-    x.salary = salary;
-    x.total = x.salary + x.cons + x.st;
+  return {s:mk(false), w:mk(true), pZ, pPK, pSt, pB, salary};
+}
+
+function totals(){
+  const u=ukpfMonths();
+  const eq=eqUkpf?PH.ukpf:PH.own;
+  const k=vat?VAT:1;
+  let indigo=0, hunter=0, staff=0, nW=0, nS=0;
+  picked.forEach(i=>{
+    const m=MONTHS[i];
+    indigo += INDIGO_KKZ;
+    hunter += (PH_KKZ + (m.phLow?eq.lo:eq.hi)) * k;
+    staff  += m.w ? u.w.total : u.s.total;
+    m.w ? nW++ : nS++;
   });
-  const year = s.total*SUMMER_N + w.total*WINTER_N;
-  return {s, w, year, pZ, pPK, pSt, pB, salary};
+  return {indigo, hunter, staff, nW, nS, n:picked.size, u, eq, k};
+}
+
+function renderMonths(){
+  document.getElementById("months").innerHTML=MONTHS.map((m,i)=>
+    `<button class="mo ${m.w?"w":""}" data-m="${i}" aria-pressed="${picked.has(i)}">
+       <span>${m.s}</span><span class="dot"></span></button>`).join("");
+  document.querySelectorAll(".mo").forEach(b=>b.addEventListener("click",()=>{
+    const i=+b.dataset.m;
+    picked.has(i)?picked.delete(i):picked.add(i);
+    render();
+  }));
 }
 
 function render(){
-  const m = model();
-  const cur = season === "summer" ? m.s : m.w;
-  const isW = season === "winter";
+  const t=totals(), u=t.u;
 
-  document.documentElement.setAttribute("data-season", isW ? "winter" : "summer");
-  document.getElementById("eyebrow").textContent = isW
-    ? "Сезон · зимний период, только 3-й контур"
-    : "Сезон · тёплый период, все три контура";
-  document.getElementById("btnS").setAttribute("aria-pressed", String(!isW));
-  document.getElementById("btnW").setAttribute("aria-pressed", String(isW));
+  document.querySelectorAll(".mo").forEach(b=>
+    b.setAttribute("aria-pressed", String(picked.has(+b.dataset.m))));
+  document.getElementById("selCount").textContent =
+    t.n===0 ? "не выбрано ни одного месяца"
+            : `${t.n} мес · ${t.nS} тёплых, ${t.nW} зимних`;
+  document.getElementById("btnVat").setAttribute("aria-pressed", String(vat));
+  document.getElementById("btnEq").setAttribute("aria-pressed", String(eqUkpf));
+  document.getElementById("btnEq").textContent = eqUkpf ? "Оборудование УКПФ" : "Оборудование Pest Hunters";
 
-  // KPI
-  document.getElementById("kMonth").textContent = money(cur.total);
-  document.getElementById("kMonthSub").textContent = isW
-    ? "октябрь — март, 6 месяцев"
-    : "апрель — сентябрь, 6 месяцев";
-  document.getElementById("kCons").textContent = money(cur.cons + cur.st);
-  document.getElementById("kConsSub").textContent = isW
-    ? "только клеевые станции"
-    : "яды, бутылки и станции";
-  document.getElementById("kPts").textContent = int(cur.points);
-  document.getElementById("kPtsSub").textContent = isW
-    ? int(T.c3) + " точек 3-го контура ×2 зарядки"
-    : int(T.c1) + " + " + int(T.c2) + " + " + int(T.c3) + " по контурам";
-  document.getElementById("kYear").textContent = money(m.year);
-
-  // ribbon
-  document.getElementById("ribbon").innerHTML = MONTHS.map((mo,i)=>{
-    const w = WINTER_MONTHS.includes(i);
-    const active = (w && isW) || (!w && !isW);
-    return `<div class="mo ${w?"w":"s"}${active?" active":""}">${mo}</div>`;
-  }).join("");
-
-  // stations
-  document.getElementById("thUse").textContent = isW ? "Зимой заряжается" : "Летом заряжается";
-  document.getElementById("tbStations").innerHTML = SITES.map(x=>{
-    const use = isW ? x.c3*2 : x.c1+x.c2+x.c3;
-    return `<tr><td>${x.name}</td>
-      <td class="n${isW?" zero":""}">${isW?"—":int(x.c1)}</td>
-      <td class="n${isW?" zero":""}">${isW?"—":int(x.c2)}</td>
-      <td class="n">${int(x.c3)}</td>
-      <td class="n">${int(x.c1+x.c2+x.c3)}</td>
-      <td class="n col-hi">${int(use)}</td></tr>`;
-  }).join("");
-  document.getElementById("tfStations").innerHTML =
-    `<tr><td>Итого по фабрике</td>
-      <td class="n">${isW?"—":int(T.c1)}</td>
-      <td class="n">${isW?"—":int(T.c2)}</td>
-      <td class="n">${int(T.c3)}</td>
-      <td class="n">${int(T.c1+T.c2+T.c3)}</td>
-      <td class="n col-hi">${int(isW?T.c3*2:T.c1+T.c2+T.c3)}</td></tr>`;
-
-  // poison
-  document.getElementById("poisonHint").textContent = isW
-    ? "зимой 1–2 контуры не заряжаются — расход 0 кг"
-    : "кг на 1 обработку в месяц, 2-й контур";
-  document.getElementById("winterPoison").hidden = !isW;
-  document.getElementById("tbPoison").innerHTML = SITES.map(x=>{
-    const pk = isW?0:x.pk, zc = isW?0:x.zc;
-    const cPk = pk*m.pPK, cZc = zc*m.pZ;
-    const z = v => v===0 ? `<span class="zero">—</span>` : v;
-    return `<tr><td>${x.name}</td>
-      <td class="n">${z(isW?0:kg(x.pk))}</td>
-      <td class="n">${z(isW?0:kg(x.zc))}</td>
-      <td class="n">${z(cPk?money(cPk):0)}</td>
-      <td class="n">${z(cZc?money(cZc):0)}</td>
-      <td class="n col-hi">${z((cPk+cZc)?money(cPk+cZc):0)}</td></tr>`;
-  }).join("");
-  document.getElementById("tfPoison").innerHTML =
-    `<tr><td>Итого / мес</td>
-      <td class="n">${isW?"0 кг":kg(T.pk)}</td>
-      <td class="n">${isW?"0 кг":kg(T.zc)}</td>
-      <td class="n">${money(cur.pk)}</td>
-      <td class="n">${money(cur.zc)}</td>
-      <td class="n col-hi">${money(cur.pk+cur.zc)}</td></tr>`;
-
-  // ledger
-  document.getElementById("ledgerHint").textContent =
-    `лето ${money(m.s.total)} · зима ${money(m.w.total)}`;
-  const rows = [
-    ["Зарплата дератизаторов (2 чел.)", "2 чел., 5/2", money(m.salary/2)+" / чел", m.s.salary, m.w.salary],
-    ["Зерноцид", kg(T.zc)+" / мес летом", money(m.pZ)+" / кг", m.s.zc, m.w.zc],
-    ["Pest Killer, брикеты", kg(T.pk)+" / мес летом", money(m.pPK)+" / кг", m.s.pk, m.w.pk],
-    ["Бутылки", int(m.s.bottles)+" шт / мес летом", money(m.pB)+" / шт", m.s.bot, m.w.bot],
-    ["Станции 3-го контура (клеевые)", int(T.c3)+" шт · зимой ×2", money(m.pSt)+" / шт", m.s.st, m.w.st]
-  ];
-  document.getElementById("tbLedger").innerHTML = rows.map(r=>
-    `<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td>
-     <td class="n">${r[3]?money(r[3]):'<span class="zero">—</span>'}</td>
-     <td class="n">${r[4]?money(r[4]):'<span class="zero">—</span>'}</td>
-     <td class="n col-hi">${money(r[3]*SUMMER_N + r[4]*WINTER_N)}</td></tr>`
-  ).join("");
-  document.getElementById("tfLedger").innerHTML =
-    `<tr><td>Итого</td><td></td><td></td>
-      <td>${money(m.s.total)}</td><td>${money(m.w.total)}</td>
-      <td class="col-hi">${money(m.year)}</td></tr>`;
+  // option cards
+  document.getElementById("oI").textContent = money(t.indigo);
+  document.getElementById("oH").textContent = money(t.hunter);
+  document.getElementById("oS").textContent = money(t.staff);
+  const per = t.n===12 ? "за полный год" : `за ${t.n} выбранных мес`;
+  ["oIper","oHper","oSper"].forEach(id=>document.getElementById(id).textContent=per);
+  document.getElementById("phHi").textContent = money(t.eq.hi*t.k)+"/мес";
+  document.getElementById("phLo").textContent = money(t.eq.lo*t.k)+"/мес";
+  document.getElementById("uS").textContent = money(u.s.total);
+  document.getElementById("uW").textContent = money(u.w.total);
 
   // bars
-  const parts = [
-    ["Зарплата", cur.salary, "var(--season)"],
-    ["Pest Killer", cur.pk, "color-mix(in srgb, var(--season) 62%, var(--surface))"],
-    ["Зерноцид", cur.zc, "color-mix(in srgb, var(--season) 42%, var(--surface))"],
-    ["Станции 3-го к.", cur.st, "color-mix(in srgb, var(--season) 26%, var(--surface))"],
-    ["Бутылки", cur.bot, "color-mix(in srgb, var(--season) 14%, var(--surface))"]
+  const rows=[
+    ["Штат УКПФ", t.staff, "var(--staff)", "13 объектов, 8 обходов/мес"],
+    ["Pest Hunters", t.hunter, "var(--hunter)", "ККЗ + 122 объекта, 1 обход/мес"],
+    ["Indigo Solutions", t.indigo, "var(--indigo)", "только ККЗ, 2 обхода/мес"]
   ];
-  document.getElementById("bars").innerHTML = parts.map(p=>{
-    const pct = cur.total ? (p[1]/cur.total*100) : 0;
-    return `<div class="bar-row"><span>${p[0]}</span>
-      <span class="bar-track"><span class="bar-fill" style="width:${pct.toFixed(2)}%;background:${p[2]}"></span></span>
-      <span class="amt">${p[1]?money(p[1]):"—"}</span></div>`;
-  }).join("");
+  const max=Math.max(...rows.map(r=>r[1]),1);
+  document.getElementById("bars").innerHTML=rows.map(r=>
+    `<div class="bar-row"><span>${r[0]}<br><span class="na">${r[3]}</span></span>
+      <span class="bar-track"><span class="bar-fill" style="width:${(r[1]/max*100).toFixed(2)}%;background:${r[2]}"></span></span>
+      <span class="amt">${r[1]?money(r[1]):"—"}</span></div>`).join("");
+  document.getElementById("chartHint").textContent = vat ? "цены Pest Hunters с НДС 16 %" : "цены Pest Hunters без НДС";
+  document.getElementById("chartNote").textContent =
+    "Столбцы не эквивалентны по охвату: Indigo закрывает только ККЗ, поэтому его сумма самая маленькая и сравнивать её с двумя другими напрямую нельзя. Сопоставимы Pest Hunters и штат УКПФ — оба закрывают ККЗ и бройлерные площадки.";
 
-  document.getElementById("formulaBox").innerHTML =
+  // reference prices
+  document.getElementById("rPhHi").textContent = money(t.eq.hi*t.k)+" / мес";
+  document.getElementById("rPhLo").textContent = money(t.eq.lo*t.k)+" / мес";
+
+  // facts
+  document.getElementById("facts").innerHTML=[
+    [int(T.c1+T.c2+T.c3), "приманочных точек на 8 площадках"],
+    ["8", "обходов в месяц, по 2 в неделю"],
+    [kg(T.pk+T.zc), "ядоприманок в месяц в тёплый сезон"],
+    ["13", "объектов закрывает штат"]
+  ].map(f=>`<div class="fact"><span class="fv">${f[0]}</span><span class="fl">${f[1]}</span></div>`).join("");
+
+  // sites table
+  document.getElementById("tbSites").innerHTML=SITES.map(x=>{
+    const poison=x.pk*u.pPK + x.zc*u.pZ, st=x.c3*u.pSt;
+    return `<tr><td>${x.n}</td><td class="n">${x.c1}</td><td class="n">${x.c2}</td><td class="n">${x.c3}</td>
+      <td class="n">${x.c1+x.c2+x.c3}</td><td class="n">${kg(x.pk)}</td><td class="n">${kg(x.zc)}</td>
+      <td class="n">${money(poison)}</td><td class="n">${money(st)}</td></tr>`;
+  }).join("");
+  document.getElementById("tfSites").innerHTML=
+    `<tr><td>Итого</td><td>${T.c1}</td><td>${T.c2}</td><td>${T.c3}</td><td>${T.c1+T.c2+T.c3}</td>
+      <td>${kg(T.pk)}</td><td>${kg(T.zc)}</td><td>${money(u.s.pk+u.s.zc)}</td><td>${money(u.s.st)}</td></tr>`;
+
+  // ledger
+  const L=[
+    ["Зарплата 2 дератизаторов","2 чел., 5/2",money(u.salary/2)+" / чел",u.s.salary,u.w.salary],
+    ["Зерноцид",kg(T.zc)+" / мес",money(u.pZ)+" / кг",u.s.zc,u.w.zc],
+    ["Pest Killer, брикеты",kg(T.pk)+" / мес",money(u.pPK)+" / кг",u.s.pk,u.w.pk],
+    ["Бутылки",int(u.s.bottles)+" шт / мес",money(u.pB)+" / шт",u.s.bot,u.w.bot],
+    ["Клеевые станции 3-го контура",int(u.s.stations)+" → "+int(u.w.stations)+" шт",money(u.pSt)+" / шт",u.s.st,u.w.st]
+  ];
+  const dash='<span class="muted">—</span>';
+  document.getElementById("tbLedger").innerHTML=L.map(r=>
+    `<tr><td>${r[0]}</td><td class="n muted">${r[1]}</td><td class="n muted">${r[2]}</td>
+      <td class="n">${r[3]?money(r[3]):dash}</td><td class="n">${r[4]?money(r[4]):dash}</td>
+      <td class="n">${money(r[3]*t.nS+r[4]*t.nW)}</td></tr>`).join("");
+  document.getElementById("tfLedger").innerHTML=
+    `<tr><td>Итого</td><td></td><td></td><td>${money(u.s.total)}</td><td>${money(u.w.total)}</td><td>${money(t.staff)}</td></tr>`;
+
+  document.getElementById("formulaBox").innerHTML=
     `<b>Итого за месяц</b> = Зарплата + Яды и расходники + Обновление станций<br>` +
-    `Лето &nbsp;= ${money(m.s.salary)} + ${money(m.s.cons)} + ${money(m.s.st)} = <b>${money(m.s.total)}</b><br>` +
-    `Зима &nbsp;= ${money(m.w.salary)} + ${money(m.w.cons)} + ${money(m.w.st)} = <b>${money(m.w.total)}</b><br>` +
-    `Год &nbsp;&nbsp;= ${money(m.s.total)} × 6 + ${money(m.w.total)} × 6 = <b>${money(m.year)}</b>`;
+    `Апр — сен = ${money(u.salary)} + ${money(u.s.zc+u.s.pk+u.s.bot)} + ${money(u.s.st)} = <b>${money(u.s.total)}</b><br>` +
+    `Окт — мар = ${money(u.salary)} + ${money(u.w.zc+u.w.pk+u.w.bot)} + ${money(u.w.st)} = <b>${money(u.w.total)}</b><br>` +
+    `За период = ${money(u.s.total)} × ${t.nS} + ${money(u.w.total)} × ${t.nW} = <b>${money(t.staff)}</b>`;
+
+  // per-month calendar
+  document.getElementById("tbCal").innerHTML=MONTHS.map((m,i)=>{
+    const o=m.w?u.w:u.s, on=picked.has(i);
+    return `<tr class="${on?"":"off"}"><td>${m.s}</td>
+      <td class="muted">${m.w?"зима · только 3-й контур":"лето · все контуры"}</td>
+      <td class="n">${money(o.salary)}</td>
+      <td class="n">${(o.zc+o.pk+o.bot)?money(o.zc+o.pk+o.bot):dash}</td>
+      <td class="n">${money(o.st)}</td>
+      <td class="n">${on?money(o.total):dash}</td></tr>`;
+  }).join("");
+  document.getElementById("tfCal").innerHTML=
+    `<tr><td>Итого за ${t.n} мес</td><td></td>
+      <td>${money(u.salary*t.n)}</td>
+      <td>${money((u.s.zc+u.s.pk+u.s.bot)*t.nS)}</td>
+      <td>${money(u.s.st*t.nS+u.w.st*t.nW)}</td>
+      <td>${money(t.staff)}</td></tr>`;
+
+  // verdict
+  const diff=t.hunter-t.staff;
+  if(t.n===0){
+    document.getElementById("vTitle").textContent="Выберите хотя бы один месяц";
+    document.getElementById("vText").textContent="Отметьте месяцы на шкале сверху — суммы по всем трём вариантам пересчитаются под выбранный период.";
+    document.getElementById("vn1").textContent="—";
+  } else {
+    document.getElementById("vTitle").textContent = diff>0
+      ? "Штат дешевле подрядчика на сопоставимом объёме"
+      : "На выбранном периоде подрядчик выходит дешевле штата";
+    document.getElementById("vText").innerHTML = diff>0
+      ? `За выбранный период Pest Hunters просит <b>${money(t.hunter)}</b> за ККЗ и площадки, штат УКПФ обходится в <b>${money(t.staff)}</b> и при этом закрывает ещё инкубаторий, склад лузги и АБК — разница <b>${money(diff)}</b>, это <b>${(t.hunter/t.staff).toFixed(1).replace(".",",")}×</b>. Причина проста: фонд оплаты труда фиксирован и не растёт от числа объектов, тогда как подрядчик тарифицирует каждый из 122 объектов отдельно. Indigo в это сравнение не входит — в его КП только ККЗ, предложения по площадкам нет.`
+      : `За выбранный период штат обходится в <b>${money(t.staff)}</b> против <b>${money(t.hunter)}</b> у Pest Hunters. Такой результат получается на коротких зимних отрезках, когда подрядчик работает по низкому тарифу, а зарплата дератизаторов платится в полном объёме независимо от сезона.`;
+    document.getElementById("vn1").textContent = diff>0 ? money(diff) : "—";
+  }
+  document.getElementById("vn2").textContent="8 против 1";
 }
 
-document.getElementById("btnS").addEventListener("click", ()=>{season="summer"; render();});
-document.getElementById("btnW").addEventListener("click", ()=>{season="winter"; render();});
+document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>{
+  const p=b.dataset.preset;
+  if(p==="all")    picked=new Set(MONTHS.map((_,i)=>i));
+  if(p==="none")   picked=new Set();
+  if(p==="summer") picked=new Set(MONTHS.map((m,i)=>m.w?null:i).filter(i=>i!==null));
+  if(p==="winter") picked=new Set(MONTHS.map((m,i)=>m.w?i:null).filter(i=>i!==null));
+  render();
+}));
+document.getElementById("btnVat").addEventListener("click",()=>{vat=!vat; render();});
+document.getElementById("btnEq").addEventListener("click",()=>{eqUkpf=!eqUkpf; render();});
 ["iSalary","iZerno","iPk","iStation","iBottlePrice","iBottles"].forEach(id=>
-  document.getElementById(id).addEventListener("input", render));
+  document.getElementById(id).addEventListener("input",render));
 
+renderMonths();
 render();
 </script>
