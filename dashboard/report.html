@@ -1,0 +1,579 @@
+<title>Обоснование второй единицы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#fbfbf8;
+    --card:#ffffff;
+    --ink:#16211c;
+    --ink-soft:#4a574f;
+    --ink-faint:#7d8a82;
+    --line:#e2e7e1;
+    --line-soft:#eef1ed;
+    --teal:#0e7c6b;
+    --teal-bg:#e4f2ee;
+    --amber:#a86a08;
+    --amber-bg:#fbeeda;
+    --red:#b23a2c;
+    --red-bg:#fae4e0;
+    --blue:#2f5d8a;
+    --blue-bg:#e6eef6;
+    --shadow:0 1px 2px rgba(22,33,28,.05), 0 10px 30px -22px rgba(22,33,28,.35);
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0e1512;
+      --card:#151d19;
+      --ink:#e8efea;
+      --ink-soft:#a4b2ab;
+      --ink-faint:#7b8a83;
+      --line:#25302b;
+      --line-soft:#1c2521;
+      --teal:#4fd1b8;
+      --teal-bg:#11302a;
+      --amber:#e0a33c;
+      --amber-bg:#332614;
+      --red:#f0776a;
+      --red-bg:#361d1a;
+      --blue:#7fb0e0;
+      --blue-bg:#16242f;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 34px -24px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0e1512;
+    --card:#151d19;
+    --ink:#e8efea;
+    --ink-soft:#a4b2ab;
+    --ink-faint:#7b8a83;
+    --line:#25302b;
+    --line-soft:#1c2521;
+    --teal:#4fd1b8;
+    --teal-bg:#11302a;
+    --amber:#e0a33c;
+    --amber-bg:#332614;
+    --red:#f0776a;
+    --red-bg:#361d1a;
+    --blue:#7fb0e0;
+    --blue-bg:#16242f;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 34px -24px rgba(0,0,0,.8);
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans", system-ui, sans-serif;
+    font-size:16px; line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:920px; margin:0 auto; padding:56px 22px 90px; }
+
+  /* ─── шапка ─────────────────────────────────────────── */
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--teal); font-weight:600;
+  }
+  h1{
+    font-family:"Bitter", Georgia, serif; font-weight:700;
+    font-size:clamp(28px, 4.4vw, 42px); line-height:1.14; letter-spacing:-.015em;
+    margin:12px 0 14px; text-wrap:balance;
+  }
+  .lede{ font-size:17.5px; color:var(--ink-soft); max-width:62ch; margin:0 0 26px; }
+  .lede b{ color:var(--ink); }
+
+  .verdict{
+    display:flex; gap:16px; align-items:flex-start;
+    background:var(--red-bg); border:1px solid color-mix(in srgb, var(--red) 34%, transparent);
+    border-radius:var(--radius); padding:18px 20px; margin:0 0 30px;
+  }
+  .verdict .big{ font-family:"Bitter", serif; font-size:34px; font-weight:700; color:var(--red); line-height:1; }
+  .verdict p{ margin:0; font-size:15px; color:var(--ink-soft); }
+  .verdict p b{ color:var(--ink); }
+
+  /* ─── KPI ───────────────────────────────────────────── */
+  .kpis{ display:grid; grid-template-columns:repeat(auto-fit, minmax(148px,1fr)); gap:12px; margin:0 0 44px; }
+  .kpi{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px; box-shadow:var(--shadow);
+  }
+  .kpi .ico{ font-size:20px; line-height:1; }
+  .kpi .val{
+    font-family:"Bitter", serif; font-size:30px; font-weight:700; line-height:1.05;
+    margin:8px 0 2px; font-variant-numeric:tabular-nums;
+  }
+  .kpi .lab{ font-size:12.5px; color:var(--ink-faint); line-height:1.35; }
+  .val-red{ color:var(--red); } .val-amber{ color:var(--amber); }
+  .val-teal{ color:var(--teal); } .val-blue{ color:var(--blue); }
+
+  /* ─── секции ────────────────────────────────────────── */
+  section{ margin:0 0 52px; scroll-margin-top:20px; }
+  .sec-head{ display:flex; gap:14px; align-items:baseline; border-top:2px solid var(--ink); padding-top:14px; margin-bottom:8px; }
+  .sec-num{ font-family:"IBM Plex Mono", monospace; font-size:13px; font-weight:600; color:var(--teal); }
+  h2{ font-family:"Bitter", serif; font-size:clamp(21px,2.8vw,27px); font-weight:600; margin:0; letter-spacing:-.01em; text-wrap:balance; }
+  .sec-sub{ color:var(--ink-faint); font-size:14px; margin:0 0 22px; }
+  h3{ font-family:"Bitter", serif; font-size:18px; font-weight:600; margin:32px 0 10px; }
+  h4{ font-size:14.5px; font-weight:600; margin:22px 0 8px; color:var(--ink); }
+  p{ margin:0 0 14px; }
+
+  /* ─── таблицы ───────────────────────────────────────── */
+  .tw{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); background:var(--card); box-shadow:var(--shadow); margin:0 0 20px; }
+  table{ width:100%; border-collapse:collapse; font-size:14px; min-width:560px; }
+  th, td{ text-align:left; padding:11px 14px; border-bottom:1px solid var(--line-soft); vertical-align:top; }
+  thead th{
+    font-family:"IBM Plex Mono", monospace; font-size:10.5px; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--ink-faint); font-weight:600; background:var(--line-soft); border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  td.num, th.num{ text-align:right; font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  tfoot td{ font-weight:600; background:var(--line-soft); border-top:1px solid var(--line); }
+  .task{ font-weight:500; }
+  .tag-new{
+    display:inline-block; font-family:"IBM Plex Mono", monospace; font-size:9.5px; letter-spacing:.06em;
+    background:var(--blue-bg); color:var(--blue); border-radius:20px; padding:1px 7px; margin-left:6px; vertical-align:1px;
+  }
+
+  /* полоса охвата в ячейке */
+  .cov{ display:flex; align-items:center; gap:9px; justify-content:flex-end; }
+  .cov .bar{ width:66px; height:6px; border-radius:3px; background:var(--line); overflow:hidden; flex-shrink:0; }
+  .cov .bar i{ display:block; height:100%; border-radius:3px; }
+  .cov .pct{ font-family:"IBM Plex Mono", monospace; font-size:12.5px; font-weight:600; min-width:44px; text-align:right; }
+  .c-red i{ background:var(--red); } .c-red .pct{ color:var(--red); }
+  .c-amber i{ background:var(--amber); } .c-amber .pct{ color:var(--amber); }
+  .c-teal i{ background:var(--teal); } .c-teal .pct{ color:var(--teal); }
+
+  /* ─── карточки сцен ─────────────────────────────────── */
+  .scene{
+    background:var(--card); border:1px solid var(--line); border-left:4px solid var(--teal);
+    border-radius:10px; padding:16px 18px; margin:0 0 12px; box-shadow:var(--shadow);
+  }
+  .scene .tc{ font-family:"IBM Plex Mono", monospace; font-size:11.5px; color:var(--teal); font-weight:600; }
+  .scene h5{ font-family:"Bitter", serif; font-size:16px; font-weight:600; margin:4px 0 8px; }
+  .scene p{ margin:0 0 8px; font-size:14.5px; color:var(--ink-soft); }
+  .scene .meta{ font-size:13px; color:var(--ink-faint); }
+  .scene .meta b{ color:var(--ink-soft); }
+  .scene.warn{ border-left-color:var(--red); }
+  .scene.warn .tc{ color:var(--red); }
+
+  ul.clean{ list-style:none; padding:0; margin:0 0 18px; }
+  ul.clean li{ padding:8px 0 8px 0; border-bottom:1px solid var(--line-soft); font-size:14.5px; }
+  ul.clean li:last-child{ border-bottom:none; }
+  ul.clean li b{ font-weight:600; }
+
+  .note{
+    background:var(--teal-bg); border:1px solid color-mix(in srgb, var(--teal) 32%, transparent);
+    border-radius:var(--radius); padding:16px 18px; font-size:14.5px; color:var(--ink-soft); margin:0 0 20px;
+  }
+  .note b{ color:var(--ink); }
+  .note.amber{ background:var(--amber-bg); border-color:color-mix(in srgb, var(--amber) 34%, transparent); }
+
+  .split{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:0 0 20px; }
+  @media (max-width:720px){ .split{ grid-template-columns:1fr; } }
+  .role{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 20px; box-shadow:var(--shadow);
+  }
+  .role .who{ font-family:"Bitter", serif; font-size:17px; font-weight:600; margin:6px 0 2px; }
+  .role .load{ font-family:"IBM Plex Mono", monospace; font-size:12.5px; color:var(--ink-faint); margin-bottom:12px; }
+  .role ul{ margin:0; padding-left:18px; font-size:14px; color:var(--ink-soft); }
+  .role li{ margin-bottom:5px; }
+
+  .foot{ border-top:1px solid var(--line); padding-top:18px; margin-top:44px; font-size:13px; color:var(--ink-faint); }
+  .foot b{ color:var(--ink-soft); }
+
+  @media print{
+    body{ background:#fff; }
+    .kpi, .tw, .scene, .role{ box-shadow:none; }
+    section{ break-inside:avoid; }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">Служба биобезопасности · обоснование штата</div>
+  <h1>26 направлений биобезопасности на одного специалиста</h1>
+  <p class="lede">
+    Аналитическая записка для руководства: расчёт фактической нагрузки службы,
+    карта незакрытых зон эпизоотического риска и техническое задание на два
+    анимационных ролика — <b>внешний входной контроль</b> и <b>внутренний санитарный контур</b>.
+    Все расчёты выполнены в нормо-часах при норме <b>40 ч в неделю</b> на одного специалиста.
+  </p>
+
+  <div class="verdict">
+    <div class="big">195%</div>
+    <p>
+      <b>Фактическая загрузка действующего специалиста.</b> Полный объём регламентных
+      обязанностей службы составляет <b>78 нормо-часов в неделю</b> при ресурсе 40 часов.
+      Специалист физически закрывает 43,9 часа — это <b>110% личной нормы</b> и одновременно
+      всего <b>56% требуемого объёма</b>. Четыре направления не выполняются вовсе.
+    </p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="ico">📋</div><div class="val val-blue">26</div><div class="lab">направлений контроля<br>12 внешних · 14 внутренних</div></div>
+    <div class="kpi"><div class="ico">⏱️</div><div class="val val-red">78 ч</div><div class="lab">требуется в неделю<br>ресурс — 40 ч</div></div>
+    <div class="kpi"><div class="ico">🛡️</div><div class="val val-amber">47%</div><div class="lab">охват внешнего контура<br>внутренний — 67%</div></div>
+    <div class="kpi"><div class="ico">🚫</div><div class="val val-red">4</div><div class="lab">направления с охватом 0%<br>из них 3 — новые задачи</div></div>
+    <div class="kpi"><div class="ico">👤</div><div class="val val-teal">+1</div><div class="lab">штатная единица<br>доведение до 2 специалистов</div></div>
+  </div>
+
+  <!-- ══════════════ РАЗДЕЛ 1 ══════════════ -->
+  <section id="s1">
+    <div class="sec-head"><span class="sec-num">01</span><h2>Анимация «Входной контроль внешнего периметра»</h2></div>
+    <p class="sec-sub">Техническое задание на ролик 45–60 секунд · внешний поток грузов и транспорта</p>
+
+    <p>
+      <b>Цель ролика.</b> Показать руководству и линейному персоналу непрерывную цепочку
+      входного контроля: от подъезда транспорта к периметру до допуска груза на внутренние
+      склады. Ролик одновременно служит наглядным обоснованием — на финальном кадре
+      подсвечиваются точки цепи, которые сегодня не закрыты ресурсом службы.
+    </p>
+
+    <div class="note">
+      🎬 <b>Формат:</b> 16:9, 1920×1080, 25 fps · длительность 45–60 с · без закадрового голоса,
+      только титры и звуковой дизайн (шум техники, шипение форсунок, сигнал шлагбаума).
+      Титры накладываются на монтаже отдельным слоем — генеративная модель текст не пишет.
+    </div>
+
+    <h3>🎞️ Раскадровка</h3>
+
+    <div class="scene">
+      <div class="tc">00:00 — 00:06 · Сцена 1</div>
+      <h5>🚛 Подъезд внешнего транспорта</h5>
+      <p>Колонна самосвалов и тентованных фур движется по дороге к периметру комплекса.
+        Общий план с воздуха, затем снижение к уровню кабины. Грузы: шрот и жмых,
+        ТМЦ и запчасти, оборудование, препараты для ветаптеки, МиДС.</p>
+      <div class="meta"><b>Титр:</b> «Внешний контур · всё, что заходит на территорию» &nbsp;·&nbsp;
+        <b>Контрольная точка:</b> входной поток транспорта — охват 100%</div>
+    </div>
+
+    <div class="scene">
+      <div class="tc">00:06 — 00:14 · Сцена 2</div>
+      <h5>📑 Документарный барьер: заявка и допуск</h5>
+      <p>Транспорт останавливается перед закрытым шлагбаумом. На экране — схематичная
+        «карточка допуска»: заявка, ветеринарные сопроводительные документы, статус
+        поставщика, отметка службы биобезопасности. Зелёная галочка → шлагбаум поднимается.</p>
+      <div class="meta"><b>Титр:</b> «Согласование и допуск — 100%» &nbsp;·&nbsp;
+        <b>Акцент:</b> без отметки службы транспорт не двигается дальше</div>
+    </div>
+
+    <div class="scene">
+      <div class="tc">00:14 — 00:24 · Сцена 3 · ключевая</div>
+      <h5>🚿 Дезбарьер: обработка транспорта</h5>
+      <p>Машина медленно проходит белую арку дезбарьера. Форсунки веером обрабатывают
+        колёса, ходовую часть, борта и тент; водяная пыль искрится на солнце.
+        Крупный план: датчик концентрации рабочего раствора, счётчик времени экспозиции.</p>
+      <div class="meta"><b>Титр:</b> «Дезбарьер · концентрация раствора и экспозиция» &nbsp;·&nbsp;
+        <b>Инфографика:</b> шкала концентрации МиДС выходит в зелёную зону</div>
+    </div>
+
+    <div class="scene">
+      <div class="tc">00:24 — 00:32 · Сцена 4</div>
+      <h5>🚶‍♂️ Санпропускник для людей</h5>
+      <p>Водитель и экспедитор проходят санпропускник: смена одежды, обработка рук и обуви,
+        дезковрик, отметка в журнале. Параллельный монтаж с машиной, стоящей на площадке ожидания.</p>
+      <div class="meta"><b>Титр:</b> «Входной поток людей — 100%» &nbsp;·&nbsp;
+        <b>Акцент:</b> человек — такой же вектор заноса, как и транспорт</div>
+    </div>
+
+    <div class="scene warn">
+      <div class="tc">00:32 — 00:42 · Сцена 5 · проблемная зона</div>
+      <h5>📦 Входной контроль сырья и ТМЦ</h5>
+      <p>Осмотр партии до разгрузки: целостность тента и пломб, состояние тары, отсутствие
+        следов грызунов, отбор проб. Часть кадра намеренно уходит в «серый» режим — символ
+        непроверенных партий, проходящих без контроля.</p>
+      <div class="meta"><b>Титр:</b> «Входной контроль сырья и ТМЦ — 20%» &nbsp;·&nbsp;
+        <b>Акцент:</b> 4 из 5 партий заходят без осмотра службой</div>
+    </div>
+
+    <div class="scene warn">
+      <div class="tc">00:42 — 00:50 · Сцена 6 · новая задача</div>
+      <h5>🚿 Санобработка транспорта под шрот и жмых</h5>
+      <p>Внешний транспорт встаёт под погрузку сырья. Показывается пустая площадка обработки:
+        форсунки не работают, машина уезжает необработанной. Красная пульсирующая метка.</p>
+      <div class="meta"><b>Титр:</b> «Санобработка перед погрузкой — 0%, задача не закрыта» &nbsp;·&nbsp;
+        <b>Акцент:</b> ключевой аргумент ролика</div>
+    </div>
+
+    <div class="scene">
+      <div class="tc">00:50 — 01:00 · Сцена 7 · финал</div>
+      <h5>🏭 Допуск на внутренние склады</h5>
+      <p>Обработанный и проверенный транспорт заезжает к докам складов, ветаптеки и склада МиДС.
+        Камера поднимается, вся цепочка видна одним планом. Поверх — семь точек контроля:
+        зелёные закрыты, жёлтые частично, красные не закрыты.</p>
+      <div class="meta"><b>Финальный титр:</b> «Внешний контур закрыт на 47%. Требуется вторая штатная единица»</div>
+    </div>
+
+    <h3>🎨 Визуальный стиль</h3>
+    <ul class="clean">
+      <li>🎨 <b>Палитра:</b> светлая премиальная — жемчужно-белый асфальт и здания, бирюзовый акцент службы, красный только для незакрытых точек.</li>
+      <li>💡 <b>Свет:</b> дневной, мягкие тени, лёгкая дымка от форсунок как ключевой визуальный мотив.</li>
+      <li>🎥 <b>Камера:</b> плавные проезды и подъёмы, без резких склеек; каждая сцена — один непрерывный ход.</li>
+      <li>🔤 <b>Титры:</b> «IBM Plex Sans», нижняя треть кадра, плашка 80% непрозрачности; цифры охвата — моноширинным.</li>
+      <li>🔊 <b>Звук:</b> шум дизеля, шипение распыла, сигнал шлагбаума, тихая ритмическая подложка.</li>
+    </ul>
+
+    <div class="note amber">
+      ⚠️ <b>Обязательно к показу.</b> Ролик не должен выглядеть «витриной благополучия».
+      Три точки цепи — входной контроль ТМЦ (20%), санобработка под шрот и жмых (0%) и
+      аудит внешних направлений (28,57%) — показываются подчёркнуто красным. Именно они
+      формируют аргумент о необходимости второго специалиста.
+    </div>
+  </section>
+
+  <!-- ══════════════ РАЗДЕЛ 2 ══════════════ -->
+  <section id="s2">
+    <div class="sec-head"><span class="sec-num">02</span><h2>Анимация «Внутренний санитарный контур»</h2></div>
+    <p class="sec-sub">Техническое задание на ролик 50–70 секунд · внутренние перемещения и точки контроля</p>
+
+    <p>
+      <b>Цель ролика.</b> Показать, что после пересечения периметра риск не исчезает, а
+      перераспределяется внутри объекта: между площадками, цехами, складами и транспортом.
+      Ролик выстроен как путь одной смены — от санпропускника до лабораторного протокола.
+    </p>
+
+    <div class="scene">
+      <div class="tc">00:00 — 00:08 · Сцена 1</div>
+      <h5>👷 Персонал заходит в контур</h5>
+      <p>Смена проходит санпропускник: душ, смена одежды на рабочую, обработка рук.
+        Камера следует за группой по коридору к производственной зоне.</p>
+      <div class="meta"><b>Титр:</b> «Инструктажи — 100% · Обучение персонала — 60%»</div>
+    </div>
+
+    <div class="scene warn">
+      <div class="tc">00:08 — 00:18 · Сцена 2 · проблемная зона</div>
+      <h5>🧼 Внутренние дезбарьеры</h5>
+      <p>Дезковрики и дезванны на входах в цеха. Крупный план: замер концентрации рабочего
+        раствора, отметка в графике замены. Половина барьеров показана «выцветшими» —
+        график соблюдается не везде.</p>
+      <div class="meta"><b>Титр:</b> «Внутренние дезбарьеры — 50%» &nbsp;·&nbsp;
+        <b>Акцент:</b> концентрация, чистота, график очистки</div>
+    </div>
+
+    <div class="scene warn">
+      <div class="tc">00:18 — 00:28 · Сцена 3</div>
+      <h5>🚜 АТЦ и внутренняя техника</h5>
+      <p>Внутренний транспорт выезжает из автотранспортного цеха: мойка техники,
+        осмотр ходовой, обработка колёс перед выездом на площадки. Часть техники
+        проходит мимо поста обработки.</p>
+      <div class="meta"><b>Титр:</b> «АТЦ — 60%» &nbsp;·&nbsp;
+        <b>Маршруты:</b> склад → инкубатор → бройлерные площадки → АТЦ</div>
+    </div>
+
+    <div class="scene">
+      <div class="tc">00:28 — 00:38 · Сцена 4</div>
+      <h5>♻️ Биоотходы и перевозка падежа</h5>
+      <p>Герметичный контейнер, погрузка в специализированный транспорт, обработка
+        площадки после вывоза, движение по выделенному маршруту, не пересекающему
+        чистые зоны. Маршрут подсвечивается пунктиром на схеме территории.</p>
+      <div class="meta"><b>Титр:</b> «Работа с биоотходами — 100%» &nbsp;·&nbsp;
+        <b>Акцент:</b> направление закрыто полностью — показать как эталон</div>
+    </div>
+
+    <div class="scene">
+      <div class="tc">00:38 — 00:50 · Сцена 5</div>
+      <h5>🧽 Верификация мойки и складские зоны</h5>
+      <p>Мойка оборудования и помещений, затем проверка качества: визуальный осмотр,
+        смыв, экспресс-контроль. Далее — обход склада лузги и пометохранилища:
+        состояние зон, отсутствие подтёков и следов грызунов.</p>
+      <div class="meta"><b>Титр:</b> «Верификация мойки — 100% · Склад лузги и пометохранилище — 100%»</div>
+    </div>
+
+    <div class="scene warn">
+      <div class="tc">00:50 — 01:00 · Сцена 6 · проблемная зона</div>
+      <h5>🔍 Аудиты внутренних площадок</h5>
+      <p>Специалист с чек-листом обходит площадку. Кадр «раздваивается»: одна площадка
+        проверена, ещё две остаются серыми и непроверенными — метафора охвата 30%.</p>
+      <div class="meta"><b>Титр:</b> «Аудиты внутренних площадок — 30%»</div>
+    </div>
+
+    <div class="scene">
+      <div class="tc">01:00 — 01:10 · Сцена 7 · финал</div>
+      <h5>🔬 Лабораторный контроль и решение</h5>
+      <p>Пробирки со смывами, лаборатория, протокол результатов, решение службы:
+        допустить / повторная обработка. Финальный кадр — схема территории с
+        подсвеченными точками контроля и итоговой цифрой охвата.</p>
+      <div class="meta"><b>Финальный титр:</b> «Внутренний контур закрыт на 67%. Разработка ВНД — 0%»</div>
+    </div>
+
+    <div class="note">
+      🔗 <b>Связка двух роликов.</b> Финальный кадр первого ролика (транспорт заезжает
+      на внутренние склады) является первым кадром второго. При показе руководству
+      ролики монтируются встык в единый двухминутный материал.
+    </div>
+  </section>
+
+  <!-- ══════════════ РАЗДЕЛ 3 ══════════════ -->
+  <section id="s3">
+    <div class="sec-head"><span class="sec-num">03</span><h2>Расчёт нагрузки и обоснование второй единицы</h2></div>
+    <p class="sec-sub">Нормо-часы, узкие места и матрица распределения обязанностей</p>
+
+    <h3>📊 Внешний контур · 12 направлений</h3>
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>Направление</th><th class="num">Норматив, ч/нед</th><th class="num">Охват</th><th class="num">Закрыто, ч</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="task">📊 Аудит внешних направлений</td><td class="num">6,0</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:28.57%"></i></span><span class="pct">28,57%</span></div></td><td class="num">1,71</td></tr>
+          <tr><td class="task">📑 Согласования: документы и допуски</td><td class="num">4,5</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">4,50</td></tr>
+          <tr><td class="task">🚶‍♂️🚛 Входной поток: люди и транспорт</td><td class="num">6,0</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">6,00</td></tr>
+          <tr><td class="task">📦 Входной контроль сырья и ТМЦ</td><td class="num">6,0</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:20%"></i></span><span class="pct">20%</span></div></td><td class="num">1,20</td></tr>
+          <tr><td class="task">🤝 Подрядчики</td><td class="num">1,5</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">1,50</td></tr>
+          <tr><td class="task">🚚 Поставщики</td><td class="num">3,0</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:30%"></i></span><span class="pct">30%</span></div></td><td class="num">0,90</td></tr>
+          <tr><td class="task">🏡 ЛПХ сотрудников</td><td class="num">3,0</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:30%"></i></span><span class="pct">30%</span></div></td><td class="num">0,90</td></tr>
+          <tr><td class="task">🦠 Эпизоотическая ситуация в регионе</td><td class="num">1,5</td><td class="num"><div class="cov c-amber"><span class="bar"><i style="width:80%"></i></span><span class="pct">80%</span></div></td><td class="num">1,20</td></tr>
+          <tr><td class="task">🪤 Внешний пест-контроль</td><td class="num">1,5</td><td class="num"><div class="cov c-amber"><span class="bar"><i style="width:80%"></i></span><span class="pct">80%</span></div></td><td class="num">1,20</td></tr>
+          <tr><td class="task">🚿 Санобработка транспорта под шрот и жмых<span class="tag-new">НОВАЯ</span></td><td class="num">4,0</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:2%"></i></span><span class="pct">0%</span></div></td><td class="num">0,00</td></tr>
+          <tr><td class="task">📜 Контроль исполнения договоров<span class="tag-new">НОВАЯ</span></td><td class="num">1,5</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:2%"></i></span><span class="pct">0%</span></div></td><td class="num">0,00</td></tr>
+          <tr><td class="task">📝 ВНД: требования к сырью и ТМЦ<span class="tag-new">НОВАЯ</span></td><td class="num">2,5</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:2%"></i></span><span class="pct">0%</span></div></td><td class="num">0,00</td></tr>
+        </tbody>
+        <tfoot><tr><td>Итого по внешнему контуру</td><td class="num">41,0</td><td class="num">47%</td><td class="num">19,11</td></tr></tfoot>
+      </table>
+    </div>
+
+    <h3>🏭 Внутренний контур · 14 направлений</h3>
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th>Направление</th><th class="num">Норматив, ч/нед</th><th class="num">Охват</th><th class="num">Закрыто, ч</th>
+        </tr></thead>
+        <tbody>
+          <tr><td class="task">📊 Отчётность</td><td class="num">3,5</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">3,50</td></tr>
+          <tr><td class="task">🎓 Обучение персонала</td><td class="num">2,5</td><td class="num"><div class="cov c-amber"><span class="bar"><i style="width:60%"></i></span><span class="pct">60%</span></div></td><td class="num">1,50</td></tr>
+          <tr><td class="task">📋 Инструктажи</td><td class="num">1,5</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">1,50</td></tr>
+          <tr><td class="task">🧪 Верификация мойки и дезинфекции</td><td class="num">3,5</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">3,50</td></tr>
+          <tr><td class="task">🔬 Анализ лабораторных данных</td><td class="num">2,0</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">2,00</td></tr>
+          <tr><td class="task">🧴 Учёт МиДС</td><td class="num">2,0</td><td class="num"><div class="cov c-amber"><span class="bar"><i style="width:85%"></i></span><span class="pct">85%</span></div></td><td class="num">1,70</td></tr>
+          <tr><td class="task">🌾 Склад лузги</td><td class="num">1,0</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">1,00</td></tr>
+          <tr><td class="task">🚜 АТЦ — автотранспортный цех</td><td class="num">3,0</td><td class="num"><div class="cov c-amber"><span class="bar"><i style="width:60%"></i></span><span class="pct">60%</span></div></td><td class="num">1,80</td></tr>
+          <tr><td class="task">🧼 Внутренние дезбарьеры</td><td class="num">5,0</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:50%"></i></span><span class="pct">50%</span></div></td><td class="num">2,50</td></tr>
+          <tr><td class="task">♻️ Биоотходы и перевозка падежа</td><td class="num">1,5</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">1,50</td></tr>
+          <tr><td class="task">🔍 Аудиты внутренних площадок</td><td class="num">6,0</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:30%"></i></span><span class="pct">30%</span></div></td><td class="num">1,80</td></tr>
+          <tr><td class="task">💩 Пометохранилище</td><td class="num">1,0</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">1,00</td></tr>
+          <tr><td class="task">🛡️ Внутренняя эпизоотическая ситуация</td><td class="num">1,5</td><td class="num"><div class="cov c-teal"><span class="bar"><i style="width:100%"></i></span><span class="pct">100%</span></div></td><td class="num">1,50</td></tr>
+          <tr><td class="task">📝 ВНД: внутренние требования ББ<span class="tag-new">НОВАЯ</span></td><td class="num">3,0</td><td class="num"><div class="cov c-red"><span class="bar"><i style="width:2%"></i></span><span class="pct">0%</span></div></td><td class="num">0,00</td></tr>
+        </tbody>
+        <tfoot><tr><td>Итого по внутреннему контуру</td><td class="num">37,0</td><td class="num">67%</td><td class="num">24,80</td></tr></tfoot>
+      </table>
+    </div>
+
+    <h3>🔴 Узкие места: охват 0–50%</h3>
+    <p>Десять направлений из двадцати шести находятся в зоне недопустимого риска.
+      На них приходится <b>40,0 нормо-часов в неделю</b> — больше половины всего объёма службы,
+      а фактически закрывается лишь <b>9,0 часа</b>. Это ровно тот объём, который
+      высвобождает вторая штатная единица.</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Направление</th><th>Контур</th><th class="num">Охват</th><th>Последствие при непокрытии</th></tr></thead>
+        <tbody>
+          <tr><td class="task">🚿 Санобработка транспорта под шрот и жмых</td><td>Внешний</td><td class="num" style="color:var(--red)">0%</td><td>Вынос возбудителя за периметр и обратный занос с необработанной техникой</td></tr>
+          <tr><td class="task">📜 Контроль исполнения договоров</td><td>Внешний</td><td class="num" style="color:var(--red)">0%</td><td>Поставки вне требований ББ, отсутствие правовых оснований для претензий</td></tr>
+          <tr><td class="task">📝 ВНД: требования к сырью и ТМЦ</td><td>Внешний</td><td class="num" style="color:var(--red)">0%</td><td>Нет закреплённой нормы — контроль держится на устных договорённостях</td></tr>
+          <tr><td class="task">📝 ВНД: внутренние требования ББ</td><td>Внутренний</td><td class="num" style="color:var(--red)">0%</td><td>Нет единого стандарта для площадок, разное толкование требований</td></tr>
+          <tr><td class="task">📦 Входной контроль сырья и ТМЦ</td><td>Внешний</td><td class="num" style="color:var(--red)">20%</td><td>Занос с тарой, подстилкой и непроверенными партиями сырья</td></tr>
+          <tr><td class="task">📊 Аудит внешних направлений</td><td>Внешний</td><td class="num" style="color:var(--red)">28,57%</td><td>Системные нарушения у контрагентов выявляются постфактум</td></tr>
+          <tr><td class="task">🚚 Поставщики / 🏡 ЛПХ сотрудников</td><td>Внешний</td><td class="num" style="color:var(--red)">30%</td><td>Два неконтролируемых вектора заноса — извне и от персонала</td></tr>
+          <tr><td class="task">🔍 Аудиты внутренних площадок</td><td>Внутренний</td><td class="num" style="color:var(--red)">30%</td><td>Отклонения на площадках накапливаются между проверками</td></tr>
+          <tr><td class="task">🧼 Внутренние дезбарьеры</td><td>Внутренний</td><td class="num" style="color:var(--red)">50%</td><td>Барьер формально есть, но концентрация и график не подтверждены</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>🧮 Математика нагрузки</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Показатель</th><th class="num">1 специалист<br>(сейчас)</th><th class="num">2 специалиста<br>(предложение)</th></tr></thead>
+        <tbody>
+          <tr><td>Ресурс службы, ч/нед</td><td class="num">40</td><td class="num">80</td></tr>
+          <tr><td>Требуемый объём, ч/нед</td><td class="num">78</td><td class="num">78</td></tr>
+          <tr><td>Загрузка к норме</td><td class="num" style="color:var(--red)">195%</td><td class="num" style="color:var(--teal)">98%</td></tr>
+          <tr><td>Фактически закрывается, ч</td><td class="num">43,9</td><td class="num">78,0</td></tr>
+          <tr><td>Переработка сверх личной нормы</td><td class="num" style="color:var(--red)">+3,9 ч (110%)</td><td class="num" style="color:var(--teal)">нет</td></tr>
+          <tr><td>Общий охват направлений</td><td class="num" style="color:var(--red)">56%</td><td class="num" style="color:var(--teal)">100%</td></tr>
+          <tr><td>Направлений с охватом 0%</td><td class="num" style="color:var(--red)">4</td><td class="num" style="color:var(--teal)">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note amber">
+      📐 <b>Как считалось.</b> Норматив по каждому направлению — экспертная оценка трудоёмкости
+      в нормо-часах в неделю; квартальные и месячные работы (аудиты, ЛПХ, договоры, ВНД)
+      амортизированы на неделю. Фактически закрываемый объём получен умножением норматива
+      на предоставленный службой процент охвата. Сумма: <b>78,0 ч требуется</b>,
+      <b>43,9 ч закрывается</b>, разрыв — <b>34,1 ч в неделю</b>.
+    </div>
+
+    <h3>👥 Матрица распределения на двух специалистов</h3>
+
+    <div class="split">
+      <div class="role">
+        <div style="font-size:22px">🚛</div>
+        <div class="who">Специалист 1</div>
+        <div class="load">Операционный и входной контроль · внешний контур · 38,5 ч/нед (96%)</div>
+        <ul>
+          <li>Согласования, допуски, работа с подрядчиками</li>
+          <li>Входной поток людей и транспорта, санпропускник</li>
+          <li>Входной контроль сырья и ТМЦ, тентование, отбор проб</li>
+          <li><b>Санобработка транспорта под шрот и жмых</b> — запуск с нуля</li>
+          <li>Поставщики, ЛПХ сотрудников, внешний пест-контроль</li>
+          <li>Мониторинг эпизоотической ситуации в регионе</li>
+          <li>Аудит внешних направлений, контроль исполнения договоров</li>
+        </ul>
+      </div>
+      <div class="role">
+        <div style="font-size:22px">🔬</div>
+        <div class="who">Специалист 2</div>
+        <div class="load">Внутренний аудит, ВНД и лабораторный контроль · 39,5 ч/нед (99%)</div>
+        <ul>
+          <li><b>Аудиты внутренних площадок</b> — вывод с 30% до 100%</li>
+          <li><b>Внутренние дезбарьеры</b> — концентрации, графики, верификация</li>
+          <li>АТЦ: санитарное состояние техники и помещений цеха</li>
+          <li>Верификация мойки и дезинфекции, анализ лабораторных данных</li>
+          <li>Учёт МиДС, склад лузги, пометохранилище, биоотходы</li>
+          <li>Обучение персонала и инструктажи, отчётность</li>
+          <li><b>Разработка ВНД</b> — оба документа, внешний и внутренний</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="note">
+      ⚖️ <b>Баланс распределения.</b> Разработка ВНД по входящему сырью передана Специалисту 2,
+      несмотря на принадлежность к внешнему контуру: документарная работа концентрируется в
+      одних руках, а операционная нагрузка Специалиста 1 остаётся в пределах нормы.
+      Итоговая загрузка 96% и 99% — резерв на отпуска и больничные минимален, поэтому
+      квартальные аудиты рекомендуется планировать матрицей на год.
+    </div>
+
+    <h3>✅ Итоговый эффект</h3>
+    <ul class="clean">
+      <li>🛡️ <b>Внешний контур: 47% → 100%.</b> Закрываются входной контроль ТМЦ, аудит контрагентов, ЛПХ и поставщики; запускается санобработка транспорта под шрот и жмых.</li>
+      <li>🏭 <b>Внутренний контур: 67% → 100%.</b> Аудиты площадок выходят на плановый цикл, дезбарьеры получают подтверждённые концентрации и графики, АТЦ — регулярный контроль.</li>
+      <li>📝 <b>Нормативная база.</b> Разрабатываются два ВНД — требования к входящему сырью и ТМЦ и внутренние требования ББ и санитарии. Контроль перестаёт держаться на устных договорённостях.</li>
+      <li>⚖️ <b>Правовой контур.</b> Ежеквартальный контроль исполнения договоров даёт основания для претензий к поставщикам при нарушении санитарных требований.</li>
+      <li>🧯 <b>Снижение биориска.</b> Устраняются четыре полностью открытых вектора заноса и пять частично закрытых.</li>
+      <li>👤 <b>Человеческий фактор.</b> Загрузка падает со 195% до 98% — исчезает режим, при котором специалист вынужден выбирать, какую проверку пропустить сегодня.</li>
+      <li>🔁 <b>Взаимозаменяемость.</b> Два специалиста обеспечивают непрерывность службы в период отпуска, болезни или выездной работы — сегодня такой возможности нет.</li>
+    </ul>
+
+    <div class="verdict" style="margin-top:26px">
+      <div class="big">+1</div>
+      <p>
+        <b>Решение к согласованию.</b> Ввести вторую штатную единицу специалиста службы
+        биобезопасности. Это приводит загрузку к норме, закрывает 100% регламентных
+        направлений обоих контуров и снимает четыре нулевых вектора эпизоотического риска.
+      </p>
+    </div>
+  </section>
+
+  <div class="foot">
+    <b>Исходные данные:</b> показатели охвата предоставлены службой биобезопасности предприятия.
+    <b>Расчётная база:</b> 26 направлений, 78,0 нормо-часа в неделю, норма 40 ч на специалиста.
+    <b>Материалы:</b> интерактивный дашборд нагрузки и ролик внешнего входного контроля прилагаются отдельно.
+  </div>
+
+</div>

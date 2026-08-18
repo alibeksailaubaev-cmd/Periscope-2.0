@@ -100,33 +100,45 @@ const GROUPS = {
   crit:  { id: "crit",  title: "Критические задачи",    icon: Siren,          tone: "red"  },
 };
 
-// hours — нормо-часы в неделю на полное закрытие; covered — сколько реально закрывают двое
+/* hours — нормативная трудоёмкость направления, нормо-часов в неделю (амортизировано
+   для квартальных и месячных работ); cov — фактический охват в процентах (данные службы). */
 const TASKS = [
-  { id: "coord",     name: "Согласование",                     icon: Phone,          group: "reg",   contour: "external", hours: 22, covered: 22, freq: "непрерывно",  note: "Транспорт, подрядчики, службы предприятия — входящий поток заявок" },
-  { id: "audit",     name: "Аудит соответствия",               icon: ClipboardCheck, group: "reg",   contour: "external", hours: 8,  covered: 4,  freq: "еженедельно", note: "Внешние и внутренние проверки требований биобезопасности" },
-  { id: "entry",     name: "Входной поток людей",              icon: DoorOpen,       group: "daily", contour: "external", hours: 12, covered: 6,  freq: "ежедневно",   note: "Проходная, санобработка при входе на территорию" },
-  { id: "transport", name: "Мойка и дезинфекция транспорта",   icon: Truck,          group: "daily", contour: "external", hours: 11, covered: 5,  freq: "ежедневно",   note: "Дезбарьер на въезде, контроль качества обработки" },
-  { id: "barriers",  name: "Дезбарьеры и дезковрики",          icon: ShieldCheck,    group: "daily", contour: "external", hours: 6,  covered: 3,  freq: "ежедневно",   note: "Заправка, замена растворов, контроль концентрации" },
-  { id: "raw",       name: "Входной контроль сырья и ТМЦ",     icon: Package,        group: "daily", contour: "external", hours: 9,  covered: 4,  freq: "ежедневно",   note: "Проверка партий и тары до разгрузки" },
-  { id: "suppliers", name: "Поставщики и подрядчики",          icon: Boxes,          group: "crit",  contour: "external", hours: 5,  covered: 3,  freq: "по событию",  note: "Допуск, документы, санитарный статус контрагентов" },
-  { id: "lph",       name: "ЛПХ сотрудников",                  icon: Home,           group: "crit",  contour: "external", hours: 7,  covered: 1,  freq: "ежемесячно",  note: "Личные подсобные хозяйства — риск заноса инфекции извне" },
-  { id: "epizoot",   name: "Эпизодситуация в регионе",         icon: Siren,          group: "crit",  contour: "external", hours: 8,  covered: 2,  freq: "мониторинг",  note: "Реагирование на вспышки, усиление режима на границе" },
-  { id: "pestout",   name: "Внешний пест-контроль периметра",  icon: Bug,            group: "crit",  contour: "external", hours: 3,  covered: 0,  freq: "еженедельно", note: "Барьер от грызунов и насекомых по периметру территории" },
+  // ── ВНЕШНИЙ КОНТУР (12 направлений) ──────────────────────────────────────
+  { id: "ext_audit",   name: "Аудит внешних направлений",              icon: ClipboardCheck, group: "crit",  contour: "external", hours: 6.0, cov: 28.57, freq: "ежеквартально", note: "Аудит контрагентов и внешних процессов на соответствие требованиям ББ" },
+  { id: "ext_appr",    name: "Согласования: документы и допуски",      icon: FileText,       group: "reg",   contour: "external", hours: 4.5, cov: 100,   freq: "непрерывно",    note: "Заявки на въезд и проход, допуски, переписка со службами предприятия" },
+  { id: "ext_entry",   name: "Входной поток: люди и транспорт",        icon: DoorOpen,       group: "daily", contour: "external", hours: 6.0, cov: 100,   freq: "ежедневно",     note: "Санпропускник, проходная, контроль въезда на территорию" },
+  { id: "ext_raw",     name: "Входной контроль сырья и ТМЦ",           icon: Package,        group: "daily", contour: "external", hours: 6.0, cov: 20,    freq: "ежедневно",     note: "Тентование, целостность тары, санитарное состояние партии до разгрузки" },
+  { id: "ext_contr",   name: "Подрядчики",                             icon: Users,          group: "reg",   contour: "external", hours: 1.5, cov: 100,   freq: "по событию",    note: "Допуск подрядных организаций, инструктаж и контроль на объекте" },
+  { id: "ext_supp",    name: "Поставщики",                             icon: Boxes,          group: "crit",  contour: "external", hours: 3.0, cov: 30,    freq: "ежемесячно",    note: "Санитарный статус поставщика, оценка площадки отгрузки" },
+  { id: "ext_lph",     name: "ЛПХ сотрудников",                        icon: Home,           group: "crit",  contour: "external", hours: 3.0, cov: 30,    freq: "ежемесячно",    note: "Учёт личных подсобных хозяйств — риск заноса возбудителя извне" },
+  { id: "ext_epi",     name: "Эпизоотическая ситуация в регионе",      icon: Siren,          group: "crit",  contour: "external", hours: 1.5, cov: 80,    freq: "мониторинг",    note: "Мониторинг очагов, усиление режима на внешней границе" },
+  { id: "ext_pest",    name: "Внешний пест-контроль",                  icon: Bug,            group: "daily", contour: "external", hours: 1.5, cov: 80,    freq: "еженедельно",   note: "Барьер по периметру: грызуны, синантропная птица, насекомые" },
+  { id: "ext_wash",    name: "Санобработка транспорта под шрот и жмых", icon: Droplets,      group: "crit",  contour: "external", hours: 4.0, cov: 0,     freq: "ежедневно",     note: "НОВАЯ ЗАДАЧА · обработка внешнего транспорта перед погрузкой сырья", isNew: true },
+  { id: "ext_contract",name: "Контроль исполнения договоров",          icon: BadgeCheck,     group: "reg",   contour: "external", hours: 1.5, cov: 0,     freq: "ежеквартально", note: "НОВАЯ ЗАДАЧА · проверка закупок и поставок на требования ББ и санитарии", isNew: true },
+  { id: "ext_vnd",     name: "ВНД: требования к сырью и ТМЦ",          icon: FileText,       group: "reg",   contour: "external", hours: 2.5, cov: 0,     freq: "проект",        note: "НОВАЯ ЗАДАЧА · разработка внутреннего нормативного документа", isNew: true },
 
-  { id: "report",    name: "Отчётность",                       icon: FileText,       group: "reg",   contour: "internal", hours: 16, covered: 16, freq: "ежедневно",   note: "Журналы, сводки, обязательная документация" },
-  { id: "training",  name: "Обучение персонала",               icon: GraduationCap,  group: "reg",   contour: "internal", hours: 5,  covered: 1,  freq: "ежемесячно",  note: "Очное обучение нормам биобезопасности" },
-  { id: "brief",     name: "Инструктажи на местах",            icon: Megaphone,      group: "reg",   contour: "internal", hours: 4,  covered: 1,  freq: "еженедельно", note: "Регулярные инструктажи по цехам и участкам" },
-  { id: "verify",    name: "Верификация приёмки мойки",        icon: BadgeCheck,     group: "reg",   contour: "internal", hours: 6,  covered: 3,  freq: "ежедневно",   note: "Проверка качества мойки оборудования после обработки" },
-  { id: "lab",       name: "Тестирование, лабораторные пробы", icon: FlaskConical,   group: "reg",   contour: "internal", hours: 5,  covered: 1,  freq: "еженедельно", note: "Смывы и пробы внутри контура, работа с лабораторией" },
-  { id: "chem",      name: "Учёт дезсредств",                  icon: Droplets,       group: "reg",   contour: "internal", hours: 4,  covered: 3,  freq: "еженедельно", note: "Остатки, расход, сроки годности на складе" },
-  { id: "pestin",    name: "Внутренний пест-контроль",         icon: Bug,            group: "daily", contour: "internal", hours: 5,  covered: 2,  freq: "еженедельно", note: "Ловушки и мониторинг внутри производственных помещений" },
-  { id: "hangar",    name: "Ангар — санитарный режим",         icon: Warehouse,      group: "daily", contour: "internal", hours: 6,  covered: 3,  freq: "ежедневно",   note: "Контроль состояния и режима внутри производственного ангара" },
-  { id: "husk",      name: "Склады лузги",                     icon: Layers,         group: "daily", contour: "internal", hours: 4,  covered: 0,  freq: "еженедельно", note: "Санитарный контроль зон хранения подстилочного материала" },
-  { id: "atc",       name: "АТЦ — мойка и осмотр",             icon: Car,            group: "crit",  contour: "internal", hours: 2,  covered: 0,  freq: "еженедельно", note: "Автотранспортный цех: плановый осмотр и обработка техники" },
+  // ── ВНУТРЕННИЙ КОНТУР (14 направлений) ───────────────────────────────────
+  { id: "int_rep",     name: "Отчётность",                             icon: FileText,       group: "reg",   contour: "internal", hours: 3.5, cov: 100,   freq: "ежедневно",     note: "Журналы, сводки, обязательная документация службы" },
+  { id: "int_train",   name: "Обучение персонала",                     icon: GraduationCap,  group: "reg",   contour: "internal", hours: 2.5, cov: 60,    freq: "ежемесячно",    note: "Очное обучение нормам биобезопасности и санитарии" },
+  { id: "int_brief",   name: "Инструктажи",                            icon: Megaphone,      group: "reg",   contour: "internal", hours: 1.5, cov: 100,   freq: "еженедельно",   note: "Инструктажи на местах по цехам и участкам" },
+  { id: "int_verify",  name: "Верификация мойки и дезинфекции",        icon: BadgeCheck,     group: "daily", contour: "internal", hours: 3.5, cov: 100,   freq: "ежедневно",     note: "Контроль качества обработки оборудования и помещений" },
+  { id: "int_lab",     name: "Анализ лабораторных данных",             icon: FlaskConical,   group: "reg",   contour: "internal", hours: 2.0, cov: 100,   freq: "еженедельно",   note: "Смывы, пробы, интерпретация протоколов лаборатории" },
+  { id: "int_mids",    name: "Учёт МиДС",                              icon: Droplets,       group: "daily", contour: "internal", hours: 2.0, cov: 85,    freq: "еженедельно",   note: "Моющие и дезинфицирующие средства: остатки, расход, сроки" },
+  { id: "int_husk",    name: "Склад лузги",                            icon: Layers,         group: "daily", contour: "internal", hours: 1.0, cov: 100,   freq: "еженедельно",   note: "Требования ББ и санитарии к зоне хранения подстилки" },
+  { id: "int_atc",     name: "АТЦ — автотранспортный цех",             icon: Car,            group: "crit",  contour: "internal", hours: 3.0, cov: 60,    freq: "еженедельно",   note: "Санитарное состояние техники и помещений цеха" },
+  { id: "int_barrier", name: "Внутренние дезбарьеры",                  icon: ShieldCheck,    group: "daily", contour: "internal", hours: 5.0, cov: 50,    freq: "ежедневно",     note: "Концентрации, чистота, графики очистки и замены растворов" },
+  { id: "int_bio",     name: "Биоотходы и перевозка падежа",           icon: Siren,          group: "crit",  contour: "internal", hours: 1.5, cov: 100,   freq: "ежедневно",     note: "Обращение с биологическими отходами, требования к перевозке" },
+  { id: "int_audit",   name: "Аудиты внутренних площадок",             icon: ClipboardCheck, group: "crit",  contour: "internal", hours: 6.0, cov: 30,    freq: "ежемесячно",    note: "Плановые проверки площадок на требования ББ и санитарии" },
+  { id: "int_manure",  name: "Пометохранилище",                        icon: Warehouse,      group: "daily", contour: "internal", hours: 1.0, cov: 100,   freq: "еженедельно",   note: "Требования ББ и санитарии к зоне накопления помёта" },
+  { id: "int_epi",     name: "Внутренняя эпизоотическая ситуация",     icon: Radar,          group: "crit",  contour: "internal", hours: 1.5, cov: 100,   freq: "мониторинг",    note: "Контроль эпизоотического благополучия внутри контура" },
+  { id: "int_vnd",     name: "ВНД: внутренние требования ББ",          icon: FileText,       group: "reg",   contour: "internal", hours: 3.0, cov: 0,     freq: "проект",        note: "НОВАЯ ЗАДАЧА · разработка внутреннего нормативного документа", isNew: true },
 ];
 
-const STAFF = 2;
-const HOURS_PER_STAFF = 40;
+// фактически закрываемый объём в нормо-часах выводится из процента охвата
+TASKS.forEach((t) => { t.covered = Math.round(t.hours * t.cov) / 100; });
+
+const STAFF = 1;               // действующий штат службы
+const HOURS_PER_STAFF = 40;    // нормо-часов в неделю на одного специалиста
 
 const sum = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
 
@@ -148,7 +160,11 @@ const METRICS = (() => {
     intCoverage: Math.round((intCovered / intDemand) * 100),       // 53 %
     gap: requiredStaff - STAFF,                                    // +2
     deficitHours: demandWeek - capacityWeek,                       // 68
-    uncovered: TASKS.filter((t) => t.covered === 0).length,
+    uncovered: TASKS.filter((t) => t.cov === 0).length,
+    weakSpots: TASKS.filter((t) => t.cov <= 50).length,
+    newTasks: TASKS.filter((t) => t.isNew).length,
+    coverage: Math.round((sum(TASKS, (t) => t.covered) / sum(TASKS, (t) => t.hours)) * 100),
+    coveredNow: Math.round(sum(TASKS, (t) => t.covered) * 10) / 10,
     critWeak: TASKS.filter((t) => t.group === "crit" && t.covered / t.hours < 0.5).length,
   };
 })();
@@ -180,16 +196,16 @@ const CONTOURS = {
 const PERIODS = {
   day:   { id: "day",   label: "День",   k: 1 / 5, unit: "нормо-часов",
            categories: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"],
-           demand: [2.8, 4.1, 4.6, 3.2, 2.4, 4.4, 4.7, 3.4],
-           capacity: [2, 2, 2, 2, 2, 2, 2, 2] },
+           demand: [1.5, 2.2, 2.4, 1.7, 1.3, 2.3, 2.5, 1.7],
+           capacity: [1, 1, 1, 1, 1, 1, 1, 1] },
   week:  { id: "week",  label: "Неделя", k: 1, unit: "нормо-часов",
            categories: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
-           demand: [28, 30, 26, 29, 27, 5, 3],
-           capacity: [16, 16, 16, 16, 16, 0, 0] },
+           demand: [15, 16, 14, 15, 14, 3, 1],
+           capacity: [8, 8, 8, 8, 8, 0, 0] },
   month: { id: "month", label: "Месяц",  k: 4.2, unit: "нормо-часов",
            categories: ["Неделя 1", "Неделя 2", "Неделя 3", "Неделя 4", "Неделя 5"],
-           demand: [150, 158, 142, 155, 17],
-           capacity: [80, 80, 80, 80, 16] },
+           demand: [79, 83, 75, 82, 9],
+           capacity: [40, 40, 40, 40, 8] },
 };
 
 /* Карта внутреннего контура: объекты и маршруты перемещений */
@@ -198,7 +214,7 @@ const SITES = {
   atc:       { id: "atc",       name: "АТЦ",                   sub: "транспортный цех",  x: 300, y: 470, w: 150, h: 80,  icon: Car },
   incubator: { id: "incubator", name: "Инкубатор",             sub: "суточный молодняк",     x: 545, y: 135, w: 136, h: 84,  icon: Egg },
   broiler:   { id: "broiler",   name: "Бройлерные площадки",   sub: "3 корпуса",             x: 825, y: 300, w: 200, h: 240, icon: Bird },
-  office:    { id: "office",    name: "Офис",                  sub: `${STAFF} специалиста — постоянно здесь`, x: 575, y: 458, w: 210, h: 92, icon: Building2 },
+  office:    { id: "office",    name: "Офис",                  sub: `${STAFF} специалист — постоянно здесь`, x: 575, y: 458, w: 210, h: 92, icon: Building2 },
 };
 
 const ROUTES = [
@@ -703,7 +719,7 @@ function ContourCard({ T, contour, active, onClick, side }) {
         <div className="flex-1">
           <div className="mb-1 flex justify-between font-mono text-[10px]" style={{ color: T.faint }}>
             <span>покрытие</span>
-            <span>{C.covered} из {C.demand} ч/нед</span>
+            <span>{fmt(C.covered, 1)} из {fmt(C.demand, 1)} ч/нед</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
             <motion.div
@@ -822,7 +838,7 @@ function ContourTaskList({ T, contour }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   9. СЦЕНА НАГРУЗКИ: все задачи слетаются и садятся на двух сотрудников
+   9. СЦЕНА НАГРУЗКИ: весь объём садится на одного действующего специалиста
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const VB = { w: 760, h: 520 };
@@ -901,6 +917,38 @@ function Person({ T, x, y, tilt, stack, delay = 0 }) {
         transition={{ duration: 2.6, repeat: Infinity, ease: "easeOut", delay }}
         style={{ originX: `${x}px`, originY: `${y - 6}px` }}
       />
+    </motion.g>
+  );
+}
+
+/* Незакрытая вторая штатная единица — контур человека, которого сейчас нет */
+function GhostPerson({ T, x, y }) {
+  return (
+    <motion.g
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.8, duration: 0.8 }}
+    >
+      <motion.g
+        animate={{ opacity: [0.45, 0.85, 0.45] }}
+        transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <path
+          d={`M ${x - 20} ${y + 44}
+              L ${x - 18} ${y + 4}
+              Q ${x - 17} ${y - 10} ${x} ${y - 12}
+              Q ${x + 17} ${y - 10} ${x + 18} ${y + 4}
+              L ${x + 20} ${y + 44} Z`}
+          fill="none" stroke={T.teal} strokeWidth={1.6} strokeDasharray="5 5"
+        />
+        <circle cx={x} cy={y - 26} r={14.5} fill="none" stroke={T.teal} strokeWidth={1.6} strokeDasharray="5 5" />
+      </motion.g>
+      <circle cx={x + 20} cy={y - 34} r={11} fill={T.teal} />
+      <text x={x + 20} y={y - 30} textAnchor="middle" fontSize="11" fontWeight="700" fill="#fff">+1</text>
+      <text x={x} y={y - 54} textAnchor="middle" fontSize="9.5" fontWeight="700" letterSpacing="0.6" fill={T.teal}>
+        ВАКАНСИЯ
+      </text>
     </motion.g>
   );
 }
@@ -1029,7 +1077,7 @@ function WorkloadStage({ T }) {
           })}
         </motion.g>
 
-        {/* ядро: два сотрудника */}
+        {/* ядро: действующий специалист и незакрытая вторая единица */}
         <motion.circle
           cx={CC.x} cy={CC.y} r={R_CORE + 54} fill="url(#ws-aura)"
           animate={{ scale: [1, 1.06, 1], opacity: [0.85, 1, 0.85] }}
@@ -1067,8 +1115,8 @@ function WorkloadStage({ T }) {
         />
 
         <g pointerEvents="none">
-          <Person T={T} x={CC.x - 46} y={CC.y - 6} tilt={4} stack={6} delay={0} />
-          <Person T={T} x={CC.x + 46} y={CC.y - 6} tilt={-4} stack={6} delay={0.7} />
+          <Person T={T} x={CC.x - 38} y={CC.y - 6} tilt={5} stack={7} delay={0} />
+          <GhostPerson T={T} x={CC.x + 46} y={CC.y - 6} />
         </g>
 
         {/* шкала загрузки */}
@@ -1269,16 +1317,20 @@ function LogisticsMap({ T }) {
           </g>
         ))}
 
-        {/* два сотрудника внутри офиса */}
-        {[office.x + 42, office.x + 78].map((px, i) => (
-          <motion.g key={px}
-                    animate={{ y: [0, -2.5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}>
-            <circle cx={px} cy={office.y - 10} r={9} fill={T.red} />
-            <path d={`M ${px - 11} ${office.y + 14} L ${px - 10} ${office.y} Q ${px} ${office.y - 5} ${px + 10} ${office.y} L ${px + 11} ${office.y + 14} Z`}
-                  fill={T.red} opacity={0.92} />
-          </motion.g>
-        ))}
+        {/* действующий специалист и незакрытая вторая единица */}
+        <motion.g animate={{ y: [0, -2.5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
+          <circle cx={office.x + 42} cy={office.y - 10} r={9} fill={T.red} />
+          <path d={`M ${office.x + 31} ${office.y + 14} L ${office.x + 32} ${office.y} Q ${office.x + 42} ${office.y - 5} ${office.x + 52} ${office.y} L ${office.x + 53} ${office.y + 14} Z`}
+                fill={T.red} opacity={0.92} />
+        </motion.g>
+        <motion.g animate={{ opacity: [0.4, 0.85, 0.4] }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}>
+          <circle cx={office.x + 78} cy={office.y - 10} r={9} fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
+          <path d={`M ${office.x + 67} ${office.y + 14} L ${office.x + 68} ${office.y} Q ${office.x + 78} ${office.y - 5} ${office.x + 88} ${office.y} L ${office.x + 89} ${office.y + 14} Z`}
+                fill="none" stroke={T.teal} strokeWidth={1.5} strokeDasharray="4 4" />
+        </motion.g>
+        <text x={office.x + 78} y={office.y + 27} textAnchor="middle" fontSize="8.5" fontWeight="600" fill={T.teal}>+1</text>
 
         {/* «разрываются»: силуэты уходят к объектам и растворяются */}
         {ghostTargets.map((s, i) => (
@@ -1412,7 +1464,7 @@ function ChartPanel({ T, period, open }) {
 
     series.push({
       type: "areaspline",
-      name: `Максимальная ёмкость ${STAFF} сотрудников`,
+      name: `Ёмкость службы: ${STAFF} × ${HOURS_PER_STAFF} ч`,
       data: P.capacity,
       color: T.teal,
       lineWidth: intOpen ? 4 : 2.6,
@@ -1479,9 +1531,9 @@ function CaseModal({ T, onClose }) {
   const loadAfter = Math.round((METRICS.demandWeek / (METRICS.requiredStaff * HOURS_PER_STAFF)) * 100);
   const args = [
     { icon: Layers, color: T.violet, title: "Объём не соответствует ресурсу",
-      text: `${TASKS.length} направлений требуют ${METRICS.demandWeek} нормо-часов в неделю. Физическая ёмкость ${STAFF} специалистов — ${METRICS.capacityWeek} часов. Дефицит ${METRICS.deficitHours} часов еженедельно.` },
+      text: `${TASKS.length} направлений требуют ${METRICS.demandWeek} нормо-часов в неделю. Физическая ёмкость одного специалиста — ${METRICS.capacityWeek} часов. Дефицит ${METRICS.deficitHours} часов еженедельно.` },
     { icon: ShieldAlert, color: T.red, title: `Внешний контур закрыт на ${METRICS.extCoverage}%`,
-      text: `Текущие ${STAFF} сотрудника покрывают только ${METRICS.extCoverage}% обязательного внешнего контура — границы, на которой риск должен останавливаться до входа на территорию.` },
+      text: `Единственный специалист закрывает лишь ${METRICS.extCoverage}% внешнего контура — границы, на которой риск должен останавливаться до входа на территорию. Санобработка транспорта под шрот и жмых не выполняется вовсе.` },
     { icon: Route, color: T.cyan, title: `${TRIPS_TOTAL} перемещений в сутки внутри контура`,
       text: `Склад, инкубатор, АТЦ и бройлерные площадки связаны ${ROUTES.length} постоянными маршрутами. Каждый рейс — пересечение зон, которое должно сопровождаться контролем. Двое из офиса физически не успевают.` },
     { icon: UserPlus, color: T.teal, title: `Требуется +${METRICS.gap} штатные единицы`,
@@ -1518,7 +1570,7 @@ function CaseModal({ T, onClose }) {
         <div className="mt-5 rounded-2xl p-5"
              style={{ background: `linear-gradient(135deg, ${T.glowC}, ${T.glowB})`, border: `1px solid ${T.red}44` }}>
           <p className="text-[15px] leading-relaxed" style={{ color: T.text }}>
-            Текущие <b>{STAFF} сотрудника</b> покрывают только{" "}
+            Действующий <b>штат из {STAFF} специалиста</b> закрывает только{" "}
             <b style={{ color: T.red }}>{METRICS.extCoverage}%</b> обязательного внешнего контура.
             Требуется расширение штата минимум на{" "}
             <b style={{ color: T.teal }}>{METRICS.gap} единицы</b> для исключения сбоев.
@@ -1600,14 +1652,14 @@ export default function BiosecurityExecutiveDashboard() {
   const loadAfter = Math.round((METRICS.demandWeek / (METRICS.requiredStaff * HOURS_PER_STAFF)) * 100);
 
   const stats = [
-    { label: "Загрузка сотрудников", value: METRICS.load, suffix: "%", color: T.red, progress: 100, icon: Gauge,
+    { label: "Загрузка специалиста", value: METRICS.load, suffix: "%", color: T.red, progress: 100, icon: Gauge,
       note: `при норме 100% — переработка ${METRICS.load - 100} п.п.` },
     { label: "Покрытие внешнего контура", value: METRICS.extCoverage, suffix: "%", color: T.amber, progress: METRICS.extCoverage, icon: ShieldCheck,
       note: `${EXTERNAL.length} направлений на границе территории` },
     { label: `Объём задач · ${P.label.toLowerCase()}`, value: demand, suffix: "ч", color: T.violet, progress: 100, icon: Activity,
-      note: `ёмкость ${STAFF} сотрудников — ${capacity} ч` },
+      note: `ёмкость службы — ${capacity} ч` },
     { label: "Дефицит штата", value: METRICS.gap, prefix: "+", suffix: "ед.", color: T.teal, progress: (METRICS.gap / METRICS.requiredStaff) * 100, icon: UserPlus,
-      note: `требуется ${METRICS.requiredStaff} специалиста вместо ${STAFF}` },
+      note: `требуется ${METRICS.requiredStaff} специалиста вместо ${STAFF}; охват вырастет до 100%` },
   ];
 
   return (
@@ -1655,7 +1707,7 @@ export default function BiosecurityExecutiveDashboard() {
         <div className="mt-5">
           <Panel T={T}>
             <SectionHead T={T} eyebrow="Куда всё это приходит"
-                         title={`Весь объём обоих контуров садится на ${STAFF} сотрудников`} />
+                         title="Весь объём обоих контуров садится на одного специалиста" />
             <WorkloadStage T={T} />
           </Panel>
         </div>
@@ -1694,7 +1746,7 @@ export default function BiosecurityExecutiveDashboard() {
               {[
                 { t: "Что происходит", d: `${TRIPS_TOTAL} перемещений в сутки между складом, инкубатором, АТЦ и площадками.`, c: T.cyan, i: Truck },
                 { t: "Где должен быть специалист", d: "На каждой точке погрузки и выгрузки: контроль обработки техники, тары и маршрута.", c: T.amber, i: MapPin },
-                { t: "Где он на самом деле", d: `В офисе: согласование и отчётность — ${TASKS.find((t) => t.id === "coord").hours + TASKS.find((t) => t.id === "report").hours} ч в неделю непрерывного входящего потока.`, c: T.red, i: Building2 },
+                { t: "Где он на самом деле", d: `В офисе: согласования, входной поток и отчётность — ${TASKS.filter((t) => ["ext_appr", "ext_entry", "int_rep"].includes(t.id)).reduce((a, t) => a + t.hours, 0)} ч в неделю непрерывной оперативной текучки.`, c: T.red, i: Building2 },
               ].map((x, i) => {
                 const Icon = x.i;
                 return (
