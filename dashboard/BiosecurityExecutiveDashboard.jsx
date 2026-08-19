@@ -2245,7 +2245,7 @@ export default function BiosecurityExecutiveDashboard() {
 
   const stats = [
     { label: "Загрузка службы", value: METRICS.load, suffix: "%", color: T.red, progress: 100, icon: Gauge,
-      note: `${STAFF} специалиста · переработка ${METRICS.load - 100} п.п. к норме` },
+      note: `${STAFF} специалиста работают почти за четверых при норме 100%` },
     { label: "Покрытие внешнего контура", value: METRICS.extCoverage, suffix: "%", color: T.amber, progress: METRICS.extCoverage, icon: ShieldCheck,
       note: `${EXTERNAL.length} направлений на границе территории` },
     { label: `Объём задач · ${P.label.toLowerCase()}`, value: demand, suffix: "ч", color: T.violet, progress: 100, icon: Activity,
