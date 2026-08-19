@@ -133,6 +133,10 @@ h2{font-size:15px; font-weight:700; margin:0; letter-spacing:-.01em;}
 .seg button[aria-pressed="true"]{background:var(--staff); color:var(--surface);}
 .seg button:focus-visible{outline:2px solid var(--staff); outline-offset:2px;}
 .seg.tight{margin-bottom:0;} .seg.tight button{padding:4px 11px;}
+.seg.hunter{border-color:var(--hunter);}
+.seg.hunter button{color:var(--hunter);}
+.seg.hunter button[aria-pressed="true"]{background:var(--hunter); color:var(--surface);}
+.seg.hunter button:focus-visible{outline-color:var(--hunter);}
 .head-row{display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;}
 .head-lbl{font-size:12px; color:var(--muted); font-weight:600;}
 
@@ -280,15 +284,22 @@ tr.off td{opacity:.42;}
       </div>
     </div>
     <div class="opt h">
-      <div class="opt-top"><span class="who">Pest Hunters</span><span class="chip">КП</span></div>
-      <span class="scope">Цена зависит от месяца и от того, чьё оборудование стоит на площадках.</span>
+      <div class="opt-top"><span class="who">Pest Hunters</span><span class="chip">КП + договор</span></div>
+      <span class="scope">Три объекта тарифицируются отдельно. Нажмите, чтобы включить или убрать любой из них.</span>
+      <div class="head-row">
+        <div class="seg tight hunter" role="group" aria-label="Объекты Pest Hunters">
+          <button data-obj="kkz" aria-pressed="true">ККЗ</button>
+          <button data-obj="bp"  aria-pressed="true">БП</button>
+          <button data-obj="zpp" aria-pressed="true">ЗПП</button>
+        </div>
+      </div>
       <span class="big n" id="oH">—</span>
       <span class="per" id="oHper">за выбранный период</span>
-      <span class="cov" id="oHcov">ККЗ + 122 бройлерных объекта</span>
+      <span class="cov" id="oHcov">—</span>
       <div class="split">
-        <div><span>ККЗ · один месяц</span><b>75 000 ₸</b></div>
-        <div><span>Все 122 объекта · месяц мар–ноя</span><b id="phHi">—</b></div>
-        <div><span>Все 122 объекта · месяц дек–фев</span><b id="phLo">—</b></div>
+        <div><span>ККЗ · дератизация</span><b id="phKkz">—</b></div>
+        <div><span>Бройлерные площадки · 122 объекта</span><b id="phBp">—</b></div>
+        <div><span>ЗПП · дератизация + дезинсекция</span><b id="phZpp">—</b></div>
       </div>
     </div>
     <div class="opt s">
@@ -333,7 +344,7 @@ tr.off td{opacity:.42;}
   <div class="card">
     <div class="card-head">
       <h2>Ориентир: что просят подрядчики</h2>
-      <span class="hint">только цифры из КП — внутреннюю структуру их себестоимости мы не знаем</span>
+      <span class="hint">цифры из КП и подписанного договора №88</span>
     </div>
     <div class="scroll">
       <table style="min-width:520px;">
@@ -343,10 +354,26 @@ tr.off td{opacity:.42;}
           <tr><td>Pest Hunters · дератизация</td><td>ККЗ (кормоцех)</td><td class="n">75 000 ₸/мес</td></tr>
           <tr><td>Pest Hunters · дератизация, мар–ноя</td><td>122 бройлерных объекта</td><td class="n" id="rPhHi">—</td></tr>
           <tr><td>Pest Hunters · дератизация, дек–фев</td><td>122 бройлерных объекта</td><td class="n" id="rPhLo">—</td></tr>
+          <tr><td>Pest Hunters · дератизация + дезинсекция</td><td>ЗПП · завод по переработке птицы, 8 309 м²</td><td class="n">180 000 ₸/мес</td></tr>
         </tbody>
       </table>
     </div>
     <p class="hint">Предложения по инкубаторию, складу лузги и АБК ни в одном КП нет. Дезинсекция в сравнение не входит: у Pest Hunters это отдельные 70 000 ₸/мес по ККЗ и 2 196 000 ₸ за обработку площадок раз в 40 дней, у Indigo её в КП нет.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Pest Hunters по объектам</h2>
+      <span class="hint">суммы за выбранный период и за полный год</span>
+    </div>
+    <div class="scroll">
+      <table style="min-width:720px;">
+        <thead><tr><th>Объект</th><th>Что входит</th><th class="n">Обходов/мес</th><th class="n">Цена в месяц</th><th class="n">За период</th><th class="n">За год</th></tr></thead>
+        <tbody id="tbPh"></tbody>
+        <tfoot id="tfPh"></tfoot>
+      </table>
+    </div>
+    <p class="hint" id="phNote">—</p>
   </div>
 
   <div class="eyebrow" style="margin:14px 0 -4px;">Детальный расчёт · собственная служба дератизации</div>
@@ -454,7 +481,10 @@ tr.off td{opacity:.42;}
     <b>Источники.</b> Indigo Solutions — КП от 17.08.2026: ККЗ, дератизация, 96 600 ₸/мес, оборудование подрядчика.
     Pest Hunters — КП №26/12 на 2026–2027: ККЗ 145 000 ₸/мес (дезинсекция 70 000 + дератизация 75 000, без НДС);
     дератизация 122 бройлерных объектов — мар–ноя 3 172 000 ₸/мес и дек–фев 2 074 000 ₸/мес своим оборудованием,
-    либо 2 806 000 ₸/мес и 1 830 000 ₸/мес уже установленным оборудованием заказчика (без НДС).<br>
+    либо 2 806 000 ₸/мес и 1 830 000 ₸/мес уже установленным оборудованием заказчика (без НДС).
+    ЗПП — договор оказания услуг №88 от 01.01.2026 на период с 01.01.2026 по 31.12.2026: дератизация и дезинсекция
+    производственных помещений и прилегающей территории завода по переработке птицы, 8 309 м², три обхода в месяц
+    по утверждённому графику, 180 000 ₸ ежемесячно, 2 160 000 ₸ за весь срок без НДС.<br>
     <b>Расхождение в КП Pest Hunters.</b> Для варианта «своё оборудование» 122 × 25 000 = 3 050 000 ₸, а в таблице стоит 3 172 000 ₸ —
     это соответствует цене 26 000 ₸ за объект. В расчёте использована сумма из КП; цену за единицу стоит уточнить у подрядчика.<br>
     <b>Допущения по УКПФ.</b> Цена брикетов Pest Killer 3 642,5 ₸/кг перенесена из расчёта по ККЗ — в исходных данных её нет.
@@ -486,11 +516,13 @@ const MONTHS=[
 
 const INDIGO_KKZ=96600;
 const PH_KKZ=75000;
+const PH_ZPP=180000;   // договор №88 от 01.01.2026, 2 160 000 ₸ за год без НДС
 const PH={own:{hi:3172000,lo:2074000}, ukpf:{hi:2806000,lo:1830000}};
 const VAT=1.16;
 
 let picked=new Set(MONTHS.map((_,i)=>i));
 let vat=false, eqUkpf=true, staffView="all", head=4;
+let obj={kkz:true, bp:true, zpp:true};
 
 const money=v=>Math.round(v).toLocaleString("ru-RU").replace(/ /g," ")+" ₸";
 const mln=v=>(v/1e6).toFixed(2).replace(".",",")+" млн ₸";
@@ -518,11 +550,14 @@ function totals(){
   picked.forEach(i=>{
     const m=MONTHS[i];
     indigo += INDIGO_KKZ;
-    hunter += (PH_KKZ + (m.phLow?eq.lo:eq.hi)) * k;
+    hunter += (obj.kkz?PH_KKZ*k:0) + (obj.bp?(m.phLow?eq.lo:eq.hi)*k:0) + (obj.zpp?PH_ZPP:0);
     staff  += m.w ? u.w.total : u.s.total;
     m.w ? nW++ : nS++;
   });
-  return {indigo, hunter, staff, nW, nS, n:picked.size, u, eq, k};
+  const nLo=[...picked].filter(i=>MONTHS[i].phLow).length, nHi=picked.size-nLo;
+  const ph={kkz:PH_KKZ*k*picked.size, bp:(eq.hi*nHi+eq.lo*nLo)*k, zpp:PH_ZPP*picked.size};
+  const phYear={kkz:PH_KKZ*k*12, bp:(eq.hi*9+eq.lo*3)*k, zpp:PH_ZPP*12};
+  return {indigo, hunter, staff, nW, nS, n:picked.size, u, eq, k, ph, phYear, nLo, nHi};
 }
 
 function renderMonths(){
@@ -538,6 +573,7 @@ function renderMonths(){
 
 function render(){
   const t=totals(), u=t.u;
+  const dashS='<span class="muted">—</span>';
 
   document.querySelectorAll(".mo").forEach(b=>
     b.setAttribute("aria-pressed", String(picked.has(+b.dataset.m))));
@@ -567,10 +603,15 @@ function render(){
   ["oIper","oHper"].forEach(id=>document.getElementById(id).textContent=per);
   document.getElementById("oSper").textContent =
     (staffView==="pay" ? "фонд оплаты труда, " : staffView==="mat" ? "яды и станции, " : "") + per;
-  document.getElementById("phHi").textContent = money(t.eq.hi*t.k);
-  document.getElementById("phLo").textContent = money(t.eq.lo*t.k);
+  document.getElementById("phKkz").textContent = obj.kkz ? money(t.ph.kkz) : "выключен";
+  document.getElementById("phBp").textContent  = obj.bp  ? money(t.ph.bp)  : "выключен";
+  document.getElementById("phZpp").textContent = obj.zpp ? money(t.ph.zpp) : "выключен";
+  document.querySelectorAll(".seg button[data-obj]").forEach(b=>
+    b.setAttribute("aria-pressed", String(obj[b.dataset.obj])));
+  const onNames=[obj.kkz&&"ККЗ", obj.bp&&"бройлерные площадки", obj.zpp&&"ЗПП"].filter(Boolean);
   document.getElementById("oHcov").textContent =
-    "ККЗ + 122 бройлерных объекта · " + (vat ? "цены с НДС 16 %" : "цены без НДС");
+    (onNames.length ? onNames.join(", ") : "объекты не выбраны") +
+    " · " + (vat ? "цены с НДС 16 %" : "цены без НДС");
   document.getElementById("uS").textContent = money(u.s.total);
   document.getElementById("uW").textContent = money(u.w.total);
   document.getElementById("uMatY").textContent =
@@ -579,7 +620,7 @@ function render(){
   // bars — only the two options that cover the same objects
   const rows=[
     ["Штат УКПФ", t.staff, "var(--staff)", "ККЗ + площадки + инкубаторий, лузга, АБК · 8 обходов/мес"],
-    ["Pest Hunters", t.hunter, "var(--hunter)", "ККЗ + 122 объекта площадок · 1 обход/мес"]
+    ["Pest Hunters", t.hunter, "var(--hunter)", onNames.length?onNames.join(" + "):"объекты не выбраны"]
   ];
   const max=Math.max(...rows.map(r=>r[1]),1);
   const track=r=> r[0].startsWith("Штат")
@@ -611,6 +652,26 @@ function render(){
   // reference prices
   document.getElementById("rPhHi").textContent = money(t.eq.hi*t.k)+" / мес";
   document.getElementById("rPhLo").textContent = money(t.eq.lo*t.k)+" / мес";
+
+  // Pest Hunters by object
+  const PHROWS=[
+    ["kkz","ККЗ · кормоцех","дератизация","1", money(PH_KKZ*t.k)],
+    ["bp","Бройлерные площадки · 122 объекта","дератизация","1",
+      money(t.eq.hi*t.k)+" мар–ноя / "+money(t.eq.lo*t.k)+" дек–фев"],
+    ["zpp","ЗПП · завод по переработке птицы","дератизация + дезинсекция","3", money(PH_ZPP)]
+  ];
+  document.getElementById("tbPh").innerHTML=PHROWS.map(r=>{
+    const on=obj[r[0]];
+    return `<tr class="${on?"":"off"}"><td>${r[1]}</td><td class="muted">${r[2]}</td><td class="n">${r[3]}</td>
+      <td class="n">${r[4]}</td><td class="n">${on?money(t.ph[r[0]]):dashS}</td>
+      <td class="n">${money(t.phYear[r[0]])}</td></tr>`;
+  }).join("");
+  document.getElementById("tfPh").innerHTML=
+    `<tr><td>Итого по включённым объектам</td><td></td><td></td><td></td>
+      <td>${money(t.hunter)}</td>
+      <td>${money((obj.kkz?t.phYear.kkz:0)+(obj.bp?t.phYear.bp:0)+(obj.zpp?t.phYear.zpp:0))}</td></tr>`;
+  document.getElementById("phNote").textContent =
+    "ЗПП идёт по подписанному договору №88 от 01.01.2026: 180 000 ₸ в месяц, 2 160 000 ₸ за 2026 год без НДС, площадь 8 309 м², три обхода в месяц. В эту цену входит и дезинсекция, поэтому напрямую со строкой «только дератизация» по другим объектам она не сравнивается. Переключатель НДС на ЗПП не влияет — в договоре сумма уже окончательная.";
 
   // facts
   document.getElementById("facts").innerHTML=[
@@ -657,7 +718,7 @@ function render(){
     ["Бутылки",int(u.s.bottles)+" шт / мес",money(u.pB)+" / шт",u.s.bot,u.w.bot],
     ["Клеевые станции 3-го контура",int(u.s.stations)+" → "+int(u.w.stations)+" шт",money(u.pSt)+" / шт",u.s.st,u.w.st]
   ];
-  const dash='<span class="muted">—</span>';
+  const dash=dashS;
   document.getElementById("tbLedger").innerHTML=L.map(r=>
     `<tr><td>${r[0]}</td><td class="n muted">${r[1]}</td><td class="n muted">${r[2]}</td>
       <td class="n">${r[3]?money(r[3]):dash}</td><td class="n">${r[4]?money(r[4]):dash}</td>
@@ -719,6 +780,9 @@ document.querySelectorAll(".seg button[data-view]").forEach(b=>b.addEventListene
 }));
 document.querySelectorAll(".seg button[data-head]").forEach(b=>b.addEventListener("click",()=>{
   head=+b.dataset.head; render();
+}));
+document.querySelectorAll(".seg button[data-obj]").forEach(b=>b.addEventListener("click",()=>{
+  obj[b.dataset.obj]=!obj[b.dataset.obj]; render();
 }));
 document.getElementById("btnVat").addEventListener("click",()=>{vat=!vat; render();});
 document.getElementById("btnEq").addEventListener("click",()=>{eqUkpf=!eqUkpf; render();});
