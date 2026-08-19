@@ -279,8 +279,8 @@ tr.hl td{background:var(--teal-wash);}
     <div class="period-top">
       <div class="pills">
         <button class="pill" data-preset="all" aria-pressed="true">Весь год</button>
-        <button class="pill" data-preset="summer" aria-pressed="false">Апрель — сентябрь</button>
-        <button class="pill" data-preset="winter" aria-pressed="false">Октябрь — март</button>
+        <button class="pill" data-preset="summer" aria-pressed="false">Апрель — октябрь</button>
+        <button class="pill" data-preset="winter" aria-pressed="false">Ноябрь — март</button>
       </div>
       <div class="pills">
         <button class="pill" id="btnMonths" aria-pressed="false">Выбрать месяцы</button>
@@ -321,9 +321,8 @@ tr.hl td{background:var(--teal-wash);}
       <div class="kp-ctl">
         <span class="ctl-lbl">Численность</span>
         <div class="seg wrap-seg" role="group" aria-label="Численность">
-          <button data-head="2">2 чел.</button>
-          <button data-head="4" aria-pressed="true">4 чел.</button>
-          <button data-head="6">6 чел.</button>
+          <button data-head="2">2 дератизатора</button>
+          <button data-head="4" aria-pressed="true">+2 → 4 дератизатора</button>
         </div>
         <span class="ctl-lbl">Что считаем</span>
         <div class="seg wrap-seg" role="group" aria-label="Составляющие">
@@ -393,8 +392,11 @@ tr.hl td{background:var(--teal-wash);}
       <div class="chead"><h2 id="ownTitle">Собственная служба</h2><span class="hint">присутствие 5/2, восемь обходов в месяц</span></div>
       <div class="tiles" id="ownTiles"></div>
       <div class="scroll">
-        <table style="min-width:560px;">
-          <thead><tr><th>Численность</th><th class="n">Зарплата за период</th><th class="n">Яды и станции за период</th><th class="n">Итого за период</th><th class="n">Итого за год</th></tr></thead>
+        <table style="min-width:860px;">
+          <thead><tr><th>Численность</th>
+            <th class="n">Зарплата в месяц</th><th class="n">Зарплата за год</th>
+            <th class="n">Материалы, мес. апр–окт</th><th class="n">Материалы, мес. ноя–мар</th><th class="n">Материалы за год</th>
+            <th class="n">Итого за год</th></tr></thead>
           <tbody id="tbHead"></tbody>
         </table>
       </div>
@@ -402,10 +404,10 @@ tr.hl td{background:var(--teal-wash);}
     </div>
 
     <div class="card">
-      <div class="chead"><h2>Себестоимость месяца</h2><span class="hint">зимой 1-й и 2-й контуры не заряжаются</span></div>
+      <div class="chead"><h2>Себестоимость месяца</h2><span class="hint">с ноября по март 1-й и 2-й контуры не заряжаются</span></div>
       <div class="scroll">
-        <table style="min-width:640px;">
-          <thead><tr><th>Статья</th><th class="n">Объём</th><th class="n">Цена за ед.</th><th class="n">Апр — сен</th><th class="n">Окт — мар</th><th class="n">За период</th></tr></thead>
+        <table style="min-width:800px;">
+          <thead><tr><th>Статья</th><th class="n">Объём</th><th class="n">Цена за ед.</th><th class="n">Месяц апр — окт</th><th class="n">Месяц ноя — мар</th><th class="n">За период</th><th class="n">За год</th></tr></thead>
           <tbody id="tbLedger"></tbody>
           <tfoot id="tfLedger"></tfoot>
         </table>
@@ -413,10 +415,23 @@ tr.hl td{background:var(--teal-wash);}
     </div>
 
     <div class="card">
+      <div class="chead"><h2>Клеевые станции 3-го контура — зимний режим</h2><span class="hint">ноябрь — март обслуживание вдвое</span></div>
+      <div class="tiles" id="glueTiles"></div>
+      <div class="scroll">
+        <table style="min-width:640px;">
+          <thead><tr><th>Сезон</th><th class="n">Месяцев</th><th class="n">Станций в месяц</th><th class="n">Станций за сезон</th><th class="n">Стоимость за сезон</th></tr></thead>
+          <tbody id="tbGlue"></tbody>
+          <tfoot id="tfGlue"></tfoot>
+        </table>
+      </div>
+      <div class="note" id="glueNote">—</div>
+    </div>
+
+    <div class="card">
       <div class="chead"><h2>Расход материалов</h2><span class="hint">в натуре и в деньгах</span></div>
       <div class="scroll">
         <table style="min-width:700px;">
-          <thead><tr><th>Материал</th><th class="n">Месяц апр–сен</th><th class="n">Месяц окт–мар</th><th class="n">За период</th><th class="n">За год</th><th class="n">Год, ₸</th></tr></thead>
+          <thead><tr><th>Материал</th><th class="n">Месяц апр–окт</th><th class="n">Месяц ноя–мар</th><th class="n">За период</th><th class="n">За год</th><th class="n">Год, ₸</th></tr></thead>
           <tbody id="tbUse"></tbody>
           <tfoot id="tfUse"></tfoot>
         </table>
@@ -498,13 +513,15 @@ const MONTHS=[
  {s:"Янв",w:true, lo:true},  {s:"Фев",w:true, lo:true},  {s:"Мар",w:true, lo:false},
  {s:"Апр",w:false,lo:false}, {s:"Май",w:false,lo:false}, {s:"Июн",w:false,lo:false},
  {s:"Июл",w:false,lo:false}, {s:"Авг",w:false,lo:false}, {s:"Сен",w:false,lo:false},
- {s:"Окт",w:true, lo:false}, {s:"Ноя",w:true, lo:false}, {s:"Дек",w:true, lo:true}
+ {s:"Окт",w:false,lo:false}, {s:"Ноя",w:true, lo:false}, {s:"Дек",w:true, lo:true}
 ];
 const INDIGO_KKZ=96600, PH_KKZ=75000, PH_ZPP=180000, PH_TMC=80000;
 const PH={hi:3172000, lo:2074000};        // основной вариант КП: оборудование подрядчика
 const PH_ALT={hi:2806000, lo:1830000};   // альтернатива из КП: оборудование заказчика
 const TMC_MONTHS=[3,4,5,6,7,8,9,10,11];
 const VAT=1.16;
+const WARM=MONTHS.filter(m=>!m.w).length;   // апрель — октябрь
+const COLD=MONTHS.length-WARM;              // ноябрь — март
 
 let picked=new Set(MONTHS.map((_,i)=>i));
 let vat=false, head=4, tab="sum";
@@ -577,7 +594,7 @@ function render(){
   document.getElementById("count").textContent =
     t.n===0?"месяцы не выбраны":`${t.n} мес · ${t.nS} тёплых, ${t.nW} зимних`;
   document.getElementById("btnVat").setAttribute("aria-pressed",String(vat));
-    const isAll=t.n===12, isS=t.n===6&&t.nS===6, isW=t.n===6&&t.nW===6;
+    const isAll=t.n===12, isS=t.n===WARM&&t.nW===0, isW=t.n===COLD&&t.nS===0;
   document.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed",
     String((b.dataset.preset==="all"&&isAll)||(b.dataset.preset==="summer"&&isS)||(b.dataset.preset==="winter"&&isW))));
 
@@ -662,17 +679,18 @@ function render(){
   document.getElementById("ownTitle").textContent =
     `Собственная служба · ${head} ${head>=5?"человек":"дератизатора"}`;
   document.getElementById("ownTiles").innerHTML=[
-    [money(t.staff), "итого за период, с учётом переключателей"],
-    [money(u.s.total),"месяц апрель — сентябрь"],
-    [money(u.w.total),"месяц октябрь — март"],
-    [money(u.per),"оклад одного дератизатора"]
+    [money(t.staff), `итого за период${(comp.pay&&comp.mat)?"":" · "+(compL.length?compL.join(" и "):"ничего не выбрано")}`],
+    [money(u.salary), `зарплата ${head} чел. в месяц · ${money(u.salary*12)} за год`],
+    [money(u.s.mat), `материалы, месяц апр–окт · ${money(u.w.mat)} зимой`],
+    [money(u.s.mat*WARM+u.w.mat*COLD), "материалы за год, от численности не зависят"]
   ].map(x=>`<div class="tile"><span class="tv n">${x[0]}</span><span class="tl">${x[1]}</span></div>`).join("");
 
-  document.getElementById("tbHead").innerHTML=[2,4,6].map(h=>{
-    const uu=ukpf(h), sp=uu.salary*t.n, sm=uu.s.mat*t.nS+uu.w.mat*t.nW;
-    return `<tr class="${h===head?"hl":""}"><td>${h} ${h>=5?"человек":"дератизатора"}</td>
-      <td class="n">${money(sp)}</td><td class="n">${money(sm)}</td>
-      <td class="n">${money(sp+sm)}</td><td class="n">${money(uu.salary*12+uu.s.mat*6+uu.w.mat*6)}</td></tr>`;
+  document.getElementById("tbHead").innerHTML=[2,4].map(h=>{
+    const uu=ukpf(h), matY=uu.s.mat*WARM+uu.w.mat*COLD;
+    return `<tr class="${h===head?"hl":""}"><td>${h} дератизатора</td>
+      <td class="n">${money(uu.salary)}</td><td class="n">${money(uu.salary*12)}</td>
+      <td class="n">${money(uu.s.mat)}</td><td class="n">${money(uu.w.mat)}</td><td class="n">${money(matY)}</td>
+      <td class="n">${money(uu.salary*12+matY)}</td></tr>`;
   }).join("");
 
   const L=[
@@ -685,9 +703,30 @@ function render(){
   document.getElementById("tbLedger").innerHTML=L.map(r=>
     `<tr><td>${r[0]}</td><td class="n muted">${r[1]}</td><td class="n muted">${r[2]}</td>
       <td class="n">${r[3]?money(r[3]):dashS}</td><td class="n">${r[4]?money(r[4]):dashS}</td>
-      <td class="n">${money(r[3]*t.nS+r[4]*t.nW)}</td></tr>`).join("");
+      <td class="n">${money(r[3]*t.nS+r[4]*t.nW)}</td>
+      <td class="n">${money(r[3]*WARM+r[4]*COLD)}</td></tr>`).join("");
   document.getElementById("tfLedger").innerHTML=
-    `<tr><td>Итого</td><td></td><td></td><td>${money(u.s.total)}</td><td>${money(u.w.total)}</td><td>${money(t.staff)}</td></tr>`;
+    `<tr><td>Итого</td><td></td><td></td><td>${money(u.s.total)}</td><td>${money(u.w.total)}</td>
+      <td>${money(t.staff)}</td><td>${money(u.s.total*WARM+u.w.total*COLD)}</td></tr>`;
+
+  /* glue stations, winter doubling */
+  const glueS=T.c3, glueW=T.c3*2;
+  document.getElementById("tbGlue").innerHTML=[
+    ["Апрель — октябрь · все три контура", WARM, glueS],
+    ["Ноябрь — март · только 3-й контур", COLD, glueW]
+  ].map(r=>`<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${int(r[2])} шт</td>
+      <td class="n">${int(r[2]*r[1])} шт</td><td class="n">${money(r[2]*r[1]*u.pSt)}</td></tr>`).join("");
+  const glueYQty=glueS*WARM+glueW*COLD, glueFlat=glueS*12;
+  document.getElementById("tfGlue").innerHTML=
+    `<tr><td>За год</td><td>12</td><td></td><td>${int(glueYQty)} шт</td><td>${money(glueYQty*u.pSt)}</td></tr>`;
+  document.getElementById("glueTiles").innerHTML=[
+    [int(glueS)+" шт", "в месяц с апреля по октябрь · "+money(glueS*u.pSt)],
+    [int(glueW)+" шт", "в месяц с ноября по март · "+money(glueW*u.pSt)],
+    [int(glueYQty)+" шт", "за год · "+money(glueYQty*u.pSt)],
+    ["+"+int(glueYQty-glueFlat)+" шт", "даёт удвоение зимой · +"+money((glueYQty-glueFlat)*u.pSt)]
+  ].map(x=>`<div class="tile"><span class="tv n">${x[0]}</span><span class="tl">${x[1]}</span></div>`).join("");
+  document.getElementById("glueNote").innerHTML =
+    `С ноября по март 1-й и 2-й контуры не заряжаются — Зерноцид и брикеты Pest Killer в эти пять месяцев не расходуются вовсе. Взамен 3-й контур обслуживается вдвое чаще: <b>${int(glueS)} → ${int(glueW)}</b> клеевых станций в месяц, то есть <b>${money(glueS*u.pSt)} → ${money(glueW*u.pSt)}</b>. За зимний сезон это <b>${int(glueW*COLD)}</b> станций на <b>${money(glueW*COLD*u.pSt)}</b>. Если бы удвоения не было, за год ушло бы ${int(glueFlat)} станций — удвоение добавляет <b>${int(glueYQty-glueFlat)}</b> штук и <b>${money((glueYQty-glueFlat)*u.pSt)}</b>.`;
 
   const USE=[
     ["Зерноцид","кг",T.zc,0,u.pZ],
@@ -697,13 +736,13 @@ function render(){
   ];
   const unit=(v,e)=>v===0?dashS:(Number.isInteger(v)?v:v.toFixed(1).replace(".",","))+" "+e;
   document.getElementById("tbUse").innerHTML=USE.map(r=>{
-    const p=r[2]*t.nS+r[3]*t.nW, y=r[2]*6+r[3]*6;
+    const p=r[2]*t.nS+r[3]*t.nW, y=r[2]*WARM+r[3]*COLD;
     return `<tr><td>${r[0]}</td><td class="n">${unit(r[2],r[1])}</td><td class="n">${unit(r[3],r[1])}</td>
       <td class="n">${unit(p,r[1])}</td><td class="n">${unit(y,r[1])}</td><td class="n">${money(y*r[4])}</td></tr>`;
   }).join("");
   document.getElementById("tfUse").innerHTML=
     `<tr><td>Материалы, итого</td><td></td><td></td><td></td><td></td>
-      <td>${money(USE.reduce((a,r)=>a+(r[2]*6+r[3]*6)*r[4],0))}</td></tr>`;
+      <td>${money(USE.reduce((a,r)=>a+(r[2]*WARM+r[3]*COLD)*r[4],0))}</td></tr>`;
 
   /* data tab */
   document.getElementById("tbSites").innerHTML=SITES.map(x=>
