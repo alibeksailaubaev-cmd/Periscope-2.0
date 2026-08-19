@@ -118,32 +118,34 @@ h1{font-size:clamp(27px,3.6vw,40px); font-weight:800; letter-spacing:-.03em; mar
 .mo:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
 .count{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--muted);}
 
-/* ===== headline duel ===== */
-.duel{
-  display:grid; grid-template-columns:1fr auto 1fr; gap:18px; align-items:stretch;
-}
-.side{
+.trio{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+@media (max-width:960px){.trio{grid-template-columns:1fr;}}
+.kp{
   background:var(--card); border:1px solid var(--line); border-radius:var(--r); box-shadow:var(--sh);
-  padding:22px 24px; display:flex; flex-direction:column; gap:5px; position:relative; overflow:hidden;
+  padding:20px 22px; display:flex; flex-direction:column; gap:5px; position:relative; overflow:hidden;
   transition:box-shadow .22s ease, transform .22s ease;
 }
-.side:hover{box-shadow:var(--sh-lift); transform:translateY(-2px);}
-.side::after{content:""; position:absolute; left:0; right:0; bottom:0; height:3px;}
-.side.a::after{background:var(--clay);}
-.side.b::after{background:var(--teal);}
-.side.b{background:linear-gradient(180deg, var(--teal-wash), var(--card) 70%);}
-.side .who{font-size:13px; font-weight:700;}
-.side.a .who{color:var(--clay);} .side.b .who{color:var(--teal-deep);}
-.side .sum{font-family:"IBM Plex Mono",monospace; font-size:clamp(26px,3.6vw,38px); font-weight:700; letter-spacing:-.045em; line-height:1.05;}
-.side .cap{font-size:12.5px; color:var(--muted);}
-.verdict{
-  align-self:center; text-align:center; padding:16px 20px; border-radius:var(--r);
-  background:var(--ink); color:var(--sand); min-width:150px; box-shadow:var(--sh);
+.kp:hover{box-shadow:var(--sh-lift); transform:translateY(-2px);}
+.kp::after{content:""; position:absolute; left:0; right:0; bottom:0; height:3px;}
+.kp.p::after{background:var(--plum);} .kp.c::after{background:var(--clay);} .kp.t::after{background:var(--teal);}
+.kp.t{background:linear-gradient(180deg, var(--teal-wash), var(--card) 62%);}
+.kp-top{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:2px;}
+.kp-who{font-size:13.5px; font-weight:700;}
+.kp.p .kp-who{color:var(--plum);} .kp.c .kp-who{color:var(--clay);} .kp.t .kp-who{color:var(--teal-deep);}
+.kp-chip{font-size:9.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted);
+  border:1px solid var(--line-2); border-radius:999px; padding:3px 8px; white-space:nowrap;}
+.kp-sum{font-family:"IBM Plex Mono",monospace; font-size:clamp(23px,2.6vw,31px); font-weight:700; letter-spacing:-.045em; line-height:1.08;}
+.kp-cap{font-size:12.5px; color:var(--muted); min-height:34px;}
+.kp-ctl{margin-top:10px; padding-top:12px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:7px;}
+.ctl-lbl{font-size:10px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);}
+.kp-none{font-size:12.5px; color:var(--muted);}
+.wrap-seg{flex-wrap:wrap; align-self:flex-start;}
+.seg button[aria-pressed="false"]{opacity:.62;}
+.strip{
+  background:var(--ink); color:var(--sand); border-radius:var(--r); padding:16px 22px;
+  font-size:14px; box-shadow:var(--sh); line-height:1.55;
 }
-.verdict .vt{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; opacity:.68;}
-.verdict .vn{font-family:"IBM Plex Mono",monospace; font-size:23px; font-weight:700; letter-spacing:-.04em; margin-top:4px; color:#5FE0D4;}
-.verdict .vx{font-size:12px; opacity:.72; margin-top:2px;}
-@media (max-width:820px){.duel{grid-template-columns:1fr;}}
+.strip b{color:#5FE0D4; font-family:"IBM Plex Mono",monospace; letter-spacing:-.03em;}
 
 /* ===== tabs ===== */
 .tabs{
@@ -288,23 +290,51 @@ tr.hl td{background:var(--teal-wash);}
     <div class="months" id="months" hidden></div>
   </section>
 
-  <section class="duel enter" style="animation-delay:.1s">
-    <div class="side a">
-      <span class="who">Pest Hunters — подрядчик</span>
-      <span class="sum n" id="dA">—</span>
-      <span class="cap" id="dAc">—</span>
-    </div>
-    <div class="verdict">
-      <div class="vt">Разница</div>
-      <div class="vn n" id="dDiff">—</div>
-      <div class="vx" id="dRatio">—</div>
-    </div>
-    <div class="side b">
-      <span class="who">Штат УКПФ — свои люди</span>
-      <span class="sum n" id="dB">—</span>
-      <span class="cap" id="dBc">—</span>
-    </div>
+  <section class="trio enter" style="animation-delay:.1s">
+
+    <article class="kp p">
+      <div class="kp-top"><span class="kp-who">Indigo Solutions</span><span class="kp-chip">КП 1</span></div>
+      <span class="kp-sum n" id="dI">—</span>
+      <span class="kp-cap">только ККЗ · 96 600 ₸/мес · 2 обхода</span>
+      <div class="kp-ctl"><span class="kp-none">других объектов в КП нет</span></div>
+    </article>
+
+    <article class="kp c">
+      <div class="kp-top"><span class="kp-who">Pest Hunters</span><span class="kp-chip">КП 2</span></div>
+      <span class="kp-sum n" id="dH">—</span>
+      <span class="kp-cap" id="dHc">—</span>
+      <div class="kp-ctl">
+        <span class="ctl-lbl">Объекты</span>
+        <div class="seg clay wrap-seg" role="group" aria-label="Объекты Pest Hunters">
+          <button data-obj="kkz" aria-pressed="true">ККЗ</button>
+          <button data-obj="bp" aria-pressed="true">Площадки</button>
+          <button data-obj="zpp" aria-pressed="true">ЗПП</button>
+          <button data-obj="tmc" aria-pressed="true">Склад ТМЦ</button>
+        </div>
+      </div>
+    </article>
+
+    <article class="kp t">
+      <div class="kp-top"><span class="kp-who">Дератизаторы УКПФ</span><span class="kp-chip">наш расчёт</span></div>
+      <span class="kp-sum n" id="dS">—</span>
+      <span class="kp-cap" id="dSc">—</span>
+      <div class="kp-ctl">
+        <span class="ctl-lbl">Численность</span>
+        <div class="seg wrap-seg" role="group" aria-label="Численность">
+          <button data-head="2">2 чел.</button>
+          <button data-head="4" aria-pressed="true">4 чел.</button>
+          <button data-head="6">6 чел.</button>
+        </div>
+        <span class="ctl-lbl">Что считаем</span>
+        <div class="seg wrap-seg" role="group" aria-label="Составляющие">
+          <button data-comp="pay" aria-pressed="true">Зарплата</button>
+          <button data-comp="mat" aria-pressed="true">Яды и станции</button>
+        </div>
+      </div>
+    </article>
   </section>
+
+  <div class="strip enter" style="animation-delay:.14s" id="strip">—</div>
 
   <!-- ============ TAB: ИТОГ ============ -->
   <div class="panel on" id="p-sum" role="tabpanel">
@@ -333,17 +363,7 @@ tr.hl td{background:var(--teal-wash);}
         <h2>Pest Hunters — четыре объекта</h2>
         <span class="hint">нажмите объект, чтобы включить или убрать его</span>
       </div>
-      <div class="srow">
-        <div class="seg clay" role="group" aria-label="Объекты Pest Hunters">
-          <button data-obj="kkz" aria-pressed="true">ККЗ</button>
-          <button data-obj="bp" aria-pressed="true">Бройлерные площадки</button>
-          <button data-obj="zpp" aria-pressed="true">ЗПП</button>
-          <button data-obj="tmc" aria-pressed="true">Склад ТМЦ</button>
-        </div>
-        <div class="seg clay" role="group" aria-label="Чьё оборудование">
-          <button id="btnEq" aria-pressed="true">Оборудование наше</button>
-        </div>
-      </div>
+      <p class="hint">Переключатели объектов — в карточке Pest Hunters наверху страницы.</p>
       <div class="scroll">
         <table style="min-width:700px;">
           <thead><tr><th>Объект</th><th>Что входит</th><th class="n">Обходов/мес</th><th class="n">Цена в месяц</th><th class="n">За период</th><th class="n">За год</th></tr></thead>
@@ -352,6 +372,7 @@ tr.hl td{background:var(--teal-wash);}
         </table>
       </div>
       <div class="note" id="phNote">—</div>
+      <p class="hint" id="phAlt">—</p>
     </div>
 
     <div class="card">
@@ -370,18 +391,14 @@ tr.hl td{background:var(--teal-wash);}
   <div class="panel" id="p-own" role="tabpanel">
     <div class="card">
       <div class="chead"><h2 id="ownTitle">Собственная служба</h2><span class="hint">присутствие 5/2, восемь обходов в месяц</span></div>
-      <div class="srow">
-        <div class="seg" role="group" aria-label="Численность">
-          <button data-head="2">2 дератизатора</button>
-          <button data-head="4" aria-pressed="true">4 дератизатора</button>
-        </div>
-        <div class="seg" role="group" aria-label="Что показывать">
-          <button data-view="all" aria-pressed="true">Всё</button>
-          <button data-view="pay">Только зарплата</button>
-          <button data-view="mat">Только материалы</button>
-        </div>
-      </div>
       <div class="tiles" id="ownTiles"></div>
+      <div class="scroll">
+        <table style="min-width:560px;">
+          <thead><tr><th>Численность</th><th class="n">Зарплата за период</th><th class="n">Яды и станции за период</th><th class="n">Итого за период</th><th class="n">Итого за год</th></tr></thead>
+          <tbody id="tbHead"></tbody>
+        </table>
+      </div>
+      <p class="hint">Материалы от численности не зависят: норма ядов и станций привязана к точкам, а не к людям. Каждые +2 дератизатора добавляют только фонд оплаты труда.</p>
     </div>
 
     <div class="card">
@@ -484,12 +501,14 @@ const MONTHS=[
  {s:"Окт",w:true, lo:false}, {s:"Ноя",w:true, lo:false}, {s:"Дек",w:true, lo:true}
 ];
 const INDIGO_KKZ=96600, PH_KKZ=75000, PH_ZPP=180000, PH_TMC=80000;
-const PH={own:{hi:3172000,lo:2074000}, ukpf:{hi:2806000,lo:1830000}};
+const PH={hi:3172000, lo:2074000};        // основной вариант КП: оборудование подрядчика
+const PH_ALT={hi:2806000, lo:1830000};   // альтернатива из КП: оборудование заказчика
 const TMC_MONTHS=[3,4,5,6,7,8,9,10,11];
 const VAT=1.16;
 
 let picked=new Set(MONTHS.map((_,i)=>i));
-let vat=false, eqUkpf=true, staffView="all", head=4, tab="sum";
+let vat=false, head=4, tab="sum";
+let comp={pay:true, mat:true};
 let obj={kkz:true, bp:true, zpp:true, tmc:true};
 
 /* ================= helpers ================= */
@@ -514,8 +533,9 @@ function setNum(el, value){
 }
 
 /* ================= model ================= */
-function ukpf(){
-  const per=num("iSalary"), salary=per*head, pZ=num("iZerno"), pPK=num("iPk"),
+function ukpf(hc){
+  const h=hc||head;
+  const per=num("iSalary"), salary=per*h, pZ=num("iZerno"), pPK=num("iPk"),
         pSt=num("iStation"), pB=num("iBottlePrice"), nB=num("iBottles");
   const mk=w=>{
     const o={salary, zcKg:w?0:T.zc, pkKg:w?0:T.pk, bottles:w?0:nB, stations:w?T.c3*2:T.c3};
@@ -528,14 +548,15 @@ function ukpf(){
 }
 
 function totals(){
-  const u=ukpf(), eq=eqUkpf?PH.ukpf:PH.own, k=vat?VAT:1;
+  const u=ukpf(), eq=PH, k=vat?VAT:1;
   let indigo=0, hunter=0, staff=0, nW=0, nS=0;
   picked.forEach(i=>{
     const m=MONTHS[i];
     indigo+=INDIGO_KKZ;
     hunter+=(obj.kkz?PH_KKZ*k:0)+(obj.bp?(m.lo?eq.lo:eq.hi)*k:0)+(obj.zpp?PH_ZPP:0)
            +(obj.tmc&&TMC_MONTHS.includes(i)?PH_TMC:0);
-    staff+=m.w?u.w.total:u.s.total;
+    const o=m.w?u.w:u.s;
+    staff+=(comp.pay?o.salary:0)+(comp.mat?o.mat:0);
     m.w?nW++:nS++;
   });
   const nLo=[...picked].filter(i=>MONTHS[i].lo).length, nHi=picked.size-nLo;
@@ -548,7 +569,7 @@ function totals(){
 /* ================= render ================= */
 function render(){
   const t=totals(), u=t.u;
-  const pay=u.salary*t.n, mat=t.staff-pay;
+  const pay=comp.pay?u.salary*t.n:0, mat=comp.mat?(u.s.mat*t.nS+u.w.mat*t.nW):0;
   const per=t.n===12?"за полный год":`за ${t.n} мес`;
 
   /* period bar */
@@ -556,26 +577,29 @@ function render(){
   document.getElementById("count").textContent =
     t.n===0?"месяцы не выбраны":`${t.n} мес · ${t.nS} тёплых, ${t.nW} зимних`;
   document.getElementById("btnVat").setAttribute("aria-pressed",String(vat));
-  document.getElementById("btnEq").setAttribute("aria-pressed",String(eqUkpf));
-  document.getElementById("btnEq").textContent = eqUkpf?"Оборудование наше":"Оборудование подрядчика";
-  const isAll=t.n===12, isS=t.n===6&&t.nS===6, isW=t.n===6&&t.nW===6;
+    const isAll=t.n===12, isS=t.n===6&&t.nS===6, isW=t.n===6&&t.nW===6;
   document.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed",
     String((b.dataset.preset==="all"&&isAll)||(b.dataset.preset==="summer"&&isS)||(b.dataset.preset==="winter"&&isW))));
 
-  /* duel */
-  setNum(document.getElementById("dA"), t.hunter);
-  setNum(document.getElementById("dB"), t.staff);
+  /* three KP cards */
+  setNum(document.getElementById("dI"), t.indigo);
+  setNum(document.getElementById("dH"), t.hunter);
+  setNum(document.getElementById("dS"), t.staff);
   const onNames=[obj.kkz&&"ККЗ", obj.bp&&"площадки", obj.zpp&&"ЗПП", obj.tmc&&"склад ТМЦ"].filter(Boolean);
-  document.getElementById("dAc").textContent =
-    (onNames.length?onNames.join(", "):"объекты не выбраны")+" · "+per+(vat?" · с НДС":" · без НДС");
-  document.getElementById("dBc").textContent =
-    `${head} дератизатора, 13 объектов и инкубаторий · ${per}`;
+  document.getElementById("dHc").textContent =
+    (onNames.length?onNames.join(", "):"объекты не выбраны")+" · "+per+(vat?" · с НДС 16 %":" · без НДС");
+  const compL=[comp.pay&&"зарплата", comp.mat&&"яды и станции"].filter(Boolean);
+  document.getElementById("dSc").textContent =
+    `${head} чел. · ${compL.length?compL.join(" + "):"ничего не выбрано"} · ${per}`;
+  document.querySelectorAll("[data-comp]").forEach(b=>b.setAttribute("aria-pressed",String(comp[b.dataset.comp])));
+
   const diff=t.hunter-t.staff;
-  setNum(document.getElementById("dDiff"), Math.abs(diff));
-  document.getElementById("dRatio").textContent = t.staff&&t.hunter
-    ? (diff>0 ? "штат дешевле в "+(t.hunter/t.staff).toFixed(1).replace(".",",")+" раза"
-              : "подрядчик дешевле в "+(t.staff/t.hunter).toFixed(1).replace(".",",")+" раза")
-    : "выберите период";
+  document.getElementById("strip").innerHTML = t.n===0
+    ? "Выберите хотя бы один месяц."
+    : `Pest Hunters за ${t.n===12?"год":"период"} — <b>${money(t.hunter)}</b>, собственная служба из ${head} человек — <b>${money(t.staff)}</b>.` +
+      (diff>0 ? ` Разница в пользу штата <b>${money(diff)}</b>, это <b>${(t.hunter/(t.staff||1)).toFixed(1).replace(".",",")}×</b>.`
+              : ` Подрядчик выходит дешевле на <b>${money(-diff)}</b>.`) +
+      ` Indigo — <b>${money(t.indigo)}</b>, но только за кормоцех.`;
 
   /* bars */
   const max=Math.max(t.hunter,t.staff,t.indigo,1);
@@ -597,16 +621,17 @@ function render(){
   document.getElementById("sumHint").textContent = per+(vat?" · цены подрядчика с НДС 16 %":" · цены подрядчика без НДС");
 
   /* summary tiles */
+  const diff2=diff;
   document.getElementById("tiles").innerHTML=[
     [money(t.staff),"обходится собственная служба"],
     [money(t.hunter),"выставляет Pest Hunters"],
-    [money(Math.abs(diff)), diff>0?"экономия при своём штате":"переплата при своём штате"],
+    [money(Math.abs(diff2)), diff2>0?"экономия при своём штате":"переплата при своём штате"],
     [int(T.c1+T.c2+T.c3)+" точек","обслуживает штат на 9 объектах"]
   ].map(x=>`<div class="tile"><span class="tv n">${x[0]}</span><span class="tl">${x[1]}</span></div>`).join("");
   document.getElementById("summary").innerHTML = t.n===0
     ? "Выберите хотя бы один месяц — суммы появятся сразу."
-    : diff>0
-      ? `За ${t.n===12?"полный год":"выбранный период"} подрядчик просит <b>${money(t.hunter)}</b>, собственная служба обходится в <b>${money(t.staff)}</b>. Разница <b>${money(diff)}</b>. Зарплата ${head} дератизаторов фиксирована и не растёт от количества объектов, а подрядчик тарифицирует каждый из 122 бройлерных объектов отдельно — отсюда весь разрыв. При этом штат закрывает ещё инкубаторий, склад лузги и АБК, которых нет ни в одном КП.`
+    : diff2>0
+      ? `За ${t.n===12?"полный год":"выбранный период"} подрядчик просит <b>${money(t.hunter)}</b>, собственная служба обходится в <b>${money(t.staff)}</b>. Разница <b>${money(diff2)}</b>. Зарплата ${head} дератизаторов фиксирована и не растёт от количества объектов, а подрядчик тарифицирует каждый из 122 бройлерных объектов отдельно — отсюда весь разрыв. При этом штат закрывает ещё инкубаторий, склад лузги и АБК, которых нет ни в одном КП.`
       : `За выбранный период штат обходится в <b>${money(t.staff)}</b> против <b>${money(t.hunter)}</b> у подрядчика. Так выходит на коротких отрезках, когда включена лишь часть объектов подрядчика, а зарплата платится полностью независимо от объёма работ.`;
 
   /* Indigo tile */
@@ -627,23 +652,28 @@ function render(){
   document.getElementById("tfPh").innerHTML=
     `<tr><td>Итого по включённым</td><td></td><td></td><td></td><td>${money(t.hunter)}</td>
       <td>${money(Object.keys(obj).reduce((a,k2)=>a+(obj[k2]?t.phY[k2]:0),0))}</td></tr>`;
+  document.getElementById("phAlt").textContent =
+    `Альтернатива из того же КП — обслуживание площадок уже установленным оборудованием заказчика: ${money(PH_ALT.hi*t.k)} в месяц с марта по ноябрь и ${money(PH_ALT.lo*t.k)} с декабря по февраль, ${money((PH_ALT.hi*9+PH_ALT.lo*3)*t.k)} за год против ${money(t.phY.bp)} по основному варианту.`;
   document.getElementById("phNote").innerHTML =
     `ЗПП идёт по договору №88 от 01.01.2026 — 180 000 ₸ в месяц, 2 160 000 ₸ за год. Склад ТМЦ — по договору №921 от 01.04.2026, 80 000 ₸ в месяц, 720 000 ₸ за девять месяцев: с января по март он не действует, в выбранный период попало <b>${t.nTmc}</b> оплачиваемых месяцев. В обе цены входит дезинсекция, поэтому со строкой «только дератизация» по ККЗ и площадкам они напрямую не сравниваются. Переключатель НДС на эти два договора не влияет — суммы в них окончательные.`;
 
   /* own staff */
   document.querySelectorAll("[data-head]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.head===head)));
-  document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.view===staffView)));
   document.getElementById("ownTitle").textContent =
-    `Собственная служба · ${head} ${head>=5?"дератизаторов":"дератизатора"}`;
-  const shown = staffView==="pay"?pay : staffView==="mat"?mat : t.staff;
-  const shownL = staffView==="pay"?"фонд оплаты труда за период"
-               : staffView==="mat"?"яды, бутылки и станции за период" : "полная стоимость за период";
+    `Собственная служба · ${head} ${head>=5?"человек":"дератизатора"}`;
   document.getElementById("ownTiles").innerHTML=[
-    [money(shown), shownL],
+    [money(t.staff), "итого за период, с учётом переключателей"],
     [money(u.s.total),"месяц апрель — сентябрь"],
     [money(u.w.total),"месяц октябрь — март"],
     [money(u.per),"оклад одного дератизатора"]
   ].map(x=>`<div class="tile"><span class="tv n">${x[0]}</span><span class="tl">${x[1]}</span></div>`).join("");
+
+  document.getElementById("tbHead").innerHTML=[2,4,6].map(h=>{
+    const uu=ukpf(h), sp=uu.salary*t.n, sm=uu.s.mat*t.nS+uu.w.mat*t.nW;
+    return `<tr class="${h===head?"hl":""}"><td>${h} ${h>=5?"человек":"дератизатора"}</td>
+      <td class="n">${money(sp)}</td><td class="n">${money(sm)}</td>
+      <td class="n">${money(sp+sm)}</td><td class="n">${money(uu.salary*12+uu.s.mat*6+uu.w.mat*6)}</td></tr>`;
+  }).join("");
 
   const L=[
     ["Фонд оплаты труда",head+" чел., 5/2",money(u.per)+" / чел",u.s.salary,u.w.salary],
@@ -736,12 +766,11 @@ btnM.addEventListener("click",()=>{
   btnM.setAttribute("aria-pressed",String(open));
 });
 document.getElementById("btnVat").addEventListener("click",()=>{vat=!vat; render();});
-document.getElementById("btnEq").addEventListener("click",()=>{eqUkpf=!eqUkpf; render();});
 document.querySelectorAll("[data-obj]").forEach(b=>b.addEventListener("click",()=>{
   obj[b.dataset.obj]=!obj[b.dataset.obj]; render();
 }));
 document.querySelectorAll("[data-head]").forEach(b=>b.addEventListener("click",()=>{head=+b.dataset.head; render();}));
-document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",()=>{staffView=b.dataset.view; render();}));
+document.querySelectorAll("[data-comp]").forEach(b=>b.addEventListener("click",()=>{comp[b.dataset.comp]=!comp[b.dataset.comp]; render();}));
 ["iSalary","iZerno","iPk","iStation","iBottlePrice","iBottles"].forEach(id=>
   document.getElementById(id).addEventListener("input",render));
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
