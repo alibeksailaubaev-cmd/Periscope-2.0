@@ -291,6 +291,7 @@ tr.off td{opacity:.42;}
           <button data-obj="kkz" aria-pressed="true">ККЗ</button>
           <button data-obj="bp"  aria-pressed="true">БП</button>
           <button data-obj="zpp" aria-pressed="true">ЗПП</button>
+          <button data-obj="tmc" aria-pressed="true">ТМЦ</button>
         </div>
       </div>
       <span class="big n" id="oH">—</span>
@@ -300,6 +301,7 @@ tr.off td{opacity:.42;}
         <div><span>ККЗ · дератизация</span><b id="phKkz">—</b></div>
         <div><span>Бройлерные площадки · 122 объекта</span><b id="phBp">—</b></div>
         <div><span>ЗПП · дератизация + дезинсекция</span><b id="phZpp">—</b></div>
+        <div><span>Склад ТМЦ · апрель–декабрь</span><b id="phTmc">—</b></div>
       </div>
     </div>
     <div class="opt s">
@@ -355,6 +357,7 @@ tr.off td{opacity:.42;}
           <tr><td>Pest Hunters · дератизация, мар–ноя</td><td>122 бройлерных объекта</td><td class="n" id="rPhHi">—</td></tr>
           <tr><td>Pest Hunters · дератизация, дек–фев</td><td>122 бройлерных объекта</td><td class="n" id="rPhLo">—</td></tr>
           <tr><td>Pest Hunters · дератизация + дезинсекция</td><td>ЗПП · завод по переработке птицы, 8 309 м²</td><td class="n">180 000 ₸/мес</td></tr>
+          <tr><td>Pest Hunters · дератизация + дезинсекция</td><td>Склад ТМЦ · апрель–декабрь 2026</td><td class="n">80 000 ₸/мес</td></tr>
         </tbody>
       </table>
     </div>
@@ -484,7 +487,9 @@ tr.off td{opacity:.42;}
     либо 2 806 000 ₸/мес и 1 830 000 ₸/мес уже установленным оборудованием заказчика (без НДС).
     ЗПП — договор оказания услуг №88 от 01.01.2026 на период с 01.01.2026 по 31.12.2026: дератизация и дезинсекция
     производственных помещений и прилегающей территории завода по переработке птицы, 8 309 м², три обхода в месяц
-    по утверждённому графику, 180 000 ₸ ежемесячно, 2 160 000 ₸ за весь срок без НДС.<br>
+    по утверждённому графику, 180 000 ₸ ежемесячно, 2 160 000 ₸ за весь срок без НДС.
+    Склад ТМЦ — договор №921 от 01.04.2026 на период с 01.04.2026 по 31.12.2026: дератизация и дезинсекция ежемесячно,
+    один обход в месяц плюс выезд по рекламации в течение двух рабочих дней, 80 000 ₸ ежемесячно, 720 000 ₸ за девять месяцев без НДС.<br>
     <b>Расхождение в КП Pest Hunters.</b> Для варианта «своё оборудование» 122 × 25 000 = 3 050 000 ₸, а в таблице стоит 3 172 000 ₸ —
     это соответствует цене 26 000 ₸ за объект. В расчёте использована сумма из КП; цену за единицу стоит уточнить у подрядчика.<br>
     <b>Допущения по УКПФ.</b> Цена брикетов Pest Killer 3 642,5 ₸/кг перенесена из расчёта по ККЗ — в исходных данных её нет.
@@ -517,12 +522,14 @@ const MONTHS=[
 const INDIGO_KKZ=96600;
 const PH_KKZ=75000;
 const PH_ZPP=180000;   // договор №88 от 01.01.2026, 2 160 000 ₸ за год без НДС
+const PH_TMC=80000;    // договор №921 от 01.04.2026, 720 000 ₸ за апрель–декабрь без НДС
+const TMC_MONTHS=[3,4,5,6,7,8,9,10,11];  // апрель–декабрь: раньше договор не действует
 const PH={own:{hi:3172000,lo:2074000}, ukpf:{hi:2806000,lo:1830000}};
 const VAT=1.16;
 
 let picked=new Set(MONTHS.map((_,i)=>i));
 let vat=false, eqUkpf=true, staffView="all", head=4;
-let obj={kkz:true, bp:true, zpp:true};
+let obj={kkz:true, bp:true, zpp:true, tmc:true};
 
 const money=v=>Math.round(v).toLocaleString("ru-RU").replace(/ /g," ")+" ₸";
 const mln=v=>(v/1e6).toFixed(2).replace(".",",")+" млн ₸";
@@ -550,14 +557,16 @@ function totals(){
   picked.forEach(i=>{
     const m=MONTHS[i];
     indigo += INDIGO_KKZ;
-    hunter += (obj.kkz?PH_KKZ*k:0) + (obj.bp?(m.phLow?eq.lo:eq.hi)*k:0) + (obj.zpp?PH_ZPP:0);
+    hunter += (obj.kkz?PH_KKZ*k:0) + (obj.bp?(m.phLow?eq.lo:eq.hi)*k:0) + (obj.zpp?PH_ZPP:0)
+            + (obj.tmc && TMC_MONTHS.includes(i) ? PH_TMC : 0);
     staff  += m.w ? u.w.total : u.s.total;
     m.w ? nW++ : nS++;
   });
   const nLo=[...picked].filter(i=>MONTHS[i].phLow).length, nHi=picked.size-nLo;
-  const ph={kkz:PH_KKZ*k*picked.size, bp:(eq.hi*nHi+eq.lo*nLo)*k, zpp:PH_ZPP*picked.size};
-  const phYear={kkz:PH_KKZ*k*12, bp:(eq.hi*9+eq.lo*3)*k, zpp:PH_ZPP*12};
-  return {indigo, hunter, staff, nW, nS, n:picked.size, u, eq, k, ph, phYear, nLo, nHi};
+  const nTmc=[...picked].filter(i=>TMC_MONTHS.includes(i)).length;
+  const ph={kkz:PH_KKZ*k*picked.size, bp:(eq.hi*nHi+eq.lo*nLo)*k, zpp:PH_ZPP*picked.size, tmc:PH_TMC*nTmc};
+  const phYear={kkz:PH_KKZ*k*12, bp:(eq.hi*9+eq.lo*3)*k, zpp:PH_ZPP*12, tmc:PH_TMC*TMC_MONTHS.length};
+  return {indigo, hunter, staff, nW, nS, n:picked.size, u, eq, k, ph, phYear, nLo, nHi, nTmc};
 }
 
 function renderMonths(){
@@ -606,9 +615,10 @@ function render(){
   document.getElementById("phKkz").textContent = obj.kkz ? money(t.ph.kkz) : "выключен";
   document.getElementById("phBp").textContent  = obj.bp  ? money(t.ph.bp)  : "выключен";
   document.getElementById("phZpp").textContent = obj.zpp ? money(t.ph.zpp) : "выключен";
+  document.getElementById("phTmc").textContent = obj.tmc ? money(t.ph.tmc) : "выключен";
   document.querySelectorAll(".seg button[data-obj]").forEach(b=>
     b.setAttribute("aria-pressed", String(obj[b.dataset.obj])));
-  const onNames=[obj.kkz&&"ККЗ", obj.bp&&"бройлерные площадки", obj.zpp&&"ЗПП"].filter(Boolean);
+  const onNames=[obj.kkz&&"ККЗ", obj.bp&&"бройлерные площадки", obj.zpp&&"ЗПП", obj.tmc&&"склад ТМЦ"].filter(Boolean);
   document.getElementById("oHcov").textContent =
     (onNames.length ? onNames.join(", ") : "объекты не выбраны") +
     " · " + (vat ? "цены с НДС 16 %" : "цены без НДС");
@@ -658,7 +668,8 @@ function render(){
     ["kkz","ККЗ · кормоцех","дератизация","1", money(PH_KKZ*t.k)],
     ["bp","Бройлерные площадки · 122 объекта","дератизация","1",
       money(t.eq.hi*t.k)+" мар–ноя / "+money(t.eq.lo*t.k)+" дек–фев"],
-    ["zpp","ЗПП · завод по переработке птицы","дератизация + дезинсекция","3", money(PH_ZPP)]
+    ["zpp","ЗПП · завод по переработке птицы","дератизация + дезинсекция","3", money(PH_ZPP)],
+    ["tmc","Склад ТМЦ · апрель–декабрь","дератизация + дезинсекция","1", money(PH_TMC)]
   ];
   document.getElementById("tbPh").innerHTML=PHROWS.map(r=>{
     const on=obj[r[0]];
@@ -669,9 +680,13 @@ function render(){
   document.getElementById("tfPh").innerHTML=
     `<tr><td>Итого по включённым объектам</td><td></td><td></td><td></td>
       <td>${money(t.hunter)}</td>
-      <td>${money((obj.kkz?t.phYear.kkz:0)+(obj.bp?t.phYear.bp:0)+(obj.zpp?t.phYear.zpp:0))}</td></tr>`;
+      <td>${money((obj.kkz?t.phYear.kkz:0)+(obj.bp?t.phYear.bp:0)+(obj.zpp?t.phYear.zpp:0)+(obj.tmc?t.phYear.tmc:0))}</td></tr>`;
   document.getElementById("phNote").textContent =
-    "ЗПП идёт по подписанному договору №88 от 01.01.2026: 180 000 ₸ в месяц, 2 160 000 ₸ за 2026 год без НДС, площадь 8 309 м², три обхода в месяц. В эту цену входит и дезинсекция, поэтому напрямую со строкой «только дератизация» по другим объектам она не сравнивается. Переключатель НДС на ЗПП не влияет — в договоре сумма уже окончательная.";
+    `ЗПП — договор №88 от 01.01.2026: 180 000 ₸ в месяц, 2 160 000 ₸ за 2026 год, площадь 8 309 м², три обхода в месяц. `+
+    `Склад ТМЦ — договор №921 от 01.04.2026: 80 000 ₸ в месяц, 720 000 ₸ за девять месяцев с апреля по декабрь, один обход в месяц; `+
+    `в январе–марте договор не действует, и в выбранный период попало ${t.nTmc} из них. `+
+    `В обе цены входит дезинсекция, поэтому со строкой «только дератизация» по ККЗ и площадкам они напрямую не сравниваются. `+
+    `Переключатель НДС на эти два объекта не влияет — суммы в договорах уже окончательные.`;
 
   // facts
   document.getElementById("facts").innerHTML=[
