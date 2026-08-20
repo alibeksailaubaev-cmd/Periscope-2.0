@@ -684,6 +684,13 @@
     </div>
     <div id="recordsEmpty" class="empty-state">Загрузите файл «Акт приёма мойки», чтобы увидеть записи.</div>
     <div id="recordsWrap" style="display:none;">
+      <div class="export-exclude" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:2px 0 14px;">
+        <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em;">Порядок:</span>
+        <div class="viol-scope-toggle" id="corpusSortToggle">
+          <button type="button" class="viol-scope-btn active" data-sort="date">Сначала свежие</button>
+          <button type="button" class="viol-scope-btn" data-sort="score">Сначала худшие</button>
+        </div>
+      </div>
       <div class="corpus-grid" id="corpusGrid"></div>
     </div>
   </div>
@@ -943,7 +950,15 @@ function toDate(v){
 }
 
 function dateOnly(d){
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  // Округляем к ближайшим суткам, а не просто обрезаем время.
+  // Даты в выгрузках Excel из-за погрешности чисел с плавающей точкой часто
+  // хранятся не как ровная полночь, а как "23:59:xx" предыдущих суток
+  // (например, вместо 20.08.2026 00:00:00 реально записано 19.08.2026 23:59:12).
+  // Простое обрезание времени в этом случае "сдвигает" запись на день назад.
+  // Прибавляем 12 часов перед обрезанием, чтобы дата всегда округлялась
+  // к ближайшим фактическим суткам.
+  const rounded = new Date(d.getTime() + 12*60*60*1000);
+  return new Date(rounded.getFullYear(), rounded.getMonth(), rounded.getDate());
 }
 
 function fmtDate(d){
@@ -1969,6 +1984,8 @@ function buildSparklineSvg(visits){
 let lastCorpusGroups = new Map();  // site -> [rows] за текущий отфильтрованный период
 let siteHistoryAll = new Map();    // site -> [rows] за ВЕСЬ загруженный период (для спарклайна и графика в модалке)
 
+let corpusSortMode = 'date';   // 'date' — свежие сверху, 'score' — худшие сверху
+
 function renderRecordsTable(){
   const data = getFilteredActRows();
   const emptyEl = document.getElementById('recordsEmpty');
@@ -2016,8 +2033,17 @@ function renderRecordsTable(){
     const latest = list[list.length - 1];
     return { site, uchastok: latest.uchastok, latest, visits: list };
   });
-  // худшие баллы — первыми, чтобы проблемные корпуса сразу бросались в глаза
-  tiles.sort((a,b) => a.latest.score - b.latest.score || a.site.localeCompare(b.site, 'ru'));
+  // По умолчанию — по дате приёмки: свежие корпуса сверху, внутри одного дня
+  // первыми идут худшие баллы. Переключатель «Сначала худшие» сортирует по баллу.
+  if(corpusSortMode === 'score'){
+    tiles.sort((a,b) => a.latest.score - b.latest.score
+      || b.latest.date - a.latest.date
+      || a.site.localeCompare(b.site, 'ru'));
+  }else{
+    tiles.sort((a,b) => b.latest.date - a.latest.date
+      || a.latest.score - b.latest.score
+      || a.site.localeCompare(b.site, 'ru'));
+  }
 
   const grid = document.getElementById('corpusGrid');
   grid.innerHTML = tiles.map((t, i) => {
@@ -2046,6 +2072,19 @@ function renderRecordsTable(){
   grid.querySelectorAll('.corpus-tile').forEach(tile => {
     tile.addEventListener('click', () => openCorpusModal(tile.dataset.site));
   });
+
+  const sortToggle = document.getElementById('corpusSortToggle');
+  if(sortToggle && !sortToggle.dataset.bound){
+    sortToggle.dataset.bound = '1';
+    sortToggle.querySelectorAll('.viol-scope-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if(corpusSortMode === btn.dataset.sort) return;
+        corpusSortMode = btn.dataset.sort;
+        sortToggle.querySelectorAll('.viol-scope-btn').forEach(b => b.classList.toggle('active', b === btn));
+        renderRecordsTable();
+      });
+    });
+  }
 
   // Анимация появления: счётчик балла "разгоняется" от 0, а линия спарклайна
   // дорисовывается слева направо — запускаем чуть позже, чтобы совпасть по

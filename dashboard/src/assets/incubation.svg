@@ -1,26 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Цех инкубации">
-  <rect width="64" height="64" fill="#e8f5f3"/>
-  <g fill="none" stroke="#0a6f69" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-    <rect x="8" y="12" width="48" height="42" rx="5"/>
-    <path d="M8 24h48M8 36h48"/>
-    <path d="M20 12v42"/>
-  </g>
-  <g fill="#0e9a92">
-    <ellipse cx="13.6" cy="19" rx="3.1" ry="3.9"/>
-    <ellipse cx="13.6" cy="31" rx="3.1" ry="3.9"/>
-    <ellipse cx="13.6" cy="43" rx="3.1" ry="3.9"/>
-  </g>
-  <g fill="#57c4bc">
-    <ellipse cx="28" cy="19" rx="3.1" ry="3.9"/>
-    <ellipse cx="36.5" cy="19" rx="3.1" ry="3.9"/>
-    <ellipse cx="45" cy="19" rx="3.1" ry="3.9"/>
-    <ellipse cx="28" cy="31" rx="3.1" ry="3.9"/>
-    <ellipse cx="45" cy="31" rx="3.1" ry="3.9"/>
-  </g>
-  <g>
-    <path d="M33 44.5c0-3.4 2.6-6 5.9-6s5.9 2.6 5.9 6c0 3.6-2.7 6.2-5.9 6.2s-5.9-2.6-5.9-6.2Z" fill="#c2871f"/>
-    <path d="M45 43.2l4.6-1.8-3.4 3.6" fill="#c2871f"/>
-    <circle cx="41.4" cy="42.8" r="1.15" fill="#1e1a12"/>
-    <path d="M36.8 38.6c-.4-2.2.5-3.9 2.4-5" fill="none" stroke="#c2871f" stroke-width="2" stroke-linecap="round"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Цех инкубации — вылупление цыплёнка">
+  <!-- верхняя часть скорлупы -->
+  <path d="M18.5 25c0-8.4 6-16 13.5-16s13.5 7.6 13.5 16l-6.7-4.6-6.8 4.6-6.8-4.6L18.5 25Z" fill="#0a6f69"/>
+  <!-- цыплёнок -->
+  <circle cx="32" cy="34" r="11" fill="#e8a83a"/>
+  <path d="M42.4 31.6l8.6-2.6-5.8 7.2-2.8-4.6Z" fill="#c2871f"/>
+  <circle cx="28.6" cy="31.4" r="2.3" fill="#1e1a12"/>
+  <!-- нижняя часть скорлупы -->
+  <path d="M13.5 39l6.9 5.2 6.8-5.2 6.9 5.2 6.8-5.2 6.9 5.2v1.4c0 7.4-7.5 12.9-17.3 12.9S13.5 48.9 13.5 41.5Z" fill="#0e9a92"/>
 </svg>

@@ -1,26 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Бройлерное производство">
-  <rect width="64" height="64" fill="#e8f5f3"/>
-  <g fill="none" stroke="#0a6f69" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M6 26 32 10l26 16"/>
-    <path d="M10 26v28h44V26"/>
-    <path d="M10 46h44"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Бройлерное производство — птица">
+  <!-- хвост -->
+  <path d="M46 24.5c6-3 11.5-1.5 14.5 3.5-4 .5-6.5 2-8 4.5 4.5 1 7 3.5 7.5 7.5-5-2.5-9.5-2.5-14 1Z" fill="#0a6f69"/>
+  <!-- туловище -->
+  <ellipse cx="33" cy="38" rx="18" ry="15.5" fill="#0e9a92"/>
+  <!-- крыло -->
+  <ellipse cx="35.5" cy="39" rx="9.5" ry="7.5" fill="#0a6f69" opacity=".5"/>
+  <!-- шея и голова -->
+  <path d="M21 34c-3-4-3.5-8.5-1-12l9 5Z" fill="#0e9a92"/>
+  <circle cx="21.5" cy="19.5" r="9.5" fill="#0e9a92"/>
+  <!-- гребень -->
+  <g fill="#c0392f">
+    <circle cx="17" cy="10.6" r="3.4"/>
+    <circle cx="22.4" cy="9" r="3.9"/>
+    <circle cx="27.6" cy="11.4" r="3.2"/>
   </g>
-  <g fill="#57c4bc">
-    <circle cx="19" cy="34" r="5.2"/>
-    <circle cx="45" cy="34" r="5.2"/>
-  </g>
-  <g fill="none" stroke="#0a6f69" stroke-width="1.8" stroke-linecap="round">
-    <path d="M19 30.6v6.8M15.6 34h6.8M45 30.6v6.8M41.6 34h6.8"/>
-    <path d="M27 32h10"/>
-  </g>
-  <g fill="#c2871f">
-    <path d="M17.5 53c-.5-3 1.2-5.2 4.2-5.6 2.6-.4 4.6 1 5.2 3.4.4 1.6-.2 2.6-1.6 2.6h-7.2c-.4 0-.6-.2-.6-.4Z"/>
-    <path d="M26.4 49.6l3.4-1.6-2.2 3" />
-    <path d="M35.5 53c-.5-3 1.2-5.2 4.2-5.6 2.6-.4 4.6 1 5.2 3.4.4 1.6-.2 2.6-1.6 2.6h-7.2c-.4 0-.6-.2-.6-.4Z" opacity=".75"/>
-    <path d="M44.4 49.6l3.4-1.6-2.2 3" opacity=".75"/>
-  </g>
-  <g fill="#1e1a12">
-    <circle cx="24.4" cy="49.6" r=".9"/>
-    <circle cx="42.4" cy="49.6" r=".9"/>
+  <!-- клюв и серёжка -->
+  <path d="M12.4 19.4 3 22.2l9.4 4.4Z" fill="#e8a83a"/>
+  <path d="M13.6 26.6c2.4 0 3.6 1.4 3.6 3.2s-1.4 3-3.4 3-3.4-1.2-3.4-3 1.2-3.2 3.2-3.2Z" fill="#c0392f"/>
+  <!-- глаз -->
+  <circle cx="20" cy="18.4" r="2.7" fill="#fffdf7"/>
+  <circle cx="20" cy="18.4" r="1.35" fill="#1e1a12"/>
+  <!-- лапы -->
+  <g stroke="#e8a83a" stroke-width="3" stroke-linecap="round" fill="none">
+    <path d="M27 52.6v4.2M27 56.8l-3.6 2.8M27 56.8l3.6 2.8"/>
+    <path d="M39 52.6v4.2M39 56.8l-3.6 2.8M39 56.8l3.6 2.8"/>
   </g>
 </svg>

@@ -69,6 +69,29 @@
 
   function isNumberish(v){ return v === null || v === undefined || typeof v === 'number'; }
 
+  // На коротких периодах Plotly ставит полусуточные засечки и подписи дат двоятся
+  // (17.08, 17.08, 18.08, 18.08). Если шаг оси не задан самой панелью — ставим сутки.
+  var DAY_MS = 86400000;
+  function fixDateAxis(data, layout){
+    var ax = layout.xaxis;
+    if(!ax || ax.dtick !== undefined) return;
+    var times = [];
+    (data || []).forEach(function(t){
+      if(!t || !Array.isArray(t.x)) return;
+      t.x.forEach(function(v){
+        var time = (v instanceof Date) ? v.getTime() : (typeof v === 'string' ? Date.parse(v) : NaN);
+        if(!isNaN(time)) times.push(time);
+      });
+    });
+    if(times.length < 2) return;
+    var min = Math.min.apply(null, times), max = Math.max.apply(null, times);
+    var days = (max - min) / DAY_MS;
+    if(days <= 0 || days > 45) return;          // на длинных периодах засечки оставляем Plotly
+    ax.tickmode = ax.tickmode || 'linear';
+    ax.tick0 = ax.tick0 || new Date(min);
+    ax.dtick = days <= 21 ? DAY_MS : DAY_MS * 7;
+  }
+
   if(window.Plotly && typeof window.Plotly.newPlot === 'function' && !window.Plotly.__aitasThemed){
     var origNewPlot = window.Plotly.newPlot;
     window.Plotly.__aitasThemed = true;
@@ -92,6 +115,7 @@
       }
 
       layout = themeLayout(layout);
+      try{ fixDateAxis(data, layout); }catch(e){}
       config = Object.assign({ responsive:true, displaylogo:false }, config || {});
       config.modeBarButtonsToRemove = config.modeBarButtonsToRemove ||
         ['lasso2d','select2d','autoScale2d','toggleSpikelines'];
@@ -239,6 +263,140 @@
   }
   watchValues();
   setInterval(watchValues, 1500);
+
+  /* ======================================================================
+     Читаемость числовых таблиц: полосы, доли, бейджи баллов, выбор строки
+     ====================================================================== */
+  function parseNum(text){
+    if(text === null || text === undefined) return null;
+    var t = String(text).replace(/[  %]/g, '').replace(',', '.').trim();
+    if(!/^-?\d+(\.\d+)?$/.test(t)) return null;
+    return parseFloat(t);
+  }
+
+  function cellRaw(td){
+    return (td.dataset.raw !== undefined ? td.dataset.raw : (td.textContent || '')).trim();
+  }
+
+  function scoreClass(v){
+    if(v >= 9) return 'good';
+    if(v >= 7.5) return 'warn';
+    return 'bad';
+  }
+
+  function enhanceTable(table){
+    var head = table.querySelector('thead');
+    var body = table.querySelector('tbody');
+    if(!head || !body || !body.rows.length) return;
+
+    var heads = [].slice.call(head.querySelectorAll('th')).map(function(th){
+      return (th.textContent || '').toLowerCase().trim();
+    });
+    if(heads.length < 2) return;
+
+    var kinds = heads.map(function(h, i){
+      if(i === 0) return 'name';
+      if(h.indexOf('%') > -1) return 'pct';
+      if(h.indexOf('балл') > -1) return 'score';
+      return 'num';
+    });
+
+    // общий максимум по всем числовым колонкам — тогда полосы сопоставимы между собой
+    var sharedMax = 0;
+    var firstNumCol = kinds.indexOf('num');
+    var firstNumValues = [];
+    [].forEach.call(body.rows, function(row){
+      kinds.forEach(function(k, i){
+        if(k !== 'num' || !row.cells[i]) return;
+        var v = parseNum(cellRaw(row.cells[i]));
+        if(v === null) return;
+        sharedMax = Math.max(sharedMax, v);
+        if(i === firstNumCol) firstNumValues.push(v);
+      });
+    });
+
+    // ранги ставим только если строки отсортированы по убыванию и это не список по датам
+    var sortedDesc = firstNumValues.length > 3 && firstNumValues.every(function(v, i){
+      return i === 0 || firstNumValues[i - 1] >= v;
+    });
+    var rankable = sortedDesc && heads[0].indexOf('дата') === -1;
+
+    [].forEach.call(body.rows, function(row, rowIndex){
+      if(row.dataset.aitasTable === '1') return;
+      row.dataset.aitasTable = '1';
+
+      kinds.forEach(function(kind, i){
+        var td = row.cells[i];
+        if(!td) return;
+        var raw = cellRaw(td);
+        td.dataset.raw = raw;
+
+        if(kind === 'name'){
+          td.classList.add('namecell');
+          if(rankable){
+            var chip = doc.createElement('span');
+            chip.className = 'rankchip' + (rowIndex < 3 ? ' top' : '');
+            chip.textContent = String(rowIndex + 1);
+            td.insertBefore(chip, td.firstChild);
+          }
+          return;
+        }
+
+        var value = parseNum(raw);
+        if(value === null) return;
+
+        if(kind === 'pct'){
+          var p = Math.max(0, Math.min(100, value));
+          var head = heads[i];
+          var tone = '';
+          if(head.indexOf('перемыв') > -1 || head.indexOf('nok') > -1){
+            tone = p >= 66 ? ' bad' : (p >= 33 ? ' warn' : ' good');
+          }else if(head.indexOf('норм') > -1 || head.indexOf('первого раза') > -1){
+            tone = p >= 90 ? ' good' : (p >= 70 ? ' warn' : ' bad');
+          }
+          td.classList.add('num');
+          td.innerHTML = '<span class="pctpill' + tone + '" style="--p:' + p + '%"><b>' + raw + '</b></span>';
+          return;
+        }
+
+        if(kind === 'score'){
+          td.classList.add('num');
+          td.innerHTML = '<span class="scorebadge ' + scoreClass(value) + '">' + raw + '</span>';
+          return;
+        }
+
+        var width = sharedMax > 0 ? Math.round(value / sharedMax * 100) : 0;
+        var tone = width >= 66 ? ' bad' : (width >= 33 ? ' warn' : '');
+        td.classList.add('num');
+        td.innerHTML = '<span class="cellv">' + raw + '</span>' +
+                       '<span class="cellbar' + (i === firstNumCol ? tone : '') + '"><i style="width:' + width + '%"></i></span>';
+      });
+    });
+  }
+
+  function enhanceTables(){
+    [].slice.call(doc.querySelectorAll('table.data-table')).forEach(enhanceTable);
+  }
+
+  var tableTimer;
+  function scheduleTables(){
+    clearTimeout(tableTimer);
+    tableTimer = setTimeout(enhanceTables, 60);
+  }
+
+  enhanceTables();
+  [].slice.call(doc.querySelectorAll('table.data-table tbody')).forEach(function(tb){
+    new MutationObserver(scheduleTables).observe(tb, { childList:true });
+  });
+
+  // подсветка выбранного участка/точки, пока открыта детализация
+  doc.addEventListener('click', function(e){
+    var row = e.target.closest && e.target.closest('tr.viol-row-clickable');
+    if(!row) return;
+    var scope = row.closest('tbody');
+    if(scope) [].slice.call(scope.rows).forEach(function(r){ r.classList.remove('is-selected'); });
+    row.classList.add('is-selected');
+  });
 
   /* --- «волна» по клику на кнопках -------------------------------------- */
   doc.addEventListener('click', function(e){
