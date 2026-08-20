@@ -1055,8 +1055,25 @@ function resizeFrame(key){
   if(!iframe) return;
   try{
     const d = iframe.contentWindow.document;
-    const h = Math.max(d.documentElement.scrollHeight, d.body ? d.body.scrollHeight : 0);
-    if(h > 0) iframe.style.height = (h + 24) + 'px';
+
+    // ВАЖНО: documentElement.scrollHeight никогда не меньше высоты самого iframe,
+    // поэтому «высота = scrollHeight + запас» превращалась в самоподдерживающийся
+    // цикл — рамка (а вместе с ней и карточки/графики внутри) росла на каждом тике.
+    // Меряем реальную высоту контента: нижнюю границу основного контейнера панели.
+    const main = d.querySelector('.container');
+    let h = 0;
+    if(main){
+      h = main.offsetTop + main.offsetHeight;
+      const header = d.querySelector('header.app-header');
+      if(header && header.offsetParent !== null) h = Math.max(h, header.offsetTop + header.offsetHeight);
+    }else if(d.body){
+      h = d.body.scrollHeight;
+    }
+    if(h <= 0) return;
+
+    const next = h + 24;
+    const current = parseInt(iframe.style.height, 10) || 0;
+    if(Math.abs(next - current) > 2) iframe.style.height = next + 'px';   // без дёрганья на 1–2 px
   }catch(e){}
 }
 

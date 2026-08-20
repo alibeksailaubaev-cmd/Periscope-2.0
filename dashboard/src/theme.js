@@ -117,6 +117,13 @@
       layout = themeLayout(layout);
       try{ fixDateAxis(data, layout); }catch(e){}
       config = Object.assign({ responsive:true, displaylogo:false }, config || {});
+
+      // График с жёстко заданной высотой (например, мини-динамика в карточке корпуса)
+      // не должен быть responsive: контейнер у него тянется по содержимому, и на каждом
+      // событии resize Plotly пересчитывал высоту по контейнеру — график «рос» сам по себе.
+      if(layout && typeof layout.height === 'number' && isFinite(layout.height)){
+        config.responsive = false;
+      }
       config.modeBarButtonsToRemove = config.modeBarButtonsToRemove ||
         ['lasso2d','select2d','autoScale2d','toggleSpikelines'];
 

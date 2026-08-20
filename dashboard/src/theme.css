@@ -735,6 +735,19 @@ body.aitas-js .chart-box.aitas-chart-in{
   100%{ box-shadow:0 0 0 18px rgba(14,154,146,0), var(--shadow-1); }
 }
 
+/* мини-график в карточке корпуса: высота фиксирована, иначе он раздувается
+   при каждом пересчёте высоты iframe (обратная связь «контейнер ↔ график») */
+.cm-trend-chart{
+  box-sizing:border-box;
+  height:162px;
+  overflow:hidden;
+  background:var(--sand-soft);
+  border:1px solid var(--line);
+  border-radius:12px;
+}
+.cm-trend-chart .plot-container,
+.cm-trend-chart .svg-container{ height:150px !important; }
+
 /* ==========================================================================
    МОДАЛЬНЫЕ ОКНА
    ========================================================================== */
