@@ -337,6 +337,19 @@
     }
   });
 
+  /* --- период данных уезжает в шапку оболочки ---------------------------- */
+  var lastRange = null;
+  function pushRange(){
+    var badge = doc.getElementById('rangeBadge');
+    if(!badge) return;
+    var txt = (badge.textContent || '').trim();
+    if(txt === lastRange) return;
+    lastRange = txt;
+    post({ type:'aitas-range', text:txt });
+  }
+  pushRange();
+  setInterval(pushRange, 1200);
+
   post({ type:'aitas-ready' });
   notifySections();
   setInterval(notifySections, 2000);

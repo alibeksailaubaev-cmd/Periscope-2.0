@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AITAS UKPF — сводный дэшборд качества мойки и МБ смывов</title>
+<meta name="theme-color" content="#e6dfc6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 fill=%22%230e9a92%22/%3E%3Cpath d=%22M7 21c4-1 6.5-3.5 8-7 1 3.5 3 5.5 6 6.5-1.5 4-5 6.5-9 6.5-2.6 0-4.4-2-5-6Z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M21 13.5c1.4-2.5 3.4-3.8 6-4-1 2.4-1.6 4.4-1.6 6.2%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%222.2%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
 <style>
   :root{
     --sand:        #e6dfc6;
@@ -112,6 +114,17 @@
     border-radius:999px;
     margin-bottom:12px;
   }
+  .brand-bar .range-chip{
+    background:var(--paper);
+    border-color:var(--line);
+    color:var(--ink-soft);
+    text-transform:none;
+    letter-spacing:.02em;
+    font-size:11.5px;
+    margin-left:8px;
+    animation:chipIn .35s var(--ease-out);
+  }
+  .brand-bar .range-chip b{ color:var(--teal-dark); font-weight:750; }
   .brand-bar h1{
     margin:0;
     font-size:31px;
@@ -551,6 +564,12 @@
     .tabbar{ margin:0 -16px 16px; padding:10px 16px; }
     .brand-footer{ padding:16px 18px 22px; }
   }
+  @media print{
+    body{ padding-left:0; background:#fff; }
+    .ornament-rail, .tabbar, .to-top, .toast-stack, .scroll-progress, .intake{ display:none !important; }
+    .brand-bar{ padding:0 0 12px; }
+    .tab-panel{ display:block !important; }
+  }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
     html{ scroll-behavior:auto; }
@@ -621,6 +640,7 @@
 <header class="brand-bar">
   <div class="title-block">
     <span class="eyebrow">Контроль качества · санитария</span>
+    <span class="eyebrow range-chip" id="rangeChip" hidden>Период данных: <b id="rangeChipText"></b></span>
     <h1>Сводный дэшборд качества мойки и МБ смывов</h1>
     <p class="lead">
       Файл «Свод рабочих журналов МБ» загружается один раз и автоматически расходится по всем вкладкам.
@@ -664,11 +684,11 @@
 
   <div class="tabbar" id="tabbar">
     <div class="tabbar-row">
-      <div class="tabs" id="tabs">
+      <div class="tabs" id="tabs" role="tablist" aria-label="Подразделения">
         <span class="tab-indicator" id="tabIndicator"></span>
-        <button class="tab-btn active" data-tab="incubation"><span class="tab-dot"></span>Цех инкубации</button>
-        <button class="tab-btn" data-tab="zpp"><span class="tab-dot"></span>ЗПП</button>
-        <button class="tab-btn" data-tab="broiler"><span class="tab-dot"></span>Бройлерное производство</button>
+        <button class="tab-btn active" data-tab="incubation" role="tab" aria-selected="true" aria-controls="panel-incubation"><span class="tab-dot"></span>Цех инкубации</button>
+        <button class="tab-btn" data-tab="zpp" role="tab" aria-selected="false" aria-controls="panel-zpp"><span class="tab-dot"></span>ЗПП</button>
+        <button class="tab-btn" data-tab="broiler" role="tab" aria-selected="false" aria-controls="panel-broiler"><span class="tab-dot"></span>Бройлерное производство</button>
       </div>
       <button class="btn btn-primary" id="btnExportAll" title="Скачать все слайды активной вкладки в PNG">
         <span class="spin"></span><span class="lbl">🖼 Скачать все слайды вкладки</span>
@@ -681,19 +701,19 @@
   </div>
 
   <div class="panels">
-    <div class="tab-panel active" id="panel-incubation">
+    <div class="tab-panel active" id="panel-incubation" role="tabpanel" aria-label="Цех инкубации">
       <div class="iframe-wrap">
         <div class="frame-skeleton" id="sk-incubation"><div class="sk h1"></div><div class="sk h2"></div></div>
         <iframe class="dash-frame" id="frame-incubation" title="Дэшборд цеха инкубации"></iframe>
       </div>
     </div>
-    <div class="tab-panel" id="panel-zpp">
+    <div class="tab-panel" id="panel-zpp" role="tabpanel" aria-label="ЗПП">
       <div class="iframe-wrap">
         <div class="frame-skeleton" id="sk-zpp"><div class="sk h1"></div><div class="sk h2"></div></div>
         <iframe class="dash-frame" id="frame-zpp" title="Дэшборд ЗПП"></iframe>
       </div>
     </div>
-    <div class="tab-panel" id="panel-broiler">
+    <div class="tab-panel" id="panel-broiler" role="tabpanel" aria-label="Бройлерное производство">
       <div class="iframe-wrap">
         <div class="frame-skeleton" id="sk-broiler"><div class="sk h1"></div><div class="sk h2"></div></div>
         <iframe class="dash-frame" id="frame-broiler" title="Дэшборд бройлерного производства"></iframe>
@@ -729,6 +749,7 @@ const TAB_LABELS = {
 const frames = {};
 const frameReady = {};
 const sections = { incubation:[], zpp:[], broiler:[] };
+const ranges = { incubation:'', zpp:'', broiler:'' };
 let sharedMbFile = null;
 let activeKey = 'incubation';
 
@@ -788,10 +809,15 @@ function moveIndicator(){
 function switchTab(key, scroll){
   if(!KEYS.includes(key)) return;
   activeKey = key;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === key));
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    const on = b.dataset.tab === key;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + key));
   moveIndicator();
   renderSectionRail();
+  renderRangeChip();
   resizeFrame(key);
   // графики внутри скрытой вкладки рисуются в нулевую ширину — просим пересчитать
   const f = frames[key];
@@ -838,6 +864,14 @@ function renderSectionRail(){
     rail.appendChild(chip);
   });
   rail.style.display = list.length ? 'flex' : 'none';
+}
+
+function renderRangeChip(){
+  const chip = document.getElementById('rangeChip');
+  const txt = (ranges[activeKey] || '').trim();
+  const empty = !txt || /не загружен/i.test(txt);
+  chip.hidden = empty;
+  if(!empty) document.getElementById('rangeChipText').textContent = txt;
 }
 
 /* ---------- статусы приёма файла ---------- */
@@ -926,6 +960,11 @@ window.addEventListener('message', (e) => {
   if(d.type === 'aitas-sections'){
     sections[d.key] = d.sections || [];
     if(d.key === activeKey) renderSectionRail();
+  }
+
+  if(d.type === 'aitas-range'){
+    ranges[d.key] = d.text || '';
+    if(d.key === activeKey) renderRangeChip();
   }
 
   if(d.type === 'aitas-scroll-request'){
@@ -1018,6 +1057,7 @@ document.getElementById('btnScrollTop').addEventListener('click', () => window.s
 KEYS.forEach(initFrame);
 setInterval(() => KEYS.forEach(key => { if(frameReady[key]) resizeFrame(key); }), 900);
 renderSectionRail();
+renderRangeChip();
 </script>
 
 </body>
