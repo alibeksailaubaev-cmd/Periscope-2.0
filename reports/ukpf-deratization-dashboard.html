@@ -333,6 +333,11 @@ tr.hl td{background:var(--teal-wash);}
       <span class="kp-sum n" id="dS">—</span>
       <span class="kp-cap" id="dSc">—</span>
       <div class="kp-ctl">
+        <span class="ctl-lbl">Объекты с нормами расхода</span>
+        <div class="seg wrap-seg" role="group" aria-label="Объекты штата">
+          <button data-own="bp" aria-pressed="true">Площадки</button>
+          <button data-own="inc" aria-pressed="true">Инкубаторий</button>
+        </div>
         <span class="ctl-lbl">Численность</span>
         <div class="seg wrap-seg" role="group" aria-label="Численность">
           <button data-head="2">2 дератизатора</button>
@@ -456,6 +461,18 @@ tr.hl td{background:var(--teal-wash);}
     </div>
 
     <div class="card">
+      <div class="chead"><h2>Материалы по объектам</h2><span class="hint">так же, как разбиты объекты у подрядчиков</span></div>
+      <div class="scroll">
+        <table style="min-width:780px;">
+          <thead><tr><th>Объект</th><th class="n">Точек</th><th class="n">Яды, мес. апр–окт</th><th class="n">Станции, мес. апр–окт</th><th class="n">Станции, мес. ноя–мар</th><th class="n">За год</th></tr></thead>
+          <tbody id="tbOwnObj"></tbody>
+          <tfoot id="tfOwnObj"></tfoot>
+        </table>
+      </div>
+      <div class="note" id="ownObjNote">—</div>
+    </div>
+
+    <div class="card">
       <div class="chead"><h2>Клеевые станции 3-го контура — зимний режим</h2><span class="hint">ноябрь — март обслуживание вдвое</span></div>
       <div class="tiles" id="glueTiles"></div>
       <div class="scroll">
@@ -543,17 +560,21 @@ tr.hl td{background:var(--teal-wash);}
 <script>
 /* ================= data ================= */
 const SITES=[
- {n:"Инкубаторий",   c1:18, c2:34,  c3:12, pk:1,   zc:1,  inc:true},
- {n:"Площадка А",    c1:13, c2:147, c3:20, pk:2,   zc:2},
- {n:"Площадка Б",    c1:17, c2:146, c3:20, pk:2,   zc:2},
- {n:"В / Восточка",  c1:50, c2:239, c3:30, pk:3.5, zc:3},
- {n:"Площадка Г",    c1:17, c2:88,  c3:80, pk:2,   zc:1},
- {n:"Площадка Д",    c1:15, c2:69,  c3:64, pk:1.5, zc:1},
- {n:"Площадка Е",    c1:13, c2:147, c3:20, pk:2,   zc:2},
- {n:"Площадка Ж",    c1:17, c2:73,  c3:10, pk:1,   zc:1},
- {n:"Айыртау (БП)",  c1:19, c2:187, c3:24, pk:3,   zc:3}
+ {n:"Инкубаторий",   c1:18, c2:34,  c3:12, pk:1,   zc:1,  grp:"inc"},
+ {n:"Площадка А",    c1:13, c2:147, c3:20, pk:2,   zc:2, grp:"bp"},
+ {n:"Площадка Б",    c1:17, c2:146, c3:20, pk:2,   zc:2, grp:"bp"},
+ {n:"В / Восточка",  c1:50, c2:239, c3:30, pk:3.5, zc:3, grp:"bp"},
+ {n:"Площадка Г",    c1:17, c2:88,  c3:80, pk:2,   zc:1, grp:"bp"},
+ {n:"Площадка Д",    c1:15, c2:69,  c3:64, pk:1.5, zc:1, grp:"bp"},
+ {n:"Площадка Е",    c1:13, c2:147, c3:20, pk:2,   zc:2, grp:"bp"},
+ {n:"Площадка Ж",    c1:17, c2:73,  c3:10, pk:1,   zc:1, grp:"bp"},
+ {n:"Айыртау (БП)",  c1:19, c2:187, c3:24, pk:3,   zc:3, grp:"bp"}
 ];
-const T=["c1","c2","c3","pk","zc"].reduce((a,k)=>(a[k]=SITES.reduce((s,x)=>s+x[k],0),a),{});
+const sums=list=>["c1","c2","c3","pk","zc"].reduce((a,k)=>(a[k]=list.reduce((s,x)=>s+x[k],0),a),{});
+const TALL=sums(SITES);
+let T=TALL;                       // пересчитывается по выбранным объектам
+/* Объекты, которые штат обслуживает за ту же зарплату, но нормы расхода по ним не заданы. */
+const NO_NORM=["ККЗ · кормоцех","ЗПП · завод по переработке птицы","Склад лузги","АБК"];
 
 const MONTHS=[
  {s:"Янв",w:true, lo:true},  {s:"Фев",w:true, lo:true},  {s:"Мар",w:true, lo:false},
@@ -582,6 +603,7 @@ let vat=false, head=4, tab="sum", show="period";
 let comp={pay:true, mat:true};
 let obj={kkz:true, bp:true, zpp:true, tmc:true};
 let ind={kkz:true, aer:true, mno:true, nap:true};
+let own={bp:true, inc:true};
 let indVar="full";
 
 /* ================= helpers ================= */
@@ -608,6 +630,7 @@ function setNum(el, value){
 /* ================= model ================= */
 function ukpf(hc){
   const h=hc||head;
+  T=sums(SITES.filter(x=>own[x.grp]));
   const per=num("iSalary"), salary=per*h, pZ=num("iZerno"), pPK=num("iPk"),
         pSt=num("iStation"), pB=num("iBottlePrice"), nB=num("iBottles");
   const mk=w=>{
@@ -679,7 +702,9 @@ function render(){
   const compL=[comp.pay&&"зарплата", comp.mat&&"яды и станции"].filter(Boolean);
   document.getElementById("dSc").textContent =
     `${head} чел. · ${compL.length?compL.join(" + "):"ничего не выбрано"} · ${perL}`;
+  const ownL=[own.bp&&"площадки", own.inc&&"инкубаторий"].filter(Boolean);
   document.querySelectorAll("[data-comp]").forEach(b=>b.setAttribute("aria-pressed",String(comp[b.dataset.comp])));
+  document.querySelectorAll("[data-own]").forEach(b=>b.setAttribute("aria-pressed",String(own[b.dataset.own])));
 
   const diff=t.hunter-t.staff;
   document.getElementById("strip").innerHTML = t.n===0
@@ -714,7 +739,7 @@ function render(){
     [money(t.staff/div), "обходится собственная служба "+(show==="month"?"в месяц":per)],
     [money(t.hunter/div), "выставляет Pest Hunters "+(show==="month"?"в месяц":per)],
     [money(Math.abs(diff2)/div), diff2>0?"экономия при своём штате":"переплата при своём штате"],
-    [int(T.c1+T.c2+T.c3)+" точек","обслуживает штат на 9 объектах"]
+    [int(T.c1+T.c2+T.c3)+" точек","с нормами расхода: "+(ownL.length?ownL.join(" и "):"объекты не выбраны")]
   ].map(x=>`<div class="tile"><span class="tv n">${x[0]}</span><span class="tl">${x[1]}</span></div>`).join("");
   document.getElementById("summary").innerHTML = t.n===0
     ? "Выберите хотя бы один месяц — суммы появятся сразу."
@@ -804,6 +829,25 @@ function render(){
     `<tr><td>Итого</td><td></td><td></td><td>${money(u.s.total)}</td><td>${money(u.w.total)}</td>
       <td>${money(t.staff)}</td><td>${money(u.s.total*WARM+u.w.total*COLD)}</td></tr>`;
 
+  /* materials per object group */
+  const GRP=[["bp","Бройлерные площадки · 8 шт"],["inc","Инкубаторий"]];
+  document.getElementById("tbOwnObj").innerHTML=GRP.map(([k,label])=>{
+    const g=sums(SITES.filter(x=>x.grp===k));
+    const poison=g.zc*u.pZ+g.pk*u.pPK, stS=g.c3*u.pSt, stW=g.c3*2*u.pSt;
+    const year=poison*WARM+stS*WARM+stW*COLD;
+    return `<tr class="${own[k]?"":"off"}"><td>${label}</td><td class="n">${int(g.c1+g.c2+g.c3)}</td>
+      <td class="n">${money(poison)}</td><td class="n">${money(stS)}</td><td class="n">${money(stW)}</td>
+      <td class="n">${own[k]?money(year):dashS}</td></tr>`;
+  }).join("")
+   + NO_NORM.map(n=>`<tr><td>${n}</td><td class="n">${dashS}</td><td class="n">${dashS}</td>
+      <td class="n">${dashS}</td><td class="n">${dashS}</td><td class="n">${dashS}</td></tr>`).join("");
+  document.getElementById("tfOwnObj").innerHTML=
+    `<tr><td>Итого по включённым</td><td>${int(T.c1+T.c2+T.c3)}</td><td>${money(u.s.zc+u.s.pk)}</td>
+      <td>${money(u.s.st)}</td><td>${money(u.w.st)}</td>
+      <td>${money((u.s.zc+u.s.pk+u.s.bot)*WARM+u.s.st*WARM+u.w.st*COLD)}</td></tr>`;
+  document.getElementById("ownObjNote").innerHTML =
+    `Зарплата ${head} дератизаторов не делится по объектам — она фиксирована и покрывает все 13 объектов сразу, включая ККЗ, ЗПП, склад лузги и АБК. Делятся только материалы, и переключатели в карточке штата убирают из расчёта именно их. По ККЗ, ЗПП, складу лузги и АБК нормы расхода ядов и станций пока не заданы, поэтому в деньгах они дают ноль — если дадите нормы, встанут в расчёт так же, как площадки и инкубаторий. Бутылки (${int(u.s.bottles)} шт/мес) в разбивку по объектам не разносятся и учтены в годовой сумме.`;
+
   /* glue stations, winter doubling */
   const glueS=T.c3, glueW=T.c3*2;
   document.getElementById("tbGlue").innerHTML=[
@@ -841,8 +885,10 @@ function render(){
 
   /* data tab */
   document.getElementById("tbSites").innerHTML=SITES.map(x=>
-    `<tr class="${x.inc?"hl":""}"><td>${x.n}</td><td class="n">${x.c1}</td><td class="n">${x.c2}</td><td class="n">${x.c3}</td>
-      <td class="n">${x.c1+x.c2+x.c3}</td><td class="n">${x.pk?kg(x.pk):dashS}</td><td class="n">${x.zc?kg(x.zc):dashS}</td></tr>`).join("");
+    `<tr class="${x.grp==="inc"?"hl":""} ${own[x.grp]?"":"off"}"><td>${x.n}</td><td class="n">${x.c1}</td><td class="n">${x.c2}</td><td class="n">${x.c3}</td>
+      <td class="n">${x.c1+x.c2+x.c3}</td><td class="n">${x.pk?kg(x.pk):dashS}</td><td class="n">${x.zc?kg(x.zc):dashS}</td></tr>`).join("")
+   + NO_NORM.map(n=>`<tr><td>${n}</td><td class="n">${dashS}</td><td class="n">${dashS}</td><td class="n">${dashS}</td>
+      <td class="n">${dashS}</td><td class="n">${dashS}</td><td class="n">${dashS}</td></tr>`).join("");
   document.getElementById("tfSites").innerHTML=
     `<tr><td>Итого</td><td>${T.c1}</td><td>${T.c2}</td><td>${T.c3}</td><td>${T.c1+T.c2+T.c3}</td>
       <td>${kg(T.pk)}</td><td>${kg(T.zc)}</td></tr>`;
@@ -901,6 +947,7 @@ document.querySelectorAll("[data-obj]").forEach(b=>b.addEventListener("click",()
 }));
 document.querySelectorAll("[data-head]").forEach(b=>b.addEventListener("click",()=>{head=+b.dataset.head; render();}));
 document.querySelectorAll("[data-comp]").forEach(b=>b.addEventListener("click",()=>{comp[b.dataset.comp]=!comp[b.dataset.comp]; render();}));
+document.querySelectorAll("[data-own]").forEach(b=>b.addEventListener("click",()=>{own[b.dataset.own]=!own[b.dataset.own]; render();}));
 ["iSalary","iZerno","iPk","iStation","iBottlePrice","iBottles"].forEach(id=>
   document.getElementById(id).addEventListener("input",render));
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
