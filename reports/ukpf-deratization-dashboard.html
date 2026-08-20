@@ -262,7 +262,7 @@ tr.hl td{background:var(--teal-wash);}
         </div>
       </div>
       <h1>Сравнение дератизации</h1>
-      <p class="lede">Подрядчики против собственной службы. Выберите период — все суммы пересчитаются.</p>
+      <p class="lede">Выберите период — все суммы пересчитаются.</p>
     </div>
     <div class="tabs" role="tablist" aria-label="Разделы">
       <button class="tab" role="tab" data-tab="sum" aria-selected="true">Итог</button>
@@ -284,6 +284,8 @@ tr.hl td{background:var(--teal-wash);}
         <button class="pill" data-preset="winter" aria-pressed="false">Ноябрь — март</button>
       </div>
       <div class="pills">
+        <button class="pill" data-show="month" aria-pressed="false">В месяц</button>
+        <button class="pill" data-show="period" aria-pressed="true">За период</button>
         <button class="pill" id="btnMonths" aria-pressed="false">Выбрать месяцы</button>
         <button class="pill" id="btnVat" aria-pressed="false">НДС 16 %</button>
       </div>
@@ -578,7 +580,7 @@ const WARM=MONTHS.filter(m=>!m.w).length;   // апрель — октябрь
 const COLD=MONTHS.length-WARM;              // ноябрь — март
 
 let picked=new Set(MONTHS.map((_,i)=>i));
-let vat=false, head=4, tab="sum";
+let vat=false, head=4, tab="sum", show="period";
 let comp={pay:true, mat:true};
 let obj={kkz:true, bp:true, zpp:true, tmc:true};
 let ind={kkz:true, aer:true, mno:true, nap:true};
@@ -644,6 +646,11 @@ function render(){
   const t=totals(), u=t.u;
   const pay=comp.pay?u.salary*t.n:0, mat=comp.mat?(u.s.mat*t.nS+u.w.mat*t.nW):0;
   const per=t.n===12?"за полный год":`за ${t.n} мес`;
+  const div=show==="month"?(t.n||1):1;
+  const perL=show==="month"
+    ? (t.n===12?"в среднем за месяц года":`в среднем за месяц из выбранных ${t.n}`)
+    : per;
+  document.querySelectorAll("[data-show]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.show===show)));
 
   /* period bar */
   document.querySelectorAll(".mo").forEach(b=>b.setAttribute("aria-pressed",String(picked.has(+b.dataset.m))));
@@ -658,30 +665,30 @@ function render(){
     th.textContent = t.n===12 ? "За 12 мес (год)" : `За выбранные ${t.n} мес`);
 
   /* three KP cards */
-  setNum(document.getElementById("dI"), t.indigo);
+  setNum(document.getElementById("dI"), t.indigo/div);
   document.querySelectorAll("[data-ind]").forEach(b=>b.setAttribute("aria-pressed",String(ind[b.dataset.ind])));
   document.querySelectorAll("[data-var]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.var===indVar)));
   const indOn=IND.filter(x=>ind[x.k]);
   document.getElementById("dIc").textContent =
     (indOn.length?indOn.length+" из 4 групп объектов":"объекты не выбраны")+" · "
-    +(indVar==="full"?"полная замена оборудования":"частичная замена оборудования")+" · "+per;
-  setNum(document.getElementById("dH"), t.hunter);
-  setNum(document.getElementById("dS"), t.staff);
+    +(indVar==="full"?"полная замена оборудования":"частичная замена оборудования")+" · "+perL;
+  setNum(document.getElementById("dH"), t.hunter/div);
+  setNum(document.getElementById("dS"), t.staff/div);
   const onNames=[obj.kkz&&"ККЗ", obj.bp&&"площадки", obj.zpp&&"ЗПП", obj.tmc&&"склад ТМЦ"].filter(Boolean);
   document.getElementById("dHc").textContent =
-    (onNames.length?onNames.join(", "):"объекты не выбраны")+" · "+per+(vat?" · с НДС 16 %":" · без НДС");
+    (onNames.length?onNames.join(", "):"объекты не выбраны")+" · "+perL+(vat?" · с НДС 16 %":" · без НДС");
   const compL=[comp.pay&&"зарплата", comp.mat&&"яды и станции"].filter(Boolean);
   document.getElementById("dSc").textContent =
-    `${head} чел. · ${compL.length?compL.join(" + "):"ничего не выбрано"} · ${per}`;
+    `${head} чел. · ${compL.length?compL.join(" + "):"ничего не выбрано"} · ${perL}`;
   document.querySelectorAll("[data-comp]").forEach(b=>b.setAttribute("aria-pressed",String(comp[b.dataset.comp])));
 
   const diff=t.hunter-t.staff;
   document.getElementById("strip").innerHTML = t.n===0
     ? "Выберите хотя бы один месяц."
-    : `Pest Hunters за ${t.n===12?"год":"период"} — <b>${money(t.hunter)}</b>, собственная служба из ${head} человек — <b>${money(t.staff)}</b>.` +
-      (diff>0 ? ` Разница в пользу штата <b>${money(diff)}</b>, это <b>${(t.hunter/(t.staff||1)).toFixed(1).replace(".",",")}×</b>.`
-              : ` Подрядчик выходит дешевле на <b>${money(-diff)}</b>.`) +
-      ` Indigo — <b>${money(t.indigo)}</b> за ${indOn.length} из четырёх групп объектов.`;
+    : `Pest Hunters ${show==="month"?"в среднем за месяц":"за "+(t.n===12?"год":"период")} — <b>${money(t.hunter/div)}</b>, собственная служба из ${head} человек — <b>${money(t.staff/div)}</b>.` +
+      (diff>0 ? ` Разница в пользу штата <b>${money(diff/div)}</b>, это <b>${(t.hunter/(t.staff||1)).toFixed(1).replace(".",",")}×</b>.`
+              : ` Подрядчик выходит дешевле на <b>${money(-diff/div)}</b>.`) +
+      ` Indigo — <b>${money(t.indigo/div)}</b> за ${indOn.length} из четырёх групп объектов.`;
 
   /* bars */
   const max=Math.max(t.hunter,t.staff,t.indigo,1);
@@ -691,23 +698,23 @@ function render(){
       <span class="btrack"><span class="bstack" style="width:${w(t.staff)}">
         <span class="bseg" style="width:${t.staff?(pay/t.staff*100).toFixed(2):0}%;background:var(--teal)"></span>
         <span class="bseg" style="width:${t.staff?(mat/t.staff*100).toFixed(2):0}%;background:color-mix(in srgb, var(--teal) 40%, var(--card))"></span>
-      </span></span><span class="amt">${money(t.staff)}</span></div>
+      </span></span><span class="amt">${money(t.staff/div)}</span></div>
     <div class="brow"><span>Pest Hunters<span class="sub">${onNames.length?onNames.join(" + "):"объекты не выбраны"}, 1–3 обхода/мес</span></span>
       <span class="btrack"><span class="bstack" style="width:${w(t.hunter)}">
         <span class="bseg" style="width:100%;background:var(--clay)"></span></span></span>
-      <span class="amt">${money(t.hunter)}</span></div>
+      <span class="amt">${money(t.hunter/div)}</span></div>
     <div class="brow"><span>Indigo Solutions<span class="sub">ККЗ + бройлерные площадки, периодичность в КП не указана</span></span>
       <span class="btrack"><span class="bstack" style="width:${w(t.indigo)}">
         <span class="bseg" style="width:100%;background:var(--plum)"></span></span></span>
-      <span class="amt">${money(t.indigo)}</span></div>`;
-  document.getElementById("sumHint").textContent = per+(vat?" · цены подрядчика с НДС 16 %":" · цены подрядчика без НДС");
+      <span class="amt">${money(t.indigo/div)}</span></div>`;
+  document.getElementById("sumHint").textContent = perL+(vat?" · цены подрядчика с НДС 16 %":" · цены подрядчика без НДС");
 
   /* summary tiles */
   const diff2=diff;
   document.getElementById("tiles").innerHTML=[
-    [money(t.staff),"обходится собственная служба"],
-    [money(t.hunter),"выставляет Pest Hunters"],
-    [money(Math.abs(diff2)), diff2>0?"экономия при своём штате":"переплата при своём штате"],
+    [money(t.staff/div), "обходится собственная служба "+(show==="month"?"в месяц":per)],
+    [money(t.hunter/div), "выставляет Pest Hunters "+(show==="month"?"в месяц":per)],
+    [money(Math.abs(diff2)/div), diff2>0?"экономия при своём штате":"переплата при своём штате"],
     [int(T.c1+T.c2+T.c3)+" точек","обслуживает штат на 9 объектах"]
   ].map(x=>`<div class="tile"><span class="tv n">${x[0]}</span><span class="tl">${x[1]}</span></div>`).join("");
   document.getElementById("summary").innerHTML = t.n===0
@@ -893,6 +900,7 @@ btnM.addEventListener("click",()=>{
   open?moBox.removeAttribute("hidden"):moBox.setAttribute("hidden","");
   btnM.setAttribute("aria-pressed",String(open));
 });
+document.querySelectorAll("[data-show]").forEach(b=>b.addEventListener("click",()=>{show=b.dataset.show; render();}));
 document.getElementById("btnVat").addEventListener("click",()=>{vat=!vat; render();});
 document.querySelectorAll("[data-ind]").forEach(b=>b.addEventListener("click",()=>{
   ind[b.dataset.ind]=!ind[b.dataset.ind]; render();
