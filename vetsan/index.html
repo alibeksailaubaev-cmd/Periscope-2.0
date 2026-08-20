@@ -1,0 +1,1113 @@
+<title>Акт мойки ЗПП</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ============ ТОКЕНЫ: фирменный стиль aitas ukpf ============ */
+:root{
+  --sand:#E7DEC2; --sand-2:#DDD2B0; --sand-3:#CFC199;
+  --panel:rgba(255,252,243,.78); --panel-solid:#FBF7EC; --edge:rgba(20,32,31,.14);
+  --ink:#14201F; --ink-2:#5A6763; --ink-3:#8A9490;
+  --teal:#009B98; --teal-2:#00807D; --teal-hi:#00C9C3; --teal-soft:rgba(0,155,152,.12);
+  --amber:#B8790E; --orange:#C85D1B; --red:#BE3626;
+  --glow:0 0 0 1px rgba(0,155,152,.18), 0 18px 40px -22px rgba(20,32,31,.55);
+  --grain:.055; --tile:#009B98; --tile-ink:#E7DEC2; --blend:multiply; --aur:.55;
+  --shadow-1:0 1px 2px rgba(20,32,31,.06),0 8px 24px -16px rgba(20,32,31,.5);
+  --radius:16px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --sand:#0B100F; --sand-2:#121A19; --sand-3:#1B2523;
+    --panel:rgba(20,29,28,.82); --panel-solid:#141D1C; --edge:rgba(231,222,194,.14);
+    --ink:#EDE4CA; --ink-2:#9FAAA5; --ink-3:#6E7B77;
+    --teal:#18CFC7; --teal-2:#0FB1AA; --teal-hi:#5CF2EA; --teal-soft:rgba(24,207,199,.13);
+    --amber:#E0A63A; --orange:#EE8544; --red:#F4695A;
+    --grain:.09; --tile:#0F9E99; --tile-ink:#08110F; --blend:screen; --aur:.3;
+    --shadow-1:0 1px 2px rgba(0,0,0,.5),0 18px 40px -24px #000;
+    --glow:0 0 0 1px rgba(24,207,199,.22), 0 20px 44px -22px #000;
+  }
+}
+:root[data-theme="dark"]{
+  --sand:#0B100F; --sand-2:#121A19; --sand-3:#1B2523;
+  --panel:rgba(20,29,28,.82); --panel-solid:#141D1C; --edge:rgba(231,222,194,.14);
+  --ink:#EDE4CA; --ink-2:#9FAAA5; --ink-3:#6E7B77;
+  --teal:#18CFC7; --teal-2:#0FB1AA; --teal-hi:#5CF2EA; --teal-soft:rgba(24,207,199,.13);
+  --amber:#E0A63A; --orange:#EE8544; --red:#F4695A;
+  --grain:.09; --tile:#0F9E99; --tile-ink:#08110F; --blend:screen; --aur:.3;
+  --shadow-1:0 1px 2px rgba(0,0,0,.5),0 18px 40px -24px #000;
+  --glow:0 0 0 1px rgba(24,207,199,.22), 0 20px 44px -22px #000;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;scroll-padding-top:126px}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:6px}
+body{
+  margin:0;background:var(--sand);color:var(--ink);
+  font-family:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.45;overflow-x:hidden;
+}
+/* фоновая атмосфера */
+.aurora{position:fixed;inset:-20% -20% auto -20%;height:120vh;pointer-events:none;z-index:0;filter:blur(60px);opacity:var(--aur)}
+.aurora i{position:absolute;display:block;border-radius:50%;mix-blend-mode:var(--blend)}
+.aurora i:nth-child(1){width:60vw;height:60vw;left:-10vw;top:2vh;background:radial-gradient(circle,rgba(0,155,152,.42),transparent 68%);animation:drift1 24s ease-in-out infinite}
+.aurora i:nth-child(2){width:52vw;height:52vw;right:-14vw;top:26vh;background:radial-gradient(circle,rgba(0,201,195,.32),transparent 68%);animation:drift2 31s ease-in-out infinite}
+.aurora i:nth-child(3){width:44vw;height:44vw;left:18vw;top:58vh;background:radial-gradient(circle,rgba(207,193,153,.55),transparent 70%);animation:drift3 27s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(6vw,6vh,0) scale(1.16)}}
+@keyframes drift2{0%,100%{transform:translate3d(0,0,0) scale(1.08)}50%{transform:translate3d(-7vw,-5vh,0) scale(.94)}}
+@keyframes drift3{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-5vw,4vh,0)}}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:var(--grain);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ============ Орнаментальная лента (фирменный левый край) ============ */
+.rail{position:fixed;left:0;top:0;bottom:0;width:30px;z-index:5;overflow:hidden;background:transparent}
+.rail .strip{display:flex;flex-direction:column;animation:railScroll 90s linear infinite}
+.rail svg{display:block;width:30px;height:30px;flex:none}
+.rail .tile-f{background:var(--tile)}
+.rail .tile-o{background:transparent}
+@keyframes railScroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+
+/* ============ Каркас ============ */
+.wrap{position:relative;z-index:2;max-width:560px;margin:0 auto;padding:0 14px 132px 40px}
+@media(min-width:620px){.wrap{padding-left:14px}}
+.reveal{opacity:0;transform:translateY(14px);animation:up .62s cubic-bezier(.2,.7,.25,1) forwards}
+@keyframes up{to{opacity:1;transform:none}}
+
+/* Шапка */
+.brand{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 2px 12px}
+.logo{font-family:"Unbounded",sans-serif;font-weight:600;font-style:italic;font-size:19px;letter-spacing:-.02em;line-height:1}
+.logo small{display:block;font-family:"JetBrains Mono",monospace;font-style:normal;font-weight:400;
+  font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2);margin-top:5px}
+.form-id{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.12em;color:var(--ink-2);text-align:right;text-transform:uppercase}
+.form-id b{display:block;color:var(--teal);font-weight:500}
+h1{font-family:"Unbounded",sans-serif;font-size:23px;line-height:1.14;font-weight:600;letter-spacing:-.035em;
+  margin:2px 0 4px;text-wrap:balance}
+.sub{color:var(--ink-2);font-size:12.5px;margin:0 0 16px}
+
+/* ============ Приборная панель ============ */
+.deck{position:relative;z-index:2;margin:0 -4px 14px}
+.panel{background:var(--panel);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
+  border:1px solid var(--edge);border-radius:var(--radius);box-shadow:var(--shadow-1)}
+.score-row{display:flex;align-items:stretch;gap:0;padding:12px 14px}
+.score-main{flex:1;min-width:0}
+.lbl{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.odo{display:flex;align-items:baseline;gap:1px;font-family:"Unbounded",sans-serif;font-weight:700;
+  font-size:46px;line-height:1;letter-spacing:-.05em;height:46px;overflow:hidden;margin-top:5px;
+  color:var(--sc);transition:color .5s ease}
+.odo .col{height:46px;overflow:hidden;width:.62em}
+.odo .col u{display:block;height:46px;text-decoration:none;text-align:center;
+  transition:transform .7s cubic-bezier(.16,1,.3,1)}
+.odo .dot{width:.3em;text-align:center}
+.odo.bump{animation:bump .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.055)}100%{transform:scale(1)}}
+.score-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.04em;padding:3px 8px;border-radius:999px;
+  border:1px solid var(--edge);color:var(--ink-2);background:var(--teal-soft);white-space:nowrap}
+.chip.bad{color:var(--red);border-color:color-mix(in oklab,var(--red) 40%,transparent);background:color-mix(in oklab,var(--red) 10%,transparent)}
+.gauge{width:88px;flex:none;display:grid;place-items:center;position:relative}
+.gauge svg{transform:rotate(-90deg)}
+.gauge .track{stroke:var(--edge)}
+.gauge .bar{stroke:var(--sc);transition:stroke-dashoffset .8s cubic-bezier(.16,1,.3,1),stroke .5s}
+.gauge .cap{position:absolute;font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.08em;color:var(--ink-2);text-align:center;line-height:1.25}
+.gauge .cap b{display:block;color:var(--ink);font-size:13px;font-weight:700}
+
+/* Хронометраж */
+.timer{border-top:1px solid var(--edge);padding:12px 14px 14px}
+.clock{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.digits{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:34px;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1;display:flex;align-items:center;gap:2px}
+.digits .sep{transition:opacity .2s}
+.running .digits .sep{animation:tick 1s steps(1,end) infinite}
+@keyframes tick{0%,50%{opacity:1}51%,100%{opacity:.22}}
+.pulsedot{width:8px;height:8px;border-radius:50%;background:var(--red);flex:none;box-shadow:0 0 0 0 color-mix(in oklab,var(--red) 60%,transparent)}
+.running .pulsedot{animation:live 1.6s ease-out infinite}
+@keyframes live{0%{box-shadow:0 0 0 0 color-mix(in oklab,var(--red) 55%,transparent)}70%{box-shadow:0 0 0 12px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.stamps{display:flex;gap:8px;margin-top:10px}
+.stamp{flex:1;border:1px dashed var(--edge);border-radius:11px;padding:7px 9px;min-width:0}
+.stamp .lbl{margin-bottom:2px}
+.stamp b{font-family:"JetBrains Mono",monospace;font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+.tbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.big{position:relative;overflow:hidden;border:0;border-radius:14px;padding:17px 10px;cursor:pointer;
+  font-family:"Unbounded",sans-serif;font-weight:600;font-size:14px;letter-spacing:-.01em;color:#fff;
+  display:flex;flex-direction:column;align-items:center;gap:7px;min-height:78px;justify-content:center;
+  transition:transform .18s cubic-bezier(.2,.7,.3,1),opacity .45s ease,filter .45s ease,box-shadow .3s}
+.big svg{width:24px;height:24px}
+.big:active{transform:scale(.955)}
+.big:disabled{cursor:default;opacity:.34;filter:grayscale(.75) saturate(.4);transform:none}
+.big .sheen{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.34) 47%,transparent 62%);
+  transform:translateX(-120%)}
+.big:not(:disabled) .sheen{animation:sheen 3.6s ease-in-out infinite}
+@keyframes sheen{0%,62%{transform:translateX(-120%)}88%,100%{transform:translateX(120%)}}
+.b-start{background:linear-gradient(150deg,var(--teal-hi),var(--teal-2));box-shadow:0 12px 30px -14px var(--teal)}
+.b-stop{background:linear-gradient(150deg,#E0503C,#A82718);box-shadow:0 12px 30px -14px #A82718}
+.b-stop:not(:disabled){animation:calling 1.9s ease-in-out infinite}
+@keyframes calling{0%,100%{box-shadow:0 12px 30px -16px #A82718,0 0 0 0 rgba(224,80,60,.42)}55%{box-shadow:0 12px 34px -12px #A82718,0 0 0 13px rgba(224,80,60,0)}}
+.note{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.06em;color:var(--ink-3);margin-top:9px;text-align:center}
+
+/* Реквизиты акта */
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.f{background:var(--panel);border:1px solid var(--edge);border-radius:12px;padding:8px 11px}
+.f.wide{grid-column:1/-1}
+.f input,.f select{width:100%;border:0;background:transparent;color:var(--ink);font:inherit;font-size:14px;padding:2px 0 0;outline:none}
+.f:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+
+/* Вкладки зон */
+.tabs{position:sticky;top:56px;z-index:15;scroll-margin-top:64px;display:grid;
+  grid-template-columns:repeat(3,1fr);gap:7px;padding:9px 0 10px;margin-bottom:2px;background:var(--sand)}
+.tab{border:1px solid var(--edge);background:var(--panel);color:var(--ink-2);cursor:pointer;
+  padding:8px 10px;border-radius:13px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;
+  text-align:left;transition:transform .16s,background .35s,color .35s,border-color .35s}
+.tab:active{transform:scale(.95)}
+.tab .tn{display:flex;align-items:center;gap:5px;font-family:"JetBrains Mono",monospace;font-size:8.5px;
+  letter-spacing:.1em;text-transform:uppercase;line-height:1.25}
+.tab b{font-family:"Unbounded",sans-serif;font-weight:600;font-size:15px;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;color:var(--sc)}
+.tab.on{background:var(--ink);color:var(--sand);border-color:var(--ink)}
+.tab.on b{color:var(--sand)}
+.tab .dt{width:6px;height:6px;border-radius:50%;background:var(--sc,var(--teal));flex:none}
+
+/* Компактная шина при прокрутке */
+.topbar{position:fixed;left:0;right:0;top:0;z-index:40;transform:translateY(-102%);
+  transition:transform .45s cubic-bezier(.2,.8,.25,1),box-shadow .4s;
+  background:var(--panel-solid);border-bottom:1px solid var(--edge);
+  box-shadow:0 10px 30px -22px rgba(0,0,0,.7)}
+.topbar.on{transform:none}
+.topbar-in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:11px;padding:8px 12px 8px 40px;height:56px}
+@media(min-width:620px){.topbar-in{padding-left:12px}}
+.topbar .bs{font-family:"Unbounded",sans-serif;font-weight:700;font-size:21px;letter-spacing:-.04em;
+  color:var(--sc);font-variant-numeric:tabular-nums;transition:color .5s;min-width:62px}
+.topbar .bs em{display:block;font-family:"JetBrains Mono",monospace;font-style:normal;font-size:7.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:400;margin-top:1px}
+.topbar .bt{flex:1;font-family:"JetBrains Mono",monospace;font-weight:700;font-size:17px;
+  font-variant-numeric:tabular-nums;color:var(--ink-2);display:flex;align-items:center;gap:7px}
+.topbar.live .bt{color:var(--ink)}
+.topbar.live .bt .sep{animation:tick 1s steps(1,end) infinite}
+.topbar .bb{border:0;border-radius:11px;padding:11px 15px;font-family:"Unbounded",sans-serif;font-weight:600;
+  font-size:11.5px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:7px;flex:none;
+  transition:transform .16s}
+.topbar .bb:active{transform:scale(.93)}
+.topbar .bb svg{width:14px;height:14px}
+.topbar .bb.go{background:linear-gradient(150deg,var(--teal-hi),var(--teal-2))}
+.topbar .bb.fin{background:linear-gradient(150deg,#E0503C,#A82718);animation:calling 1.9s ease-in-out infinite}
+.topbar .bb.done{background:var(--sand-3);color:var(--ink);cursor:default;animation:none}
+.sec{scroll-margin-top:120px}
+
+/* Поиск */
+.search{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--edge);
+  border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.search svg{width:16px;height:16px;color:var(--ink-3);flex:none}
+.search input{flex:1;border:0;background:transparent;font:inherit;font-size:14px;color:var(--ink);outline:none;min-width:0}
+.search:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
+
+/* Секция-участок */
+.sec{margin-bottom:12px;border:1px solid var(--edge);border-radius:var(--radius);overflow:hidden;background:var(--panel)}
+.sec-h{display:flex;align-items:center;gap:10px;padding:13px 13px;cursor:pointer;user-select:none;
+  background:var(--panel-solid);border:0;width:100%;text-align:left;color:inherit;font:inherit}
+.sec-h:active{background:var(--teal-soft)}
+.sec-h .nm{flex:1;min-width:0;font-weight:600;font-size:14.5px;letter-spacing:-.01em}
+.sec-h .nm span{display:block;font-family:"JetBrains Mono",monospace;font-weight:400;font-size:9px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.sec-avg{font-family:"Unbounded",sans-serif;font-weight:600;font-size:17px;color:var(--sc);
+  font-variant-numeric:tabular-nums;transition:color .4s}
+.sec-h .chev{width:18px;height:18px;color:var(--ink-3);transition:transform .38s cubic-bezier(.2,.8,.25,1)}
+.sec.open .chev{transform:rotate(180deg)}
+.sec-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.8,.25,1)}
+.sec.open .sec-body{grid-template-rows:1fr}
+.sec-body>div{overflow:hidden;min-height:0}
+
+/* Строка критерия */
+.row{border-top:1px solid var(--edge);padding:11px 13px;transition:background .35s}
+.row.flag{background:color-mix(in oklab,var(--red) 7%,transparent)}
+.row-top{display:flex;align-items:center;gap:11px}
+.row .idx{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-3);width:26px;flex:none;
+  font-variant-numeric:tabular-nums}
+.row .ttl{flex:1;min-width:0;font-size:13.5px;line-height:1.32}
+.stepper{display:flex;align-items:center;gap:3px;flex:none}
+.sbtn{width:36px;height:36px;border-radius:11px;border:1px solid var(--edge);background:var(--panel-solid);
+  color:var(--ink);display:grid;place-items:center;cursor:pointer;transition:transform .14s,background .25s,border-color .25s}
+.sbtn svg{width:17px;height:17px}
+.sbtn:active{transform:scale(.86)}
+.sbtn:disabled{opacity:.3;cursor:default}
+.sbtn.minus:not(:disabled):hover{border-color:var(--red);color:var(--red)}
+.sbtn.plus:not(:disabled):hover{border-color:var(--teal);color:var(--teal)}
+.val{width:36px;text-align:center;font-family:"Unbounded",sans-serif;font-weight:700;font-size:19px;
+  color:var(--sc);font-variant-numeric:tabular-nums;transition:color .4s ease}
+.val.hit{animation:hit .42s cubic-bezier(.2,1.5,.4,1)}
+@keyframes hit{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-4px) scale(1.22)}100%{transform:translateY(0) scale(1)}}
+
+/* Раскрывающийся блок несоответствия */
+.def{display:grid;grid-template-rows:0fr;transition:grid-template-rows .42s cubic-bezier(.2,.8,.25,1)}
+.row.flag .def{grid-template-rows:1fr}
+.def>div{overflow:hidden;min-height:0}
+.def-in{padding:11px 0 3px 37px;display:flex;flex-direction:column;gap:8px}
+.def textarea{width:100%;resize:vertical;min-height:62px;border-radius:11px;padding:9px 11px;font:inherit;font-size:13.5px;
+  color:var(--ink);background:var(--panel-solid);border:1.5px solid var(--red);outline:none;
+  box-shadow:0 0 0 0 color-mix(in oklab,var(--red) 45%,transparent);animation:redglow 2.4s ease-in-out infinite}
+.def textarea:focus{animation:none;box-shadow:0 0 0 4px color-mix(in oklab,var(--red) 20%,transparent)}
+.def textarea.ok{border-color:var(--teal);animation:none;box-shadow:none}
+.def textarea::placeholder{color:var(--ink-3)}
+@keyframes redglow{0%,100%{box-shadow:0 0 0 0 color-mix(in oklab,var(--red) 34%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in oklab,var(--red) 5%,transparent)}}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.q{border:1px solid var(--edge);background:transparent;color:var(--ink-2);font:inherit;font-size:11.5px;
+  padding:5px 10px;border-radius:999px;cursor:pointer;transition:transform .14s,border-color .25s,color .25s}
+.q:active{transform:scale(.92)}
+.q.on{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mini label{border:1px solid var(--edge);border-radius:10px;padding:6px 9px;background:var(--panel-solid);display:block}
+.mini input{width:100%;border:0;background:transparent;font:inherit;font-size:13px;color:var(--ink);outline:none;padding-top:1px}
+.mds{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
+.mds input{appearance:none;width:19px;height:19px;border:1.5px solid var(--edge);border-radius:6px;cursor:pointer;
+  display:grid;place-items:center;transition:background .22s,border-color .22s}
+.mds input:checked{background:var(--red);border-color:var(--red)}
+.mds input:checked::after{content:"";width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(42deg) translate(-1px,-1px)}
+
+/* Итоги по зонам */
+.totals{border:1px solid var(--edge);border-radius:var(--radius);background:var(--panel);padding:4px 13px 8px;margin:16px 0 8px}
+.tot{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--edge)}
+.tot:last-child{border-bottom:0}
+.tot .n{flex:1;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.tot .bar{width:74px;height:5px;border-radius:3px;background:var(--edge);overflow:hidden;flex:none}
+.tot .bar i{display:block;height:100%;border-radius:3px;background:var(--sc);transition:width .7s cubic-bezier(.16,1,.3,1),background .4s}
+.tot .v{width:46px;text-align:right;font-family:"Unbounded",sans-serif;font-weight:600;font-size:15px;color:var(--sc);font-variant-numeric:tabular-nums}
+.tot.grand .n{color:var(--ink);font-weight:500}
+
+/* Нижняя панель */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(10px + env(safe-area-inset-bottom)) 40px;
+  background:linear-gradient(transparent,var(--sand) 34%);pointer-events:none}
+@media(min-width:620px){.dock{padding-left:14px}}
+.dock-in{max-width:532px;margin:0 auto;pointer-events:auto;display:flex;gap:10px;align-items:center}
+.send{flex:1;border:0;border-radius:15px;padding:17px 14px;cursor:pointer;
+  background:linear-gradient(120deg,var(--ink),color-mix(in oklab,var(--ink) 72%,var(--teal)));
+  font-family:"Unbounded",sans-serif;font-weight:600;font-size:14.5px;letter-spacing:-.01em;
+  display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:var(--glow);
+  transition:transform .18s cubic-bezier(.2,.7,.3,1)}
+.send{color:var(--sand)}
+.send:active{transform:scale(.965)}
+.send svg{width:20px;height:20px}
+.ghost{border:1px solid var(--edge);background:var(--panel);color:var(--ink);border-radius:15px;
+  width:54px;height:54px;display:grid;place-items:center;cursor:pointer;transition:transform .16s}
+.ghost:active{transform:scale(.92)}
+.ghost svg{width:19px;height:19px}
+
+/* Оверлей сканирования */
+.scan{position:fixed;inset:0;z-index:60;display:none;place-items:center;background:color-mix(in oklab,var(--sand) 86%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.scan.on{display:grid;animation:fade .35s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.scan-box{width:min(340px,84vw);text-align:center}
+.doc{position:relative;height:190px;border:1px solid var(--edge);border-radius:14px;overflow:hidden;
+  background:var(--panel-solid);box-shadow:var(--glow)}
+.doc .ln{position:absolute;left:14px;height:7px;border-radius:4px;background:var(--edge)}
+.doc .beam{position:absolute;left:0;right:0;height:64px;top:-64px;
+  background:linear-gradient(transparent,color-mix(in oklab,var(--teal) 30%,transparent),transparent);
+  border-bottom:1.5px solid var(--teal);box-shadow:0 0 26px var(--teal);animation:beam 1.15s cubic-bezier(.5,0,.5,1) infinite}
+@keyframes beam{0%{top:-64px}100%{top:190px}}
+.scan h3{font-family:"Unbounded",sans-serif;font-size:15px;font-weight:600;margin:18px 0 5px;letter-spacing:-.02em}
+.scan p{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin:0;min-height:14px}
+.pbar{height:3px;border-radius:2px;background:var(--edge);margin-top:16px;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--teal-hi));transition:width .4s ease}
+
+/* Модальное окно отчёта */
+.sheet{position:fixed;inset:0;z-index:70;display:none;background:color-mix(in oklab,var(--ink) 42%,transparent)}
+.sheet.on{display:block;animation:fade .3s ease}
+.sheet-in{position:absolute;left:0;right:0;bottom:0;max-height:92vh;display:flex;flex-direction:column;
+  background:var(--panel-solid);border-radius:22px 22px 0 0;border-top:1px solid var(--edge);
+  box-shadow:0 -30px 60px -30px rgba(0,0,0,.5);animation:rise .5s cubic-bezier(.16,1,.3,1)}
+@media(min-width:620px){.sheet-in{max-width:560px;margin:0 auto;border-radius:22px;bottom:2vh;left:14px;right:14px}}
+@keyframes rise{from{transform:translateY(102%)}to{transform:none}}
+.sheet-h{display:flex;align-items:center;gap:12px;padding:16px 16px 12px;border-bottom:1px solid var(--edge)}
+.sheet-h h2{font-family:"Unbounded",sans-serif;font-size:16px;font-weight:600;margin:0;flex:1;letter-spacing:-.02em}
+.sheet-b{overflow-y:auto;padding:14px 16px 20px;-webkit-overflow-scrolling:touch}
+.pack{border:1px solid var(--edge);border-radius:14px;margin-bottom:12px;overflow:hidden}
+.pack-h{display:flex;align-items:center;gap:9px;padding:11px 13px;background:var(--teal-soft)}
+.pack-h .tag{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.13em;text-transform:uppercase;
+  padding:3px 7px;border-radius:5px;background:var(--teal);color:var(--tile-ink);font-weight:500}
+.pack-h b{font-size:13.5px;font-weight:600;flex:1}
+.pack-h em{font-family:"JetBrains Mono",monospace;font-style:normal;font-size:10.5px;color:var(--ink-2)}
+.kv{display:flex;gap:10px;padding:8px 13px;border-top:1px solid var(--edge);font-size:13px}
+.kv span{color:var(--ink-2);flex:1;min-width:96px}
+.kv b{font-weight:600;text-align:right;font-variant-numeric:tabular-nums;flex:1.25}
+.kv b.mono{font-family:"JetBrains Mono",monospace;font-weight:500}
+.drow{padding:10px 13px;border-top:1px solid var(--edge)}
+.drow .h{display:flex;gap:9px;align-items:baseline}
+.drow .h b{flex:1;font-size:13px;font-weight:600}
+.drow .h i{font-style:normal;font-family:"Unbounded",sans-serif;font-weight:700;font-size:14px;color:var(--sc)}
+.drow .z{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:3px}
+.drow .t{font-size:12.5px;color:var(--ink-2);margin-top:5px;padding-left:9px;border-left:2px solid var(--red)}
+.empty{padding:18px 13px;text-align:center;color:var(--ink-2);font-size:13px}
+pre.json{margin:0;padding:13px;background:var(--sand-2);border-radius:12px;overflow:auto;max-height:240px;
+  font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.55;white-space:pre;color:var(--ink)}
+.sheet-f{display:flex;gap:9px;padding:12px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--edge)}
+.sheet-f button{flex:1;border-radius:13px;padding:14px;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;
+  border:1px solid var(--edge);background:transparent;color:var(--ink);transition:transform .16s}
+.sheet-f button:active{transform:scale(.96)}
+.sheet-f .prim{border:0;background:var(--teal);color:var(--tile-ink)}
+.det{margin-top:2px}
+.det summary{cursor:pointer;padding:11px 13px;border-top:1px solid var(--edge);font-family:"JetBrains Mono",monospace;
+  font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2)}
+.det summary::marker{color:var(--teal)}
+.det .list{max-height:230px;overflow:auto}
+.det .li{display:flex;gap:9px;padding:6px 13px;font-size:12.5px;border-top:1px solid var(--edge)}
+.det .li span{flex:1;color:var(--ink-2)}
+.det .li b{font-family:"JetBrains Mono",monospace;color:var(--sc);font-variant-numeric:tabular-nums}
+
+/* Тост */
+.toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,20px);z-index:80;opacity:0;pointer-events:none;
+  background:var(--ink);color:var(--sand);padding:12px 17px;border-radius:12px;font-size:13px;font-weight:500;
+  max-width:82vw;text-align:center;box-shadow:0 20px 40px -20px rgba(0,0,0,.6);transition:opacity .3s,transform .3s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+</style>
+
+<div class="aurora"><i></i><i></i><i></i></div>
+<div class="grain"></div>
+<div class="rail" aria-hidden="true"><div class="strip" id="rail"></div></div>
+
+<div class="topbar" id="bar"><div class="topbar-in">
+    <div class="bs" id="barScore">10.00<em>ср. балл</em></div>
+    <div class="bt" id="barTime"><span>00</span><span class="sep">:</span><span>00</span><span class="sep">:</span><span>00</span></div>
+    <button class="bb go" id="barBtn"></button>
+  </div></div>
+
+<div class="wrap">
+  <header class="brand reveal">
+    <div class="logo">aitas ukpf<small>усть-каменогорская птицефабрика</small></div>
+    <div class="form-id">форма<b>Ф-ВС-29</b></div>
+  </header>
+
+  <h1 class="reveal" style="animation-delay:.05s">Акт санитарной<br>обработки ЗПП</h1>
+  <p class="sub reveal" style="animation-delay:.08s">10-балльная шкала · 131 позиция · 11 участков</p>
+
+  <div class="deck reveal" style="animation-delay:.12s">
+    <div class="panel">
+      <div class="score-row">
+        <div class="score-main">
+          <div class="lbl">Итоговый средний балл по цеху</div>
+          <div class="odo" id="odo"></div>
+          <div class="score-meta" id="meta"></div>
+        </div>
+        <div class="gauge" id="gauge">
+          <svg width="88" height="88" viewBox="0 0 88 88">
+            <circle class="track" cx="44" cy="44" r="36" fill="none" stroke-width="6"></circle>
+            <circle class="bar" id="gbar" cx="44" cy="44" r="36" fill="none" stroke-width="6"
+                    stroke-linecap="round" stroke-dasharray="226.2" stroke-dashoffset="0"></circle>
+          </svg>
+          <div class="cap"><b id="gpct">100%</b>качество</div>
+        </div>
+      </div>
+
+      <div class="timer" id="timerBox">
+        <div class="clock">
+          <div class="digits" id="digits"><span>00</span><span class="sep">:</span><span>00</span><span class="sep">:</span><span>00</span></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="pulsedot" id="dot" style="display:none"></span>
+            <span class="lbl" id="tstate">хронометраж не запущен</span>
+          </div>
+        </div>
+        <div class="stamps">
+          <div class="stamp"><div class="lbl">Начало мойки</div><b id="tstart">—:—</b></div>
+          <div class="stamp"><div class="lbl">Окончание</div><b id="tend">—:—</b></div>
+          <div class="stamp"><div class="lbl">Отклонение</div><b id="tdev">—</b></div>
+        </div>
+        <div class="tbtns">
+          <button class="big b-start" id="btnStart"><span class="sheen"></span></button>
+          <button class="big b-stop" id="btnStop" disabled><span class="sheen"></span></button>
+        </div>
+        <div class="note">норма по форме: грязная зона 3:00 + чистая зона 3:00 = 6:00</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fields reveal" style="animation-delay:.16s">
+    <div class="f wide"><div class="lbl">Номер акта</div><input id="fAct"></div>
+    <div class="f wide"><div class="lbl">ФИО ветеринарного врача</div><input id="fFio" placeholder="Фамилия И.О."></div>
+    <div class="f"><div class="lbl">Дата проверки</div><input id="fDate" type="date"></div>
+    <div class="f"><div class="lbl">Место работ</div>
+      <select id="fPlace">
+        <option>Завод по переработке птицы</option>
+        <option>Цех убоя</option>
+        <option>Склад готовой продукции</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="tabs reveal" id="tabs" style="animation-delay:.2s"></div>
+
+  <div class="search reveal" style="animation-delay:.22s">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="q" placeholder="Поиск по акту">
+    <button class="q" id="onlyBad" type="button">только &lt; 10</button>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="totals reveal" id="totals"></div>
+</div>
+
+<div class="dock">
+  <div class="dock-in">
+    <button class="ghost" id="btnReset" title="Сбросить все оценки на 10">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+    </button>
+    <button class="send" id="btnSend">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="m8 13 3 3-3 3"/><path d="M14 19h3"/></svg>
+      Отправить в Excel
+    </button>
+  </div>
+</div>
+
+<div class="scan" id="scan">
+  <div class="scan-box">
+    <div class="doc" id="doc"><div class="beam"></div></div>
+    <h3 id="scanTitle">Формирование пакета данных</h3>
+    <p id="scanStep">инициализация</p>
+    <div class="pbar"><i id="pbar"></i></div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="sheet-in">
+    <div class="sheet-h">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1 1 0 0 1 1.5 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1Z"/><path d="m9 12 2 2 4-4"/></svg>
+      <h2>Проверка перед отправкой</h2>
+      <button class="ghost" id="btnClose" style="width:40px;height:40px;border-radius:11px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-b" id="sheetBody"></div>
+    <div class="sheet-f">
+      <button id="btnBack">Вернуться к акту</button>
+      <button class="prim" id="btnCopy">Скопировать JSON</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+const ZONES=[
+ {n:"ГРЯЗНАЯ ЗОНА",s:[
+  {n:"Участок приёмки живой птицы",i:[
+   [1,"Помещение отдела выгрузки/навески живой птицы (стены, пол, двери)",9],
+   [2,"Система цепных транспортеров",10],
+   [3,"Навеска",11],
+   [4,"Машинка мойки клетей",12],
+   [5,"Туннельная машина для мойки ящиков",13],
+   [6,"Транспортерная лента",14],
+  ]},
+  {n:"Участок убоя",i:[
+   [7,"Помещение отделения убоя (стены, пол, двери)",16],
+   [8,"Подвесной цепной конвейер",17],
+   [9,"Устройство оглушения птиц",18],
+   [10,"Желоб крови",19],
+   [11,"Ванны ошпаривания птицы",20],
+   [12,"Машина обесперивания (модуль 1)",21],
+   [13,"Машина обесперивания (модуль 2)",22],
+   [14,"Машина обесперивания (модуль 3)",23],
+   [15,"Устройство удаления голов/трахей",24],
+   [16,"Ванна после отрыва голов",25],
+   [17,"Насосная",26],
+  ]},
+  {n:"Участок потрошения",i:[
+   [18,"Помещение потрошения (стены, пол, двери)",28],
+   [19,"Перевесчик тушек птицы",29],
+   [20,"Машина резки лап",30],
+   [21,"Подвесной конвейер",31],
+   [22,"Ванны ошпаривания лап",32],
+   [23,"Машина очистки лап",33],
+   [24,"Транспортер лап",34],
+   [25,"Стол ветеринарного врача",35],
+   [26,"Машина вскрытия Stork VOC-20",36],
+   [27,"Машина потрошения Stork Nuova-20",37],
+   [28,"Конвейер субпродуктов Stork Nuova",38],
+   [29,"Машина удаления желчного пузыря Stork PGI",39],
+   [30,"Машина очистки желудков Stork MG-60",40],
+   [31,"Стол сортировки желудков",41],
+   [32,"Насосы транспортировки субпродуктов",42],
+   [33,"Станция выгрузки пакетов внутренностей",43],
+   [34,"Отделитель шей Stork NS-1600",44],
+   [35,"Ванна охлаждения сердца",45],
+   [36,"Ванна охлаждения печени",46],
+   [37,"Ванна охлаждения желудка",47],
+   [38,"Ванна охлаждения шеи",48],
+   [39,"Ванна охлаждения лапы",49],
+   [40,"Ванна охлаждения головы",50],
+   [41,"Ленточный конвейер №1",51],
+   [42,"Канализация",52],
+  ]},
+  {n:"ВКО",i:[
+   [43,"Подвесной цепной конвейер (синие вешала)",54],
+   [44,"Канализация ВКО",55],
+   [45,"Камера ВКО (цепной конвейер)",56],
+   [46,"Камера ВКО (железные балки)",57],
+   [47,"Камера ВКО (орошение)",58],
+  ]},
+ ]},
+ {n:"ЧИСТАЯ ЗОНА",s:[
+  {n:"Участок разделки",i:[
+   [48,"Помещение отделения разделки (стены, пол, двери, окна)",61],
+   [49,"Ленточный конвейер №1",62],
+   [50,"Система взвешивания PDS (вешала сортировки)",63],
+   [51,"Сортировка по качеству STORK QS-3",64],
+   [52,"Транспортер ЦБ длинный",65],
+   [53,"Транспортер ЦБ короткий",66],
+   [54,"Вешала линий разделки",67],
+   [55,"Модуль отрезания крыла",68],
+   [56,"Модуль отрезания грудки",69],
+   [57,"Модуль отрезания грудки для обвалки",70],
+   [58,"Модуль отрезания спинки",71],
+   [59,"Блок разделки окорочков",72],
+   [60,"Модуль отрезания голень/бедро",73],
+   [61,"Полуавтоматическая линия филетирования 1",74],
+   [62,"Полуавтоматическая линия филетирования 2",75],
+   [63,"Транспортерная лента филе",76],
+   [64,"Транспортерная лента голень",77],
+   [65,"Транспортерная лента грудки",78],
+   [66,"Транспортерная лента бедро",79],
+   [67,"Транспортерная лента четвертинка",80],
+   [68,"Транспортерная лента крыло",81],
+   [69,"Стол полуфабрикатов",82],
+   [70,"Столы резки КФС",83],
+   [71,"Столы приготовления маринадов",84],
+   [72,"Вакуумная машина",85],
+   [73,"Машинка перемешивания рассола",86],
+   [74,"Машина для обвалки филе Maxima",87],
+  ]},
+  {n:"ММО",i:[
+   [75,"Помещение участка ММО (стены, пол, двери)",89],
+   [76,"Опрокидыватель тележек-чанов",90],
+   [77,"Подающий конвейер с металлодетектором",91],
+   [78,"Жиловщик/мясообвальщик",92],
+   [79,"Обвалочная головка",93],
+   [80,"Автоматическая взвешивающая станция",94],
+   [81,"Трансферная труба",95],
+   [82,"Сепаратор",96],
+   [83,"Сепарирующая головка",97],
+   [84,"Вертикальный плиточный скороморозильный аппарат (4 шт.)",98],
+   [85,"Промышленные весы платформенные",99],
+  ]},
+  {n:"Отделение фасовки и упаковки",i:[
+   [86,"Помещение отделения фасовки и упаковки (стены, пол, двери, окна)",101],
+   [87,"Пила №1",102],
+   [88,"Пила №2",103],
+   [89,"Стол сортировки и упаковки",104],
+   [90,"Клипсаторы",105],
+   [91,"Бункера ЦБ",106],
+   [92,"Транспортер готовой продукции",107],
+   [93,"Канализация",108],
+  ]},
+  {n:"Упаковочная машина",i:[
+   [94,"Упаковочная машина №1",110],
+   [95,"Упаковочная машина №2",111],
+  ]},
+  {n:"Отделение мойки тары",i:[
+   [96,"Помещение хранения грязной тары (стены, пол, двери)",113],
+   [97,"Машина мойки ящиков",114],
+   [98,"Помещения хранения чистой тары (стены, пол, двери)",115],
+   [99,"Ящики",116],
+   [100,"Паллеты / поддоны",117],
+  ]},
+ ]},
+ {n:"СГП",s:[
+  {n:"Участок складской логистики",i:[
+   [101,"Техкамера",120],
+   [102,"Камера хранения охлажденной ГП №1",121],
+   [103,"Камера шоковой охлажденной ГП №2",122],
+   [104,"Камера шоковой заморозки №3",123],
+   [105,"Камера заморозки №1",124],
+   [106,"Камера заморозки №2",125],
+   [107,"Камера заморозки №3",126],
+   [108,"Помещение эстакады (стены, пол, двери, потолок, батареи)",127],
+   [109,"Весы напольные",128],
+   [110,"Паллетообмотчик",129],
+   [111,"Рохли",130],
+   [112,"Отгрузочные площадки",131],
+  ]},
+  {n:"Бытовые помещения ЗПП",i:[
+   [113,"Склад хранения ТМЦ",133],
+   [114,"Склад хранения специй",134],
+   [115,"Комната приема пищи",135],
+   [116,"Гардероб мужской",136],
+   [117,"Гардероб женский",137],
+   [118,"Прачечная",138],
+   [119,"Санузел мужской (АБК)",139],
+   [120,"Санузел женский (АБК)",140],
+   [121,"Санузел мужской (отгрузка ГП)",141],
+   [122,"Санузел женский (отгрузка ГП)",142],
+   [123,"Санузел (убой)",143],
+   [124,"Санузел мужской (ПЖП)",144],
+   [125,"Санузел женский (ПЖП)",145],
+   [126,"Административное помещение",146],
+   [127,"Помещения для хранения фартуков",147],
+   [128,"Помещения АХУ",148],
+   [129,"Слесарная",149],
+   [130,"Спецодежда",150],
+   [131,"Спецобувь",151],
+  ]},
+ ]},
+];
+/* ======================= ИКОНКИ (Lucide) ======================= */
+const ICONS={
+  play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+  stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
+  minus:'<path d="M5 12h14"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  chev:'<path d="m6 9 6 6 6-6"/>',
+  alert:'<path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/>'
+};
+const ic=(n,extra='')=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+  stroke-linecap="round" stroke-linejoin="round" ${extra}>${ICONS[n]}</svg>`;
+
+/* ======================= ОРНАМЕНТАЛЬНАЯ ЛЕНТА ======================= */
+(function rail(){
+  const g=[
+    '<circle cx="15" cy="15" r="7"/><circle cx="15" cy="15" r="2.6" fill="var(--tile)"/>',
+    '<path d="M15 7c-5 0-8 3-8 8s4 6 6.5 4.5S16 14 12 13.5"/>',
+    '<path d="M15 6c4 5 6 7 6 10a6 6 0 0 1-12 0c0-3 2-5 6-10Z"/>',
+    '<path d="M15 8c2.2 0 3.6 1.6 3.6 3.5S17 15 15 15s-3.6-1.6-3.6-3.5S12.8 8 15 8Z"/><path d="M15 15c2.2 0 3.6 1.6 3.6 3.5S17 22 15 22s-3.6-1.6-3.6-3.5S12.8 15 15 15Z"/>',
+    '<path d="M8 22c0-6 3-9 7-9s7 3 7 9"/><circle cx="15" cy="9" r="3"/>',
+    '<path d="M15 6v18M6 15h18M9 9l12 12M21 9 9 21" stroke-width="1.4"/><circle cx="15" cy="15" r="4"/>',
+    '<path d="M15 7 22 15l-7 8-7-8Z"/><path d="M15 12.5 17.5 15 15 17.5 12.5 15Z" fill="var(--tile)"/>',
+    '<path d="M11 20c-3-4-1-9 4-11 5 2 7 7 4 11"/><circle cx="15" cy="22" r="1.4"/>'
+  ];
+  const tile=(i)=>{
+    const filled=i%3!==2;
+    return `<svg viewBox="0 0 30 30" class="${filled?'tile-f':'tile-o'}">
+      <g fill="none" stroke="${filled?'var(--tile-ink)':'var(--tile)'}" stroke-width="1.7"
+         stroke-linecap="round" stroke-linejoin="round" opacity="${filled?1:.85}">${g[i%g.length]}</g></svg>`;
+  };
+  let h='';for(let i=0;i<80;i++)h+=tile(i);
+  document.getElementById('rail').innerHTML=h+h;
+})();
+
+/* ======================= СОСТОЯНИЕ ======================= */
+const ALL=[];const SEC=[];
+ZONES.forEach((z,zi)=>z.s.forEach((s,si)=>{
+  SEC.push({zi,si,name:s.n,zone:z.n,items:s.i.map(x=>x[0])});
+  s.i.forEach(it=>ALL.push({n:it[0],name:it[1],row:it[2],sec:s.n,zone:z.n,zi}));
+}));
+const byN={};ALL.forEach(i=>byN[i.n]=i);
+const NORM_MIN=360; /* норма 6:00 по форме */
+
+const S={
+  act:'', fio:'', date:new Date().toISOString().slice(0,10), place:'Завод по переработке птицы',
+  start:null, end:null, scores:{}, def:{}, mds:{}, resp:{}, due:{},
+  zone:0, q:'', onlyBad:false, open:{}
+};
+ALL.forEach(i=>S.scores[i.n]=10);
+SEC.forEach((s,i)=>S.open[i]= i===0);
+
+const pad=n=>String(n).padStart(2,'0');
+const hhmm=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+S.act='АМ-'+S.date.replace(/-/g,'')+'-01';
+
+function save(){try{localStorage.setItem('ukpf-act',JSON.stringify(S))}catch(e){}}
+function load(){try{const r=localStorage.getItem('ukpf-act');if(!r)return;const o=JSON.parse(r);
+  if(o&&o.date===S.date){Object.assign(S,o);}}catch(e){}}
+load();
+
+/* ======================= ЦВЕТ И РАСЧЁТЫ (формулы из Excel) ======================= */
+function col(v){
+  if(v===''||v==null) return 'var(--ink-3)';
+  if(v>=9.5) return 'var(--teal)';
+  if(v>=8)   return 'var(--amber)';
+  if(v>=6)   return 'var(--orange)';
+  return 'var(--red)';
+}
+const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:0;
+const secAvg=s=>avg(s.items.map(n=>S.scores[n]));                       /* =AVERAGE(D..:D..) */
+const zoneAvg=zi=>avg(ALL.filter(i=>i.zi===zi).map(i=>S.scores[i.n]));  /* =AVERAGE(D9:D58) и т.д. */
+const grand=()=>(zoneAvg(0)+zoneAvg(1)+zoneAvg(2))/3;                   /* =(E153+E154+E155)/3 */
+const defects=()=>ALL.filter(i=>S.scores[i.n]<10);
+const r2=v=>Math.round(v*100)/100;
+
+/* ======================= ОДОМЕТР СРЕДНЕГО БАЛЛА ======================= */
+const odo=document.getElementById('odo');let odoStr='';
+function setOdo(str){
+  if(str.length!==odoStr.length){
+    odo.innerHTML=[...str].map(c=>c==='.'
+      ? '<span class="dot">.</span>'
+      : `<span class="col"><u>${'0123456789'.split('').map(d=>`<i style="font-style:normal;display:block;height:46px">${d}</i>`).join('')}</u></span>`).join('');
+  }
+  const cols=odo.querySelectorAll('.col');let k=0;
+  [...str].forEach(c=>{ if(c==='.')return; const u=cols[k++].querySelector('u');
+    u.style.transform=`translateY(-${(+c)*46}px)`; });
+  if(str!==odoStr){odo.classList.remove('bump');void odo.offsetWidth;odo.classList.add('bump');}
+  odoStr=str;
+}
+
+/* ======================= ПРИБОРНАЯ ПАНЕЛЬ ======================= */
+function paintDeck(){
+  const g=grand(), c=col(g);
+  odo.style.setProperty('--sc',c);
+  setOdo(g.toFixed(2));
+  const pct=Math.max(0,Math.min(1,g/10));
+  const bar=document.getElementById('gbar');
+  bar.style.setProperty('--sc',c);
+  bar.style.strokeDashoffset=(226.2*(1-pct)).toFixed(1);
+  document.getElementById('gpct').textContent=Math.round(pct*100)+'%';
+  const bad=defects().length, blank=defects().filter(i=>!(S.def[i.n]||'').trim()).length;
+  document.getElementById('meta').innerHTML=
+    `<span class="chip">позиций 131</span>`+
+    (bad?`<span class="chip bad">несоответствий ${bad}</span>`:`<span class="chip">несоответствий нет</span>`)+
+    (blank?`<span class="chip bad">без описания ${blank}</span>`:'');
+  /* вкладки зон */
+  document.getElementById('tabs').innerHTML=ZONES.map((z,i)=>{
+    const a=zoneAvg(i);
+    return `<button class="tab ${i===S.zone?'on':''}" data-z="${i}" style="--sc:${col(a)}">
+      <span class="tn"><span class="dt"></span>${z.n}</span><b>${a.toFixed(2)}</b></button>`;}).join('');
+  /* итоги */
+  document.getElementById('totals').innerHTML=ZONES.map((z,i)=>{
+    const a=zoneAvg(i);
+    return `<div class="tot" style="--sc:${col(a)}"><span class="n">Средний балл — ${z.n}</span>
+      <span class="bar"><i style="width:${a*10}%"></i></span><span class="v">${a.toFixed(2)}</span></div>`;
+  }).join('')+`<div class="tot grand" style="--sc:${col(g)}"><span class="n">Итоговый средний балл по цеху ЗПП</span>
+      <span class="bar"><i style="width:${g*10}%"></i></span><span class="v">${g.toFixed(2)}</span></div>`;
+  paintBar();
+  save();
+}
+
+/* ======================= СПИСОК КРИТЕРИЕВ ======================= */
+const list=document.getElementById('list');
+function match(it){
+  if(S.onlyBad && S.scores[it.n]>=10) return false;
+  const q=S.q.trim().toLowerCase();
+  if(!q) return true;
+  return it.name.toLowerCase().includes(q)||it.sec.toLowerCase().includes(q)||String(it.n)===q;
+}
+function rowHTML(it){
+  const v=S.scores[it.n], flag=v<10, d=S.def[it.n]||'';
+  return `<div class="row ${flag?'flag':''}" data-n="${it.n}" style="--sc:${col(v)}">
+    <div class="row-top">
+      <span class="idx">${String(it.n).padStart(3,'0')}</span>
+      <span class="ttl">${it.name}</span>
+      <span class="stepper">
+        <button class="sbtn minus" data-a="-1" data-n="${it.n}" aria-label="Снизить балл" ${v<=0?'disabled':''}>${ic('minus')}</button>
+        <span class="val">${v}</span>
+        <button class="sbtn plus" data-a="1" data-n="${it.n}" aria-label="Повысить балл" ${v>=10?'disabled':''}>${ic('plus')}</button>
+      </span>
+    </div>
+    <div class="def"><div><div class="def-in">
+      <textarea data-d="${it.n}" placeholder="Описание несоответствия — обязательно для балла ниже 10"
+        class="${d.trim()?'ok':''}">${d.replace(/</g,'&lt;')}</textarea>
+      <div class="quick">${['органика','жировая плёнка','остатки МДС','известковый налёт','механические загрязнения','следы коррозии','запах']
+        .map(t=>`<button class="q ${d.includes(t)?'on':''}" data-q="${t}" data-n="${it.n}">${t}</button>`).join('')}</div>
+      <div class="mini">
+        <label><div class="lbl">Ответственный</div><input data-r="${it.n}" value="${(S.resp[it.n]||'').replace(/"/g,'&quot;')}" placeholder="ФИО / бригада"></label>
+        <label><div class="lbl">Срок устранения</div><input type="date" data-due="${it.n}" value="${S.due[it.n]||''}"></label>
+      </div>
+      <label class="mds"><input type="checkbox" data-m="${it.n}" ${S.mds[it.n]?'checked':''}>Остатки МДС обнаружены</label>
+    </div></div></div>
+  </div>`;
+}
+function renderList(){
+  const secs=SEC.map((s,i)=>({s,i})).filter(({s})=>s.zi===S.zone);
+  let html='';
+  secs.forEach(({s,i})=>{
+    const items=s.items.map(n=>byN[n]).filter(match);
+    if(!items.length) return;
+    const a=secAvg(s), bad=s.items.filter(n=>S.scores[n]<10).length;
+    const open=S.open[i]||S.q.trim()||S.onlyBad;
+    html+=`<section class="sec ${open?'open':''}" data-s="${i}" style="--sc:${col(a)}">
+      <button class="sec-h" data-h="${i}">
+        <span class="nm">${s.name}<span>${plural(s.items.length,["позиция","позиции","позиций"])}${bad?` · ${plural(bad,["несоответствие","несоответствия","несоответствий"])}`:''}</span></span>
+        <span class="sec-avg">${a.toFixed(2)}</span>
+        ${ic('chev','class="chev" width="18" height="18"')}
+      </button>
+      <div class="sec-body"><div>${items.map(rowHTML).join('')}</div></div>
+    </section>`;
+  });
+  list.innerHTML=html||`<div class="sec"><div class="empty">Ничего не найдено — измените запрос</div></div>`;
+}
+
+/* ======================= ВЗАИМОДЕЙСТВИЕ ======================= */
+function setScore(n,delta){
+  const v=Math.max(0,Math.min(10,S.scores[n]+delta));
+  if(v===S.scores[n])return;
+  S.scores[n]=v;
+  const row=list.querySelector(`.row[data-n="${n}"]`);
+  if(row){
+    row.style.setProperty('--sc',col(v));
+    const val=row.querySelector('.val');
+    val.textContent=v;val.classList.remove('hit');void val.offsetWidth;val.classList.add('hit');
+    row.classList.toggle('flag',v<10);
+    row.querySelector('.minus').disabled=v<=0;
+    row.querySelector('.plus').disabled=v>=10;
+    const sec=row.closest('.sec');
+    if(sec){const si=+sec.dataset.s,a=secAvg(SEC[si]),bad=SEC[si].items.filter(x=>S.scores[x]<10).length;
+      sec.style.setProperty('--sc',col(a));
+      sec.querySelector('.sec-avg').textContent=a.toFixed(2);
+      sec.querySelector('.nm span').textContent=`${SEC[si].items.length} позиций${bad?` · ${plural(bad,["несоответствие","несоответствия","несоответствий"])}`:''}`;
+      if(v<10&&!sec.classList.contains('open'))sec.classList.add('open');
+    }
+    if(v<10) setTimeout(()=>{const t=row.querySelector('textarea');
+      if(t&&!t.value.trim()&&window.innerWidth<620)t.focus({preventScroll:true});},420);
+  }
+  paintDeck();
+}
+list.addEventListener('click',e=>{
+  const s=e.target.closest('.sbtn'); if(s){setScore(+s.dataset.n,+s.dataset.a);return;}
+  const h=e.target.closest('.sec-h'); if(h){const i=+h.dataset.h;S.open[i]=!h.closest('.sec').classList.contains('open');
+    h.closest('.sec').classList.toggle('open');return;}
+  const q=e.target.closest('.q'); if(q){
+    const n=+q.dataset.n,t=q.dataset.q,ta=list.querySelector(`textarea[data-d="${n}"]`);
+    let cur=(S.def[n]||'').trim();
+    if(cur.includes(t)) cur=cur.replace(new RegExp(`(,\\s*)?${t}`),'').replace(/^,\s*/,'').trim();
+    else cur=cur?cur+', '+t:t;
+    S.def[n]=cur; ta.value=cur; ta.classList.toggle('ok',!!cur.trim());
+    q.classList.toggle('on',cur.includes(t)); paintDeck();return;}
+});
+list.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.d!==undefined){S.def[+t.dataset.d]=t.value;t.classList.toggle('ok',!!t.value.trim());paintDeck();}
+  if(t.dataset.r!==undefined)S.resp[+t.dataset.r]=t.value;
+  if(t.dataset.due!==undefined)S.due[+t.dataset.due]=t.value;
+});
+list.addEventListener('change',e=>{const t=e.target;
+  if(t.dataset.m!==undefined){S.mds[+t.dataset.m]=t.checked;save();}});
+document.getElementById('tabs').addEventListener('click',e=>{
+  const t=e.target.closest('.tab'); if(!t)return; S.zone=+t.dataset.z;
+  const first=SEC.findIndex(x=>x.zi===S.zone);
+  if(!SEC.some((x,i)=>x.zi===S.zone&&S.open[i])) S.open[first]=true;
+  renderList(); paintDeck();
+  window.scrollTo({top:document.getElementById('tabs').offsetTop-8,behavior:'smooth'});});
+document.getElementById('q').addEventListener('input',e=>{S.q=e.target.value;renderList()});
+document.getElementById('onlyBad').addEventListener('click',e=>{
+  S.onlyBad=!S.onlyBad;e.target.classList.toggle('on',S.onlyBad);renderList()});
+let armed=0;
+document.getElementById('btnReset').addEventListener('click',()=>{
+  if(Date.now()-armed>3000){armed=Date.now();toast('Нажмите ещё раз, чтобы сбросить акт целиком');return}
+  armed=0;
+  ALL.forEach(i=>{S.scores[i.n]=10});S.def={};S.mds={};S.resp={};S.due={};
+  clearInterval(tick);S.start=null;S.end=null;
+  document.getElementById('tdev').textContent='—';
+  document.getElementById('tdev').style.color='';
+  renderList();paintDeck();paintClock();toast('Акт очищен: 131 позиция по 10 баллов');});
+
+/* реквизиты */
+const bind=(id,key)=>{const el=document.getElementById(id);el.value=S[key];
+  el.addEventListener('input',()=>{S[key]=el.value;save()})};
+bind('fAct','act');bind('fFio','fio');bind('fDate','date');bind('fPlace','place');
+
+/* ======================= ХРОНОМЕТРАЖ ======================= */
+const btnStart=document.getElementById('btnStart'),btnStop=document.getElementById('btnStop'),
+      digits=document.getElementById('digits'),tbox=document.getElementById('timerBox');
+btnStart.innerHTML=`<span class="sheen"></span>${ic('play')}Начать мойку`;
+btnStop.innerHTML=`<span class="sheen"></span>${ic('stop')}Завершить мойку`;
+let tick=null;
+function fmt(ms){const s=Math.max(0,Math.floor(ms/1000));
+  return [pad(Math.floor(s/3600)),pad(Math.floor(s/60)%60),pad(s%60)];}
+function paintClock(){
+  const end=S.end||Date.now(), ms=S.start?end-S.start:0, [h,m,s]=fmt(ms);
+  digits.innerHTML=`<span>${h}</span><span class="sep">:</span><span>${m}</span><span class="sep">:</span><span>${s}</span>`;
+  digits.style.color=S.start&&!S.end?'var(--ink)':'var(--ink-2)';
+  document.getElementById('tstart').textContent=S.start?hhmm(new Date(S.start)):'—:—';
+  document.getElementById('tend').textContent=S.end?hhmm(new Date(S.end)):'—:—';
+  if(S.end){const dev=Math.round((S.end-S.start)/60000)-NORM_MIN;
+    const el=document.getElementById('tdev');
+    el.textContent=(dev>0?'+':'')+dev+' мин';
+    el.style.color=dev>0?'var(--red)':'var(--teal)';
+  }
+  document.getElementById('tstate').textContent=
+    !S.start?'хронометраж не запущен':(S.end?'мойка завершена':'мойка идёт');
+  document.getElementById('dot').style.display=S.start&&!S.end?'block':'none';
+  tbox.classList.toggle('running',!!S.start&&!S.end);
+  btnStart.disabled=!!S.start; btnStop.disabled=!S.start||!!S.end;
+  paintBar();
+}
+btnStart.addEventListener('click',()=>{
+  S.start=Date.now();S.end=null;paintClock();save();
+  tick=setInterval(paintClock,1000);
+  toast('Мойка начата в '+hhmm(new Date(S.start)));
+});
+btnStop.addEventListener('click',()=>{
+  S.end=Date.now();clearInterval(tick);paintClock();save();
+  const [h,m,sec]=fmt(S.end-S.start);
+  toast(`Мойка завершена · длительность ${h==='00'?m+':'+sec:h+':'+m}`);
+});
+if(S.start&&!S.end)tick=setInterval(paintClock,1000);
+
+/* ======================= ТОСТ ======================= */
+let tt=null;const toastEl=document.getElementById('toast');
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add('on');
+  clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove('on'),2600);}
+
+/* ======================= КОМПАКТНАЯ ШИНА ПРИ ПРОКРУТКЕ ======================= */
+const bar=document.getElementById('bar'),barScore=document.getElementById('barScore'),
+      barTime=document.getElementById('barTime'),barBtn=document.getElementById('barBtn');
+function paintBar(){
+  const g=grand(),c=col(g);
+  bar.style.setProperty('--sc',c);
+  const cur=barScore.firstChild;
+  const txt=g.toFixed(2);
+  if(!cur||cur.nodeValue!==txt){barScore.innerHTML=txt+'<em>ср. балл</em>';}
+  const end=S.end||Date.now(),[h,m,sec]=fmt(S.start?end-S.start:0);
+  barTime.innerHTML=`<span>${h}</span><span class="sep">:</span><span>${m}</span><span class="sep">:</span><span>${sec}</span>`;
+  bar.classList.toggle('live',!!S.start&&!S.end);
+  if(!S.start){barBtn.className='bb go';barBtn.innerHTML=ic('play')+'Начать';barBtn.disabled=false;}
+  else if(!S.end){barBtn.className='bb fin';barBtn.innerHTML=ic('stop')+'Завершить';barBtn.disabled=false;}
+  else {barBtn.className='bb done';barBtn.innerHTML=ic('stop')+'Готово';barBtn.disabled=true;}
+}
+barBtn.addEventListener('click',()=>{(S.start?btnStop:btnStart).click()});
+let barShown=false;
+function onScroll(){
+  const deck=document.querySelector('.deck');
+  const show=window.scrollY>deck.offsetTop+deck.offsetHeight-70;
+  if(show!==barShown){barShown=show;bar.classList.toggle('on',show)}
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+window.addEventListener('resize',onScroll);
+
+/* ======================= СБОРКА ПАКЕТА ДЛЯ EXCEL ======================= */
+function duration(){
+  if(!S.start||!S.end)return null;
+  const [h,m,s]=fmt(S.end-S.start);return {h,m,s,mins:Math.round((S.end-S.start)/60000)};
+}
+function buildJSON(){
+  const d=duration(), g=grand();
+  const secAvgs={};SEC.forEach(s=>secAvgs[s.name]=r2(secAvg(s)));
+  return {
+    "форма":"Ф-ВС-29",
+    "документ":"Акт проверки санитарной обработки ЗПП (10-балльная шкала оценки)",
+    "предприятие":"АО «Усть-Каменогорская Птицефабрика»",
+    "Акт мойки":{
+      "номер_акта":S.act,
+      "дата_проверки":S.date,
+      "место_проведения_работ":S.place,
+      "ветеринарный_врач":S.fio,
+      "время_начала_мойки":S.start?hhmm(new Date(S.start)):null,
+      "время_окончания_мойки":S.end?hhmm(new Date(S.end)):null,
+      "длительность_ч_мм_сс":d?`${d.h}:${d.m}:${d.s}`:null,
+      "оценки":ALL.map(i=>({
+        "№":i.n,"наименование":i.name,"_зона":i.sec,"зона":i.zone,
+        "остатки_МДС":S.mds[i.n]?"да":"",
+        "оценка_балл":S.scores[i.n],
+        "выявленные_несоответствия":S.scores[i.n]<10?(S.def[i.n]||'').trim():"",
+        "ответственный":S.scores[i.n]<10?(S.resp[i.n]||''):"",
+        "отметка_об_устранении":S.scores[i.n]<10?"не устранено":""
+      })),
+      "ср_балл_по_участку":secAvgs,
+      "средний_балл_ГРЯЗНАЯ_ЗОНА":r2(zoneAvg(0)),
+      "средний_балл_ЧИСТАЯ_ЗОНА":r2(zoneAvg(1)),
+      "средний_балл_СГП":r2(zoneAvg(2)),
+      "итоговый_средний_балл_по_цеху_ЗПП":r2(g)
+    },
+    "Хронометраж":{
+      "дата":S.date,"цех":"ЗПП",
+      "грязная_зона_начало":S.start?hhmm(new Date(S.start)):null,
+      "чистая_зона_окончание":S.end?hhmm(new Date(S.end)):null,
+      "факт_ч_мм":d?`${d.h}:${d.m}`:null,
+      "норма_ч_мм":"6:00",
+      "отклонение_мин":d?d.mins-NORM_MIN:null,
+      "ответственный":S.fio
+    },
+    "Динамика":{"дата":S.date,"цех_ЗПП":"ЗПП","итоговый_балл":r2(g)},
+    "Журнал несоответствий":defects().map(i=>({
+      "Дата":S.date,"Участок":i.sec,"Наименование оборудования/места":i.name,
+      "Описание несоответствия":(S.def[i.n]||'').trim(),"Балл":S.scores[i.n],
+      "Ответственный за устранение":S.resp[i.n]||"","Срок устранения":S.due[i.n]||"",
+      "Отметка":"","Статус":"Открыто"
+    }))
+  };
+}
+
+/* ======================= АНИМАЦИЯ ОТПРАВКИ ======================= */
+const scan=document.getElementById('scan'),sheet=document.getElementById('sheet');
+(function docLines(){
+  const doc=document.getElementById('doc');let h='';
+  for(let i=0;i<11;i++)h+=`<span class="ln" style="top:${16+i*15}px;width:${[62,84,45,90,70,52,88,40,76,58,82][i]}%"></span>`;
+  doc.insertAdjacentHTML('afterbegin',h);
+})();
+const STEPS=[
+  ['Считывание оценок','131 позиция',18],
+  ['Пересчёт средних баллов','формулы AVERAGE по участкам и зонам',44],
+  ['Выборка несоответствий','фильтр «балл < 10»',68],
+  ['Формирование JSON-пакета','лист «Акт мойки» + лист «Журнал несоответствий»',88],
+  ['Пакет готов','проверьте данные перед отправкой',100]
+];
+function runScan(done){
+  scan.classList.add('on');
+  const t=document.getElementById('scanTitle'),p=document.getElementById('scanStep'),b=document.getElementById('pbar');
+  b.style.width='0%';let i=0;
+  const next=()=>{
+    if(i>=STEPS.length){setTimeout(()=>{scan.classList.remove('on');done()},260);return}
+    const [title,step,pct]=STEPS[i++];
+    t.textContent=title;p.textContent=step;b.style.width=pct+'%';
+    setTimeout(next,i===STEPS.length?520:440);
+  };next();
+}
+
+const plural=(n,f)=>{const a=Math.abs(n)%100,b=a%10;
+  return n+' '+(a>10&&a<20?f[2]:b===1?f[0]:b>1&&b<5?f[1]:f[2])};
+
+/* ======================= ОКНО ПРОВЕРКИ ======================= */
+function openSheet(){
+  const data=buildJSON(),a=data["Акт мойки"],j=data["Журнал несоответствий"],g=a["итоговый_средний_балл_по_цеху_ЗПП"];
+  const kv=(k,v,mono)=>`<div class="kv"><span>${k}</span><b class="${mono?'mono':''}">${v??'—'}</b></div>`;
+  const scores=ALL.map(i=>`<div class="li" style="--sc:${col(S.scores[i.n])}">
+      <span>${String(i.n).padStart(3,'0')} · ${i.name}</span><b>${S.scores[i.n]}</b></div>`).join('');
+  document.getElementById('sheetBody').innerHTML=`
+    <div class="pack">
+      <div class="pack-h"><span class="tag">пачка 1</span><b>Лист «Акт мойки»</b><em>${plural(131,["строка","строки","строк"])}</em></div>
+      ${kv('Номер акта',a["номер_акта"],1)}
+      ${kv('ФИО ветеринарного врача',a["ветеринарный_врач"]||'<span style="color:var(--red)">не заполнено</span>')}
+      ${kv('Дата проверки',a["дата_проверки"],1)}
+      ${kv('Место проведения работ',a["место_проведения_работ"])}
+      ${kv('Время начала мойки',a["время_начала_мойки"],1)}
+      ${kv('Время окончания',a["время_окончания_мойки"],1)}
+      ${kv('Длительность',a["длительность_ч_мм_сс"],1)}
+      ${kv('Отклонение от нормы 6:00',data["Хронометраж"]["отклонение_мин"]!=null?(data["Хронометраж"]["отклонение_мин"]>0?'+':'')+data["Хронометраж"]["отклонение_мин"]+' мин':'—',1)}
+      ${kv('Средний балл — ГРЯЗНАЯ ЗОНА',a["средний_балл_ГРЯЗНАЯ_ЗОНА"].toFixed(2),1)}
+      ${kv('Средний балл — ЧИСТАЯ ЗОНА',a["средний_балл_ЧИСТАЯ_ЗОНА"].toFixed(2),1)}
+      ${kv('Средний балл — СГП',a["средний_балл_СГП"].toFixed(2),1)}
+      <div class="kv" style="--sc:${col(g)}"><span style="color:var(--ink);font-weight:600">Итоговый средний балл по цеху ЗПП</span>
+        <b style="color:${col(g)};font-family:Unbounded,sans-serif;font-size:16px">${g.toFixed(2)}</b></div>
+      <details class="det"><summary>Показать все 131 оценку</summary><div class="list">${scores}</div></details>
+    </div>
+    <div class="pack">
+      <div class="pack-h"><span class="tag" style="background:var(--red)">пачка 2</span>
+        <b>Лист «Журнал несоответствий»</b><em>${plural(j.length,["строка","строки","строк"])}</em></div>
+      ${j.length?j.map(r=>`<div class="drow" style="--sc:${col(r["Балл"])}">
+          <div class="h"><b>${r["Наименование оборудования/места"]}</b><i>${r["Балл"]}</i></div>
+          <div class="z">${r["Участок"]}${r["Ответственный за устранение"]?' · '+r["Ответственный за устранение"]:''}${r["Срок устранения"]?' · до '+r["Срок устранения"]:''}</div>
+          <div class="t">${r["Описание несоответствия"]}</div></div>`).join('')
+        :`<div class="empty">Несоответствий нет — все 131 позиция принята на 10 баллов</div>`}
+    </div>
+    <div class="lbl" style="margin:14px 0 7px">JSON-пакет для выгрузки</div>
+    <pre class="json" id="jsonOut">${JSON.stringify(data,null,1).replace(/</g,'&lt;')}</pre>`;
+  sheet.classList.add('on');
+}
+document.getElementById('btnSend').addEventListener('click',()=>{
+  if(!S.fio.trim()){toast('Укажите ФИО ветеринарного врача');document.getElementById('fFio').focus();return}
+  const blank=defects().filter(i=>!(S.def[i.n]||'').trim());
+  if(blank.length){
+    const first=blank[0];
+    toast(`Заполните описание несоответствия · осталось ${blank.length}`);
+    if(first.zi!==S.zone){S.zone=first.zi;renderList();paintDeck()}
+    S.onlyBad=true;document.getElementById('onlyBad').classList.add('on');renderList();
+    const row=list.querySelector(`.row[data-n="${first.n}"]`);
+    if(row){row.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(()=>row.querySelector('textarea').focus({preventScroll:true}),500)}
+    return;
+  }
+  if(!S.start||!S.end)toast('Хронометраж не завершён — время будет пустым');
+  runScan(openSheet);
+});
+const close=()=>sheet.classList.remove('on');
+document.getElementById('btnClose').addEventListener('click',close);
+document.getElementById('btnBack').addEventListener('click',close);
+document.getElementById('btnCopy').addEventListener('click',async()=>{
+  const txt=JSON.stringify(buildJSON(),null,1);
+  try{await navigator.clipboard.writeText(txt);toast('JSON скопирован в буфер обмена')}
+  catch(e){
+    const pre=document.getElementById('jsonOut'),r=document.createRange();
+    r.selectNodeContents(pre);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
+    toast('JSON выделен — скопируйте вручную');
+  }
+});
+sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
+
+/* ======================= СТАРТ ======================= */
+renderList();paintDeck();paintClock();onScroll();
+</script>
