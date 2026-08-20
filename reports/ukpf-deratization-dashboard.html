@@ -274,23 +274,18 @@ tr.hl td{background:var(--teal-wash);}
 
   <section class="period enter" style="animation-delay:.05s">
     <div class="period-top">
-      <span class="lbl">Период расчёта — за него считаются все суммы</span>
+      <span class="lbl">Как показывать суммы</span>
       <span class="count" id="count">—</span>
     </div>
     <div class="period-top">
       <div class="pills">
-        <button class="pill" data-preset="all" aria-pressed="true">Весь год</button>
-        <button class="pill" data-preset="summer" aria-pressed="false">Апрель — октябрь</button>
-        <button class="pill" data-preset="winter" aria-pressed="false">Ноябрь — март</button>
+        <button class="pill" data-show="month" aria-pressed="false">В месяц</button>
+        <button class="pill" data-show="year" aria-pressed="true">За год</button>
       </div>
       <div class="pills">
-        <button class="pill" data-show="month" aria-pressed="false">В месяц</button>
-        <button class="pill" data-show="period" aria-pressed="true">За период</button>
-        <button class="pill" id="btnMonths" aria-pressed="false">Выбрать месяцы</button>
         <button class="pill" id="btnVat" aria-pressed="false">НДС 16 %</button>
       </div>
     </div>
-    <div class="months" id="months" hidden></div>
   </section>
 
   <section class="trio enter" style="animation-delay:.1s">
@@ -381,7 +376,7 @@ tr.hl td{background:var(--teal-wash);}
       <p class="hint">Переключатели объектов — в карточке Pest Hunters наверху страницы.</p>
       <div class="scroll">
         <table style="min-width:700px;">
-          <thead><tr><th>Объект</th><th>Что входит</th><th class="n">Обходов/мес</th><th class="n">Цена в месяц</th><th class="n" data-perhead>За период</th><th class="n">За год</th></tr></thead>
+          <thead><tr><th>Объект</th><th>Что входит</th><th class="n">Обходов/мес</th><th class="n">Цена в месяц</th><th class="n">За год</th></tr></thead>
           <tbody id="tbPh"></tbody>
           <tfoot id="tfPh"></tfoot>
         </table>
@@ -397,7 +392,7 @@ tr.hl td{background:var(--teal-wash);}
       </div>
       <div class="scroll">
         <table style="min-width:780px;">
-          <thead><tr><th>Объект</th><th class="n">Оборудования, ед.</th><th class="n">Вариант 1 · полная замена</th><th class="n">Вариант 2 · частичная</th><th class="n" data-perhead>За период</th><th class="n">За год</th></tr></thead>
+          <thead><tr><th>Объект</th><th class="n">Оборудования, ед.</th><th class="n">Вариант 1 · полная замена</th><th class="n">Вариант 2 · частичная</th><th class="n">За год</th></tr></thead>
           <tbody id="tbInd"></tbody>
           <tfoot id="tfInd"></tfoot>
         </table>
@@ -450,7 +445,7 @@ tr.hl td{background:var(--teal-wash);}
       <div class="chead"><h2>Себестоимость месяца</h2><span class="hint">с ноября по март 1-й и 2-й контуры не заряжаются</span></div>
       <div class="scroll">
         <table style="min-width:800px;">
-          <thead><tr><th>Статья</th><th class="n">Объём</th><th class="n">Цена за ед.</th><th class="n">Месяц апр — окт</th><th class="n">Месяц ноя — мар</th><th class="n" data-perhead>За период</th><th class="n">За год</th></tr></thead>
+          <thead><tr><th>Статья</th><th class="n">Объём</th><th class="n">Цена за ед.</th><th class="n">Месяц апр — окт</th><th class="n">Месяц ноя — мар</th><th class="n">За год</th></tr></thead>
           <tbody id="tbLedger"></tbody>
           <tfoot id="tfLedger"></tfoot>
         </table>
@@ -474,7 +469,7 @@ tr.hl td{background:var(--teal-wash);}
       <div class="chead"><h2>Расход материалов</h2><span class="hint">в натуре и в деньгах</span></div>
       <div class="scroll">
         <table style="min-width:700px;">
-          <thead><tr><th>Материал</th><th class="n">Месяц апр–окт</th><th class="n">Месяц ноя–мар</th><th class="n" data-perhead>За период</th><th class="n">За год</th><th class="n">Год, ₸</th></tr></thead>
+          <thead><tr><th>Материал</th><th class="n">Месяц апр–окт</th><th class="n">Месяц ноя–мар</th><th class="n">За год</th><th class="n">Год, ₸</th></tr></thead>
           <tbody id="tbUse"></tbody>
           <tfoot id="tfUse"></tfoot>
         </table>
@@ -580,7 +575,7 @@ const WARM=MONTHS.filter(m=>!m.w).length;   // апрель — октябрь
 const COLD=MONTHS.length-WARM;              // ноябрь — март
 
 let picked=new Set(MONTHS.map((_,i)=>i));
-let vat=false, head=4, tab="sum", show="period";
+let vat=false, head=4, tab="sum", show="year";
 let comp={pay:true, mat:true};
 let obj={kkz:true, bp:true, zpp:true, tmc:true};
 let ind={kkz:true, aer:true, mno:true, nap:true};
@@ -646,23 +641,14 @@ function render(){
   const t=totals(), u=t.u;
   const pay=comp.pay?u.salary*t.n:0, mat=comp.mat?(u.s.mat*t.nS+u.w.mat*t.nW):0;
   const per=t.n===12?"за полный год":`за ${t.n} мес`;
-  const div=show==="month"?(t.n||1):1;
-  const perL=show==="month"
-    ? (t.n===12?"в среднем за месяц года":`в среднем за месяц из выбранных ${t.n}`)
-    : per;
+  const div=show==="month"?12:1;
+  const perL=show==="month"?"в среднем за месяц":"за полный год";
   document.querySelectorAll("[data-show]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.show===show)));
 
   /* period bar */
-  document.querySelectorAll(".mo").forEach(b=>b.setAttribute("aria-pressed",String(picked.has(+b.dataset.m))));
-  document.getElementById("count").textContent =
-    t.n===0?"месяцы не выбраны":`${t.n} мес · ${t.nS} тёплых, ${t.nW} зимних`;
+  document.getElementById("count").textContent = `${WARM} тёплых месяцев · ${COLD} зимних`;
   document.getElementById("btnVat").setAttribute("aria-pressed",String(vat));
-    const isAll=t.n===12, isS=t.n===WARM&&t.nW===0, isW=t.n===COLD&&t.nS===0;
-  document.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed",
-    String((b.dataset.preset==="all"&&isAll)||(b.dataset.preset==="summer"&&isS)||(b.dataset.preset==="winter"&&isW))));
-
-  document.querySelectorAll("[data-perhead]").forEach(th=>
-    th.textContent = t.n===12 ? "За 12 мес (год)" : `За выбранные ${t.n} мес`);
+  
 
   /* three KP cards */
   setNum(document.getElementById("dI"), t.indigo/div);
@@ -685,7 +671,7 @@ function render(){
   const diff=t.hunter-t.staff;
   document.getElementById("strip").innerHTML = t.n===0
     ? "Выберите хотя бы один месяц."
-    : `Pest Hunters ${show==="month"?"в среднем за месяц":"за "+(t.n===12?"год":"период")} — <b>${money(t.hunter/div)}</b>, собственная служба из ${head} человек — <b>${money(t.staff/div)}</b>.` +
+    : `Pest Hunters ${show==="month"?"в среднем за месяц":"за год"} — <b>${money(t.hunter/div)}</b>, собственная служба из ${head} человек — <b>${money(t.staff/div)}</b>.` +
       (diff>0 ? ` Разница в пользу штата <b>${money(diff/div)}</b>, это <b>${(t.hunter/(t.staff||1)).toFixed(1).replace(".",",")}×</b>.`
               : ` Подрядчик выходит дешевле на <b>${money(-diff/div)}</b>.`) +
       ` Indigo — <b>${money(t.indigo/div)}</b> за ${indOn.length} из четырёх групп объектов.`;
@@ -712,16 +698,16 @@ function render(){
   /* summary tiles */
   const diff2=diff;
   document.getElementById("tiles").innerHTML=[
-    [money(t.staff/div), "обходится собственная служба "+(show==="month"?"в месяц":per)],
-    [money(t.hunter/div), "выставляет Pest Hunters "+(show==="month"?"в месяц":per)],
+    [money(t.staff/div), "обходится собственная служба "+(show==="month"?"в месяц":"за год")],
+    [money(t.hunter/div), "выставляет Pest Hunters "+(show==="month"?"в месяц":"за год")],
     [money(Math.abs(diff2)/div), diff2>0?"экономия при своём штате":"переплата при своём штате"],
     [int(T.c1+T.c2+T.c3)+" точек","обслуживает штат на 9 объектах"]
   ].map(x=>`<div class="tile"><span class="tv n">${x[0]}</span><span class="tl">${x[1]}</span></div>`).join("");
   document.getElementById("summary").innerHTML = t.n===0
     ? "Выберите хотя бы один месяц — суммы появятся сразу."
     : diff2>0
-      ? `За ${t.n===12?"полный год":"выбранный период"} подрядчик просит <b>${money(t.hunter)}</b>, собственная служба обходится в <b>${money(t.staff)}</b>. Разница <b>${money(diff2)}</b>. Зарплата ${head} дератизаторов фиксирована и не растёт от количества объектов, а подрядчик тарифицирует каждый из 122 бройлерных объектов отдельно — отсюда весь разрыв. При этом штат закрывает ещё инкубаторий, склад лузги и АБК, которых нет ни в одном КП.`
-      : `За выбранный период штат обходится в <b>${money(t.staff)}</b> против <b>${money(t.hunter)}</b> у подрядчика. Так выходит на коротких отрезках, когда включена лишь часть объектов подрядчика, а зарплата платится полностью независимо от объёма работ.`;
+      ? `За год подрядчик просит <b>${money(t.hunter)}</b>, собственная служба обходится в <b>${money(t.staff)}</b>. Разница <b>${money(diff2)}</b>. Зарплата ${head} дератизаторов фиксирована и не растёт от количества объектов, а подрядчик тарифицирует каждый из 122 бройлерных объектов отдельно — отсюда весь разрыв. При этом штат закрывает ещё инкубаторий, склад лузги и АБК, которых нет ни в одном КП.`
+      : `За год штат обходится в <b>${money(t.staff)}</b> против <b>${money(t.hunter)}</b> у подрядчика. Так выходит на коротких отрезках, когда включена лишь часть объектов подрядчика, а зарплата платится полностью независимо от объёма работ.`;
 
   /* Indigo tables */
   const indMonth=IND.reduce((a,x)=>a+(ind[x.k]?x[indVar]:0),0);
@@ -882,24 +868,6 @@ const GLYPHS=[
 })();
 
 /* ================= interactions ================= */
-document.getElementById("months").innerHTML=MONTHS.map((m,i)=>
-  `<button class="mo ${m.w?"w":""}" data-m="${i}" aria-pressed="true"><span>${m.s}</span><span class="dot"></span></button>`).join("");
-document.querySelectorAll(".mo").forEach(b=>b.addEventListener("click",()=>{
-  const i=+b.dataset.m; picked.has(i)?picked.delete(i):picked.add(i); render();
-}));
-document.querySelectorAll("[data-preset]").forEach(b=>b.addEventListener("click",()=>{
-  const p=b.dataset.preset;
-  if(p==="all")    picked=new Set(MONTHS.map((_,i)=>i));
-  if(p==="summer") picked=new Set(MONTHS.map((m,i)=>m.w?null:i).filter(i=>i!==null));
-  if(p==="winter") picked=new Set(MONTHS.map((m,i)=>m.w?i:null).filter(i=>i!==null));
-  render();
-}));
-const btnM=document.getElementById("btnMonths"), moBox=document.getElementById("months");
-btnM.addEventListener("click",()=>{
-  const open=moBox.hasAttribute("hidden");
-  open?moBox.removeAttribute("hidden"):moBox.setAttribute("hidden","");
-  btnM.setAttribute("aria-pressed",String(open));
-});
 document.querySelectorAll("[data-show]").forEach(b=>b.addEventListener("click",()=>{show=b.dataset.show; render();}));
 document.getElementById("btnVat").addEventListener("click",()=>{vat=!vat; render();});
 document.querySelectorAll("[data-ind]").forEach(b=>b.addEventListener("click",()=>{
