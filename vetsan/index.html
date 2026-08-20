@@ -338,13 +338,25 @@ h1{font-family:"Unbounded",sans-serif;font-size:23px;line-height:1.14;font-weigh
 .steps ol{margin:8px 0 0;padding-left:19px;display:flex;flex-direction:column;gap:6px;font-size:13px}
 .steps li b{font-weight:600}
 .steps p{margin:9px 0 0;font-size:12px;color:var(--ink-2);line-height:1.4}
+.steps p.warn{color:#b23c17}
+.mailrow{display:flex;align-items:center;gap:10px;margin-top:9px;background:var(--paper);border:1px solid var(--edge);
+  border-radius:11px;padding:0 12px;transition:border-color .2s,box-shadow .2s}
+.mailrow:focus-within{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,150,143,.14)}
+.mailrow.miss{border-color:#c8442099;box-shadow:0 0 0 3px rgba(200,68,32,.13)}
+.mailrow span{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2)}
+.mailrow input{flex:1;border:0;background:transparent;padding:12px 0;font:inherit;font-size:14px;color:var(--ink);outline:0;min-width:0}
 pre.json{margin:0;padding:13px;background:var(--sand-2);border-radius:12px;overflow:auto;max-height:240px;
   font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.55;white-space:pre;color:var(--ink)}
 .sheet-f{display:flex;gap:9px;padding:12px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--edge)}
-.sheet-f button{flex:1;border-radius:13px;padding:14px;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;
+.sheet-f button,.sheet-f .prim{flex:1;border-radius:13px;padding:14px;font:inherit;font-weight:600;font-size:13.5px;cursor:pointer;
   border:1px solid var(--edge);background:transparent;color:var(--ink);transition:transform .16s}
 .sheet-f button:active{transform:scale(.96)}
-.sheet-f .prim{border:0;background:var(--teal);color:var(--tile-ink)}
+.sheet-f .prim{border:0;background:var(--teal);color:var(--tile-ink);display:flex;align-items:center;justify-content:center;
+  gap:8px;text-decoration:none;transition:transform .16s,opacity .2s}
+.sheet-f .prim:active{transform:scale(.96)}
+.sheet-f .prim svg{width:17px;height:17px}
+.sheet-f .prim.off{opacity:.45}
+.sheet-f #btnCopy{flex:0 0 108px}
 .det{margin-top:2px}
 .det summary{cursor:pointer;padding:11px 13px;border-top:1px solid var(--edge);font-family:"JetBrains Mono",monospace;
   font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2)}
@@ -482,8 +494,8 @@ pre.json{margin:0;padding:13px;background:var(--sand-2);border-radius:12px;overf
     </div>
     <div class="sheet-b" id="sheetBody"></div>
     <div class="sheet-f">
-      <button id="btnBack">Вернуться к акту</button>
-      <button class="prim" id="btnCopy">Скопировать пакет</button>
+      <button id="btnCopy">Копировать</button>
+      <a class="prim" id="btnMail" href="mailto:"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Отправить в акт</a>
     </div>
   </div>
 </div>
@@ -697,7 +709,7 @@ const NORM_MIN=360; /* норма 6:00 по форме */
 const S={
   act:'', fio:'', date:new Date().toISOString().slice(0,10), place:'Завод по переработке птицы',
   start:null, end:null, scores:{}, def:{}, mds:{}, resp:{}, due:{},
-  zone:0, q:'', onlyBad:false, open:{}
+  zone:0, q:'', onlyBad:false, open:{}, mail:''
 };
 ALL.forEach(i=>S.scores[i.n]=10);
 SEC.forEach((s,i)=>S.open[i]= i===0);
@@ -707,8 +719,16 @@ const hhmm=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())
 S.act='АМ-'+S.date.replace(/-/g,'')+'-01';
 
 function save(){try{localStorage.setItem('ukpf-act',JSON.stringify(S))}catch(e){}}
-function load(){try{const r=localStorage.getItem('ukpf-act');if(!r)return;const o=JSON.parse(r);
-  if(o&&o.date===S.date){Object.assign(S,o);}}catch(e){}}
+/* адрес переживает смену дня, поэтому хранится отдельным ключом */
+function saveMail(v){S.mail=v;try{localStorage.setItem('ukpf-mail',v)}catch(e){}}
+try{S.mail=localStorage.getItem('ukpf-mail')||''}catch(e){}
+function load(){
+  try{const r=localStorage.getItem('ukpf-act');
+    if(r){const o=JSON.parse(r);if(o&&o.date===S.date)Object.assign(S,o);}
+  }catch(e){}
+  // адрес восстанавливаем последним: акт живёт один день, адрес — постоянно
+  try{const m=localStorage.getItem('ukpf-mail');if(m)S.mail=m}catch(e){}
+}
 load();
 
 /* ======================= ЦВЕТ И РАСЧЁТЫ (формулы из Excel) ======================= */
@@ -1016,22 +1036,37 @@ function buildJSON(){
   };
 }
 
-/* компактный пакет для Office Script: передаём только отклонения от 10 баллов */
+/* Пакет v2 для Office Script. Ключи латинские, отклонения — массивами:
+   в письме каждый кириллический символ раздувается до 9 символов URL. */
+function rowRanges(){
+  const rows=ALL.map(i=>i.row).sort((a,b)=>a-b),out=[];
+  let from=rows[0],prev=rows[0];
+  for(let k=1;k<rows.length;k++){
+    if(rows[k]!==prev+1){out.push(from===prev?`${from}`:`${from}-${prev}`);from=rows[k]}
+    prev=rows[k];
+  }
+  out.push(from===prev?`${from}`:`${from}-${prev}`);
+  return out.join(',');
+}
 function buildPacket(){
-  const d=duration();
   return {
-    v:1, акт:S.act, дата:S.date, врач:S.fio, место:S.place,
-    начало:S.start?hhmm(new Date(S.start)):"", окончание:S.end?hhmm(new Date(S.end)):"",
-    длительность:d?`${d.h}:${d.m}:${d.s}`:"", балл:r2(grand()),
-    иск:ALL.filter(i=>S.scores[i.n]<10||S.mds[i.n]).map(i=>{
-      const o={r:i.row, б:S.scores[i.n], у:i.sec, н:i.name};
-      if(S.scores[i.n]<10) o.о=(S.def[i.n]||'').trim();
-      if(S.resp[i.n]) o.отв=S.resp[i.n];
-      if(S.due[i.n]) o.срок=S.due[i.n];
-      if(S.mds[i.n]) o.мдс=1;
-      return o;
+    v:2, act:S.act, d:S.date, fio:S.fio,
+    t1:S.start?hhmm(new Date(S.start)):"", t2:S.end?hhmm(new Date(S.end)):"",
+    sc:r2(grand()), rows:rowRanges(),
+    x:ALL.filter(i=>S.scores[i.n]<10||S.mds[i.n]).map(i=>{
+      const a=[i.row,S.scores[i.n],S.scores[i.n]<10?(S.def[i.n]||'').trim():"",
+               S.mds[i.n]?1:0,S.resp[i.n]||"",S.due[i.n]||""];
+      while(a.length>2&&!a[a.length-1])a.pop();   // обрезаем пустой хвост
+      return a;
     })
   };
+}
+const packetText=()=>JSON.stringify(buildPacket());
+function mailHref(){
+  const to=(S.mail||'').trim();
+  return 'mailto:'+encodeURIComponent(to)
+    +'?subject='+encodeURIComponent(`Акт мойки ЗПП ${S.act} ${S.date}`)
+    +'&body='+encodeURIComponent(packetText());
 }
 
 /* ======================= АНИМАЦИЯ ОТПРАВКИ ======================= */
@@ -1066,7 +1101,7 @@ const plural=(n,f)=>{const a=Math.abs(n)%100,b=a%10;
 /* ======================= ОКНО ПРОВЕРКИ ======================= */
 function openSheet(){
   const data=buildJSON(),a=data["Акт мойки"],j=data["Журнал несоответствий"],g=a["итоговый_средний_балл_по_цеху_ЗПП"];
-  const packetText=JSON.stringify(buildPacket()),packet=packetText;
+  const packet=packetText();
   const kv=(k,v,mono)=>`<div class="kv"><span>${k}</span><b class="${mono?'mono':''}">${v??'—'}</b></div>`;
   const scores=ALL.map(i=>`<div class="li" style="--sc:${col(S.scores[i.n])}">
       <span>${String(i.n).padStart(3,'0')} · ${i.name}</span><b>${S.scores[i.n]}</b></div>`).join('');
@@ -1098,20 +1133,43 @@ function openSheet(){
         :`<div class="empty">Несоответствий нет — все 131 позиция принята на 10 баллов</div>`}
     </div>
     <div class="steps">
-      <div class="lbl">Как перенести в Excel Online</div>
-      <ol>
-        <li>Нажмите <b>«Скопировать пакет»</b> внизу.</li>
-        <li>Откройте книгу → лист <b>«Импорт»</b> → ячейка <b>A1</b> → вставьте.</li>
-        <li>Вкладка <b>«Автоматизация»</b> → скрипт <b>«Импорт акта мойки»</b> → «Выполнить».</li>
-      </ol>
-      <p>Скрипт проставит 131 балл, дату, хронометраж и допишет несоответствия в архив. Лист «Журнал несоответствий» заполнится сам — там уже стоят формулы.</p>
+      <div class="lbl">Отправка</div>
+      <label class="mailrow">
+        <span>Кому</span>
+        <input id="fMail" type="email" inputmode="email" autocomplete="email"
+               placeholder="адрес приёма актов" value="${(S.mail||'').replace(/"/g,'&quot;')}">
+      </label>
+      <p id="mailNote">Кнопка «Отправить в акт» откроет готовое письмо — останется нажать «Отправить» в почте. Книгу открывать не нужно: поток заполнит её сам.</p>
     </div>
-    <div class="lbl" style="margin:14px 0 7px">Пакет для листа «Импорт» · ${packet.length} символов</div>
-    <pre class="json" id="jsonOut">${packetText.replace(/</g,'&lt;')}</pre>
+    <div class="lbl" style="margin:14px 0 7px">Пакет · ${packet.length} символов</div>
+    <pre class="json" id="jsonOut">${packet.replace(/</g,'&lt;')}</pre>
     <details class="det" style="margin-top:10px"><summary>Полный JSON (для других интеграций)</summary>
       <pre class="json" style="max-height:200px;border-radius:0">${JSON.stringify(data,null,1).replace(/</g,'&lt;')}</pre>
     </details>`;
+  const f=document.getElementById('fMail');
+  f.addEventListener('input',()=>{saveMail(f.value.trim());syncMail()});
+  syncMail();
   sheet.classList.add('on');
+}
+
+/* href письма пересобирается при каждом изменении адреса */
+function syncMail(){
+  const btn=document.getElementById('btnMail'),note=document.getElementById('mailNote');
+  const href=mailHref(),ready=!!(S.mail||'').trim();
+  btn.setAttribute('href',href);
+  btn.classList.toggle('off',!ready);
+  if(!note)return;
+  const len=href.length;
+  if(!ready){
+    note.className='';
+    note.textContent='Укажите адрес, на который приходят акты, — он запомнится и подставится в следующий раз.';
+  }else if(len>1900){
+    note.className='warn';
+    note.textContent='Несоответствий слишком много для письма ('+len+' символов) — почтовая программа может обрезать текст. Надёжнее «Копировать» и вставить в лист «Импорт».';
+  }else{
+    note.className='';
+    note.textContent='Кнопка «Отправить в акт» откроет готовое письмо — останется нажать «Отправить» в почте. Книгу открывать не нужно: поток заполнит её сам.';
+  }
 }
 document.getElementById('btnSend').addEventListener('click',()=>{
   if(!S.fio.trim()){toast('Укажите ФИО ветеринарного врача');document.getElementById('fFio').focus();return}
@@ -1131,9 +1189,18 @@ document.getElementById('btnSend').addEventListener('click',()=>{
 });
 const close=()=>sheet.classList.remove('on');
 document.getElementById('btnClose').addEventListener('click',close);
-document.getElementById('btnBack').addEventListener('click',close);
+document.getElementById('btnMail').addEventListener('click',e=>{
+  const f=document.getElementById('fMail');
+  if(!(S.mail||'').trim()){
+    e.preventDefault();
+    f.parentElement.classList.add('miss');
+    setTimeout(()=>f.parentElement.classList.remove('miss'),1800);
+    f.focus();toast('Укажите адрес, на который уходят акты');return;
+  }
+  toast('Письмо сформировано — нажмите «Отправить» в почте');
+});
 document.getElementById('btnCopy').addEventListener('click',async()=>{
-  const txt=JSON.stringify(buildPacket());
+  const txt=packetText();
   try{await navigator.clipboard.writeText(txt);toast('Пакет скопирован — вставьте в A1 листа «Импорт»')}
   catch(e){
     const pre=document.getElementById('jsonOut'),r=document.createRange();
