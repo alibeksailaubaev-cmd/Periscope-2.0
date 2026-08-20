@@ -334,6 +334,10 @@ h1{font-family:"Unbounded",sans-serif;font-size:23px;line-height:1.14;font-weigh
 .drow .z{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:3px}
 .drow .t{font-size:12.5px;color:var(--ink-2);margin-top:5px;padding-left:9px;border-left:2px solid var(--red)}
 .empty{padding:18px 13px;text-align:center;color:var(--ink-2);font-size:13px}
+.steps{border:1px solid var(--edge);border-radius:14px;padding:12px 13px;background:var(--teal-soft)}
+.steps ol{margin:8px 0 0;padding-left:19px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.steps li b{font-weight:600}
+.steps p{margin:9px 0 0;font-size:12px;color:var(--ink-2);line-height:1.4}
 pre.json{margin:0;padding:13px;background:var(--sand-2);border-radius:12px;overflow:auto;max-height:240px;
   font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.55;white-space:pre;color:var(--ink)}
 .sheet-f{display:flex;gap:9px;padding:12px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--edge)}
@@ -479,7 +483,7 @@ pre.json{margin:0;padding:13px;background:var(--sand-2);border-radius:12px;overf
     <div class="sheet-b" id="sheetBody"></div>
     <div class="sheet-f">
       <button id="btnBack">Вернуться к акту</button>
-      <button class="prim" id="btnCopy">Скопировать JSON</button>
+      <button class="prim" id="btnCopy">Скопировать пакет</button>
     </div>
   </div>
 </div>
@@ -1012,6 +1016,24 @@ function buildJSON(){
   };
 }
 
+/* компактный пакет для Office Script: передаём только отклонения от 10 баллов */
+function buildPacket(){
+  const d=duration();
+  return {
+    v:1, акт:S.act, дата:S.date, врач:S.fio, место:S.place,
+    начало:S.start?hhmm(new Date(S.start)):"", окончание:S.end?hhmm(new Date(S.end)):"",
+    длительность:d?`${d.h}:${d.m}:${d.s}`:"", балл:r2(grand()),
+    иск:ALL.filter(i=>S.scores[i.n]<10||S.mds[i.n]).map(i=>{
+      const o={r:i.row, б:S.scores[i.n], у:i.sec, н:i.name};
+      if(S.scores[i.n]<10) o.о=(S.def[i.n]||'').trim();
+      if(S.resp[i.n]) o.отв=S.resp[i.n];
+      if(S.due[i.n]) o.срок=S.due[i.n];
+      if(S.mds[i.n]) o.мдс=1;
+      return o;
+    })
+  };
+}
+
 /* ======================= АНИМАЦИЯ ОТПРАВКИ ======================= */
 const scan=document.getElementById('scan'),sheet=document.getElementById('sheet');
 (function docLines(){
@@ -1044,6 +1066,7 @@ const plural=(n,f)=>{const a=Math.abs(n)%100,b=a%10;
 /* ======================= ОКНО ПРОВЕРКИ ======================= */
 function openSheet(){
   const data=buildJSON(),a=data["Акт мойки"],j=data["Журнал несоответствий"],g=a["итоговый_средний_балл_по_цеху_ЗПП"];
+  const packetText=JSON.stringify(buildPacket()),packet=packetText;
   const kv=(k,v,mono)=>`<div class="kv"><span>${k}</span><b class="${mono?'mono':''}">${v??'—'}</b></div>`;
   const scores=ALL.map(i=>`<div class="li" style="--sc:${col(S.scores[i.n])}">
       <span>${String(i.n).padStart(3,'0')} · ${i.name}</span><b>${S.scores[i.n]}</b></div>`).join('');
@@ -1074,8 +1097,20 @@ function openSheet(){
           <div class="t">${r["Описание несоответствия"]}</div></div>`).join('')
         :`<div class="empty">Несоответствий нет — все 131 позиция принята на 10 баллов</div>`}
     </div>
-    <div class="lbl" style="margin:14px 0 7px">JSON-пакет для выгрузки</div>
-    <pre class="json" id="jsonOut">${JSON.stringify(data,null,1).replace(/</g,'&lt;')}</pre>`;
+    <div class="steps">
+      <div class="lbl">Как перенести в Excel Online</div>
+      <ol>
+        <li>Нажмите <b>«Скопировать пакет»</b> внизу.</li>
+        <li>Откройте книгу → лист <b>«Импорт»</b> → ячейка <b>A1</b> → вставьте.</li>
+        <li>Вкладка <b>«Автоматизация»</b> → скрипт <b>«Импорт акта мойки»</b> → «Выполнить».</li>
+      </ol>
+      <p>Скрипт проставит 131 балл, дату, хронометраж и допишет несоответствия в архив. Лист «Журнал несоответствий» заполнится сам — там уже стоят формулы.</p>
+    </div>
+    <div class="lbl" style="margin:14px 0 7px">Пакет для листа «Импорт» · ${packet.length} символов</div>
+    <pre class="json" id="jsonOut">${packetText.replace(/</g,'&lt;')}</pre>
+    <details class="det" style="margin-top:10px"><summary>Полный JSON (для других интеграций)</summary>
+      <pre class="json" style="max-height:200px;border-radius:0">${JSON.stringify(data,null,1).replace(/</g,'&lt;')}</pre>
+    </details>`;
   sheet.classList.add('on');
 }
 document.getElementById('btnSend').addEventListener('click',()=>{
@@ -1098,12 +1133,12 @@ const close=()=>sheet.classList.remove('on');
 document.getElementById('btnClose').addEventListener('click',close);
 document.getElementById('btnBack').addEventListener('click',close);
 document.getElementById('btnCopy').addEventListener('click',async()=>{
-  const txt=JSON.stringify(buildJSON(),null,1);
-  try{await navigator.clipboard.writeText(txt);toast('JSON скопирован в буфер обмена')}
+  const txt=JSON.stringify(buildPacket());
+  try{await navigator.clipboard.writeText(txt);toast('Пакет скопирован — вставьте в A1 листа «Импорт»')}
   catch(e){
     const pre=document.getElementById('jsonOut'),r=document.createRange();
     r.selectNodeContents(pre);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
-    toast('JSON выделен — скопируйте вручную');
+    toast('Пакет выделен — скопируйте вручную (Ctrl+C)');
   }
 });
 sheet.addEventListener('click',e=>{if(e.target===sheet)close()});
