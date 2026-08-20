@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Бройлерное производство">
+  <rect width="64" height="64" fill="#e8f5f3"/>
+  <g fill="none" stroke="#0a6f69" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M6 26 32 10l26 16"/>
+    <path d="M10 26v28h44V26"/>
+    <path d="M10 46h44"/>
+  </g>
+  <g fill="#57c4bc">
+    <circle cx="19" cy="34" r="5.2"/>
+    <circle cx="45" cy="34" r="5.2"/>
+  </g>
+  <g fill="none" stroke="#0a6f69" stroke-width="1.8" stroke-linecap="round">
+    <path d="M19 30.6v6.8M15.6 34h6.8M45 30.6v6.8M41.6 34h6.8"/>
+    <path d="M27 32h10"/>
+  </g>
+  <g fill="#c2871f">
+    <path d="M17.5 53c-.5-3 1.2-5.2 4.2-5.6 2.6-.4 4.6 1 5.2 3.4.4 1.6-.2 2.6-1.6 2.6h-7.2c-.4 0-.6-.2-.6-.4Z"/>
+    <path d="M26.4 49.6l3.4-1.6-2.2 3" />
+    <path d="M35.5 53c-.5-3 1.2-5.2 4.2-5.6 2.6-.4 4.6 1 5.2 3.4.4 1.6-.2 2.6-1.6 2.6h-7.2c-.4 0-.6-.2-.6-.4Z" opacity=".75"/>
+    <path d="M44.4 49.6l3.4-1.6-2.2 3" opacity=".75"/>
+  </g>
+  <g fill="#1e1a12">
+    <circle cx="24.4" cy="49.6" r=".9"/>
+    <circle cx="42.4" cy="49.6" r=".9"/>
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="ЗПП — завод по переработке птицы">
+  <rect width="64" height="64" fill="#e8f5f3"/>
+  <g fill="none" stroke="#0a6f69" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 15h52"/>
+    <path d="M15 15v7M27 15v7M39 15v7"/>
+  </g>
+  <g fill="#0e9a92">
+    <path d="M15 21c2.6 0 4.4 2 4.4 4.6 0 3.4-2.2 5.6-4.4 8.2-2.2-2.6-4.4-4.8-4.4-8.2 0-2.6 1.8-4.6 4.4-4.6Z"/>
+    <path d="M27 21c2.6 0 4.4 2 4.4 4.6 0 3.4-2.2 5.6-4.4 8.2-2.2-2.6-4.4-4.8-4.4-8.2 0-2.6 1.8-4.6 4.4-4.6Z" opacity=".72"/>
+    <path d="M39 21c2.6 0 4.4 2 4.4 4.6 0 3.4-2.2 5.6-4.4 8.2-2.2-2.6-4.4-4.8-4.4-8.2 0-2.6 1.8-4.6 4.4-4.6Z" opacity=".46"/>
+  </g>
+  <g fill="none" stroke="#0a6f69" stroke-width="2.2" stroke-linejoin="round">
+    <rect x="6" y="40" width="52" height="8" rx="3"/>
+    <path d="M42 27h14v13H42z"/>
+    <path d="M42 33.5h14M49 27v13"/>
+  </g>
+  <g fill="#57c4bc">
+    <circle cx="13" cy="53.5" r="3.2"/>
+    <circle cx="25" cy="53.5" r="3.2"/>
+    <circle cx="37" cy="53.5" r="3.2"/>
+    <circle cx="49" cy="53.5" r="3.2"/>
+  </g>
+</svg>

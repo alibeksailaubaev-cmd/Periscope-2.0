@@ -26,7 +26,9 @@
     --red-wash:    #fdeeec;
     --amber:       #c2871f;
     --amber-wash:  #fbf2df;
-    --rail:        58px;
+    --side-w:      274px;
+    --side-w-min:  76px;
+    --side:        var(--side-w);
     --shadow-1: 0 1px 2px rgba(30,26,18,.06), 0 2px 8px rgba(30,26,18,.05);
     --shadow-2: 0 2px 6px rgba(30,26,18,.07), 0 12px 28px rgba(30,26,18,.09);
     --shadow-3: 0 18px 50px rgba(30,26,18,.18);
@@ -37,54 +39,237 @@
   html{ scroll-behavior:smooth; }
   body{
     margin:0;
-    padding-left:var(--rail);
+    padding-left:var(--side);
     font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, Roboto, Arial, sans-serif;
     background:var(--sand);
     color:var(--ink);
     -webkit-font-smoothing:antialiased;
+    transition:padding-left .34s var(--ease-out);
   }
+  body.side-collapsed{ --side:var(--side-w-min); }
 
-  /* ---------- декоративная орнаментная колонка слева ---------- */
-  .ornament-rail{
+  /* ==========================================================
+     ЛЕВАЯ ПАНЕЛЬ ПОДРАЗДЕЛЕНИЙ
+     ========================================================== */
+  .sidebar{
     position:fixed;
     left:0; top:0; bottom:0;
-    width:var(--rail);
-    background:var(--sand);
-    border-right:1px solid rgba(30,26,18,.08);
+    width:var(--side);
     display:flex;
     flex-direction:column;
-    align-items:center;
-    padding:4px 0;
-    gap:2px;
+    background:linear-gradient(180deg, #fffdf7 0%, #f7f2e4 100%);
+    border-right:1px solid var(--line);
+    box-shadow:2px 0 22px -18px rgba(30,26,18,.7);
+    z-index:70;
+    transition:width .34s var(--ease-out), transform .34s var(--ease-out);
     overflow:hidden;
-    z-index:60;
   }
-  .ornament-rail .orn{
-    width:46px; height:46px;
-    flex:none;
-    background:var(--teal);
-    color:#fff;
+  .sidebar::before{ /* фирменная бирюзовая кромка */
+    content:"";
+    position:absolute; left:0; top:0; bottom:0;
+    width:6px;
+    background:repeating-linear-gradient(180deg, var(--teal) 0 26px, var(--teal-light) 26px 34px);
+    opacity:.9;
+  }
+  .side-top{
     display:flex;
     align-items:center;
-    justify-content:center;
-    opacity:0;
-    transform:translateY(-12px);
-    animation:ornIn .5s var(--ease-out) forwards;
+    gap:10px;
+    padding:16px 14px 12px 20px;
+    min-height:74px;
   }
-  .ornament-rail .orn svg{ width:30px; height:30px; display:block; }
-  .ornament-rail .orn.plain{ background:transparent; color:var(--teal); }
-  @keyframes ornIn{ to{ opacity:1; transform:none; } }
+  .side-brand{
+    display:flex; align-items:center; gap:10px;
+    min-width:0;
+    opacity:1;
+    transition:opacity .2s var(--ease);
+  }
+  .side-brand .mark{ width:38px; height:38px; color:var(--ink); flex:none; }
+  .side-brand .word b{ display:block; font-size:19px; font-weight:600; letter-spacing:.01em; white-space:nowrap; }
+  .side-brand .word span{ display:block; font-size:8.5px; letter-spacing:.05em; color:var(--clay); white-space:nowrap; }
+  .side-toggle{
+    margin-left:auto;
+    width:34px; height:34px;
+    flex:none;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--teal-dark);
+    font-size:15px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s var(--ease), color .2s var(--ease), transform .3s var(--ease-out), border-color .2s var(--ease);
+  }
+  .side-toggle:hover{ background:var(--teal); color:#fff; border-color:var(--teal); }
+  .side-toggle .chev{ transition:transform .34s var(--ease-out); display:block; }
+  body.side-collapsed .side-toggle .chev{ transform:rotate(180deg); }
+
+  .side-label{
+    padding:4px 20px 8px;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--clay);
+    white-space:nowrap;
+  }
+  .side-nav{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:0 12px;
+    overflow-y:auto;
+    overflow-x:hidden;
+  }
+  .side-item{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    width:100%;
+    padding:11px 12px;
+    border:1px solid transparent;
+    border-radius:15px;
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+    text-align:left;
+    overflow:hidden;
+    transition:background .22s var(--ease), color .22s var(--ease),
+               border-color .22s var(--ease), transform .18s var(--ease), box-shadow .22s var(--ease);
+  }
+  .side-item:hover{
+    background:var(--paper);
+    border-color:var(--line);
+    transform:translateX(2px);
+    box-shadow:var(--shadow-1);
+  }
+  .side-item.active{
+    background:linear-gradient(135deg, var(--teal) 0%, #0b8a83 100%);
+    border-color:transparent;
+    color:#fff;
+    box-shadow:0 10px 24px -12px rgba(10,111,105,.9);
+  }
+  .side-item.active::after{ /* световой блик по активному пункту */
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(120px 60px at 88% -20%, rgba(255,255,255,.22), transparent 70%);
+    pointer-events:none;
+  }
+  .side-item .thumb{
+    width:46px; height:46px;
+    flex:none;
+    border-radius:13px;
+    overflow:hidden;
+    background:var(--teal-wash);
+    border:1px solid rgba(14,154,146,.25);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .3s var(--ease-out), border-color .22s var(--ease);
+  }
+  .side-item .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .side-item:hover .thumb{ transform:scale(1.06) rotate(-1.5deg); }
+  .side-item.active .thumb{ border-color:rgba(255,255,255,.55); box-shadow:0 4px 12px rgba(0,0,0,.16); }
+  .side-item .side-text{ min-width:0; flex:1; transition:opacity .2s var(--ease); }
+  .side-item .side-text b{ display:block; font-size:13.5px; font-weight:750; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .side-item .side-text small{
+    display:block;
+    margin-top:2px;
+    font-size:11px;
+    font-weight:600;
+    color:var(--clay);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .side-item.active .side-text small{ color:rgba(255,255,255,.85); }
+  .side-item .side-dot{
+    width:9px; height:9px; flex:none;
+    border-radius:50%;
+    background:var(--sand-deep);
+    transition:background .25s var(--ease), box-shadow .25s var(--ease);
+  }
+  .side-item .side-dot.ok{ background:var(--green); box-shadow:0 0 0 3px rgba(46,125,82,.16); }
+  .side-item .side-dot.error{ background:var(--red); box-shadow:0 0 0 3px rgba(192,57,47,.16); }
+  .side-item .side-dot.pending{ background:var(--amber); animation:blink 1s ease-in-out infinite; }
+  .side-item.active .side-dot{ box-shadow:0 0 0 3px rgba(255,255,255,.35); }
+  @keyframes blink{ 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+
+  .side-foot{
+    margin-top:auto;
+    padding:14px 16px 16px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .side-orn{ display:flex; gap:4px; }
+  .side-orn .orn{
+    width:28px; height:28px;
+    background:var(--teal);
+    color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    flex:none;
+    opacity:0;
+    animation:ornIn .45s var(--ease-out) forwards;
+  }
+  .side-orn .orn.plain{ background:transparent; color:var(--teal); }
+  .side-orn .orn svg{ width:19px; height:19px; }
+  @keyframes ornIn{ to{ opacity:1; } }
+  .side-hint{ font-size:10.5px; color:var(--clay); line-height:1.5; white-space:nowrap; }
+
+  /* свёрнутое состояние */
+  body.side-collapsed .side-brand,
+  body.side-collapsed .side-item .side-text,
+  body.side-collapsed .side-label,
+  body.side-collapsed .side-hint{ opacity:0; pointer-events:none; }
+  body.side-collapsed .side-top{ padding-left:14px; }
+  body.side-collapsed .side-item{ justify-content:center; padding:10px 8px; gap:0; }
+  body.side-collapsed .side-item .side-text{ display:none; }
+  body.side-collapsed .side-item .side-dot{
+    position:absolute; top:7px; right:9px;
+    width:8px; height:8px;
+  }
+  body.side-collapsed .side-orn{ flex-direction:column; }
+  /* подсказка при наведении на свёрнутый пункт */
+  .side-item .tip{
+    position:absolute;
+    left:calc(100% + 10px);
+    top:50%;
+    transform:translateY(-50%) translateX(-6px);
+    background:var(--ink);
+    color:#fffdf7;
+    font-size:12px;
+    font-weight:650;
+    padding:7px 12px;
+    border-radius:10px;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s var(--ease), transform .18s var(--ease);
+    z-index:5;
+  }
+  body.side-collapsed .side-item:hover .tip{ opacity:1; transform:translateY(-50%) translateX(0); }
+  body:not(.side-collapsed) .side-item .tip{ display:none; }
+
+  .side-backdrop{
+    position:fixed; inset:0;
+    background:rgba(30,26,18,.45);
+    -webkit-backdrop-filter:blur(2px);
+    backdrop-filter:blur(2px);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s var(--ease);
+    z-index:65;
+  }
+  body.side-open .side-backdrop{ opacity:1; pointer-events:auto; }
 
   /* ---------- индикатор прокрутки ---------- */
   .scroll-progress{
     position:fixed;
-    top:0; left:var(--rail); right:0;
+    top:0; left:var(--side); right:0;
     height:3px;
     background:linear-gradient(90deg, var(--teal), var(--teal-light));
     transform-origin:0 50%;
     transform:scaleX(0);
     z-index:80;
-    transition:transform .12s linear;
+    transition:transform .12s linear, left .34s var(--ease-out);
   }
 
   /* ---------- фирменная шапка ---------- */
@@ -94,12 +279,10 @@
     justify-content:space-between;
     gap:26px;
     flex-wrap:wrap;
-    padding:26px 34px 22px;
-    background:var(--sand);
-    position:relative;
+    padding:24px 34px 20px;
   }
-  .brand-bar .title-block{ flex:1 1 420px; min-width:280px; }
-  .brand-bar .eyebrow{
+  .brand-bar .title-block{ flex:1 1 420px; min-width:260px; }
+  .eyebrow{
     display:inline-flex;
     align-items:center;
     gap:8px;
@@ -114,24 +297,12 @@
     border-radius:999px;
     margin-bottom:12px;
   }
-  .brand-bar .range-chip{
-    background:var(--paper);
-    border-color:var(--line);
-    color:var(--ink-soft);
-    text-transform:none;
-    letter-spacing:.02em;
-    font-size:11.5px;
-    margin-left:8px;
-    animation:chipIn .35s var(--ease-out);
-  }
-  .brand-bar .range-chip b{ color:var(--teal-dark); font-weight:750; }
   .brand-bar h1{
     margin:0;
-    font-size:31px;
+    font-size:30px;
     line-height:1.18;
     font-weight:750;
     letter-spacing:-.02em;
-    color:var(--ink);
   }
   .brand-bar p.lead{
     margin:9px 0 0;
@@ -140,73 +311,43 @@
     color:var(--ink-soft);
     max-width:760px;
   }
-  .logo-lockup{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    padding:6px 4px;
-  }
-  .logo-lockup .mark{ width:52px; height:52px; color:var(--ink); flex:none; }
-  .logo-lockup .word{ line-height:1; }
-  .logo-lockup .word b{
-    display:block;
-    font-size:27px;
-    font-weight:600;
-    letter-spacing:.01em;
-    color:var(--ink);
-  }
-  .logo-lockup .word span{
-    display:block;
-    margin-top:5px;
-    font-size:9.5px;
-    letter-spacing:.055em;
-    color:var(--ink-soft);
+  .side-open-btn{
+    display:none;
+    width:44px; height:44px;
+    border-radius:13px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--teal-dark);
+    font-size:19px;
+    cursor:pointer;
+    box-shadow:var(--shadow-1);
   }
 
   /* ---------- корпус ---------- */
-  .shell-body{
-    max-width:1520px;
-    margin:0 auto;
-    padding:0 34px 40px;
-  }
+  .shell-body{ max-width:1520px; margin:0 auto; padding:0 34px 40px; }
   .section-title{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size:11.5px;
-    font-weight:800;
-    letter-spacing:.12em;
-    text-transform:uppercase;
-    color:var(--clay);
-    margin:0 0 12px;
+    display:flex; align-items:center; gap:10px;
+    font-size:11.5px; font-weight:800; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--clay); margin:0 0 12px;
   }
-  .section-title::after{
-    content:"";
-    flex:1;
-    height:1px;
-    background:linear-gradient(90deg, var(--line), transparent);
-  }
+  .section-title::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg, var(--line), transparent); }
 
-  /* ---------- зона загрузки общего файла ---------- */
+  /* ---------- зона загрузки ---------- */
   .intake{
     display:grid;
     grid-template-columns:minmax(320px, 1.15fr) minmax(280px, .85fr);
     gap:18px;
     margin-bottom:24px;
   }
-  @media (max-width:980px){ .intake{ grid-template-columns:1fr; } }
-
+  @media (max-width:1080px){ .intake{ grid-template-columns:1fr; } }
   .shared-upload{
     position:relative;
     background:var(--paper);
     border:1.5px dashed var(--line);
     border-radius:20px;
     padding:22px 26px;
-    display:flex;
-    align-items:center;
-    gap:20px;
-    cursor:pointer;
-    overflow:hidden;
+    display:flex; align-items:center; gap:20px;
+    cursor:pointer; overflow:hidden;
     box-shadow:var(--shadow-1);
     transition:border-color .22s var(--ease), background .22s var(--ease),
                transform .22s var(--ease), box-shadow .22s var(--ease);
@@ -216,17 +357,14 @@
     position:absolute; right:-30px; bottom:-40px;
     width:170px; height:170px;
     background:radial-gradient(closest-side, rgba(14,154,146,.12), transparent 72%);
-    opacity:0;
-    transition:opacity .3s var(--ease);
-    pointer-events:none;
+    opacity:0; transition:opacity .3s var(--ease); pointer-events:none;
   }
   .shared-upload:hover{ border-color:var(--teal); transform:translateY(-2px); box-shadow:var(--shadow-2); }
   .shared-upload:hover::after{ opacity:1; }
   .shared-upload.dragover{ border-style:solid; border-color:var(--teal); background:var(--teal-wash); transform:scale(1.006); }
   .shared-upload.loaded{ border-style:solid; border-color:var(--green); background:linear-gradient(180deg, var(--green-wash), var(--paper) 65%); }
   .shared-upload .icon{
-    width:56px; height:56px;
-    flex:none;
+    width:56px; height:56px; flex:none;
     border-radius:16px;
     background:var(--teal-wash);
     color:var(--teal-dark);
@@ -236,145 +374,96 @@
   }
   .shared-upload:hover .icon{ transform:translateY(-3px) scale(1.05); }
   .shared-upload.loaded .icon{ background:var(--green-wash); color:var(--green); animation:pop .5s var(--ease-out); }
-  @keyframes pop{
-    0%{ transform:scale(.65) rotate(-8deg); }
-    60%{ transform:scale(1.12) rotate(3deg); }
-    100%{ transform:scale(1); }
-  }
+  @keyframes pop{ 0%{ transform:scale(.65) rotate(-8deg); } 60%{ transform:scale(1.12) rotate(3deg); } 100%{ transform:scale(1); } }
   .shared-upload .txt h3{ margin:0 0 4px; font-size:16px; font-weight:750; letter-spacing:-.01em; }
   .shared-upload .txt .hint{ font-size:12.5px; color:var(--clay); line-height:1.55; }
   .shared-upload .txt .status-line{ font-size:12.5px; font-weight:700; margin-top:8px; color:var(--green); min-height:17px; }
   .shared-upload .txt .status-line.error{ color:var(--red); }
   .shared-upload input[type=file]{ display:none; }
 
-  /* ---------- статусы вкладок ---------- */
   .status-card{
     background:var(--paper);
     border:1px solid var(--line);
     border-radius:20px;
     padding:18px 22px;
     box-shadow:var(--shadow-1);
-    display:flex;
-    flex-direction:column;
-    gap:9px;
+    display:flex; flex-direction:column; gap:9px;
   }
-  .status-card .status-head{
-    font-size:11px; font-weight:800; letter-spacing:.1em;
-    text-transform:uppercase; color:var(--clay);
-  }
+  .status-card .status-head{ font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--clay); }
   .mb-status-item{
-    display:flex;
-    align-items:center;
-    gap:9px;
-    font-size:12.5px;
-    font-weight:650;
-    padding:9px 13px;
-    border-radius:12px;
+    display:flex; align-items:center; gap:9px;
+    font-size:12.5px; font-weight:650;
+    padding:9px 13px; border-radius:12px;
     background:var(--sand-soft);
     border:1px solid transparent;
     color:var(--clay);
-    transition:background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+    cursor:pointer;
+    transition:background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease), transform .18s var(--ease);
   }
-  .mb-status-item .dot{
-    width:9px; height:9px; border-radius:50%;
-    background:currentColor; opacity:.55; flex:none;
+  .mb-status-item:hover{ transform:translateX(2px); }
+  .mb-status-item .dot{ width:9px; height:9px; border-radius:50%; background:currentColor; opacity:.55; flex:none; align-self:flex-start; margin-top:4px; }
+  .mb-status-item .txt{
+    display:-webkit-box;
+    -webkit-line-clamp:2;              /* длинные сообщения об ошибке не распирают карточку */
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+    line-height:1.45;
   }
+  .mb-status-item.expanded .txt{ -webkit-line-clamp:unset; }
   .mb-status-item.pending{ background:var(--amber-wash); color:#8a6a1a; border-color:#eed9a8; }
   .mb-status-item.pending .dot{ animation:blink 1s ease-in-out infinite; opacity:1; }
-  @keyframes blink{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
   .mb-status-item.ok{ background:var(--green-wash); color:var(--green); border-color:#cbe8d5; }
   .mb-status-item.ok .dot{ opacity:1; }
   .mb-status-item.error{ background:var(--red-wash); color:var(--red); border-color:#f0cdc8; }
   .mb-status-item.error .dot{ opacity:1; }
 
-  /* ---------- панель вкладок ---------- */
+  /* ==========================================================
+     ЛИПКАЯ ПАНЕЛЬ: контекст вкладки + РАЗДЕЛЫ
+     ========================================================== */
   .tabbar{
     position:sticky;
     top:0;
     z-index:55;
     margin:0 -34px 20px;
-    padding:12px 34px;
-    background:rgba(230,223,198,.88);
+    padding:12px 34px 14px;
+    background:rgba(230,223,198,.9);
     -webkit-backdrop-filter:blur(10px);
     backdrop-filter:blur(10px);
     border-bottom:1px solid transparent;
     transition:border-color .25s var(--ease), box-shadow .25s var(--ease);
   }
-  .tabbar.stuck{
-    border-bottom-color:var(--line);
-    box-shadow:0 10px 24px -18px rgba(30,26,18,.55);
-  }
-  .tabbar-row{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    flex-wrap:wrap;
-  }
-  .tabs{
-    position:relative;
-    display:flex;
-    gap:4px;
-    padding:4px;
+  .tabbar.stuck{ border-bottom-color:var(--line); box-shadow:0 10px 24px -18px rgba(30,26,18,.55); }
+  .tabbar-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .crumb{
+    display:flex; align-items:center; gap:10px;
     background:var(--paper);
     border:1px solid var(--line);
-    border-radius:16px;
+    border-radius:14px;
+    padding:9px 16px;
     box-shadow:var(--shadow-1);
+    min-width:0;
   }
-  .tab-indicator{
-    position:absolute;
-    top:4px; left:4px;
-    height:calc(100% - 8px);
-    border-radius:12px;
-    background:linear-gradient(180deg, var(--teal), #0b8a83);
-    box-shadow:0 6px 16px rgba(10,111,105,.28);
-    transition:transform .38s var(--ease-out), width .38s var(--ease-out);
-    z-index:0;
-  }
-  .tab-btn{
-    position:relative;
-    z-index:1;
-    border:none;
-    background:transparent;
-    padding:11px 20px;
-    border-radius:12px;
-    font-size:13.5px;
-    font-weight:700;
-    color:var(--clay);
-    cursor:pointer;
+  .crumb .crumb-mark{ width:9px; height:22px; border-radius:4px; background:linear-gradient(180deg, var(--teal), var(--teal-light)); flex:none; }
+  .crumb b{ font-size:14.5px; font-weight:750; letter-spacing:-.01em; white-space:nowrap; }
+  .crumb .crumb-range{
+    font-size:11.5px; font-weight:700;
+    color:var(--teal-dark);
+    background:var(--teal-wash);
+    border:1px solid rgba(14,154,146,.25);
+    border-radius:999px;
+    padding:4px 11px;
     white-space:nowrap;
-    overflow:hidden;
-    transition:color .25s var(--ease), transform .18s var(--ease);
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
   }
-  .tab-btn:hover{ color:var(--ink); }
-  .tab-btn.active{ color:#fff; }
-  .tab-btn .tab-dot{
-    width:7px; height:7px; border-radius:50%;
-    background:var(--line);
-    transition:background .25s var(--ease), transform .25s var(--ease);
-  }
-  .tab-btn .tab-dot.ok{ background:var(--green); }
-  .tab-btn .tab-dot.error{ background:var(--red); }
-  .tab-btn .tab-dot.pending{ background:var(--amber); animation:blink 1s ease-in-out infinite; }
-  .tab-btn.active .tab-dot{ box-shadow:0 0 0 2px rgba(255,255,255,.5); }
-  .tab-btn:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(14,154,146,.4); }
+  .crumb .crumb-range[hidden]{ display:none; }
 
   .btn{
     position:relative;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
     border:1px solid transparent;
     border-radius:12px;
     padding:11px 18px;
-    font-size:13px;
-    font-weight:700;
-    cursor:pointer;
-    overflow:hidden;
-    white-space:nowrap;
+    font-size:13px; font-weight:700;
+    cursor:pointer; overflow:hidden; white-space:nowrap;
     transition:transform .16s var(--ease), box-shadow .2s var(--ease),
                background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease);
   }
@@ -386,12 +475,7 @@
     box-shadow:0 1px 2px rgba(10,111,105,.35), 0 6px 16px rgba(10,111,105,.22);
   }
   .btn-primary:hover{ transform:translateY(-1px); box-shadow:0 2px 4px rgba(10,111,105,.34), 0 12px 26px rgba(10,111,105,.28); }
-  .btn-ghost{
-    background:var(--paper);
-    color:var(--ink-soft);
-    border-color:var(--line);
-    box-shadow:var(--shadow-1);
-  }
+  .btn-ghost{ background:var(--paper); color:var(--ink-soft); border-color:var(--line); box-shadow:var(--shadow-1); }
   .btn-ghost:hover{ background:var(--sand-soft); color:var(--ink); transform:translateY(-1px); }
   .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none !important; box-shadow:none; }
   .btn .spin{
@@ -405,79 +489,82 @@
   .btn.busy .spin{ display:block; }
   @keyframes spin{ to{ transform:rotate(360deg); } }
   .ripple{
-    position:absolute;
-    border-radius:50%;
+    position:absolute; border-radius:50%;
     transform:translate(-50%,-50%) scale(0);
-    background:currentColor;
-    opacity:.22;
-    pointer-events:none;
+    background:currentColor; opacity:.22; pointer-events:none;
     animation:rippleOut .55s var(--ease-out) forwards;
   }
   @keyframes rippleOut{ to{ transform:translate(-50%,-50%) scale(2.6); opacity:0; } }
 
-  /* ---------- быстрая навигация по разделам вкладки ---------- */
+  /* ---------- РАЗДЕЛЫ ---------- */
   .section-rail{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-top:10px;
+    display:flex; align-items:center; gap:9px;
+    margin-top:11px;
+    padding:9px 12px;
+    border:1px solid rgba(14,154,146,.28);
+    border-radius:16px;
+    background:linear-gradient(180deg, rgba(255,253,247,.95), rgba(232,245,243,.7));
+    box-shadow:var(--shadow-1);
     overflow-x:auto;
-    padding-bottom:2px;
     scrollbar-width:thin;
   }
   .section-rail::-webkit-scrollbar{ height:6px; }
   .section-rail::-webkit-scrollbar-thumb{ background:var(--sand-deep); border-radius:6px; }
   .section-rail .rail-label{
-    font-size:10.5px; font-weight:800; letter-spacing:.1em;
-    text-transform:uppercase; color:var(--clay); white-space:nowrap;
+    display:flex; align-items:center; gap:7px;
+    font-size:10.5px; font-weight:800; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--teal-dark);
+    white-space:nowrap;
+    padding-right:4px;
+    border-right:1px solid rgba(14,154,146,.22);
+    margin-right:3px;
+    align-self:stretch;
   }
   .section-chip{
-    border:1px solid var(--line);
+    position:relative;
+    display:inline-flex; align-items:center; gap:8px;
+    border:1.5px solid rgba(14,154,146,.45);
     background:var(--paper);
-    color:var(--ink-soft);
+    color:var(--teal-dark);
     border-radius:999px;
-    padding:7px 14px;
-    font-size:12px;
-    font-weight:650;
-    cursor:pointer;
-    white-space:nowrap;
-    transition:all .2s var(--ease);
-    animation:chipIn .35s var(--ease-out) backwards;
+    padding:8px 16px;
+    font-size:12.5px; font-weight:700;
+    cursor:pointer; white-space:nowrap; overflow:hidden;
+    box-shadow:0 1px 2px rgba(30,26,18,.06);
+    transition:all .22s var(--ease);
+    animation:chipIn .38s var(--ease-out) backwards;
+  }
+  .section-chip::before{
+    content:"";
+    width:8px; height:8px; border-radius:50%;
+    background:var(--teal-light);
+    box-shadow:0 0 0 3px rgba(14,154,146,.16);
+    flex:none;
+    transition:background .22s var(--ease), box-shadow .22s var(--ease);
   }
   .section-chip:hover{
-    border-color:var(--teal);
-    color:var(--teal-dark);
     background:var(--teal-wash);
-    transform:translateY(-1px);
+    border-color:var(--teal);
+    transform:translateY(-2px);
+    box-shadow:0 10px 20px -12px rgba(10,111,105,.9);
   }
-  @keyframes chipIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+  .section-chip.current{
+    background:linear-gradient(180deg, var(--teal), #0b8a83);
+    border-color:transparent;
+    color:#fff;
+    box-shadow:0 8px 18px -8px rgba(10,111,105,.85);
+  }
+  .section-chip.current::before{ background:#fff; box-shadow:0 0 0 3px rgba(255,255,255,.3); }
+  @keyframes chipIn{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
 
-  /* ---------- панели с дэшбордами ---------- */
+  /* ---------- панели ---------- */
   .panels{ position:relative; }
   .tab-panel{ display:none; }
   .tab-panel.active{ display:block; animation:panelIn .42s var(--ease-out); }
-  @keyframes panelIn{
-    from{ opacity:0; transform:translateY(14px); }
-    to{ opacity:1; transform:none; }
-  }
-  .iframe-wrap{
-    background:transparent;
-    border:none;
-    border-radius:0;
-    overflow:hidden;
-  }
-  iframe.dash-frame{
-    width:100%;
-    border:none;
-    display:block;
-    background:transparent;
-    min-height:520px;
-  }
-  .frame-skeleton{
-    display:grid;
-    gap:16px;
-    padding:4px 0 12px;
-  }
+  @keyframes panelIn{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:none; } }
+  .iframe-wrap{ background:transparent; border:none; overflow:hidden; }
+  iframe.dash-frame{ width:100%; border:none; display:block; background:transparent; min-height:520px; }
+  .frame-skeleton{ display:grid; gap:16px; padding:4px 0 12px; }
   .frame-skeleton .sk{
     border-radius:18px;
     background:linear-gradient(100deg, rgba(255,253,247,.75) 30%, rgba(255,255,255,.98) 50%, rgba(255,253,247,.75) 70%);
@@ -489,26 +576,14 @@
   .frame-skeleton .sk.h2{ height:280px; }
   @keyframes shimmer{ from{ background-position:120% 0; } to{ background-position:-120% 0; } }
 
-  /* ---------- всплывающие уведомления ---------- */
-  .toast-stack{
-    position:fixed;
-    right:22px; bottom:22px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    z-index:90;
-  }
+  /* ---------- уведомления, подвал, «наверх» ---------- */
+  .toast-stack{ position:fixed; right:22px; bottom:82px; display:flex; flex-direction:column; gap:10px; z-index:90; }
   .toast{
-    background:var(--ink);
-    color:#fffdf7;
-    border-radius:14px;
-    padding:13px 18px;
-    font-size:13px;
-    font-weight:600;
+    background:var(--ink); color:#fffdf7;
+    border-radius:14px; padding:13px 18px;
+    font-size:13px; font-weight:600;
     box-shadow:var(--shadow-3);
-    display:flex;
-    align-items:center;
-    gap:10px;
+    display:flex; align-items:center; gap:10px;
     animation:toastIn .32s var(--ease-out);
     max-width:340px;
   }
@@ -518,55 +593,56 @@
   @keyframes toastIn{ from{ opacity:0; transform:translateY(14px) scale(.96); } to{ opacity:1; transform:none; } }
   @keyframes toastOut{ to{ opacity:0; transform:translateY(10px) scale(.97); } }
 
-  /* ---------- подвал ---------- */
   .brand-footer{
     margin-top:26px;
     padding:18px 34px 26px;
     border-top:1px solid rgba(30,26,18,.14);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:18px;
-    flex-wrap:wrap;
-    font-size:11.5px;
-    color:var(--clay);
+    display:flex; align-items:center; justify-content:space-between;
+    gap:18px; flex-wrap:wrap;
+    font-size:11.5px; color:var(--clay);
   }
   .brand-footer .mini-mark{ display:flex; align-items:center; gap:9px; color:var(--ink); }
   .brand-footer .mini-mark svg{ width:26px; height:26px; }
   .brand-footer .mini-mark b{ font-size:15px; font-weight:600; letter-spacing:.02em; }
 
   .to-top{
-    position:fixed;
-    right:22px; bottom:22px;
-    width:46px; height:46px;
-    border-radius:50%;
+    position:fixed; right:22px; bottom:22px;
+    width:46px; height:46px; border-radius:50%;
     border:1px solid var(--line);
-    background:var(--paper);
-    color:var(--teal-dark);
-    font-size:17px;
-    cursor:pointer;
+    background:var(--paper); color:var(--teal-dark);
+    font-size:17px; cursor:pointer;
     box-shadow:var(--shadow-2);
-    opacity:0;
-    pointer-events:none;
-    transform:translateY(10px);
+    opacity:0; pointer-events:none; transform:translateY(10px);
     transition:opacity .25s var(--ease), transform .25s var(--ease), background .2s var(--ease);
     z-index:70;
   }
   .to-top.show{ opacity:1; pointer-events:auto; transform:none; }
   .to-top:hover{ background:var(--teal); color:#fff; border-color:var(--teal); }
 
-  @media (max-width:760px){
-    :root{ --rail:0px; }
-    .ornament-rail{ display:none; }
-    .brand-bar{ padding:20px 18px 16px; }
-    .brand-bar h1{ font-size:24px; }
+  @media (max-width:900px){
+    body{ padding-left:0; }
+    .sidebar{ transform:translateX(-102%); width:var(--side-w); box-shadow:var(--shadow-3); }
+    body.side-open .sidebar{ transform:none; }
+    body.side-collapsed .sidebar{ width:var(--side-w); }
+    body.side-collapsed .side-brand,
+    body.side-collapsed .side-item .side-text,
+    body.side-collapsed .side-label,
+    body.side-collapsed .side-hint{ opacity:1; pointer-events:auto; }
+    body.side-collapsed .side-item{ justify-content:flex-start; padding:11px 12px; gap:12px; }
+    body.side-collapsed .side-item .side-text{ display:block; }
+    body.side-collapsed .side-item .side-dot{ position:static; width:9px; height:9px; }
+    .side-toggle{ display:none; }
+    .side-open-btn{ display:flex; align-items:center; justify-content:center; }
+    .scroll-progress{ left:0; }
+    .brand-bar{ padding:18px 16px 14px; }
+    .brand-bar h1{ font-size:23px; }
     .shell-body{ padding:0 16px 30px; }
-    .tabbar{ margin:0 -16px 16px; padding:10px 16px; }
+    .tabbar{ margin:0 -16px 16px; padding:10px 16px 12px; }
     .brand-footer{ padding:16px 18px 22px; }
   }
   @media print{
     body{ padding-left:0; background:#fff; }
-    .ornament-rail, .tabbar, .to-top, .toast-stack, .scroll-progress, .intake{ display:none !important; }
+    .sidebar, .tabbar, .to-top, .toast-stack, .scroll-progress, .intake, .side-backdrop{ display:none !important; }
     .brand-bar{ padding:0 0 12px; }
     .tab-panel{ display:block !important; }
   }
@@ -578,39 +654,19 @@
 </head>
 <body>
 
-<!-- орнаментальная колонка (фирменный элемент) -->
-<aside class="ornament-rail" id="ornRail" aria-hidden="true"></aside>
-<div class="scroll-progress" id="scrollProgress"></div>
-
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <!-- фирменные орнаментальные знаки -->
     <symbol id="orn-koshkar" viewBox="0 0 32 32">
-      <path d="M16 27V13M16 13c0-5 4-8 8-8 3 0 5 2 5 4.5S27 14 24.5 14 21 12 22 10.5"
-            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-      <path d="M16 13c0-5-4-8-8-8-3 0-5 2-5 4.5S5.5 14 8 14s3.5-2 2.5-3.5"
-            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M16 27V13M16 13c0-5 4-8 8-8 3 0 5 2 5 4.5S27 14 24.5 14 21 12 22 10.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M16 13c0-5-4-8-8-8-3 0-5 2-5 4.5S5.5 14 8 14s3.5-2 2.5-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
     </symbol>
     <symbol id="orn-drop" viewBox="0 0 32 32">
-      <path d="M16 4c5 5.5 8 9.5 8 13.5A8 8 0 1 1 8 17.5C8 13.5 11 9.5 16 4Z"
-            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M16 4c5 5.5 8 9.5 8 13.5A8 8 0 1 1 8 17.5C8 13.5 11 9.5 16 4Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
       <circle cx="16" cy="18" r="3.2" fill="currentColor"/>
-    </symbol>
-    <symbol id="orn-flower" viewBox="0 0 32 32">
-      <path d="M16 5c2.6 2.4 3.8 4.8 3.8 7.2S18.6 17 16 19c-2.6-2-3.8-4.4-3.8-6.8S13.4 7.4 16 5Z" fill="currentColor"/>
-      <path d="M7 14c3.2.4 5.4 1.6 6.6 3.4M25 14c-3.2.4-5.4 1.6-6.6 3.4M16 19v8"
-            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-      <circle cx="16" cy="27" r="1.8" fill="currentColor"/>
     </symbol>
     <symbol id="orn-sun" viewBox="0 0 32 32">
       <circle cx="16" cy="16" r="5" fill="currentColor"/>
       <circle cx="16" cy="16" r="9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2.6 3.4"/>
-      <circle cx="16" cy="16" r="13.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1.6 3.6"/>
-    </symbol>
-    <symbol id="orn-bird" viewBox="0 0 32 32">
-      <path d="M6 20c4-1 6.5-3.5 8-7 1 3.5 3 5.5 6 6.5-1.5 4-5 6.5-9 6.5-2.6 0-4.4-2-5-6Z" fill="currentColor"/>
-      <path d="M20 12.5c1.4-2.5 3.4-3.8 6-4-1 2.4-1.6 4.4-1.6 6.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-      <circle cx="16.5" cy="13.5" r="1.2" fill="currentColor"/>
     </symbol>
     <symbol id="orn-diamond" viewBox="0 0 32 32">
       <path d="M16 3 29 16 16 29 3 16Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
@@ -618,56 +674,87 @@
     </symbol>
     <symbol id="orn-tulip" viewBox="0 0 32 32">
       <path d="M16 6c3 3 5 6 5 9a5 5 0 0 1-10 0c0-3 2-6 5-9Z" fill="currentColor"/>
-      <path d="M16 20v8M11 24c1.8-.4 3.4 0 5 1M21 24c-1.8-.4-3.4 0-5 1"
-            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M16 20v8M11 24c1.8-.4 3.4 0 5 1M21 24c-1.8-.4-3.4 0-5 1" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
     </symbol>
     <symbol id="orn-spiral" viewBox="0 0 32 32">
-      <path d="M16 26c-5.5 0-10-4.5-10-10S10.5 6 16 6s9 4 9 8.5-3.5 7.5-7.5 7.5-6.5-2.6-6.5-5.6 2.4-5.4 5.2-5.4 4.4 1.8 4.4 3.8-1.4 3.2-3 3.2"
-            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M16 26c-5.5 0-10-4.5-10-10S10.5 6 16 6s9 4 9 8.5-3.5 7.5-7.5 7.5-6.5-2.6-6.5-5.6 2.4-5.4 5.2-5.4 4.4 1.8 4.4 3.8-1.4 3.2-3 3.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
     </symbol>
-    <!-- знак «птица» для логотипа -->
     <symbol id="mark-aitas" viewBox="0 0 64 64">
-      <path d="M14 46c8-2 13.5-7 16-15 2.2 7.5 6.4 11.8 12.5 13.5C39.5 52 32 56 23.5 56 18 56 14.8 52.5 14 46Z"
-            fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M40 28c3-5.5 7.4-8.4 13-8.6-2.2 5.2-3.4 9.6-3.4 13.4"
-            fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path d="M14 46c8-2 13.5-7 16-15 2.2 7.5 6.4 11.8 12.5 13.5C39.5 52 32 56 23.5 56 18 56 14.8 52.5 14 46Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M40 28c3-5.5 7.4-8.4 13-8.6-2.2 5.2-3.4 9.6-3.4 13.4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
       <path d="M30 31c-1.5-6 .5-11 6-15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
       <circle cx="34" cy="30" r="2.1" fill="currentColor"/>
     </symbol>
   </defs>
 </svg>
 
+<aside class="sidebar" id="sidebar">
+  <div class="side-top">
+    <div class="side-brand">
+      <svg class="mark" aria-hidden="true"><use href="#mark-aitas"></use></svg>
+      <div class="word">
+        <b>aitas ukpf</b>
+        <span>усть-каменогорская птицефабрика</span>
+      </div>
+    </div>
+    <button class="side-toggle" id="sideToggle" title="Свернуть панель" aria-label="Свернуть панель">
+      <span class="chev">‹</span>
+    </button>
+  </div>
+
+  <div class="side-label">Подразделения</div>
+  <nav class="side-nav" id="sideNav" role="tablist" aria-label="Подразделения">
+    <button class="side-item active" data-tab="incubation" title="Цех инкубации" role="tab" aria-selected="true" aria-controls="panel-incubation">
+      <span class="thumb"><img src="__ILLU_INCUBATION__" alt=""></span>
+      <span class="side-text"><b>Цех инкубации</b><small class="side-status">Ожидание файла</small></span>
+      <span class="side-dot"></span>
+      <span class="tip">Цех инкубации</span>
+    </button>
+    <button class="side-item" data-tab="zpp" title="ЗПП — завод по переработке птицы" role="tab" aria-selected="false" aria-controls="panel-zpp">
+      <span class="thumb"><img src="__ILLU_ZPP__" alt=""></span>
+      <span class="side-text"><b>ЗПП</b><small class="side-status">Ожидание файла</small></span>
+      <span class="side-dot"></span>
+      <span class="tip">ЗПП — завод по переработке птицы</span>
+    </button>
+    <button class="side-item" data-tab="broiler" title="Бройлерное производство" role="tab" aria-selected="false" aria-controls="panel-broiler">
+      <span class="thumb"><img src="__ILLU_BROILER__" alt=""></span>
+      <span class="side-text"><b>Бройлерное производство</b><small class="side-status">Ожидание файла</small></span>
+      <span class="side-dot"></span>
+      <span class="tip">Бройлерное производство</span>
+    </button>
+  </nav>
+
+  <div class="side-foot">
+    <div class="side-orn" id="sideOrn"></div>
+    <div class="side-hint">Alt + 1…3 — быстрое переключение</div>
+  </div>
+</aside>
+<div class="side-backdrop" id="sideBackdrop"></div>
+<div class="scroll-progress" id="scrollProgress"></div>
+
 <header class="brand-bar">
   <div class="title-block">
     <span class="eyebrow">Контроль качества · санитария</span>
-    <span class="eyebrow range-chip" id="rangeChip" hidden>Период данных: <b id="rangeChipText"></b></span>
     <h1>Сводный дэшборд качества мойки и МБ смывов</h1>
     <p class="lead">
-      Файл «Свод рабочих журналов МБ» загружается один раз и автоматически расходится по всем вкладкам.
-      Акты приёма мойки — отдельный файл на каждой вкладке. Каждый блок можно выгрузить как готовый слайд PNG для отчёта.
+      Файл «Свод рабочих журналов МБ» загружается один раз и автоматически расходится по всем подразделениям.
+      Акты приёма мойки — отдельный файл на каждое подразделение. Каждый блок выгружается как готовый слайд PNG для отчёта.
     </p>
   </div>
-  <div class="logo-lockup">
-    <svg class="mark" aria-hidden="true"><use href="#mark-aitas"></use></svg>
-    <div class="word">
-      <b>aitas ukpf</b>
-      <span>усть-каменогорская птицефабрика</span>
-    </div>
-  </div>
+  <button class="side-open-btn" id="sideOpen" aria-label="Открыть меню подразделений">☰</button>
 </header>
 
 <div class="shell-body">
 
   <h2 class="section-title">Исходные данные</h2>
   <div class="intake">
-    <div class="shared-upload" id="sharedDz" tabindex="0" role="button"
-         aria-label="Загрузить общий файл «Свод рабочих журналов МБ»">
+    <div class="shared-upload" id="sharedDz" tabindex="0" role="button" aria-label="Загрузить общий файл «Свод рабочих журналов МБ»">
       <input type="file" id="sharedFileInput" accept=".xlsx,.xls">
       <div class="icon">🧫</div>
       <div class="txt">
         <h3>Свод рабочих журналов МБ — общий файл</h3>
         <div class="hint">
-          Excel (.xlsx). Загрузите один раз — данные уйдут во все вкладки, каждая отфильтрует свои строки.
+          Excel (.xlsx). Загрузите один раз — данные уйдут во все подразделения, каждое отфильтрует свои строки.
           Можно перетащить файл прямо сюда.
         </div>
         <div class="status-line" id="sharedStatus"></div>
@@ -675,28 +762,27 @@
     </div>
 
     <div class="status-card">
-      <div class="status-head">Приём файла по вкладкам</div>
-      <div class="mb-status-item" id="mbStatus-incubation"><span class="dot"></span><span class="txt">Цех инкубации — ожидание файла</span></div>
-      <div class="mb-status-item" id="mbStatus-zpp"><span class="dot"></span><span class="txt">ЗПП — ожидание файла</span></div>
-      <div class="mb-status-item" id="mbStatus-broiler"><span class="dot"></span><span class="txt">Бройлерное производство — ожидание файла</span></div>
+      <div class="status-head">Приём файла по подразделениям</div>
+      <div class="mb-status-item" id="mbStatus-incubation" data-tab="incubation"><span class="dot"></span><span class="txt">Цех инкубации — ожидание файла</span></div>
+      <div class="mb-status-item" id="mbStatus-zpp" data-tab="zpp"><span class="dot"></span><span class="txt">ЗПП — ожидание файла</span></div>
+      <div class="mb-status-item" id="mbStatus-broiler" data-tab="broiler"><span class="dot"></span><span class="txt">Бройлерное производство — ожидание файла</span></div>
     </div>
   </div>
 
   <div class="tabbar" id="tabbar">
     <div class="tabbar-row">
-      <div class="tabs" id="tabs" role="tablist" aria-label="Подразделения">
-        <span class="tab-indicator" id="tabIndicator"></span>
-        <button class="tab-btn active" data-tab="incubation" role="tab" aria-selected="true" aria-controls="panel-incubation"><span class="tab-dot"></span>Цех инкубации</button>
-        <button class="tab-btn" data-tab="zpp" role="tab" aria-selected="false" aria-controls="panel-zpp"><span class="tab-dot"></span>ЗПП</button>
-        <button class="tab-btn" data-tab="broiler" role="tab" aria-selected="false" aria-controls="panel-broiler"><span class="tab-dot"></span>Бройлерное производство</button>
+      <div class="crumb">
+        <span class="crumb-mark"></span>
+        <b id="crumbTitle">Цех инкубации</b>
+        <span class="crumb-range" id="rangeChip" hidden>Период: <span id="rangeChipText"></span></span>
       </div>
-      <button class="btn btn-primary" id="btnExportAll" title="Скачать все слайды активной вкладки в PNG">
-        <span class="spin"></span><span class="lbl">🖼 Скачать все слайды вкладки</span>
+      <button class="btn btn-primary" id="btnExportAll" title="Скачать все слайды активного подразделения в PNG">
+        <span class="spin"></span><span class="lbl">🖼 Скачать все слайды</span>
       </button>
       <button class="btn btn-ghost" id="btnScrollTop">↑ К началу</button>
     </div>
     <div class="section-rail" id="sectionRail">
-      <span class="rail-label">Разделы:</span>
+      <span class="rail-label">Разделы</span>
     </div>
   </div>
 
@@ -735,7 +821,7 @@
 
 <script>
 /* ==========================================================================
-   Оболочка дэшборда: вкладки, общий файл, навигация по разделам, экспорт
+   Оболочка дэшборда: левая панель подразделений, разделы, экспорт слайдов
    ========================================================================== */
 const DASH_B64 = __DASH_B64_JSON__;
 
@@ -753,19 +839,16 @@ const ranges = { incubation:'', zpp:'', broiler:'' };
 let sharedMbFile = null;
 let activeKey = 'incubation';
 
-/* ---------- орнаментальная колонка ---------- */
-(function buildRail(){
-  const rail = document.getElementById('ornRail');
-  const glyphs = ['orn-bird','orn-koshkar','orn-drop','orn-tulip','orn-flower','orn-sun','orn-diamond','orn-spiral'];
-  const count = Math.max(8, Math.ceil(window.innerHeight / 50));
-  for(let i = 0; i < count; i++){
-    const g = glyphs[i % glyphs.length];
+/* ---------- орнамент в подвале панели ---------- */
+(function buildOrn(){
+  const box = document.getElementById('sideOrn');
+  ['orn-koshkar','orn-drop','orn-tulip','orn-sun','orn-diamond','orn-spiral'].forEach((g, i) => {
     const cell = document.createElement('div');
-    cell.className = 'orn' + (i % 4 === 3 ? ' plain' : '');
-    cell.style.animationDelay = (i * 45) + 'ms';
+    cell.className = 'orn' + (i % 3 === 2 ? ' plain' : '');
+    cell.style.animationDelay = (i * 60) + 'ms';
     cell.innerHTML = '<svg><use href="#' + g + '"></use></svg>';
-    rail.appendChild(cell);
-  }
+    box.appendChild(cell);
+  });
 })();
 
 /* ---------- уведомления ---------- */
@@ -784,7 +867,7 @@ function toast(text, kind, ttl){
 
 /* ---------- «волна» на кнопках ---------- */
 document.addEventListener('click', (e) => {
-  const btn = e.target.closest('.btn, .tab-btn, .section-chip');
+  const btn = e.target.closest('.btn, .side-item, .section-chip, .side-toggle');
   if(!btn || btn.disabled) return;
   const rect = btn.getBoundingClientRect();
   const r = document.createElement('span');
@@ -797,56 +880,80 @@ document.addEventListener('click', (e) => {
   setTimeout(() => r.remove(), 600);
 });
 
-/* ---------- вкладки ---------- */
-function moveIndicator(){
-  const active = document.querySelector('.tab-btn.active');
-  const ind = document.getElementById('tabIndicator');
-  if(!active || !ind) return;
-  ind.style.width = active.offsetWidth + 'px';
-  ind.style.transform = 'translateX(' + (active.offsetLeft - 4) + 'px)';
-}
+/* ---------- левая панель: сворачивание и мобильный режим ---------- */
+const body = document.body;
+const isNarrow = () => window.matchMedia('(max-width: 900px)').matches;
 
+try{
+  if(localStorage.getItem('aitas-side') === 'collapsed') body.classList.add('side-collapsed');
+}catch(e){}
+
+document.getElementById('sideToggle').addEventListener('click', () => {
+  body.classList.toggle('side-collapsed');
+  const collapsed = body.classList.contains('side-collapsed');
+  document.getElementById('sideToggle').title = collapsed ? 'Развернуть панель' : 'Свернуть панель';
+  try{ localStorage.setItem('aitas-side', collapsed ? 'collapsed' : 'expanded'); }catch(e){}
+  setTimeout(() => KEYS.forEach(resizeFrame), 360);
+});
+
+document.getElementById('sideOpen').addEventListener('click', () => body.classList.add('side-open'));
+document.getElementById('sideBackdrop').addEventListener('click', () => body.classList.remove('side-open'));
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') body.classList.remove('side-open');
+});
+
+/* ---------- переключение подразделений ---------- */
 function switchTab(key, scroll){
   if(!KEYS.includes(key)) return;
   activeKey = key;
-  document.querySelectorAll('.tab-btn').forEach(b => {
+
+  document.querySelectorAll('.side-item').forEach(b => {
     const on = b.dataset.tab === key;
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', on ? 'true' : 'false');
   });
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + key));
-  moveIndicator();
+  document.getElementById('crumbTitle').textContent = TAB_LABELS[key];
+
   renderSectionRail();
   renderRangeChip();
   resizeFrame(key);
-  // графики внутри скрытой вкладки рисуются в нулевую ширину — просим пересчитать
+
+  // графики в скрытой вкладке рисуются в нулевую ширину — просим пересчитать
   const f = frames[key];
   if(f && f.contentWindow){
     const nudge = () => { try{ f.contentWindow.dispatchEvent(new Event('resize')); resizeFrame(key); }catch(e){} };
     nudge();
     setTimeout(nudge, 260);
   }
+
+  if(isNarrow()) body.classList.remove('side-open');
   if(scroll){
     const top = document.getElementById('tabbar').offsetTop;
     window.scrollTo({ top: Math.max(0, top - 4), behavior:'smooth' });
   }
 }
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
+document.querySelectorAll('.side-item').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab, true));
 });
-window.addEventListener('resize', moveIndicator);
-window.addEventListener('load', moveIndicator);
-moveIndicator();
-
-// быстрые переключения: Alt+1 / Alt+2 / Alt+3
+document.querySelectorAll('.mb-status-item').forEach(item => {
+  item.addEventListener('click', () => {
+    // у ошибок текст длинный — первый клик раскрывает его, повторный ведёт на подразделение
+    if(item.classList.contains('error') && !item.classList.contains('expanded')){
+      item.classList.add('expanded');
+      return;
+    }
+    switchTab(item.dataset.tab, true);
+  });
+});
 document.addEventListener('keydown', (e) => {
   if(!e.altKey) return;
   const i = ['1','2','3'].indexOf(e.key);
   if(i > -1){ e.preventDefault(); switchTab(KEYS[i], true); }
 });
 
-/* ---------- навигация по разделам активной вкладки ---------- */
+/* ---------- разделы активного подразделения ---------- */
 function renderSectionRail(){
   const rail = document.getElementById('sectionRail');
   rail.querySelectorAll('.section-chip').forEach(c => c.remove());
@@ -855,8 +962,9 @@ function renderSectionRail(){
     const chip = document.createElement('button');
     chip.className = 'section-chip';
     chip.type = 'button';
-    chip.textContent = s.title.replace(/^[^\p{L}\d]+/u, '').slice(0, 44);
-    chip.style.animationDelay = (i * 40) + 'ms';
+    chip.dataset.id = s.id;
+    chip.textContent = s.title.replace(/^[^\p{L}\d]+/u, '').slice(0, 46);
+    chip.style.animationDelay = (i * 45) + 'ms';
     chip.addEventListener('click', () => {
       const f = frames[activeKey];
       if(f && f.contentWindow) f.contentWindow.postMessage({ type:'aitas-scroll-to', id:s.id }, '*');
@@ -864,6 +972,19 @@ function renderSectionRail(){
     rail.appendChild(chip);
   });
   rail.style.display = list.length ? 'flex' : 'none';
+  highlightCurrentSection();
+}
+
+// подсветка раздела, который сейчас на экране
+function highlightCurrentSection(){
+  const list = sections[activeKey] || [];
+  const panel = document.getElementById('panel-' + activeKey);
+  if(!list.length || !panel) return;
+  const panelTop = panel.getBoundingClientRect().top + window.pageYOffset;
+  const probe = window.pageYOffset + 190;
+  let currentId = list[0].id;
+  list.forEach(s => { if(typeof s.top === 'number' && panelTop + s.top <= probe) currentId = s.id; });
+  document.querySelectorAll('.section-chip').forEach(c => c.classList.toggle('current', c.dataset.id === currentId));
 }
 
 function renderRangeChip(){
@@ -877,27 +998,36 @@ function renderRangeChip(){
 /* ---------- статусы приёма файла ---------- */
 function updateTabMbStatus(key, state, detail){
   const el = document.getElementById('mbStatus-' + key);
-  const dot = document.querySelector('.tab-btn[data-tab="' + key + '"] .tab-dot');
+  const item = document.querySelector('.side-item[data-tab="' + key + '"]');
+  const dot = item ? item.querySelector('.side-dot') : null;
+  const sideStatus = item ? item.querySelector('.side-status') : null;
   if(!el) return;
+
   const label = TAB_LABELS[key] || key;
   el.classList.remove('ok','error','pending');
   if(dot) dot.classList.remove('ok','error','pending');
   const txt = el.querySelector('.txt');
+
   if(state === 'sending'){
     el.classList.add('pending'); if(dot) dot.classList.add('pending');
     txt.textContent = label + ' — передача файла…';
+    if(sideStatus) sideStatus.textContent = 'Передача файла…';
   }else if(state === 'ok'){
     el.classList.add('ok'); if(dot) dot.classList.add('ok');
     txt.textContent = label + ' — принято: ' + detail;
+    if(sideStatus) sideStatus.textContent = 'Принято: ' + detail;
   }else if(state === 'error'){
     el.classList.add('error'); if(dot) dot.classList.add('error');
     txt.textContent = label + ' — ошибка: ' + detail;
+    el.title = detail;
+    if(sideStatus) sideStatus.textContent = 'Ошибка обработки';
   }else{
     txt.textContent = label + ' — ожидание файла';
+    if(sideStatus) sideStatus.textContent = 'Ожидание файла';
   }
 }
 
-/* ---------- инициализация панелей ---------- */
+/* ---------- панели ---------- */
 function decodeUtf8Base64(b64){
   const binary = atob(b64);
   const bytes = new Uint8Array(binary.length);
@@ -970,7 +1100,7 @@ window.addEventListener('message', (e) => {
   if(d.type === 'aitas-scroll-request'){
     const wrap = document.getElementById('panel-' + d.key);
     if(!wrap) return;
-    const top = wrap.getBoundingClientRect().top + window.pageYOffset + d.y - 96;
+    const top = wrap.getBoundingClientRect().top + window.pageYOffset + d.y - 150;
     window.scrollTo({ top:Math.max(0, top), behavior:'smooth' });
   }
 
@@ -987,11 +1117,11 @@ window.addEventListener('message', (e) => {
     activeToast.classList.add('out');
     setTimeout(() => activeToast.remove(), 300);
     if(d.total > 0) toast('Готово: слайдов выгружено — ' + d.total, 'ok');
-    else toast('На этой вкладке пока нечего выгружать — сначала загрузите файлы', 'error', 4200);
+    else toast('Здесь пока нечего выгружать — сначала загрузите файлы', 'error', 4200);
   }
 });
 
-/* ---------- выгрузка всех слайдов активной вкладки ---------- */
+/* ---------- выгрузка всех слайдов ---------- */
 document.getElementById('btnExportAll').addEventListener('click', (e) => {
   const btn = e.currentTarget;
   const f = frames[activeKey];
@@ -1011,11 +1141,11 @@ function handleSharedFile(file){
   sharedMbFile = file;
   sharedDz.classList.add('loaded');
   sharedStatus.classList.remove('error');
-  sharedStatus.textContent = '✓ ' + file.name + ' — расходится по вкладкам…';
+  sharedStatus.textContent = '✓ ' + file.name + ' — расходится по подразделениям…';
   KEYS.forEach(key => sendFileToFrame(key, file));
-  toast('Файл «' + file.name + '» отправлен во все вкладки', 'ok');
+  toast('Файл «' + file.name + '» отправлен во все подразделения', 'ok');
   setTimeout(() => {
-    sharedStatus.textContent = '✓ ' + file.name + ' загружен. Статус по вкладкам — справа.';
+    sharedStatus.textContent = '✓ ' + file.name + ' загружен. Статус по подразделениям — справа и в левой панели.';
   }, 700);
 }
 
@@ -1034,7 +1164,7 @@ sharedDz.addEventListener('drop', (e) => {
   if(e.dataTransfer.files.length) handleSharedFile(e.dataTransfer.files[0]);
 });
 
-/* ---------- прокрутка: прогресс, «наверх», липкая панель вкладок ---------- */
+/* ---------- прокрутка ---------- */
 const progress = document.getElementById('scrollProgress');
 const toTop = document.getElementById('toTop');
 const tabbar = document.getElementById('tabbar');
@@ -1045,8 +1175,10 @@ function onScroll(){
   progress.style.transform = 'scaleX(' + p + ')';
   toTop.classList.toggle('show', window.pageYOffset > 600);
   tabbar.classList.toggle('stuck', tabbar.getBoundingClientRect().top <= 0.5);
+  highlightCurrentSection();
 }
 window.addEventListener('scroll', onScroll, { passive:true });
+window.addEventListener('resize', onScroll);
 onScroll();
 
 toTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));

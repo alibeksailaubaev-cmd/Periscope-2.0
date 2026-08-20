@@ -292,7 +292,13 @@
   function collectSections(){
     return [].slice.call(doc.querySelectorAll('.card[id]')).filter(visible).map(function(card){
       var t = card.querySelector('.card-header h2, .chart-subtitle');
-      return { id:card.id, title:(t ? t.textContent : card.id).trim() };
+      var rect = card.getBoundingClientRect();
+      return {
+        id: card.id,
+        title: (t ? t.textContent : card.id).trim(),
+        top: Math.round(rect.top + window.pageYOffset),   // для подсветки активного раздела в оболочке
+        height: Math.round(rect.height)
+      };
     });
   }
   var sectionsTimer;
