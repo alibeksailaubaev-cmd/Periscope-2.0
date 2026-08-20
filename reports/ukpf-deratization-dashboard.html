@@ -205,6 +205,7 @@ h2{font-size:15.5px; font-weight:700; margin:0; letter-spacing:-.01em;}
 }
 .seg button[aria-pressed="true"]{background:var(--teal); color:var(--card);}
 .seg.clay button[aria-pressed="true"]{background:var(--clay); color:var(--card);}
+.seg.plum button[aria-pressed="true"]{background:var(--plum); color:var(--card);}
 .seg button:focus-visible{outline:2px solid var(--teal); outline-offset:2px;}
 .srow{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
 
@@ -295,8 +296,21 @@ tr.hl td{background:var(--teal-wash);}
     <article class="kp p">
       <div class="kp-top"><span class="kp-who">Indigo Solutions</span><span class="kp-chip">КП 1</span></div>
       <span class="kp-sum n" id="dI">—</span>
-      <span class="kp-cap">только ККЗ · 96 600 ₸/мес · 2 обхода</span>
-      <div class="kp-ctl"><span class="kp-none">других объектов в КП нет</span></div>
+      <span class="kp-cap" id="dIc">—</span>
+      <div class="kp-ctl">
+        <span class="ctl-lbl">Объекты</span>
+        <div class="seg plum wrap-seg" role="group" aria-label="Объекты Indigo">
+          <button data-ind="kkz" aria-pressed="true">ККЗ</button>
+          <button data-ind="aer" aria-pressed="true">АЭР ТАУ</button>
+          <button data-ind="mno" aria-pressed="true">Многоэтажки</button>
+          <button data-ind="nap" aria-pressed="true">Напольники</button>
+        </div>
+        <span class="ctl-lbl">Оборудование</span>
+        <div class="seg plum wrap-seg" role="group" aria-label="Вариант оборудования">
+          <button data-var="full" aria-pressed="true">Полностью их</button>
+          <button data-var="part" aria-pressed="false">Частичная замена</button>
+        </div>
+      </div>
     </article>
 
     <article class="kp c">
@@ -375,16 +389,27 @@ tr.hl td{background:var(--teal-wash);}
     </div>
 
     <div class="card">
-      <div class="chead"><h2>Indigo Solutions — только кормоцех</h2><span class="hint">других данных у нас нет</span></div>
-      <div class="tiles">
-        <div class="tile"><span class="tv n">96 600 ₸</span><span class="tl">в месяц за ККЗ, дератизация</span></div>
-        <div class="tile"><span class="tv n" id="inPer">—</span><span class="tl">за выбранный период</span></div>
-        <div class="tile"><span class="tv n">2</span><span class="tl">обхода в месяц</span></div>
-        <div class="tile"><span class="tv n">≤2 ч</span><span class="tl">ответ на заявку, выезд ≤24 ч</span></div>
+      <div class="chead">
+        <h2>Indigo Solutions — четыре группы объектов</h2>
+        <span class="hint">переключатели — в карточке Indigo наверху страницы</span>
       </div>
-      <div class="note">Оборудование полностью подрядчика. Предложения по бройлерным площадкам, ЗПП, складу ТМЦ, инкубаторию и АБК в этом КП нет, поэтому сумма Indigo не сопоставима с полным охватом фабрики и в общий график не входит.</div>
+      <div class="scroll">
+        <table style="min-width:780px;">
+          <thead><tr><th>Объект</th><th class="n">Оборудования, ед.</th><th class="n">Полностью их оборудование</th><th class="n">Частичная замена</th><th class="n" data-perhead>За период</th><th class="n">За год</th></tr></thead>
+          <tbody id="tbInd"></tbody>
+          <tfoot id="tfInd"></tfoot>
+        </table>
+      </div>
+      <div class="note" id="indNote">—</div>
+      <div class="chead" style="margin-top:6px;"><h2>Дезинсекция по тому же КП</h2><span class="hint">в сравнение дератизации не входит</span></div>
+      <div class="scroll">
+        <table style="min-width:520px;">
+          <thead><tr><th>Объект</th><th class="n">В месяц</th><th class="n">За год</th></tr></thead>
+          <tbody id="tbIndD"></tbody>
+          <tfoot id="tfIndD"></tfoot>
+        </table>
+      </div>
     </div>
-  </div>
 
   <!-- ============ TAB: НАШ ШТАТ ============ -->
   <div class="panel" id="p-own" role="tabpanel">
@@ -475,7 +500,12 @@ tr.hl td{background:var(--teal-wash);}
         <div class="inp"><label for="iBottles">Бутылки, шт/мес (тёплый сезон)</label><input id="iBottles" type="number" value="40" step="5"></div>
       </div>
       <p class="foot">
-        <b>Источники.</b> Indigo Solutions — КП от 17.08.2026: ККЗ, дератизация, 96 600 ₸/мес, оборудование подрядчика.
+        <b>Источники.</b> Indigo Solutions — КП от 17.08.2026: ККЗ, дератизация, 96 600 ₸/мес, оборудование подрядчика;
+        КП от 19.08.2026 по бройлерным площадкам, ежемесячное обслуживание: АЭР ТАУ (БП-12, БП-13, БП-14) — дезинсекция 720 000,
+        дератизация 618 400 полностью их оборудованием (180 ед.) либо 478 400 при частичной замене; Многоэтажки (площадки Д, Г) —
+        дезинсекция 1 080 000, дератизация 569 800 (166 ед.) либо 440 700; Напольники (А, Б, Е, Ж, В рем. молод, В) —
+        дезинсекция 3 000 000, дератизация 2 599 100 (793 ед.) либо 2 010 300. Гарантии: ответ по заявке в течение двух часов,
+        выезд в течение суток; при неудовлетворительном результате за первые два месяца — месяц обслуживания бесплатно.
         Pest Hunters — КП №26/12 на 2026–2027: ККЗ 145 000 ₸/мес (дезинсекция 70 000 + дератизация 75 000, без НДС);
         дератизация 122 бройлерных объектов — мар–ноя 3 172 000 ₸/мес и дек–фев 2 074 000 ₸/мес своим оборудованием
         либо 2 806 000 ₸/мес и 1 830 000 ₸/мес уже установленным оборудованием заказчика.
@@ -515,7 +545,15 @@ const MONTHS=[
  {s:"Июл",w:false,lo:false}, {s:"Авг",w:false,lo:false}, {s:"Сен",w:false,lo:false},
  {s:"Окт",w:false,lo:false}, {s:"Ноя",w:true, lo:false}, {s:"Дек",w:true, lo:true}
 ];
-const INDIGO_KKZ=96600, PH_KKZ=75000, PH_ZPP=180000, PH_TMC=80000;
+const PH_KKZ=75000, PH_ZPP=180000, PH_TMC=80000;
+/* Indigo: КП от 17.08.2026 (ККЗ) и от 19.08.2026 (площадки).
+   full — полностью оборудование Indigo, part — частичная замена по периметру. */
+const IND=[
+  {k:"kkz", n:"ККЗ · кормоцех",                                    units:null, full:96600,   part:96600,   dez:0},
+  {k:"aer", n:"АЭР ТАУ · БП-12, БП-13, БП-14",                     units:180,  full:618400,  part:478400,  dez:720000},
+  {k:"mno", n:"Многоэтажки · площадки Д, Г",                       units:166,  full:569800,  part:440700,  dez:1080000},
+  {k:"nap", n:"Напольники · А, Б, Е, Ж, В (рем. молод), В",        units:793,  full:2599100, part:2010300, dez:3000000}
+];
 const PH={hi:3172000, lo:2074000};        // основной вариант КП: оборудование подрядчика
 const PH_ALT={hi:2806000, lo:1830000};   // альтернатива из КП: оборудование заказчика
 const TMC_MONTHS=[3,4,5,6,7,8,9,10,11];
@@ -527,6 +565,8 @@ let picked=new Set(MONTHS.map((_,i)=>i));
 let vat=false, head=4, tab="sum";
 let comp={pay:true, mat:true};
 let obj={kkz:true, bp:true, zpp:true, tmc:true};
+let ind={kkz:true, aer:true, mno:true, nap:true};
+let indVar="full";
 
 /* ================= helpers ================= */
 const money=v=>Math.round(v).toLocaleString("ru-RU").replace(/ /g," ")+" ₸";
@@ -569,7 +609,7 @@ function totals(){
   let indigo=0, hunter=0, staff=0, nW=0, nS=0;
   picked.forEach(i=>{
     const m=MONTHS[i];
-    indigo+=INDIGO_KKZ;
+    indigo+=IND.reduce((a,x)=>a+(ind[x.k]?x[indVar]:0),0);
     hunter+=(obj.kkz?PH_KKZ*k:0)+(obj.bp?(m.lo?eq.lo:eq.hi)*k:0)+(obj.zpp?PH_ZPP:0)
            +(obj.tmc&&TMC_MONTHS.includes(i)?PH_TMC:0);
     const o=m.w?u.w:u.s;
@@ -603,6 +643,12 @@ function render(){
 
   /* three KP cards */
   setNum(document.getElementById("dI"), t.indigo);
+  document.querySelectorAll("[data-ind]").forEach(b=>b.setAttribute("aria-pressed",String(ind[b.dataset.ind])));
+  document.querySelectorAll("[data-var]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.var===indVar)));
+  const indOn=IND.filter(x=>ind[x.k]);
+  document.getElementById("dIc").textContent =
+    (indOn.length?indOn.length+" из 4 групп объектов":"объекты не выбраны")+" · "
+    +(indVar==="full"?"полностью их оборудование":"частичная замена")+" · "+per;
   setNum(document.getElementById("dH"), t.hunter);
   setNum(document.getElementById("dS"), t.staff);
   const onNames=[obj.kkz&&"ККЗ", obj.bp&&"площадки", obj.zpp&&"ЗПП", obj.tmc&&"склад ТМЦ"].filter(Boolean);
@@ -619,7 +665,7 @@ function render(){
     : `Pest Hunters за ${t.n===12?"год":"период"} — <b>${money(t.hunter)}</b>, собственная служба из ${head} человек — <b>${money(t.staff)}</b>.` +
       (diff>0 ? ` Разница в пользу штата <b>${money(diff)}</b>, это <b>${(t.hunter/(t.staff||1)).toFixed(1).replace(".",",")}×</b>.`
               : ` Подрядчик выходит дешевле на <b>${money(-diff)}</b>.`) +
-      ` Indigo — <b>${money(t.indigo)}</b>, но только за кормоцех.`;
+      ` Indigo — <b>${money(t.indigo)}</b> за ${indOn.length} из четырёх групп объектов.`;
 
   /* bars */
   const max=Math.max(t.hunter,t.staff,t.indigo,1);
@@ -634,7 +680,7 @@ function render(){
       <span class="btrack"><span class="bstack" style="width:${w(t.hunter)}">
         <span class="bseg" style="width:100%;background:var(--clay)"></span></span></span>
       <span class="amt">${money(t.hunter)}</span></div>
-    <div class="brow"><span>Indigo Solutions<span class="sub">только ККЗ, 2 обхода/мес</span></span>
+    <div class="brow"><span>Indigo Solutions<span class="sub">ККЗ + бройлерные площадки, 2 обхода/мес</span></span>
       <span class="btrack"><span class="bstack" style="width:${w(t.indigo)}">
         <span class="bseg" style="width:100%;background:var(--plum)"></span></span></span>
       <span class="amt">${money(t.indigo)}</span></div>`;
@@ -654,8 +700,32 @@ function render(){
       ? `За ${t.n===12?"полный год":"выбранный период"} подрядчик просит <b>${money(t.hunter)}</b>, собственная служба обходится в <b>${money(t.staff)}</b>. Разница <b>${money(diff2)}</b>. Зарплата ${head} дератизаторов фиксирована и не растёт от количества объектов, а подрядчик тарифицирует каждый из 122 бройлерных объектов отдельно — отсюда весь разрыв. При этом штат закрывает ещё инкубаторий, склад лузги и АБК, которых нет ни в одном КП.`
       : `За выбранный период штат обходится в <b>${money(t.staff)}</b> против <b>${money(t.hunter)}</b> у подрядчика. Так выходит на коротких отрезках, когда включена лишь часть объектов подрядчика, а зарплата платится полностью независимо от объёма работ.`;
 
-  /* Indigo tile */
-  document.getElementById("inPer").textContent = money(t.indigo);
+  /* Indigo tables */
+  const indMonth=IND.reduce((a,x)=>a+(ind[x.k]?x[indVar]:0),0);
+  document.getElementById("tbInd").innerHTML=IND.map(x=>
+    `<tr class="${ind[x.k]?"":"off"}"><td>${x.n}</td><td class="n">${x.units?int(x.units):dashS}</td>
+      <td class="n">${money(x.full)}</td><td class="n">${money(x.part)}</td>
+      <td class="n">${ind[x.k]?money(x[indVar]*t.n):dashS}</td>
+      <td class="n">${money(x[indVar]*12)}</td></tr>`).join("");
+  document.getElementById("tfInd").innerHTML=
+    `<tr><td>Итого по включённым</td>
+      <td>${int(IND.reduce((a,x)=>a+(ind[x.k]?(x.units||0):0),0))}</td>
+      <td>${money(IND.reduce((a,x)=>a+(ind[x.k]?x.full:0),0))}</td>
+      <td>${money(IND.reduce((a,x)=>a+(ind[x.k]?x.part:0),0))}</td>
+      <td>${money(t.indigo)}</td><td>${money(indMonth*12)}</td></tr>`;
+  const dezOn=IND.filter(x=>ind[x.k]&&x.dez);
+  document.getElementById("tbIndD").innerHTML=IND.filter(x=>x.dez).map(x=>
+    `<tr class="${ind[x.k]?"":"off"}"><td>${x.n}</td><td class="n">${money(x.dez)}</td><td class="n">${money(x.dez*12)}</td></tr>`).join("");
+  const dezSum=dezOn.reduce((a,x)=>a+x.dez,0);
+  document.getElementById("tfIndD").innerHTML=
+    `<tr><td>Итого по включённым</td><td>${money(dezSum)}</td><td>${money(dezSum*12)}</td></tr>`;
+  document.getElementById("indNote").innerHTML =
+    `КП от 19 августа 2026 года делит бройлерные площадки на три группы и по каждой даёт два варианта дератизации. `+
+    `<b>Полностью их оборудование</b> — Indigo ставит свои ЭПК и живоловки целиком, всего ${int(IND.reduce((a,x)=>a+(x.units||0),0))} единиц: `+
+    `${money(IND.reduce((a,x)=>a+x.full,0))} в месяц по всем объектам. `+
+    `<b>Частичная замена</b> — оборудование по периметру грязного барьера меняется на их, по периметру птичников заменяется частично, плюс допоборудование в чистой зоне: `+
+    `${money(IND.reduce((a,x)=>a+x.part,0))} в месяц. ККЗ идёт по отдельному КП от 17 августа за 96 600 ₸ и от варианта не зависит. `+
+    `Дезинсекция и по этому КП считается отдельно — ${money(IND.reduce((a,x)=>a+x.dez,0))} в месяц по трём группам площадок.`;
 
   /* Pest Hunters table */
   document.querySelectorAll("[data-obj]").forEach(b=>b.setAttribute("aria-pressed",String(obj[b.dataset.obj])));
@@ -808,6 +878,12 @@ btnM.addEventListener("click",()=>{
   btnM.setAttribute("aria-pressed",String(open));
 });
 document.getElementById("btnVat").addEventListener("click",()=>{vat=!vat; render();});
+document.querySelectorAll("[data-ind]").forEach(b=>b.addEventListener("click",()=>{
+  ind[b.dataset.ind]=!ind[b.dataset.ind]; render();
+}));
+document.querySelectorAll("[data-var]").forEach(b=>b.addEventListener("click",()=>{
+  indVar=b.dataset.var; render();
+}));
 document.querySelectorAll("[data-obj]").forEach(b=>b.addEventListener("click",()=>{
   obj[b.dataset.obj]=!obj[b.dataset.obj]; render();
 }));
