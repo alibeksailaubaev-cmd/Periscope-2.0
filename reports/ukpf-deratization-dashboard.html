@@ -301,14 +301,14 @@ tr.hl td{background:var(--teal-wash);}
         <span class="ctl-lbl">Объекты</span>
         <div class="seg plum wrap-seg" role="group" aria-label="Объекты Indigo">
           <button data-ind="kkz" aria-pressed="true">ККЗ</button>
-          <button data-ind="aer" aria-pressed="true">АЭР ТАУ</button>
+          <button data-ind="aer" aria-pressed="true">Айыртау БП</button>
           <button data-ind="mno" aria-pressed="true">Многоэтажки</button>
-          <button data-ind="nap" aria-pressed="true">Напольники</button>
+          <button data-ind="nap" aria-pressed="true">Площадки</button>
         </div>
         <span class="ctl-lbl">Оборудование</span>
         <div class="seg plum wrap-seg" role="group" aria-label="Вариант оборудования">
-          <button data-var="full" aria-pressed="true">Полностью их</button>
-          <button data-var="part" aria-pressed="false">Частичная замена</button>
+          <button data-var="full" aria-pressed="true">Всё оборудование их</button>
+          <button data-var="part" aria-pressed="false">Часть — наша</button>
         </div>
       </div>
     </article>
@@ -395,12 +395,27 @@ tr.hl td{background:var(--teal-wash);}
       </div>
       <div class="scroll">
         <table style="min-width:780px;">
-          <thead><tr><th>Объект</th><th class="n">Оборудования, ед.</th><th class="n">Полностью их оборудование</th><th class="n">Частичная замена</th><th class="n" data-perhead>За период</th><th class="n">За год</th></tr></thead>
+          <thead><tr><th>Объект</th><th class="n">Оборудования, ед.</th><th class="n">Вариант 1 · всё их</th><th class="n">Вариант 2 · часть наша</th><th class="n" data-perhead>За период</th><th class="n">За год</th></tr></thead>
           <tbody id="tbInd"></tbody>
           <tfoot id="tfInd"></tfoot>
         </table>
       </div>
       <div class="note" id="indNote">—</div>
+      <div class="chead" style="margin-top:6px;"><h2>Периодичность обходов</h2><span class="hint">то, что прямо написано в документах</span></div>
+      <div class="scroll">
+        <table style="min-width:560px;">
+          <thead><tr><th>Вариант</th><th>Объект</th><th class="n">Обходов в месяц</th><th>Что обещано дополнительно</th></tr></thead>
+          <tbody>
+            <tr><td>Indigo Solutions</td><td>все объекты</td><td class="n">в КП не указана</td><td>ответ по заявке ≤2 ч, выезд ≤24 ч, вызовы без ограничений, клеевые пластины меняются по мере необходимости</td></tr>
+            <tr><td>Pest Hunters</td><td>ККЗ</td><td class="n">1</td><td>выезд по запросу</td></tr>
+            <tr><td>Pest Hunters</td><td>бройлерные площадки</td><td class="n">1</td><td>дополнительные визиты по вызову заказчика</td></tr>
+            <tr><td>Pest Hunters</td><td>ЗПП</td><td class="n">3</td><td>по утверждённому графику на 2026 год, бригада из 3 человек</td></tr>
+            <tr><td>Pest Hunters</td><td>склад ТМЦ</td><td class="n">1</td><td>выезд по рекламации в течение 2 рабочих дней</td></tr>
+            <tr class="hl"><td>Штат УКПФ</td><td>все объекты</td><td class="n">8</td><td>присутствие на фабрике 5/2, реакция в тот же день</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note">Периодичность обходов Indigo ни в КП от 17 августа, ни в КП от 19 августа не указана — там зафиксированы только сроки реакции. Это стоит уточнить у подрядчика до сравнения: при равной цене один обход в месяц и четыре — разные услуги.</div>
       <div class="chead" style="margin-top:6px;"><h2>Дезинсекция по тому же КП</h2><span class="hint">в сравнение дератизации не входит</span></div>
       <div class="scroll">
         <table style="min-width:520px;">
@@ -501,9 +516,9 @@ tr.hl td{background:var(--teal-wash);}
       </div>
       <p class="foot">
         <b>Источники.</b> Indigo Solutions — КП от 17.08.2026: ККЗ, дератизация, 96 600 ₸/мес, оборудование подрядчика;
-        КП от 19.08.2026 по бройлерным площадкам, ежемесячное обслуживание: АЭР ТАУ (БП-12, БП-13, БП-14) — дезинсекция 720 000,
+        КП от 19.08.2026 по бройлерным площадкам, ежемесячное обслуживание: Айыртау БП (БП-12, БП-13, БП-14) — дезинсекция 720 000,
         дератизация 618 400 полностью их оборудованием (180 ед.) либо 478 400 при частичной замене; Многоэтажки (площадки Д, Г) —
-        дезинсекция 1 080 000, дератизация 569 800 (166 ед.) либо 440 700; Напольники (А, Б, Е, Ж, В рем. молод, В) —
+        дезинсекция 1 080 000, дератизация 569 800 (166 ед.) либо 440 700; Площадки (А, Б, Е, Ж, В рем. молод, В) —
         дезинсекция 3 000 000, дератизация 2 599 100 (793 ед.) либо 2 010 300. Гарантии: ответ по заявке в течение двух часов,
         выезд в течение суток; при неудовлетворительном результате за первые два месяца — месяц обслуживания бесплатно.
         Pest Hunters — КП №26/12 на 2026–2027: ККЗ 145 000 ₸/мес (дезинсекция 70 000 + дератизация 75 000, без НДС);
@@ -550,9 +565,9 @@ const PH_KKZ=75000, PH_ZPP=180000, PH_TMC=80000;
    full — полностью оборудование Indigo, part — частичная замена по периметру. */
 const IND=[
   {k:"kkz", n:"ККЗ · кормоцех",                                    units:null, full:96600,   part:96600,   dez:0},
-  {k:"aer", n:"АЭР ТАУ · БП-12, БП-13, БП-14",                     units:180,  full:618400,  part:478400,  dez:720000},
+  {k:"aer", n:"Айыртау БП · БП-12, БП-13, БП-14",                  units:180,  full:618400,  part:478400,  dez:720000},
   {k:"mno", n:"Многоэтажки · площадки Д, Г",                       units:166,  full:569800,  part:440700,  dez:1080000},
-  {k:"nap", n:"Напольники · А, Б, Е, Ж, В (рем. молод), В",        units:793,  full:2599100, part:2010300, dez:3000000}
+  {k:"nap", n:"Площадки · А, Б, Е, Ж, В (рем. молод), В",          units:793,  full:2599100, part:2010300, dez:3000000}
 ];
 const PH={hi:3172000, lo:2074000};        // основной вариант КП: оборудование подрядчика
 const PH_ALT={hi:2806000, lo:1830000};   // альтернатива из КП: оборудование заказчика
@@ -648,7 +663,7 @@ function render(){
   const indOn=IND.filter(x=>ind[x.k]);
   document.getElementById("dIc").textContent =
     (indOn.length?indOn.length+" из 4 групп объектов":"объекты не выбраны")+" · "
-    +(indVar==="full"?"полностью их оборудование":"частичная замена")+" · "+per;
+    +(indVar==="full"?"всё оборудование Indigo":"часть точек остаётся нашей")+" · "+per;
   setNum(document.getElementById("dH"), t.hunter);
   setNum(document.getElementById("dS"), t.staff);
   const onNames=[obj.kkz&&"ККЗ", obj.bp&&"площадки", obj.zpp&&"ЗПП", obj.tmc&&"склад ТМЦ"].filter(Boolean);
@@ -680,7 +695,7 @@ function render(){
       <span class="btrack"><span class="bstack" style="width:${w(t.hunter)}">
         <span class="bseg" style="width:100%;background:var(--clay)"></span></span></span>
       <span class="amt">${money(t.hunter)}</span></div>
-    <div class="brow"><span>Indigo Solutions<span class="sub">ККЗ + бройлерные площадки, 2 обхода/мес</span></span>
+    <div class="brow"><span>Indigo Solutions<span class="sub">ККЗ + бройлерные площадки, периодичность в КП не указана</span></span>
       <span class="btrack"><span class="bstack" style="width:${w(t.indigo)}">
         <span class="bseg" style="width:100%;background:var(--plum)"></span></span></span>
       <span class="amt">${money(t.indigo)}</span></div>`;
@@ -721,9 +736,9 @@ function render(){
     `<tr><td>Итого по включённым</td><td>${money(dezSum)}</td><td>${money(dezSum*12)}</td></tr>`;
   document.getElementById("indNote").innerHTML =
     `КП от 19 августа 2026 года делит бройлерные площадки на три группы и по каждой даёт два варианта дератизации. `+
-    `<b>Полностью их оборудование</b> — Indigo ставит свои ЭПК и живоловки целиком, всего ${int(IND.reduce((a,x)=>a+(x.units||0),0))} единиц: `+
+    `<b>Вариант 1 — всё оборудование их.</b> Indigo снимает наши приманочные станции и ставит по всем контурам свои ЭПК и живоловки, плюс допоборудование в чистой зоне. Всего ${int(IND.reduce((a,x)=>a+(x.units||0),0))} единиц, и они остаются собственностью подрядчика: `+
     `${money(IND.reduce((a,x)=>a+x.full,0))} в месяц по всем объектам. `+
-    `<b>Частичная замена</b> — оборудование по периметру грязного барьера меняется на их, по периметру птичников заменяется частично, плюс допоборудование в чистой зоне: `+
+    `<b>Вариант 2 — часть точек остаётся нашей.</b> На их оборудование меняется только периметр грязного барьера, по периметру птичников замена частичная, остальное — наши действующие станции. Дешевле на ${money(IND.reduce((a,x)=>a+x.full-x.part,0))} в месяц: `+
     `${money(IND.reduce((a,x)=>a+x.part,0))} в месяц. ККЗ идёт по отдельному КП от 17 августа за 96 600 ₸ и от варианта не зависит. `+
     `Дезинсекция и по этому КП считается отдельно — ${money(IND.reduce((a,x)=>a+x.dez,0))} в месяц по трём группам площадок.`;
 
