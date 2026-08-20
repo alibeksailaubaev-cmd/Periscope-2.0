@@ -338,6 +338,7 @@ tr.hl td{background:var(--teal-wash);}
           <button data-own="bp" aria-pressed="true">Площадки</button>
           <button data-own="inc" aria-pressed="true">Инкубаторий</button>
           <button data-own="kkz" aria-pressed="true">ККЗ</button>
+          <button data-own="abk" aria-pressed="true">АБК</button>
         </div>
         <span class="ctl-lbl">Численность</span>
         <div class="seg wrap-seg" role="group" aria-label="Численность">
@@ -513,6 +514,18 @@ tr.hl td{background:var(--teal-wash);}
     </div>
 
     <div class="card">
+      <div class="chead"><h2>АБК по площадкам</h2><span class="hint">административно-бытовые корпуса</span></div>
+      <div class="scroll">
+        <table style="min-width:640px;">
+          <thead><tr><th>Корпус</th><th class="n">Клеевые, 3-й контур</th><th class="n">Приманочные станции</th><th class="n">Клеевые, мес. апр–окт</th><th class="n">Клеевые, мес. ноя–мар</th></tr></thead>
+          <tbody id="tbAbk"></tbody>
+          <tfoot id="tfAbk"></tfoot>
+        </table>
+      </div>
+      <div class="note" id="abkNote">—</div>
+    </div>
+
+    <div class="card">
       <div class="chead"><h2>Помесячная развёртка штата</h2><span class="hint">снятые месяцы в сумму не идут</span></div>
       <div class="scroll">
         <table style="min-width:600px;">
@@ -562,6 +575,7 @@ tr.hl td{background:var(--teal-wash);}
 /* ================= data ================= */
 const SITES=[
  {n:"ККЗ · кормоцех",  c1:0,  c2:29,  c3:0,  pk:1,   zc:0,  grp:"kkz"},
+ {n:"АБК · 11 корпусов", c1:0, c2:39, c3:63, pk:0, zc:0, grp:"abk"},
  {n:"Инкубаторий",   c1:18, c2:34,  c3:12, pk:1,   zc:1,  grp:"inc"},
  {n:"Площадка А",    c1:13, c2:147, c3:20, pk:2,   zc:2, grp:"bp"},
  {n:"Площадка Б",    c1:17, c2:146, c3:20, pk:2,   zc:2, grp:"bp"},
@@ -572,11 +586,26 @@ const SITES=[
  {n:"Площадка Ж",    c1:17, c2:73,  c3:10, pk:1,   zc:1, grp:"bp"},
  {n:"Айыртау (БП)",  c1:19, c2:187, c3:24, pk:3,   zc:3, grp:"bp"}
 ];
+/* АБК — административно-бытовые корпуса на площадках. Норма ядоприманок по ним не задана. */
+const ABK=[
+ {n:"Б",      glue:11, bait:4},
+ {n:"Ж",      glue:5,  bait:2},
+ {n:"Е",      glue:6,  bait:3},
+ {n:"В",      glue:6,  bait:3},
+ {n:"В (РМ)", glue:6,  bait:3},
+ {n:"Д",      glue:3,  bait:4},
+ {n:"Г",      glue:3,  bait:3},
+ {n:"БП-12",  glue:6,  bait:5},
+ {n:"БП-13",  glue:6,  bait:5},
+ {n:"БП-14",  glue:6,  bait:5},
+ {n:"А",      glue:5,  bait:2}
+];
+const ABK_GLUE=ABK.reduce((a,x)=>a+x.glue,0), ABK_BAIT=ABK.reduce((a,x)=>a+x.bait,0);
 const sums=list=>["c1","c2","c3","pk","zc"].reduce((a,k)=>(a[k]=list.reduce((s,x)=>s+x[k],0),a),{});
 const TALL=sums(SITES);
 let T=TALL;                       // пересчитывается по выбранным объектам
 /* Объекты, которые штат обслуживает за ту же зарплату, но нормы расхода по ним не заданы. */
-const NO_NORM=["ЗПП · завод по переработке птицы","Склад лузги","АБК"];
+const NO_NORM=["ЗПП · завод по переработке птицы","Склад лузги"];
 
 const MONTHS=[
  {s:"Янв",w:true, lo:true},  {s:"Фев",w:true, lo:true},  {s:"Мар",w:true, lo:false},
@@ -605,7 +634,7 @@ let vat=false, head=4, tab="sum", show="period";
 let comp={pay:true, mat:true};
 let obj={kkz:true, bp:true, zpp:true, tmc:true};
 let ind={kkz:true, aer:true, mno:true, nap:true};
-let own={bp:true, inc:true, kkz:true};
+let own={bp:true, inc:true, kkz:true, abk:true};
 let indVar="full";
 
 /* ================= helpers ================= */
@@ -704,7 +733,7 @@ function render(){
   const compL=[comp.pay&&"зарплата", comp.mat&&"яды и станции"].filter(Boolean);
   document.getElementById("dSc").textContent =
     `${head} чел. · ${compL.length?compL.join(" + "):"ничего не выбрано"} · ${perL}`;
-  const ownL=[own.bp&&"площадки", own.inc&&"инкубаторий", own.kkz&&"ККЗ"].filter(Boolean);
+  const ownL=[own.bp&&"площадки", own.inc&&"инкубаторий", own.kkz&&"ККЗ", own.abk&&"АБК"].filter(Boolean);
   document.querySelectorAll("[data-comp]").forEach(b=>b.setAttribute("aria-pressed",String(comp[b.dataset.comp])));
   document.querySelectorAll("[data-own]").forEach(b=>b.setAttribute("aria-pressed",String(own[b.dataset.own])));
 
@@ -831,8 +860,18 @@ function render(){
     `<tr><td>Итого</td><td></td><td></td><td>${money(u.s.total)}</td><td>${money(u.w.total)}</td>
       <td>${money(t.staff)}</td><td>${money(u.s.total*WARM+u.w.total*COLD)}</td></tr>`;
 
+  /* ABK detail */
+  document.getElementById("tbAbk").innerHTML=ABK.map(x=>
+    `<tr class="${own.abk?"":"off"}"><td>АБК ${x.n}</td><td class="n">${x.glue}</td><td class="n">${x.bait}</td>
+      <td class="n">${money(x.glue*u.pSt)}</td><td class="n">${money(x.glue*2*u.pSt)}</td></tr>`).join("");
+  document.getElementById("tfAbk").innerHTML=
+    `<tr><td>Итого</td><td>${ABK_GLUE}</td><td>${ABK_BAIT}</td>
+      <td>${money(ABK_GLUE*u.pSt)}</td><td>${money(ABK_GLUE*2*u.pSt)}</td></tr>`;
+  document.getElementById("abkNote").innerHTML =
+    `Всего по АБК <b>${ABK_GLUE}</b> клеевых станций 3-го контура и <b>${ABK_BAIT}</b> приманочных станций, суммарно ${ABK_GLUE+ABK_BAIT} точек. Клеевые считаются полностью расходуемыми: ${money(ABK_GLUE*u.pSt)} в месяц с апреля по октябрь и ${money(ABK_GLUE*2*u.pSt)} с ноября по март при удвоении, <b>${money(ABK_GLUE*u.pSt*WARM+ABK_GLUE*2*u.pSt*COLD)}</b> за год. Приманочные станции отнесены ко 2-му контуру; норма ядоприманок по АБК не задана, поэтому Зерноцид и Pest Killer по ним пока не считаются — скажете норму, добавлю.`;
+
   /* materials per object group */
-  const GRP=[["bp","Бройлерные площадки · 8 шт"],["inc","Инкубаторий"],["kkz","ККЗ · кормоцех"]];
+  const GRP=[["bp","Бройлерные площадки · 8 шт"],["inc","Инкубаторий"],["kkz","ККЗ · кормоцех"],["abk","АБК · 11 корпусов"]];
   document.getElementById("tbOwnObj").innerHTML=GRP.map(([k,label])=>{
     const g=sums(SITES.filter(x=>x.grp===k));
     const poison=g.zc*u.pZ+g.pk*u.pPK, stS=g.c3*u.pSt, stW=g.c3*2*u.pSt;
