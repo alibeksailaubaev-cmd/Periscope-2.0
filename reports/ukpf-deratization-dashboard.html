@@ -337,6 +337,7 @@ tr.hl td{background:var(--teal-wash);}
         <div class="seg wrap-seg" role="group" aria-label="Объекты штата">
           <button data-own="bp" aria-pressed="true">Площадки</button>
           <button data-own="inc" aria-pressed="true">Инкубаторий</button>
+          <button data-own="kkz" aria-pressed="true">ККЗ</button>
         </div>
         <span class="ctl-lbl">Численность</span>
         <div class="seg wrap-seg" role="group" aria-label="Численность">
@@ -508,7 +509,7 @@ tr.hl td{background:var(--teal-wash);}
           <tfoot id="tfSites"></tfoot>
         </table>
       </div>
-      <div class="note">Инкубаторий добавлен отдельной строкой: 18 точек 1-го контура, 34 точки 2-го и 12 клеевых станций 3-го. Норма ядоприманок по нему — 1 кг брикетов Pest Killer и 1 кг Зерноцида на обработку, как и по площадке Ж, и она уже учтена в общем расходе.</div>
+      <div class="note">ККЗ — 29 приманочных станций 2-го контура, заряжаются 1 кг брикетов Pest Killer на обработку; по разовой закупке этих станций в прежнем расчёте фигурировала цена 2 160 ₸/шт, то есть 62 640 ₸ единовременно, в ежемесячную себестоимость она не входит. Инкубаторий — 18 точек 1-го контура, 34 точки 2-го и 12 клеевых станций 3-го. Норма ядоприманок по нему — 1 кг брикетов Pest Killer и 1 кг Зерноцида на обработку, как и по площадке Ж, и она уже учтена в общем расходе.</div>
     </div>
 
     <div class="card">
@@ -560,6 +561,7 @@ tr.hl td{background:var(--teal-wash);}
 <script>
 /* ================= data ================= */
 const SITES=[
+ {n:"ККЗ · кормоцех",  c1:0,  c2:29,  c3:0,  pk:1,   zc:0,  grp:"kkz"},
  {n:"Инкубаторий",   c1:18, c2:34,  c3:12, pk:1,   zc:1,  grp:"inc"},
  {n:"Площадка А",    c1:13, c2:147, c3:20, pk:2,   zc:2, grp:"bp"},
  {n:"Площадка Б",    c1:17, c2:146, c3:20, pk:2,   zc:2, grp:"bp"},
@@ -574,7 +576,7 @@ const sums=list=>["c1","c2","c3","pk","zc"].reduce((a,k)=>(a[k]=list.reduce((s,x
 const TALL=sums(SITES);
 let T=TALL;                       // пересчитывается по выбранным объектам
 /* Объекты, которые штат обслуживает за ту же зарплату, но нормы расхода по ним не заданы. */
-const NO_NORM=["ККЗ · кормоцех","ЗПП · завод по переработке птицы","Склад лузги","АБК"];
+const NO_NORM=["ЗПП · завод по переработке птицы","Склад лузги","АБК"];
 
 const MONTHS=[
  {s:"Янв",w:true, lo:true},  {s:"Фев",w:true, lo:true},  {s:"Мар",w:true, lo:false},
@@ -603,7 +605,7 @@ let vat=false, head=4, tab="sum", show="period";
 let comp={pay:true, mat:true};
 let obj={kkz:true, bp:true, zpp:true, tmc:true};
 let ind={kkz:true, aer:true, mno:true, nap:true};
-let own={bp:true, inc:true};
+let own={bp:true, inc:true, kkz:true};
 let indVar="full";
 
 /* ================= helpers ================= */
@@ -702,7 +704,7 @@ function render(){
   const compL=[comp.pay&&"зарплата", comp.mat&&"яды и станции"].filter(Boolean);
   document.getElementById("dSc").textContent =
     `${head} чел. · ${compL.length?compL.join(" + "):"ничего не выбрано"} · ${perL}`;
-  const ownL=[own.bp&&"площадки", own.inc&&"инкубаторий"].filter(Boolean);
+  const ownL=[own.bp&&"площадки", own.inc&&"инкубаторий", own.kkz&&"ККЗ"].filter(Boolean);
   document.querySelectorAll("[data-comp]").forEach(b=>b.setAttribute("aria-pressed",String(comp[b.dataset.comp])));
   document.querySelectorAll("[data-own]").forEach(b=>b.setAttribute("aria-pressed",String(own[b.dataset.own])));
 
@@ -830,7 +832,7 @@ function render(){
       <td>${money(t.staff)}</td><td>${money(u.s.total*WARM+u.w.total*COLD)}</td></tr>`;
 
   /* materials per object group */
-  const GRP=[["bp","Бройлерные площадки · 8 шт"],["inc","Инкубаторий"]];
+  const GRP=[["bp","Бройлерные площадки · 8 шт"],["inc","Инкубаторий"],["kkz","ККЗ · кормоцех"]];
   document.getElementById("tbOwnObj").innerHTML=GRP.map(([k,label])=>{
     const g=sums(SITES.filter(x=>x.grp===k));
     const poison=g.zc*u.pZ+g.pk*u.pPK, stS=g.c3*u.pSt, stW=g.c3*2*u.pSt;
@@ -846,7 +848,7 @@ function render(){
       <td>${money(u.s.st)}</td><td>${money(u.w.st)}</td>
       <td>${money((u.s.zc+u.s.pk+u.s.bot)*WARM+u.s.st*WARM+u.w.st*COLD)}</td></tr>`;
   document.getElementById("ownObjNote").innerHTML =
-    `Зарплата ${head} дератизаторов не делится по объектам — она фиксирована и покрывает все 13 объектов сразу, включая ККЗ, ЗПП, склад лузги и АБК. Делятся только материалы, и переключатели в карточке штата убирают из расчёта именно их. По ККЗ, ЗПП, складу лузги и АБК нормы расхода ядов и станций пока не заданы, поэтому в деньгах они дают ноль — если дадите нормы, встанут в расчёт так же, как площадки и инкубаторий. Бутылки (${int(u.s.bottles)} шт/мес) в разбивку по объектам не разносятся и учтены в годовой сумме.`;
+    `Зарплата ${head} дератизаторов не делится по объектам — она фиксирована и покрывает все 13 объектов сразу, включая ККЗ, ЗПП, склад лузги и АБК. Делятся только материалы, и переключатели в карточке штата убирают из расчёта именно их. По ККЗ учтены 29 приманочных станций 2-го контура и 1 кг брикетов Pest Killer на обработку; Зерноцид по нему не заявлен. По ЗПП, складу лузги и АБК нормы пока не заданы, поэтому в деньгах они дают ноль — дадите нормы, встанут в расчёт так же. Бутылки (${int(u.s.bottles)} шт/мес) в разбивку по объектам не разносятся и учтены в годовой сумме.`;
 
   /* glue stations, winter doubling */
   const glueS=T.c3, glueW=T.c3*2;
