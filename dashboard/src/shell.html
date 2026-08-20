@@ -974,19 +974,18 @@ window.addEventListener('message', (e) => {
     window.scrollTo({ top:Math.max(0, top), behavior:'smooth' });
   }
 
-  if(d.type === 'aitas-export-progress' && exportBtnState){
+  if(d.type === 'aitas-export-progress' && exportBtnState && d.key === exportBtnState.key){
     exportBtnState.toast.textContent = 'Готовим слайды: ' + (d.done + 1) + ' из ' + d.total + '…';
   }
 
-  if(d.type === 'aitas-export-done'){
+  if(d.type === 'aitas-export-done' && exportBtnState && d.key === exportBtnState.key){
     const btn = document.getElementById('btnExportAll');
     btn.classList.remove('busy');
     btn.disabled = false;
-    if(exportBtnState){
-      exportBtnState.toast.classList.add('out');
-      setTimeout(() => exportBtnState.toast.remove(), 300);
-      exportBtnState = null;
-    }
+    const activeToast = exportBtnState.toast;   // ссылку берём до сброса состояния
+    exportBtnState = null;
+    activeToast.classList.add('out');
+    setTimeout(() => activeToast.remove(), 300);
     if(d.total > 0) toast('Готово: слайдов выгружено — ' + d.total, 'ok');
     else toast('На этой вкладке пока нечего выгружать — сначала загрузите файлы', 'error', 4200);
   }
@@ -999,7 +998,7 @@ document.getElementById('btnExportAll').addEventListener('click', (e) => {
   if(!f || !frameReady[activeKey]) return;
   btn.classList.add('busy');
   btn.disabled = true;
-  exportBtnState = { toast: toast('Готовим слайды…', '', 60000) };
+  exportBtnState = { key: activeKey, toast: toast('Готовим слайды…', '', 60000) };
   f.contentWindow.postMessage({ type:'aitas-export-all' }, '*');
 });
 

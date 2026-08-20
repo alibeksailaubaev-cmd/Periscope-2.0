@@ -592,7 +592,7 @@ tr.mb-ok td{ background:var(--green-wash); }
 }
 /* стартовое состояние — только если тема-скрипт жив (иначе график виден сразу) */
 body.aitas-js .chart-box{ opacity:0; transform:translateY(10px) scale(.995); }
-.chart-box.aitas-chart-in{
+body.aitas-js .chart-box.aitas-chart-in{
   opacity:1; transform:none;
   transition:opacity .55s var(--ease-out), transform .6s var(--ease-out);
 }
@@ -730,5 +730,5 @@ body.aitas-exporting .stat-pill{ transform:none !important; }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
   .aitas-reveal{ opacity:1; transform:none; }
-  .chart-box{ opacity:1; transform:none; }
+  body.aitas-js .chart-box{ opacity:1; transform:none; }
 }

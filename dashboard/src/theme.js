@@ -22,7 +22,8 @@
     '#f1ede0':'#e6ddc4', '#e1d6b3':'#ded4b4', '#c9bd97':'#c3b58c',
     '#3a2f1e':'#1e1a12', '#7a6d52':'#7a6e52',
     '#f7f9fc':'#f6f2e6', '#f0f9f7':'#e8f5f3', '#cfe9e6':'#bfe2de',
-    '#eaf1ff':'#e8f5f3', '#eff6ff':'#e8f5f3'
+    '#eaf1ff':'#e8f5f3', '#eff6ff':'#e8f5f3',
+    '#e2a23c':'#cf9433', '#b8791f':'#a06a1a'
   };
   var PALETTE = ['#0e9a92','#c2871f','#2e7d52','#c0392f','#4d7ea8','#7a6e52','#57c4bc','#8f5da8'];
 
