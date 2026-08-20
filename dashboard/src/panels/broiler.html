@@ -1,0 +1,2894 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дэшборд качества мойки и МБ смывов — Цех бройлерного производства</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --primary:#12938c;
+    --primary-dark:#0d6f6a;
+    --primary-light:#5fc4bd;
+    --ok:#1a9e63;
+    --nok:#d94f4f;
+    --bg:#efe6cc;
+    --card-bg:#ffffff;
+    --border:#e1d6b3;
+    --text:#3a2f1e;
+    --text-muted:#7a6d52;
+    --shadow:0 2px 10px rgba(58,47,30,0.08), 0 1px 2px rgba(58,47,30,0.05);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  header.app-header{
+    background:linear-gradient(120deg,#0d6f6a 0%, #12938c 55%, #1fb0a8 100%);
+    color:#fff;
+    padding:22px 32px;
+    box-shadow:var(--shadow);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  header.app-header .brand-text h1{
+    margin:0 0 4px 0;
+    font-size:24px;
+    font-weight:700;
+    letter-spacing:0.2px;
+  }
+  header.app-header .brand-text p{
+    margin:0;
+    font-size:14px;
+    opacity:0.92;
+  }
+  header.app-header .brand-logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:rgba(255,255,255,0.14);
+    padding:8px 16px;
+    border-radius:10px;
+    font-size:13px;
+    opacity:0.95;
+  }
+  header.app-header .brand-logo img{
+    height:36px;
+    display:block;
+  }
+  .container{
+    max-width:1400px;
+    margin:0 auto;
+    padding:24px 32px 60px;
+  }
+  .grid-upload{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-bottom:24px;
+  }
+  @media (max-width:900px){
+    .grid-upload{grid-template-columns:1fr;}
+  }
+  /* Внутри общей оболочки файл "Свод" грузится один раз в шапке — своя зона скрыта */
+  body.embedded-in-shell .grid-upload{ grid-template-columns:1fr; }
+  body.embedded-in-shell #dz-mb{ display:none; }
+  .dropzone{
+    background:var(--card-bg);
+    border:2px dashed var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    text-align:center;
+    cursor:pointer;
+    transition:all .2s ease;
+    box-shadow:var(--shadow);
+    position:relative;
+  }
+  .dropzone:hover{border-color:var(--primary); background:#f8faff;}
+  .dropzone.dragover{border-color:var(--primary); background:#eaf1ff;}
+  .dropzone.loaded{border-color:var(--ok); background:#f3fbf5;}
+  .dropzone .icon{font-size:30px; margin-bottom:8px;}
+  .dropzone h3{margin:0 0 6px 0; font-size:15px; font-weight:600;}
+  .dropzone .hint{font-size:12.5px; color:var(--text-muted);}
+  .dropzone .status-line{
+    margin-top:10px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ok);
+    min-height:16px;
+  }
+  .dropzone .status-line.error{color:var(--nok);}
+  .dropzone input[type=file]{display:none;}
+
+  .controls-bar{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px 20px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:14px;
+    margin-bottom:24px;
+  }
+  .controls-bar label{font-size:13px; font-weight:600; color:var(--text-muted);}
+  .controls-bar input[type=number]{
+    width:80px;
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:14px;
+  }
+  .btn{
+    border:none;
+    border-radius:8px;
+    padding:9px 16px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .btn-primary{background:var(--primary); color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-secondary{background:#eef1f6; color:var(--text);}
+  .btn-secondary:hover{background:#e1e6ee;}
+  .btn-download{
+    background:#fff;
+    color:var(--primary);
+    border:1px solid var(--primary);
+    padding:6px 12px;
+    font-size:12.5px;
+  }
+  .btn-download:hover{background:var(--primary); color:#fff;}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .viol-scope-toggle{ display:inline-flex; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:#fff; }
+  .viol-scope-btn{
+    border:none; background:#fff; color:var(--text-muted);
+    padding:8px 14px; font-size:12.5px; font-weight:600; cursor:pointer;
+    border-right:1px solid var(--border); transition:all .15s ease;
+  }
+  .viol-scope-btn:last-child{ border-right:none; }
+  .viol-scope-btn:hover{ background:#f7f3e6; }
+  .viol-scope-btn.active{ background:var(--primary); color:#fff; }
+  .range-badge{
+    background:#eaf1ff;
+    color:var(--primary-dark);
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:13px;
+    font-weight:600;
+    margin-left:auto;
+  }
+
+  .card{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px 22px;
+    margin-bottom:24px;
+  }
+  .card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .card-header h2{
+    margin:0;
+    font-size:17px;
+    font-weight:700;
+  }
+  .card-header .sub{
+    font-size:12.5px;
+    color:var(--text-muted);
+    margin-top:3px;
+  }
+  .stats-row{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:12px;
+    margin-bottom:14px;
+  }
+  @media (max-width:1000px){
+    .stats-row{ grid-template-columns:repeat(4, 1fr); }
+  }
+  @media (max-width:560px){
+    .stats-row{ grid-template-columns:repeat(2, 1fr); }
+  }
+  .stat-pill{
+    background:#f7f9fc;
+    border:1px solid var(--border);
+    border-top:3px solid var(--primary);
+    border-radius:12px;
+    padding:14px 10px 12px;
+    transition:transform .15s ease, box-shadow .15s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    gap:4px;
+    text-align:center;
+  }
+  .stat-pill:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(58,47,30,0.1); }
+  .stat-pill.accent-nok{ border-top-color:var(--nok); }
+  .pulse-alert{ animation:pulseNok 1.8s ease-in-out infinite; }
+  @keyframes pulseNok{
+    0%, 100%{ opacity:1; }
+    50%{ opacity:.55; }
+  }
+  .stat-pill.accent-ok{ border-top-color:var(--ok); }
+  .stat-pill .icon-emoji{ font-size:18px; line-height:1; }
+  .stat-pill .lab{ font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+  .stat-pill .val-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .stat-pill .val{font-size:24px; font-weight:800; color:var(--primary-dark); line-height:1.3;}
+  .stat-pill .val.nok{color:var(--nok);}
+  .stat-pill .val.ok{color:var(--ok);}
+
+  .nok-card-list{ display:flex; flex-direction:column; gap:10px; max-height:420px; overflow-y:auto; padding-right:4px; }
+  .nok-card{
+    display:grid;
+    grid-template-columns:110px 1fr 1.4fr;
+    gap:16px;
+    align-items:center;
+    background:#fdf3f2;
+    border:1px solid #f0c6c3;
+    border-left:5px solid var(--nok);
+    border-radius:10px;
+    padding:12px 16px;
+  }
+  .nok-card .nok-date{ font-size:15px; font-weight:700; color:#3a2f1e; white-space:nowrap; }
+  .nok-card .nok-where .nok-lab, .nok-card .nok-what .nok-lab{ font-size:10.5px; color:#a06a63; text-transform:uppercase; letter-spacing:.3px; margin-bottom:2px; }
+  .nok-card .nok-where .nok-val{ font-size:14px; color:#3a2f1e; font-weight:600; }
+  .nok-card .nok-what .nok-val{ font-size:14.5px; color:#8f2d29; font-weight:700; }
+  @media (max-width:760px){
+    .nok-card{ grid-template-columns:1fr; gap:6px; }
+  }
+
+  .chart-box{width:100%; height:420px;}
+  .chart-box.tall{height:520px;}
+
+  table.data-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    margin-top:10px;
+  }
+  table.data-table th{
+    text-align:left;
+    background:#f7f9fc;
+    padding:9px 10px;
+    border-bottom:2px solid var(--border);
+    color:var(--text-muted);
+    font-weight:600;
+    position:sticky;
+    top:0;
+  }
+  table.data-table td{
+    padding:8px 10px;
+    border-bottom:1px solid var(--border);
+  }
+  table.data-table tr.row-nok{background:#fef2f2;}
+  table.data-table tr.row-nok td{color:#991b1b; font-weight:600;}
+  table.data-table tr.viol-row-clickable{cursor:pointer;}
+  table.data-table tr.viol-row-clickable:hover{background:#f0f9f7;}
+  .table-wrap{max-height:360px; overflow-y:auto; border:1px solid var(--border); border-radius:10px;}
+  .badge{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:20px;
+    font-size:11.5px;
+    font-weight:700;
+  }
+  .badge.ok{background:#dcfce7; color:#166534;}
+  .badge.nok{background:#fee2e2; color:#991b1b;}
+  .badge.na{background:#f1f5f9; color:#475569;}
+
+  .empty-state{
+    text-align:center;
+    color:var(--text-muted);
+    padding:50px 20px;
+    font-size:14px;
+  }
+  .banner{
+    padding:12px 16px;
+    border-radius:10px;
+    font-size:13.5px;
+    margin-bottom:16px;
+    display:none;
+  }
+  .banner.error{background:#fef2f2; color:#991b1b; border:1px solid #fecaca;}
+  .banner.info{background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe;}
+  .overlay{
+    position:absolute; left:0; right:0;
+    background:rgba(15,23,42,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+  }
+  .overlay.show{display:flex;}
+  .overlay-box{
+    background:#fff;
+    padding:28px 34px;
+    border-radius:14px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+    max-width:320px;
+  }
+  .spinner{
+    width:38px; height:38px;
+    border:4px solid #e2e8f0;
+    border-top-color:var(--primary);
+    border-radius:50%;
+    margin:0 auto 14px;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-muted);
+    margin-top:10px;
+  }
+  .chart-subtitle{
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--text);
+    margin:22px 0 10px 0;
+    padding-bottom:6px;
+    border-bottom:2px solid var(--border);
+  }
+  .chart-subtitle-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:22px 0 10px 0;
+    padding-bottom:6px;
+    border-bottom:2px solid var(--border);
+  }
+  .chart-subtitle-row .chart-subtitle{ margin:0; padding-bottom:0; border-bottom:none; }
+  .btn-small{ padding:5px 11px; font-size:11.5px; white-space:nowrap; }
+  .table-search{
+    width:100%;
+    padding:9px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:13.5px;
+    margin-top:4px;
+  }
+  .table-search:focus{ outline:none; border-color:var(--primary); }
+  .empty-state-inline{
+    text-align:center;
+    color:var(--ok);
+    background:#eefaf2;
+    border:1px solid #cdeedd;
+    border-radius:10px;
+    padding:16px;
+    font-size:13.5px;
+    font-weight:600;
+    margin-top:10px;
+  }
+
+  /* ===== Сетка карточек «Корпуса за период» ===== */
+  .corpus-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    gap:12px;
+  }
+  .corpus-tile{
+    background:#fff;
+    border:1px solid var(--border);
+    border-left:5px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    animation:tileIn .38s ease backwards;
+  }
+  @keyframes tileIn{
+    from{ opacity:0; transform:translateY(10px) scale(.97); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .corpus-tile:hover{
+    transform:translateY(-2px);
+    box-shadow:0 4px 14px rgba(0,0,0,.09);
+  }
+  .corpus-tile.tile-good{ border-left-color:var(--ok); }
+  .corpus-tile.tile-warn{ border-left-color:#e2a23c; }
+  .corpus-tile.tile-bad{ border-left-color:var(--nok); }
+  .corpus-tile .tile-site{
+    font-size:15px;
+    font-weight:800;
+    color:#2a2117;
+  }
+  .corpus-tile .tile-uchastok{
+    font-size:11.5px;
+    color:var(--text-muted);
+  }
+  .corpus-tile .tile-date{
+    font-size:11px;
+    color:var(--text-muted);
+    margin-top:1px;
+  }
+  .corpus-tile .tile-score-row{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    margin-top:2px;
+  }
+  .corpus-tile .tile-score{
+    font-size:26px;
+    font-weight:800;
+    line-height:1;
+  }
+  .tile-good .tile-score{ color:var(--ok); }
+  .tile-warn .tile-score{ color:#c98a2e; }
+  .tile-bad  .tile-score{ color:var(--nok); }
+  .corpus-tile .tile-score-max{ font-size:12px; color:var(--text-muted); }
+  .corpus-tile .tile-badge{
+    align-self:flex-start;
+    font-size:10.5px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:20px;
+  }
+  .tile-badge.badge-first{ background:#e6f6ee; color:#1a9e63; }
+  .tile-badge.badge-rewash{ background:#fdeaea; color:#c23b3b; }
+  .tile-badge.badge-unspec{ background:#f0ece0; color:#7a6d52; }
+  .corpus-tile .tile-issue-hint{
+    font-size:11.5px;
+    color:var(--text-muted);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .corpus-tile .tile-multi{
+    font-size:10.5px;
+    color:var(--primary);
+    font-weight:700;
+  }
+  .tile-spark{
+    width:100%;
+    height:26px;
+    margin-top:2px;
+    display:block;
+  }
+
+  /* ===== Модальное окно детализации по корпусу ===== */
+  .corpus-modal-overlay{
+    display:none;
+    position:absolute;
+    left:0; right:0;
+    background:rgba(30,24,14,.45);
+    z-index:200;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    opacity:0;
+    transition:opacity .16s ease;
+  }
+  .corpus-modal-overlay.open{
+    display:flex;
+    opacity:1;
+  }
+  .corpus-modal{
+    background:#fffdf8;
+    border-radius:16px;
+    max-width:640px;
+    width:100%;
+    max-height:86vh;
+    overflow-y:auto;
+    padding:28px 30px;
+    position:relative;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+    transform:translateY(10px) scale(.98);
+    opacity:0;
+    transition:transform .18s ease, opacity .18s ease;
+  }
+  .corpus-modal-overlay.open .corpus-modal{
+    transform:translateY(0) scale(1);
+    opacity:1;
+  }
+  .corpus-modal-close{
+    position:absolute;
+    top:16px; right:16px;
+    width:32px; height:32px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:#fff;
+    font-size:14px;
+    cursor:pointer;
+    color:var(--text-muted);
+  }
+  .corpus-modal-close:hover{ background:#f7f3e6; color:#2a2117; }
+
+  .cm-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; padding-right:34px; }
+  .cm-title{ font-size:24px; font-weight:800; color:#2a2117; }
+  .cm-subtitle{ font-size:13px; color:var(--text-muted); margin-top:2px; }
+  .cm-score-big{ font-size:44px; font-weight:800; line-height:1; }
+  .cm-score-max{ font-size:13px; color:var(--text-muted); text-align:center; }
+
+  .cm-meta-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .cm-meta-item{
+    background:#f7f3e6;
+    border-radius:10px;
+    padding:10px 12px;
+  }
+  .cm-meta-item .lab{ font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.03em; margin-bottom:3px; }
+  .cm-meta-item .val{ font-size:14.5px; font-weight:700; color:#2a2117; }
+
+  .cm-section-title{
+    font-size:13px;
+    font-weight:800;
+    color:#7a6d52;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    margin:18px 0 8px;
+  }
+  .cm-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .cm-chip{
+    background:#fdeaea;
+    color:#a02f2f;
+    border:1px solid #f3caca;
+    border-radius:20px;
+    padding:4px 12px;
+    font-size:12.5px;
+    font-weight:600;
+  }
+  .cm-nesoot-text{
+    background:#f7f9fc;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13.5px;
+    line-height:1.6;
+    color:#3a2f1e;
+  }
+  .cm-clean{
+    background:#eefaf2;
+    border:1px solid #cdeedd;
+    color:#1a9e63;
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13.5px;
+    font-weight:600;
+    text-align:center;
+  }
+  .cm-visit{
+    border-left:3px solid var(--border);
+    padding:6px 0 6px 14px;
+    margin-bottom:10px;
+  }
+  .cm-visit.visit-good{ border-left-color:var(--ok); }
+  .cm-visit.visit-warn{ border-left-color:#e2a23c; }
+  .cm-visit.visit-bad{ border-left-color:var(--nok); }
+  .cm-visit-head{ font-size:13px; font-weight:700; color:#2a2117; display:flex; gap:8px; align-items:baseline; }
+  .cm-visit-head .score{ font-size:16px; }
+  .cm-vs-avg{
+    font-size:12.5px;
+    font-weight:700;
+    margin:-8px 0 14px;
+    padding:5px 12px;
+    border-radius:20px;
+    display:inline-block;
+  }
+  .cm-vs-avg.vs-good{ background:#eefaf2; color:#1a9e63; }
+  .cm-vs-avg.vs-bad{ background:#fdeaea; color:#c23b3b; }
+  .cm-vs-avg.vs-mid{ background:#f0ece0; color:#7a6d52; }
+  tr.mb-nok td{ background:#fdf2f2; }
+  tr.mb-ok td{ background:#f3faf6; }
+
+  .cm-anim{
+    animation:cmFadeIn .34s ease backwards;
+  }
+  @keyframes cmFadeIn{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .cm-trend-chart{
+    background:#fbf8f0;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:6px 4px 0;
+  }
+  .cm-score-big{
+    transition:none;
+  }
+</style>
+
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand-text">
+    <h1>📊 Дэшборд качества мойки и МБ смывов</h1>
+    <p>УКПФ · Цех бройлерного производства (Выращивание)</p>
+  </div>
+  <div class="brand-logo">🐔&nbsp; AITAS&nbsp;UKPF</div>
+</header>
+
+<div class="container">
+
+  <div id="globalBanner" class="banner error"></div>
+
+  <div class="grid-upload">
+    <div class="dropzone" id="dz-act" onclick="document.getElementById('file-act').click()">
+      <input type="file" id="file-act" accept=".xlsx,.xls">
+      <div class="icon">🧼</div>
+      <h3>Файл 1 — Акт приёма мойки (Выращивание)</h3>
+      <div class="hint">Excel (.xlsx). Лист «с марта 2025». Перетащите файл сюда или нажмите для выбора.</div>
+      <div class="status-line" id="status-act"></div>
+    </div>
+
+    <div class="dropzone" id="dz-mb" onclick="document.getElementById('file-mb').click()">
+      <input type="file" id="file-mb" accept=".xlsx,.xls">
+      <div class="icon">🧫</div>
+      <h3>Файл 2 — Свод рабочих журналов МБ</h3>
+      <div class="hint">Excel (.xlsx). Лист «Sheet1». Перетащите файл сюда или нажмите для выбора. Файл может быть большим — обработка займёт время.</div>
+      <div class="status-line" id="status-mb"></div>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <label for="weekInput">Номер недели (2026 год):</label>
+    <input type="number" id="weekInput" min="1" max="53" placeholder="напр. 29">
+    <button class="btn btn-primary" id="btnApplyWeek" disabled>Применить</button>
+    <button class="btn btn-secondary" id="btnResetFilter" disabled>Сбросить фильтр</button>
+    <span class="range-badge" id="rangeBadge">Данные не загружены</span>
+  </div>
+
+  <!-- БЛОК 1: ДИНАМИКА МОЙКИ (отдельный слайд для отчёта) -->
+  <div class="card" id="actCard">
+    <div class="card-header export-exclude">
+      <div>
+        <h2>Динамика качества мойки</h2>
+        <div class="sub">Средний балл по мойке по датам (шкала 1–10, приёмка корпусов после мойки)</div>
+        <div class="sub" style="margin-top:2px;">🟢 в этот день смывы без отклонений &nbsp;·&nbsp; 🔴 обнаружен NOK &nbsp;·&nbsp; серый — смывы в этот день не отбирались</div>
+      </div>
+      <button class="btn btn-download" id="btnPngAct" disabled>🖼 Скачать слайд «Мойка» (PNG)</button>
+    </div>
+    <div id="actChart" class="chart-box" style="height:560px;"></div>
+    <div id="actEmpty" class="empty-state">Загрузите файл «Акт приёма мойки», чтобы увидеть график.</div>
+  </div>
+
+  <!-- БЛОК 1б: ЗАПИСИ МОЙКИ ЗА ПЕРИОД (таблица по корпусам) -->
+  <div class="card" id="recordsCard">
+    <div class="card-header export-exclude">
+      <div>
+        <h2>Корпуса за период</h2>
+        <div class="sub">Каждый корпус, принятый после мойки — балл сразу виден на плитке. Нажмите на корпус, чтобы открыть полную карточку с несоответствиями.</div>
+      </div>
+      <button class="btn btn-download" id="btnPngRecords" disabled>🖼 Скачать слайд «Корпуса» (PNG)</button>
+    </div>
+    <div id="recordsEmpty" class="empty-state">Загрузите файл «Акт приёма мойки», чтобы увидеть записи.</div>
+    <div id="recordsWrap" style="display:none;">
+      <div class="corpus-grid" id="corpusGrid"></div>
+    </div>
+  </div>
+
+  <!-- Модальное окно детализации по корпусу -->
+  <div class="corpus-modal-overlay" id="corpusModalOverlay">
+    <div class="corpus-modal" id="corpusModal">
+      <button type="button" class="corpus-modal-close" id="corpusModalClose">✕</button>
+      <div id="corpusModalBody"></div>
+    </div>
+  </div>
+
+  <!-- БЛОК 1в: ХРОНОЛОГИЯ ПРИЁМКИ КОРПУСОВ И СМЫВОВ -->
+  <div class="card" id="timelineCard">
+    <div class="card-header export-exclude">
+      <div>
+        <h2>Хронология приёмки корпусов и смывов</h2>
+        <div class="sub">Линия — средний балл мойки по дням (ось слева); столбики на фоне — сколько смывов МБ взято в этот день (ось справа)</div>
+        <div class="sub" style="margin-top:2px;">Нажмите на дату (или на точку), чтобы открыть детальную карточку дня</div>
+      </div>
+      <button class="btn btn-download" id="btnPngTimeline" disabled>🖼 Скачать слайд «Хронология» (PNG)</button>
+    </div>
+    <div id="timelineEmpty" class="empty-state">Загрузите файл «Акт приёма мойки», чтобы увидеть хронологию.</div>
+    <div id="timelineWrap" style="display:none;">
+      <div id="timelineChart" class="chart-box" style="height:380px;"></div>
+      <div class="export-exclude" id="dayDetailPanel" style="display:none; margin-top:16px; padding:14px 16px; background:#f7f9fc; border:1px solid var(--border); border-radius:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <h3 class="chart-subtitle" style="margin:0;" id="dayDetailTitle"></h3>
+          <button type="button" class="btn btn-secondary btn-small" id="btnCloseDayDetail">✕ Закрыть</button>
+        </div>
+        <div class="stats-row" id="dayDetailStats" style="margin-bottom:12px;"></div>
+        <div class="table-wrap" style="max-height:280px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Корпус</th><th>Балл</th><th>Приёмка</th><th>Несоответствий</th><th>Что не так</th></tr>
+            </thead>
+            <tbody id="dayDetailBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- БЛОК 2: КПИ + СМЫВЫ МБ (отдельный слайд для отчёта) -->
+  <div class="card" id="smyvyCard">
+    <div class="card-header export-exclude">
+      <div>
+        <h2>КПИ + Смывы МБ</h2>
+        <div class="sub">Только пробы по Цеху бройлерного производства · общие цифры, динамика по дням и детали по NOK</div>
+        <div class="sub" style="margin-top:2px;">🔎 Автоматически отфильтровано: «Подразделение» содержит «бройлер» И «Предприятие» содержит «Усть» (только УКПФ) · группы материала «Смывы» + «Вода» · бахильные пробы исключены</div>
+      </div>
+      <button class="btn btn-download" id="btnPngKpi" disabled>🖼 Скачать слайд «Динамика КПИ» (PNG)</button>
+    </div>
+
+    <div class="stats-row" id="statsMb" style="display:none;">
+      <div class="stat-pill"><span class="icon-emoji">🧫</span><div class="lab">Проб взято</div><div class="val" id="statMbCount">–</div></div>
+      <div class="stat-pill"><span class="icon-emoji">📆</span><div class="lab">Период отбора</div><div class="val" id="statMbPeriod" style="font-size:13px; white-space:nowrap;">–</div></div>
+      <div class="stat-pill accent-ok"><span class="icon-emoji">✅</span><div class="lab">OK</div><div class="val ok" id="statMbOk">–</div></div>
+      <div class="stat-pill accent-nok"><span class="icon-emoji">⚠️</span><div class="lab">NOK</div><div class="val nok" id="statMbNok">–</div></div>
+      <div class="stat-pill accent-ok"><span class="icon-emoji">🎯</span><div class="lab">% в норме</div><div class="val ok" id="statMbPct">–</div></div>
+      <div class="stat-pill accent-nok"><span class="icon-emoji">🚩</span><div class="lab">% NOK</div><div class="val nok" id="statMbPctNok">–</div></div>
+      <div class="stat-pill"><span class="icon-emoji">⏳</span><div class="lab">% в ожидании</div><div class="val" id="statMbPctNa">–</div></div>
+    </div>
+
+    <div id="mbEmpty" class="empty-state">Загрузите файл «Свод рабочих журналов МБ», чтобы увидеть данные.</div>
+
+    <div id="mbContentWrap" style="display:none;">
+      <h3 class="chart-subtitle export-exclude">Динамика КПИ по дням</h3>
+      <div id="kpiChart" class="chart-box" style="height:460px;"></div>
+
+      <div class="export-exclude">
+        <h3 class="chart-subtitle">Проб по дням</h3>
+        <div class="table-wrap" style="max-height:220px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Дата отбора пробы</th><th>Проб взято</th><th>OK</th><th>NOK</th></tr>
+            </thead>
+            <tbody id="mbByDateBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ОБНАРУЖЕНО (NOK) — отдельная карточка, скачивается отдельно от КПИ-графика -->
+  <div class="card" id="nokSection" style="display:none;">
+    <div class="chart-subtitle-row" style="margin-top:0;">
+      <h3 class="chart-subtitle" style="margin:0;">⚠ Обнаружено (только отклонения — NOK)</h3>
+      <button class="btn btn-download btn-small" id="btnPngNok" disabled>🖼 Скачать карточку «Обнаружено» (PNG)</button>
+    </div>
+    <div id="mbNokWrap" class="nok-card-list"></div>
+    <div id="mbNokEmpty" class="empty-state-inline">За выбранный период отклонений (NOK) не обнаружено — отлично! 🎉</div>
+  </div>
+
+  <!-- БЛОК 3: НЕСООТВЕТСТВИЯ ПО УЧАСТКАМ/КОРПУСАМ (из основного лога Акта — «с марта 2025») -->
+  <div class="card" id="violCard">
+    <div class="card-header export-exclude">
+      <div>
+        <h2>Несоответствия по участкам и корпусам</h2>
+        <div class="sub">Доля зафиксированных несоответствий по каждому участку (группе корпусов) выращивания</div>
+        <div class="sub" style="margin-top:2px;">🔎 Источник: лист «с марта 2025» файла «Акт приёма мойки» · строка с баллом ниже 10 и/или заполненным «Несоответствие» считается несоответствием · участок определён по буквенному/числовому префиксу кода площадки (напр. «Г5-1» → участок «Г5», «БП12-3» → участок «БП12»)</div>
+      </div>
+      <button class="btn btn-download" id="btnPngViol" disabled>🖼 Скачать слайд «Несоответствия по участкам» (PNG)</button>
+    </div>
+
+    <div class="stats-row" id="statsViol" style="display:none;">
+      <div class="stat-pill"><span class="icon-emoji">📋</span><div class="lab">Всего несоответствий</div><div class="val" id="statViolTotal">–</div></div>
+      <div class="stat-pill accent-nok"><span class="icon-emoji">🔁</span><div class="lab">Перемывок (со 2-го раза)</div><div class="val nok" id="statViolRewash">–</div></div>
+      <div class="stat-pill accent-ok"><span class="icon-emoji">✅</span><div class="lab">С первого раза</div><div class="val ok" id="statViolFirstTry">–</div></div>
+      <div class="stat-pill"><span class="icon-emoji">🎯</span><div class="lab">% перемывок</div><div class="val" id="statViolPct">–</div></div>
+    </div>
+
+    <div id="violEmpty" class="empty-state">Загрузите файл «Акт приёма мойки», чтобы увидеть статистику.</div>
+
+    <div id="violContentWrap" style="display:none;">
+      <div id="violPie" class="chart-box" style="height:460px;"></div>
+
+      <div class="export-exclude">
+        <h3 class="chart-subtitle">Сводка по участкам</h3>
+        <div class="sub" style="margin:-6px 0 8px;">Нажмите на участок в таблице или в диаграмме, чтобы увидеть детализацию по конкретным корпусам — какой из них самый «грязный»</div>
+        <div class="table-wrap" style="max-height:320px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Участок</th><th>Несоответствий</th><th>Перемывок</th><th>% перемывок</th><th>Ср. балл</th></tr>
+            </thead>
+            <tbody id="violByUchastokBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="export-exclude" id="violDetailPanel" style="display:none; margin-top:16px; padding:14px 16px; background:#f7f9fc; border:1px solid var(--border); border-radius:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <h3 class="chart-subtitle" style="margin:0;">Детализация по корпусам: <span id="violDetailTitle"></span></h3>
+          <button type="button" class="btn btn-secondary btn-small" id="btnCloseViolDetail">✕ Закрыть</button>
+        </div>
+        <div class="table-wrap" style="max-height:320px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Площадка/корпус</th><th>Несоответствий</th><th>Перемывок</th><th>Ср. балл</th></tr>
+            </thead>
+            <tbody id="violDetailBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- БЛОК 4: НЕСООТВЕТСТВИЯ ПО КОНТРОЛЬНЫМ ТОЧКАМ -->
+  <div class="card" id="kpCard">
+    <div class="card-header export-exclude">
+      <div>
+        <h2>Несоответствия по контрольным точкам</h2>
+        <div class="sub">Какие контрольные точки чаще всего оказываются с замечаниями (по столбцу «Контрольные точки» Акта)</div>
+        <div class="sub" style="margin-top:2px;">🔎 Каждая строка Акта может содержать несколько контрольных точек списком — учитывается каждое упоминание</div>
+      </div>
+      <button class="btn btn-download" id="btnPngKp" disabled>🖼 Скачать слайд «Контрольные точки» (PNG)</button>
+    </div>
+
+    <div id="kpEmpty" class="empty-state">Загрузите файл «Акт приёма мойки», чтобы увидеть статистику.</div>
+
+    <div id="kpContentWrap" style="display:none;">
+      <div id="kpPie" class="chart-box" style="height:460px;"></div>
+
+      <div class="export-exclude">
+        <h3 class="chart-subtitle">Сводка по контрольным точкам</h3>
+        <div class="sub" style="margin:-6px 0 8px;">Нажмите на точку в таблице или в диаграмме, чтобы увидеть примеры несоответствий</div>
+        <div class="table-wrap" style="max-height:320px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Контрольная точка</th><th>Упоминаний</th></tr>
+            </thead>
+            <tbody id="kpByPointBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="export-exclude" id="kpDetailPanel" style="display:none; margin-top:16px; padding:14px 16px; background:#f7f9fc; border:1px solid var(--border); border-radius:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <h3 class="chart-subtitle" style="margin:0;">Примеры несоответствий: <span id="kpDetailTitle"></span></h3>
+          <button type="button" class="btn btn-secondary btn-small" id="btnCloseKpDetail">✕ Закрыть</button>
+        </div>
+        <div class="table-wrap" style="max-height:320px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Площадка/корпус</th><th>Дата</th><th>Балл</th><th>Несоответствие</th></tr>
+            </thead>
+            <tbody id="kpDetailBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-box">
+    <div class="spinner"></div>
+    <div id="overlayText">Обработка файла…</div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И КОНСТАНТЫ
+   ========================================================================== */
+const BASE_DATE = new Date(2026, 6, 1); // 01.07.2026 (месяцы в JS с 0)
+let actDataAll = [];   // {date: Date, score: Number}  -- отфильтровано с 01.07.2026, агрегировано по дате (для графика)
+let actRowsAll = [];   // сырые строки листа «с марта 2025»: {date, site, uchastok, shift, master, score, controlPoints[], nonconformity, priemkaRaw, priemkaClass, hasIssue, otvet}
+let mbDataAll  = [];   // {date: Date, point: String, result: String, status: 'OK'|'NOK'|'Н/Д'}
+
+let actLoaded = false;
+let mbLoaded  = false;
+
+let currentRange = null; // {start: Date, end: Date} для активного фильтра по неделе, либо null = весь диапазон с 01.07.2026
+
+
+/* ==========================================================================
+   ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+   ========================================================================== */
+
+function normHeader(v){
+  if(v === null || v === undefined) return '';
+  return String(v).replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function toDate(v){
+  if(v === null || v === undefined || v === '') return null;
+  if(v instanceof Date){
+    if(isNaN(v.getTime())) return null;
+    return v;
+  }
+  if(typeof v === 'number'){
+    // Excel serial date -> JS Date (система отсчёта 1900, epoch offset 25569 дней)
+    const utcDays = Math.floor(v - 25569);
+    const utcValue = utcDays * 86400;
+    const d = new Date(utcValue * 1000);
+    if(isNaN(d.getTime())) return null;
+    return d;
+  }
+  if(typeof v === 'string'){
+    const s = v.trim();
+    let m = s.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
+    if(m){
+      const d = new Date(+m[3], +m[2]-1, +m[1]);
+      if(!isNaN(d.getTime())) return d;
+    }
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m){
+      const d = new Date(+m[1], +m[2]-1, +m[3]);
+      if(!isNaN(d.getTime())) return d;
+    }
+    const d2 = new Date(s);
+    if(!isNaN(d2.getTime())) return d2;
+  }
+  return null;
+}
+
+function dateOnly(d){
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function fmtDate(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
+}
+
+// Стандартный расчёт диапазона ISO-недели (понедельник-воскресенье) для заданного года/номера недели
+function isoWeekRange(year, week){
+  const jan4 = new Date(year, 0, 4);
+  const jan4Day = (jan4.getDay() + 6) % 7; // 0=понедельник ... 6=воскресенье
+  const week1Monday = new Date(jan4);
+  week1Monday.setDate(jan4.getDate() - jan4Day);
+  const start = new Date(week1Monday);
+  start.setDate(week1Monday.getDate() + (week - 1) * 7);
+  start.setHours(0,0,0,0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23,59,59,999);
+  return { start, end };
+}
+
+function showOverlay(text){
+  document.getElementById('overlayText').textContent = text;
+  positionFixedLikeOverlay(document.getElementById('overlay'));
+  document.getElementById('overlay').classList.add('show');
+}
+function hideOverlay(){
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ---------------------------------------------------------------------------
+// Позиционирование "as-fixed" оверлеев (спиннер загрузки, модалка корпуса).
+// Обычный position:fixed сломан для нас в одном сценарии: когда эта страница
+// встроена как <iframe> в общую оболочку "Сводный дэшборд УКПФ", и оболочка
+// подгоняет высоту iframe под ВЕСЬ контент (чтобы не было двойного скролла).
+// У такого iframe нет собственной прокрутки — с точки зрения position:fixed
+// внутри него "видимая область" это весь iframe целиком (может быть 5000px),
+// а не то, что сейчас видно пользователю на экране родительской страницы.
+// Поэтому окно "уезжает" в середину всего документа, а не туда, где кликнули.
+// Решение: считаем видимую область относительно РОДИТЕЛЬСКОГО окна (если мы
+// внутри iframe той же origin — а мы всегда внутри своей же оболочки), и
+// позиционируем оверлей через position:absolute + top/height, а не fixed.
+function getVisibleRegion(){
+  try{
+    if(window.frameElement && window.parent && window.parent !== window){
+      const rect = window.frameElement.getBoundingClientRect();
+      const parentH = window.parent.innerHeight || document.documentElement.clientHeight;
+      return { top: Math.max(0, -rect.top), height: parentH };
+    }
+  }catch(e){ /* межстраничный доступ запрещён (открыто не через нашу оболочку) — используем локальный viewport */ }
+  return { top: window.scrollY || document.documentElement.scrollTop, height: window.innerHeight };
+}
+function positionFixedLikeOverlay(el){
+  if(!el) return;
+  const region = getVisibleRegion();
+  el.style.top = region.top + 'px';
+  el.style.height = region.height + 'px';
+}
+
+function showBanner(msg, type){
+  const b = document.getElementById('globalBanner');
+  b.textContent = msg;
+  b.className = 'banner ' + (type || 'error');
+  b.style.display = 'block';
+  clearTimeout(window.__bannerTimeout);
+  window.__bannerTimeout = setTimeout(()=>{ b.style.display='none'; }, 7000);
+}
+
+/* ==========================================================================
+   ИСПРАВЛЕНИЕ ДИАПАЗОНА ЛИСТА
+   Некоторые файлы (особенно сформированные автоматически, например через
+   Power Automate / Power Apps) содержат некорректный или заниженный
+   диапазон данных (!ref) в метаданных листа — из-за этого SheetJS может
+   "видеть" только заголовки и считать лист пустым, хотя реальные данные
+   на месте. Эта функция пересчитывает реальный диапазон по фактическим
+   ячейкам листа, не доверяя заявленным метаданным.
+   ========================================================================== */
+function fixSheetRange(ws){
+  let maxR = -1, maxC = -1;
+  for(const key in ws){
+    if(key.charCodeAt(0) === 33) continue; // пропускаем служебные ключи вида "!ref", "!margins" и т.п.
+    let cell;
+    try{ cell = XLSX.utils.decode_cell(key); } catch(e){ continue; }
+    if(cell.r > maxR) maxR = cell.r;
+    if(cell.c > maxC) maxC = cell.c;
+  }
+  if(maxR >= 0 && maxC >= 0){
+    ws['!ref'] = XLSX.utils.encode_range({ s:{ r:0, c:0 }, e:{ r:maxR, c:maxC } });
+  }
+}
+
+/* ==========================================================================
+   ПАРСИНГ ФАЙЛА 1 — АКТ ПРИЁМА МОЙКИ (лист «с марта 2025»)
+   --------------------------------------------------------------------------
+   В отличие от ЗПП/инкубации, здесь один и тот же лист одновременно
+   играет роль и «Динамики» (дата+балл), и «Архива несоответствий»
+   (у каждой строки уже есть балл, контрольные точки и текст
+   несоответствия — отдельного архивного листа не требуется).
+   ========================================================================== */
+async function parseActFile(file){
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type:'array', cellDates:true });
+
+  let sheetName = wb.SheetNames.find(n => n.trim() === 'с марта 2025');
+  if(!sheetName) sheetName = wb.SheetNames.find(n => n.toLowerCase().includes('марта'));
+  if(!sheetName) throw new Error('В файле «Акт приёма мойки» не найден лист «с марта 2025».');
+
+  const ws = wb.Sheets[sheetName];
+  fixSheetRange(ws);
+  const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:null });
+
+  let headerRowIdx = -1;
+  let colSite=-1, colShift=-1, colMaster=-1, colDate=-1, colScore=-1, colKp=-1, colNesoot=-1, colPriemka=-1, colOtvet=-1;
+  for(let r = 0; r < Math.min(rows.length, 15); r++){
+    const row = rows[r];
+    if(!row) continue;
+    let siteI=-1, shiftI=-1, masterI=-1, dateI=-1, scoreI=-1, kpI=-1, nesootI=-1, priemkaI=-1, otvetI=-1;
+    row.forEach((cell, ci) => {
+      const n = normHeader(cell);
+      if(n === 'Площадка/корпус') siteI = ci;
+      if(n === 'Время суток') shiftI = ci;
+      if(n === 'Мастер мойки') masterI = ci;
+      if(n === 'Дата') dateI = ci;
+      if(n === 'Балл') scoreI = ci;
+      if(n.startsWith('Контрольные точки')) kpI = ci;
+      if(n === 'Несоответствие') nesootI = ci;
+      if(n.startsWith('Приемка мойки')) priemkaI = ci;
+      if(n.startsWith('Ответственный')) otvetI = ci;
+    });
+    if(siteI >= 0 && dateI >= 0 && scoreI >= 0){
+      headerRowIdx = r;
+      colSite=siteI; colShift=shiftI; colMaster=masterI; colDate=dateI; colScore=scoreI;
+      colKp=kpI; colNesoot=nesootI; colPriemka=priemkaI; colOtvet=otvetI;
+      break;
+    }
+  }
+  if(headerRowIdx === -1){
+    throw new Error('На листе «с марта 2025» не найдены заголовки «Площадка/корпус», «Дата» и «Балл».');
+  }
+
+  // Извлекаем «участок» из кода площадки: буквенный код (Г,Д,Е,Ж,А,Б,В) + идущее
+  // следом число считаем ОДНИМ участком (напр. «Г5-1»,«Г5-2» → участок «Г5»),
+  // а числовой код БП (напр. «БП12-1», «Бп14-6») — участком «БП12» / «БП14».
+  function extractUchastok(site){
+    const s = String(site).trim();
+    let m = s.match(/^(БП|Бп|бп)\s*[-]?\s*(\d+)/i);
+    if(m) return 'БП' + m[2];
+    m = s.match(/^([А-Яа-яЁё]+)\s*[-]?\s*(\d*)/);
+    if(m) return (m[1].toUpperCase()) + (m[2] || '');
+    return s;
+  }
+
+  // Разбираем список контрольных точек вида «1. Точка А 2. Точка Б 3. Точка В»
+  // в массив отдельных названий (не завязываясь на конкретную нумерацию/пунктуацию).
+  function splitControlPoints(text){
+    if(!text) return [];
+    const raw = String(text).replace(/\n/g, ' ');
+    const parts = raw.split(/\d+\s*[.)]\s*/).map(s => s.trim()).filter(Boolean);
+    if(parts.length) return parts.map(normalizePointName);
+    // на случай если нумерации нет вовсе — считаем всю строку одной точкой
+    return [normalizePointName(raw)];
+  }
+  function normalizePointName(s){
+    return s.replace(/\s+/g,' ').replace(/\s*\/\s*/g,'/').replace(/[.,;]+$/,'').trim();
+  }
+
+  // Классификация «приёмка с первого/второго раза» по свободному тексту столбца
+  function classifyPriemka(v){
+    if(!v) return 'unspecified';
+    const s = String(v).toLowerCase();
+    if(s.includes('перемыв') || s.includes('втор')) return 'rewash';
+    if(s.includes('перв')) return 'first';
+    return 'unspecified'; // напр. «промывка корпуса» — обычная мойка, без явного указания попытки
+  }
+
+  const dynMap = new Map();
+  const allRows = [];
+
+  for(let r = headerRowIdx + 1; r < rows.length; r++){
+    const row = rows[r];
+    if(!row) continue;
+    const siteRaw = row[colSite];
+    const dRaw = row[colDate];
+    const sRaw = row[colScore];
+    if(siteRaw === null || siteRaw === undefined || siteRaw === '') continue;
+    if(dRaw === null || dRaw === undefined || dRaw === '') continue;
+    if(sRaw === null || sRaw === undefined || sRaw === '') continue;
+    const d = toDate(dRaw);
+    const score = parseFloat(sRaw);
+    if(!d || isNaN(score)) continue;
+    const dateOnlyVal = dateOnly(d);
+    if(dateOnlyVal < BASE_DATE) continue;
+
+    const site = String(siteRaw).trim();
+    const uchastok = extractUchastok(site);
+    const nesootText = (colNesoot >= 0 && row[colNesoot]) ? String(row[colNesoot]).trim() : '';
+    const kpText = (colKp >= 0 && row[colKp]) ? String(row[colKp]).trim() : '';
+    const kpList = splitControlPoints(kpText);
+    const priemkaRaw = (colPriemka >= 0 && row[colPriemka]) ? String(row[colPriemka]).trim() : '';
+    const priemkaClass = classifyPriemka(priemkaRaw);
+    const hasIssue = score < 10; // по легенде Акта: 10 = отлично/без замечаний
+
+    allRows.push({
+      date: dateOnlyVal,
+      site, uchastok,
+      shift: (colShift >= 0 && row[colShift]) ? String(row[colShift]).trim() : '',
+      master: (colMaster >= 0 && row[colMaster]) ? String(row[colMaster]).trim() : '',
+      score,
+      controlPoints: kpList,
+      nonconformity: nesootText,
+      priemkaRaw, priemkaClass,
+      hasIssue,
+      otvet: (colOtvet >= 0 && row[colOtvet]) ? String(row[colOtvet]).trim() : ''
+    });
+
+    const key = dateOnlyVal.getTime();
+    if(!dynMap.has(key)) dynMap.set(key, { date:dateOnlyVal, sum:0, count:0 });
+    const o = dynMap.get(key);
+    o.sum += score; o.count += 1;
+  }
+
+  if(allRows.length === 0){
+    throw new Error('На листе «с марта 2025» не найдено ни одной записи с даты ' + fmtDate(BASE_DATE) + '. Проверьте столбец «Дата».');
+  }
+
+  const dynamics = Array.from(dynMap.values())
+    .map(o => ({ date:o.date, score:o.sum / o.count }))
+    .sort((a,b) => a.date - b.date);
+
+  allRows.sort((a,b) => a.date - b.date);
+
+  return { dynamics, rows: allRows };
+}
+
+/* ==========================================================================
+   ПАРСИНГ ФАЙЛА 2 — СВОД ЖУРНАЛОВ МБ (лист «Sheet1»)
+   --------------------------------------------------------------------------
+   Этот файл может содержать сотни тысяч строк и десятки столбцов.
+   Полный разбор через SheetJS (объект на каждую ячейку) может не
+   укладываться в память браузера и приводить к тому, что лист "теряется".
+   Поэтому здесь применяется ПОТОКОВЫЙ разбор: xlsx распаковывается как
+   zip-архив (через JSZip), и из XML листа извлекаются данные ТОЛЬКО
+   4 нужных столбцов (остальные ~36 столбцов полностью игнорируются на
+   лету и никогда не попадают в память), что кардинально снижает нагрузку.
+   ========================================================================== */
+
+function decodeXmlEntities(s){
+  if(s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&lt;/g,'<')
+    .replace(/&gt;/g,'>')
+    .replace(/&quot;/g,'"')
+    .replace(/&apos;/g,"'")
+    .replace(/&amp;/g,'&');
+}
+
+/* ==========================================================================
+   ПОТОКОВОЕ ЧТЕНИЕ БОЛЬШИХ XML-ЧАСТЕЙ ВНУТРИ XLSX (zip)
+   --------------------------------------------------------------------------
+   Для очень больших листов (сотни тысяч строк) расшифрованный XML может
+   превышать максимально допустимую длину JS-строки в браузере (ошибка
+   "Invalid string length"). Поэтому здесь файл читается как байты
+   (Uint8Array — у него такого ограничения нет) и декодируется небольшими
+   кусками по 8 МБ. Полный XML целиком в памяти никогда не собирается —
+   обрабатываются только уже полностью считанные элементы (<row>...</row>
+   или <si>...</si>), после чего их текст сразу отбрасывается.
+   ========================================================================== */
+async function streamXmlElements(zipEntryFile, tagName, handler, chunkSizeBytes){
+  chunkSizeBytes = chunkSizeBytes || (8 * 1024 * 1024);
+  const u8 = await zipEntryFile.async('uint8array');
+  const decoder = new TextDecoder('utf-8');
+  const closeTag = '</' + tagName + '>';
+  const elementRegex = new RegExp('<' + tagName + '\\b[^>]*>([\\s\\S]*?)<\\/' + tagName + '>', 'g');
+  let buffer = '';
+  let iter = 0;
+
+  function flush(isFinal){
+    let cutIdx;
+    if(isFinal){
+      cutIdx = buffer.length;
+    }else{
+      const idx = buffer.lastIndexOf(closeTag);
+      if(idx === -1) return; // полного элемента в буфере ещё нет — ждём следующий кусок
+      cutIdx = idx + closeTag.length;
+    }
+    const completeRegion = buffer.slice(0, cutIdx);
+    buffer = buffer.slice(cutIdx);
+    elementRegex.lastIndex = 0;
+    let m;
+    while((m = elementRegex.exec(completeRegion)) !== null){
+      handler(m[1]);
+    }
+  }
+
+  if(u8.length === 0) return;
+
+  for(let offset = 0; offset < u8.length; offset += chunkSizeBytes){
+    const end = Math.min(offset + chunkSizeBytes, u8.length);
+    const slice = u8.subarray(offset, end);
+    const isLastSlice = end >= u8.length;
+    buffer += decoder.decode(slice, { stream: !isLastSlice });
+    flush(false);
+    iter++;
+    if(iter % 4 === 0){
+      await new Promise(r => setTimeout(r, 0)); // не подвешиваем вкладку на очень больших файлах
+    }
+  }
+  flush(true);
+}
+
+
+// Извлечение ячеек из XML одной строки <row>...</row> -> [{col:'A', attrs:'...', inner:'...'}]
+function extractRowCells(rowXml){
+  const cells = [];
+  const cellRegex = /<c\s+r="([A-Z]+)\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  let m;
+  while((m = cellRegex.exec(rowXml)) !== null){
+    cells.push({ col: m[1], attrs: m[2] || '', inner: m[3] || '' });
+  }
+  return cells;
+}
+
+// Получить значение ячейки (с учётом типа: shared string / inline string / число)
+function getCellValue(cell, sharedStrings){
+  if(!cell.inner) return null;
+  const typeMatch = cell.attrs.match(/\st="([^"]*)"/);
+  const type = typeMatch ? typeMatch[1] : null;
+
+  if(type === 'inlineStr'){
+    let text = '';
+    const tRegex = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+    let tm;
+    while((tm = tRegex.exec(cell.inner)) !== null){
+      text += decodeXmlEntities(tm[1]);
+    }
+    return text;
+  }
+
+  const vMatch = cell.inner.match(/<v>([\s\S]*?)<\/v>/);
+  if(!vMatch) return null;
+  const raw = vMatch[1];
+
+  if(type === 's'){
+    const idx = parseInt(raw, 10);
+    return sharedStrings[idx] !== undefined ? sharedStrings[idx] : '';
+  }
+  if(type === 'str' || type === 'b'){
+    return decodeXmlEntities(raw);
+  }
+  return raw; // число (в т.ч. дата в виде серийного номера Excel) — как строка, распарсим позже
+}
+
+// Определить путь к XML-файлу листа по его имени (например, "Sheet1") через workbook.xml + rels
+async function resolveSheetPath(zip, wantedSheetName){
+  const workbookXml = await zip.file('xl/workbook.xml').async('string');
+  const sheetTags = workbookXml.match(/<sheet\b[^>]*\/>/g) || [];
+
+  let chosenTag = sheetTags.find(tag => {
+    const nameM = tag.match(/name="([^"]*)"/);
+    return nameM && nameM[1].trim() === wantedSheetName;
+  });
+  if(!chosenTag) chosenTag = sheetTags[0];
+  if(!chosenTag) throw new Error('В файле не найдено ни одного листа (workbook.xml повреждён).');
+
+  const ridMatch = chosenTag.match(/r:id="([^"]*)"/);
+  if(!ridMatch) throw new Error('Не удалось определить ссылку на лист в workbook.xml.');
+  const rid = ridMatch[1];
+
+  const relsFile = zip.file('xl/_rels/workbook.xml.rels');
+  if(!relsFile) throw new Error('Не найден файл xl/_rels/workbook.xml.rels.');
+  const relsXml = await relsFile.async('string');
+  const relTags = relsXml.match(/<Relationship\b[^>]*\/>/g) || [];
+
+  let target = null;
+  for(const tag of relTags){
+    const idM = tag.match(/Id="([^"]*)"/);
+    if(idM && idM[1] === rid){
+      const targetM = tag.match(/Target="([^"]*)"/);
+      target = targetM ? targetM[1] : null;
+      break;
+    }
+  }
+  if(!target) throw new Error('Не удалось определить путь к файлу листа.');
+
+  target = target.replace(/^\.?\//, '');
+  const sheetPath = target.startsWith('xl/') ? target : ('xl/' + target);
+  return sheetPath;
+}
+
+async function parseMbFile(file){
+  let zip;
+  try{
+    const buf = await file.arrayBuffer();
+    zip = await JSZip.loadAsync(buf);
+  }catch(e){
+    throw new Error('Не удалось открыть файл как Excel/zip-архив: ' + e.message);
+  }
+
+  const sheetPath = await resolveSheetPath(zip, 'Sheet1');
+  const sheetFile = zip.file(sheetPath);
+  if(!sheetFile) throw new Error('Не найден файл листа внутри архива: ' + sheetPath);
+
+  // --- Shared strings (таблица строк) — тоже читаем потоково на случай, если она большая ---
+  const sharedStrings = [];
+  const sstFile = zip.file('xl/sharedStrings.xml');
+  if(sstFile){
+    await streamXmlElements(sstFile, 'si', (inner) => {
+      let text = '';
+      const tRegex = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+      let tm;
+      while((tm = tRegex.exec(inner)) !== null){
+        text += decodeXmlEntities(tm[1]);
+      }
+      sharedStrings.push(text);
+    });
+  }
+
+  // Этот свод МБ ведётся по всей фабрике (ЗПП, инкубация, корма и т.д.),
+  // а не только по цеху бройлерного производства. Отбираем ТОЛЬКО пробы,
+  // относящиеся к этому цеху, чтобы результат соответствовал контексту «Акта приёма мойки».
+  function isBroilerDept(v){
+    if(v === null || v === undefined) return false;
+    return String(v).toLowerCase().includes('бройлер');
+  }
+
+  // Свод объединяет НЕСКОЛЬКО предприятий (АО «Усть-Каменогорская птицефабрика» = УКПФ,
+  // ТОО «Макинская птицефабрика» = МПФ и др.) — ограничиваемся УКПФ (хотя на практике
+  // «Цех_бройлерного_производства» встречается только у УКПФ, фильтр оставлен для страховки).
+  function isUkpfEnterprise(v){
+    if(v === null || v === undefined) return false;
+    return String(v).toUpperCase().includes('УСТЬ');
+  }
+
+  // Отбираем смывы (Группа материала = «Смывы») и пробы воды («Вода»), исключая прочие
+  // типы проб (окружение, биоматериал и т.п.) — тот же принцип, что и для Цеха инкубации.
+  function isSmyvyGroup(v){
+    if(v === null || v === undefined) return false;
+    const g = String(v).trim().toLowerCase();
+    return g === 'смывы' || g === 'вода';
+  }
+
+  // Исключаем бахильные пробы (обувной смыв персонала, а не смыв с оборудования/помещения)
+  function isBahilnayaProba(v){
+    if(v === null || v === undefined) return false;
+    return String(v).toLowerCase().includes('бахильн');
+  }
+
+  let headerResolved = false;
+  let sawAnyRow = false;
+  let colDateLetter = null, colPointLetter = null, colResultLetter = null, colOkLetter = null;
+  let colDeptLetter = null, colZoneLetter = null, colTestNameLetter = null, colUnitLetter = null;
+  let colEnterpriseLetter = null, colMatGroupLetter = null, colMatSubgroupLetter = null;
+  let targetLetters = null;
+
+  const result = [];
+  let totalScanned = 0;
+  let totalAfterDate = 0;
+  let headerError = null;
+
+  function handleRow(rowInner){
+    sawAnyRow = true;
+    const cells = extractRowCells(rowInner);
+
+    if(!headerResolved){
+      // --- Первая встреченная строка листа — заголовки: определяем буквы нужных столбцов ---
+      cells.forEach(c => {
+        const val = getCellValue(c, sharedStrings);
+        const n = normHeader(val);
+        if(n === 'Дата отбора пробы') colDateLetter = c.col;
+        if(n.startsWith('Точка отбора пробы')) colPointLetter = c.col;
+        if(n === 'Результат') colResultLetter = c.col;
+        if(n.includes('допустимых пределах')) colOkLetter = c.col;
+        if(n === 'Подразделение') colDeptLetter = c.col;                 // напр. «Цех_бройлерного_производства»
+        if(n === 'Корпус / Помещение') colZoneLetter = c.col;            // напр. «Корпус Г5-1»
+        if(n === 'Наименование исследования') colTestNameLetter = c.col; // напр. «БГКП смывы», «КМАФАнМ Смывы»
+        if(n === 'Единица измерения') colUnitLetter = c.col;             // напр. «КОЕ на 100 см2»
+        if(n === 'Предприятие') colEnterpriseLetter = c.col;             // напр. «АО_Усть_Каменогорская_Птицефабрика»
+        if(n === 'Группа материала') colMatGroupLetter = c.col;          // напр. «Смывы», «Вода»
+        if(n === 'Подгруппа материала') colMatSubgroupLetter = c.col;    // напр. «Бахильная_проба» — исключаем
+      });
+      if(!colDateLetter || !colPointLetter || !colResultLetter || !colOkLetter){
+        headerError = 'На листе «Sheet1» не найдены все необходимые столбцы: «Дата отбора пробы», «Точка отбора пробы», «Результат», «Результат в допустимых пределах ОК или NOK».';
+        throw new Error(headerError);
+      }
+      targetLetters = new Set([colDateLetter, colPointLetter, colResultLetter, colOkLetter]);
+      if(colDeptLetter) targetLetters.add(colDeptLetter);
+      if(colZoneLetter) targetLetters.add(colZoneLetter);
+      if(colTestNameLetter) targetLetters.add(colTestNameLetter);
+      if(colUnitLetter) targetLetters.add(colUnitLetter);
+      if(colEnterpriseLetter) targetLetters.add(colEnterpriseLetter);
+      if(colMatGroupLetter) targetLetters.add(colMatGroupLetter);
+      if(colMatSubgroupLetter) targetLetters.add(colMatSubgroupLetter);
+      headerResolved = true;
+      return;
+    }
+
+    // --- Обычная строка данных: извлекаем ТОЛЬКО нужные столбцы ---
+    let dRaw = null, pointRaw = null, resultRaw = null, okRaw = null, deptRaw = null, zoneRaw = null;
+    let testNameRaw = null, unitRaw = null, enterpriseRaw = null, matGroupRaw = null, matSubgroupRaw = null;
+    for(let i = 0; i < cells.length; i++){
+      const c = cells[i];
+      if(!targetLetters.has(c.col)) continue;
+      const val = getCellValue(c, sharedStrings);
+      if(c.col === colDateLetter) dRaw = val;
+      else if(c.col === colPointLetter) pointRaw = val;
+      else if(c.col === colResultLetter) resultRaw = val;
+      else if(c.col === colOkLetter) okRaw = val;
+      else if(colDeptLetter && c.col === colDeptLetter) deptRaw = val;
+      else if(colZoneLetter && c.col === colZoneLetter) zoneRaw = val;
+      else if(colTestNameLetter && c.col === colTestNameLetter) testNameRaw = val;
+      else if(colUnitLetter && c.col === colUnitLetter) unitRaw = val;
+      else if(colEnterpriseLetter && c.col === colEnterpriseLetter) enterpriseRaw = val;
+      else if(colMatGroupLetter && c.col === colMatGroupLetter) matGroupRaw = val;
+      else if(colMatSubgroupLetter && c.col === colMatSubgroupLetter) matSubgroupRaw = val;
+    }
+
+    if(dRaw === null || dRaw === '') return;
+    totalScanned++;
+    const dNum = (typeof dRaw === 'string' && /^-?\d+(\.\d+)?$/.test(dRaw)) ? parseFloat(dRaw) : dRaw;
+    const d = toDate(dNum);
+    if(!d) return;
+    const dOnly = dateOnly(d);
+    if(dOnly < BASE_DATE) return; // отсекаем сразу же, чтобы не хранить лишние записи (файл большой)
+    totalAfterDate++;
+
+    // Фильтр «только цех бройлерного производства»
+    if(colDeptLetter && !isBroilerDept(deptRaw)) return;
+    // Фильтр «только предприятие УКПФ» (исключаем МПФ, Meal Pro и др.)
+    if(colEnterpriseLetter && !isUkpfEnterprise(enterpriseRaw)) return;
+    // Фильтр «смывы + вода»
+    if(colMatGroupLetter && !isSmyvyGroup(matGroupRaw)) return;
+    // Исключаем бахильные пробы
+    if(colMatSubgroupLetter && isBahilnayaProba(matSubgroupRaw)) return;
+
+    const point = (pointRaw === null || pointRaw === undefined || pointRaw === '') ? '(не указано)' : String(pointRaw).trim();
+    const rawResultStr = (resultRaw === null || resultRaw === undefined) ? '' : String(resultRaw).trim();
+    const testName = (testNameRaw === null || testNameRaw === undefined) ? '' : String(testNameRaw).trim();
+    const unit = (unitRaw === null || unitRaw === undefined) ? '' : String(unitRaw).trim();
+    // Собираем понятное описание находки: «Наименование исследования — Результат [единица]»
+    const isNumericResult = rawResultStr !== '' && !isNaN(parseFloat(rawResultStr.replace(',', '.'))) && /^[\d.,\s]+$/.test(rawResultStr);
+    let resVal = rawResultStr;
+    if(testName && rawResultStr) resVal = testName + ' — ' + rawResultStr + (isNumericResult && unit ? ' ' + unit : '');
+    else if(testName) resVal = testName;
+    const okNorm = (okRaw === null || okRaw === undefined) ? '' : String(okRaw).trim().toUpperCase();
+    const zone = (zoneRaw === null || zoneRaw === undefined || zoneRaw === '') ? '' : String(zoneRaw).trim();
+
+    let status = 'Н/Д';
+    if(okNorm.includes('NOK')) status = 'NOK';
+    else if(okNorm.includes('OK')) status = 'OK';
+
+    result.push({ date: dOnly, point: point || '(не указано)', zone, result: resVal, status });
+  }
+
+  await streamXmlElements(sheetFile, 'row', handleRow);
+
+  if(!sawAnyRow){
+    throw new Error('Не удалось прочитать строки на листе «Sheet1» — лист пуст или повреждён.');
+  }
+  if(!headerResolved){
+    throw new Error(headerError || 'Не удалось определить заголовки столбцов на листе «Sheet1».');
+  }
+  if(totalAfterDate === 0){
+    throw new Error('Данные прочитаны, но после фильтрации по дате (с 01.07.2026) не найдено ни одной записи. Проверьте столбец «Дата отбора пробы» в файле.');
+  }
+  if(result.length === 0){
+    throw new Error('За период с 01.07.2026 найдено ' + totalAfterDate + ' проб по всей фабрике, но ни одной — по Цеху бройлерного производства УКПФ (столбцы «Подразделение», «Предприятие», «Группа материала»). Проверьте, что в файле есть пробы с подразделением, содержащим «бройлер», предприятием, содержащим «Усть», и группой материала «Смывы» или «Вода».');
+  }
+
+  result.sort((a,b) => a.date - b.date);
+  result.__meta = {
+    totalAfterDate,
+    totalIncubation: result.length,
+    deptFilterApplied: !!colDeptLetter
+  };
+  return result;
+}
+
+/* ==========================================================================
+   ОБРАБОТКА ЗАГРУЗКИ ФАЙЛОВ (drag&drop + выбор)
+   ========================================================================== */
+function setupDropzone(dzId, inputId, onFile){
+  const dz = document.getElementById(dzId);
+  const input = document.getElementById(inputId);
+
+  input.addEventListener('change', (e) => {
+    if(e.target.files.length) onFile(e.target.files[0]);
+  });
+
+  dz.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dz.classList.add('dragover');
+  });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    if(e.dataTransfer.files.length) onFile(e.dataTransfer.files[0]);
+  });
+}
+
+setupDropzone('dz-act', 'file-act', async (file) => {
+  const statusEl = document.getElementById('status-act');
+  const dz = document.getElementById('dz-act');
+  statusEl.classList.remove('error');
+  statusEl.textContent = 'Загрузка...';
+  showOverlay('Обработка файла «Акт приёма мойки»…');
+  try{
+    const parsed = await parseActFile(file);
+    if(parsed.dynamics.length === 0){
+      throw new Error('После фильтрации по дате (с 01.07.2026) в файле не найдено ни одной записи.');
+    }
+    actDataAll = parsed.dynamics;
+    actRowsAll = parsed.rows;
+    actLoaded = true;
+    dz.classList.add('loaded');
+    statusEl.textContent = `✓ Загружено: ${file.name} (${parsed.rows.length} записей мойки с ${fmtDate(BASE_DATE)})`;
+    onDataReady();
+  }catch(err){
+    statusEl.classList.add('error');
+    statusEl.textContent = '✗ ' + err.message;
+    showBanner('Ошибка при обработке файла «Акт приёма мойки»: ' + err.message, 'error');
+  }finally{
+    hideOverlay();
+  }
+});
+
+async function handleMbFile(file){
+  const statusEl = document.getElementById('status-mb');
+  const dz = document.getElementById('dz-mb');
+  statusEl.classList.remove('error');
+  statusEl.textContent = 'Загрузка...';
+  showOverlay('Обработка файла «Свод рабочих журналов МБ»… Файл может быть большим, это может занять до минуты.');
+  try{
+    const data = await parseMbFile(file);
+    mbDataAll = data;
+    mbLoaded = true;
+    dz.classList.add('loaded');
+    const meta = data.__meta || {};
+    if(meta.deptFilterApplied){
+      statusEl.textContent = `✓ Загружено: ${file.name} — ${data.length} проб по Цеху бройлерного производства (из ${meta.totalAfterDate} проб по всей фабрике за период)`;
+    }else{
+      statusEl.textContent = `✓ Загружено: ${file.name} (${data.length} записей). Внимание: столбец «Подразделение» не найден — фильтр по цеху не применён, показаны все пробы.`;
+    }
+    onDataReady();
+    try{
+      if(window.parent && window.parent !== window){
+        window.parent.postMessage({type:'mb-status', key: window.__DASH_KEY__, ok:true, count:data.length, deptFilterApplied: !!meta.deptFilterApplied}, '*');
+      }
+    }catch(e){}
+  }catch(err){
+    statusEl.classList.add('error');
+    statusEl.textContent = '✗ ' + err.message;
+    showBanner('Ошибка при обработке файла «Свод рабочих журналов МБ»: ' + err.message, 'error');
+    try{
+      if(window.parent && window.parent !== window){
+        window.parent.postMessage({type:'mb-status', key: window.__DASH_KEY__, ok:false, error: err.message}, '*');
+      }
+    }catch(e){}
+  }finally{
+    hideOverlay();
+  }
+}
+window.handleMbFile = handleMbFile;
+setupDropzone('dz-mb', 'file-mb', handleMbFile);
+
+/* приём файла "Свод" из общей оболочки (если дэшборд встроен как вкладка) */
+window.__DASH_KEY__ = 'broiler';
+window.addEventListener('message', (e) => {
+  const d = e.data;
+  if(!d || d.type !== 'mb-file') return;
+  try{
+    const file = new File([d.buffer], d.name || 'svod.xlsx');
+    handleMbFile(file);
+  }catch(err){
+    try{
+      window.parent.postMessage({type:'mb-status', key: window.__DASH_KEY__, ok:false, error: 'Не удалось прочитать переданный файл: ' + err.message}, '*');
+    }catch(e2){}
+  }
+});
+
+function onDataReady(){
+  document.getElementById('btnResetFilter').disabled = !(actLoaded || mbLoaded);
+  document.getElementById('btnApplyWeek').disabled = !(actLoaded || mbLoaded);
+  currentRange = null;
+  renderAll();
+}
+
+/* ==========================================================================
+   ФИЛЬТРАЦИЯ ПО НЕДЕЛЕ
+   ========================================================================== */
+document.getElementById('btnApplyWeek').addEventListener('click', () => {
+  const weekVal = parseInt(document.getElementById('weekInput').value, 10);
+  if(!weekVal || weekVal < 1 || weekVal > 53){
+    showBanner('Введите корректный номер недели (1-53).', 'error');
+    return;
+  }
+  currentRange = isoWeekRange(2026, weekVal);
+  renderAll();
+});
+
+document.getElementById('btnResetFilter').addEventListener('click', () => {
+  currentRange = null;
+  document.getElementById('weekInput').value = '';
+  renderAll();
+});
+
+
+function getFilteredAct(){
+  if(!currentRange) return actDataAll;
+  return actDataAll.filter(d => d.date >= currentRange.start && d.date <= currentRange.end);
+}
+function getFilteredActRows(){
+  if(!currentRange) return actRowsAll;
+  return actRowsAll.filter(d => d.date >= currentRange.start && d.date <= currentRange.end);
+}
+function getFilteredMb(){
+  if(!currentRange) return mbDataAll;
+  return mbDataAll.filter(d => d.date >= currentRange.start && d.date <= currentRange.end);
+}
+
+/* ==========================================================================
+   ОТРИСОВКА ГРАФИКОВ И ТАБЛИЦ
+   ========================================================================== */
+function updateRangeBadge(){
+  const badge = document.getElementById('rangeBadge');
+  if(!actLoaded && !mbLoaded){
+    badge.textContent = 'Данные не загружены';
+    return;
+  }
+  if(currentRange){
+    badge.textContent = `Неделя: ${fmtDate(currentRange.start)} — ${fmtDate(currentRange.end)}`;
+  }else{
+    badge.textContent = `Весь период с ${fmtDate(BASE_DATE)}`;
+  }
+}
+
+// Палитра для круговых диаграмм — в тон общей тёплой тёмно-бирюзовой/золотой гамме дэшборда
+const VIOL_PIE_COLORS = ['#12938c','#e2a23c','#0d6f6a','#d94f4f','#5fc4bd','#b8791f','#7a6d52','#9c8a5e','#3a9188','#c9673f','#4a7a75','#d1b169'];
+
+function renderViolationsPie(){
+  let data = getFilteredActRows();
+  const emptyEl = document.getElementById('violEmpty');
+  const wrapEl = document.getElementById('violContentWrap');
+  const statsEl = document.getElementById('statsViol');
+  const btnPng = document.getElementById('btnPngViol');
+
+  if(!actLoaded || actRowsAll.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Загрузите файл «Акт приёма мойки», чтобы увидеть статистику.';
+    wrapEl.style.display = 'none';
+    statsEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  if(data.length === 0){
+    emptyEl.style.display = 'block';
+    const allDates = actRowsAll.map(d => d.date).sort((a,b) => a - b);
+    const rangeHint = allDates.length > 0
+      ? ` В акте есть данные за ${fmtDate(allDates[0])}–${fmtDate(allDates[allDates.length-1])} — выберите эту неделю, чтобы их увидеть.`
+      : '';
+    emptyEl.textContent = 'Нет записей мойки за выбранный период.' + rangeHint;
+    wrapEl.style.display = 'none';
+    statsEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  wrapEl.style.display = 'block';
+  statsEl.style.display = 'flex';
+  btnPng.disabled = false;
+
+  // --- Агрегация по участку (группа корпусов) ---
+  const byUchastok = new Map();
+  data.forEach(d => {
+    if(!byUchastok.has(d.uchastok)){
+      byUchastok.set(d.uchastok, { uchastok:d.uchastok, total:0, rewash:0, firstTry:0, ballSum:0, ballCount:0 });
+    }
+    const o = byUchastok.get(d.uchastok);
+    if(d.hasIssue) o.total++;
+    if(d.priemkaClass === 'rewash') o.rewash++;
+    else if(d.priemkaClass === 'first') o.firstTry++;
+    o.ballSum += d.score; o.ballCount++;
+  });
+  const rows = Array.from(byUchastok.values()).filter(r => r.total > 0).sort((a,b) => b.total - a.total);
+
+  // --- Общие KPI-плашки ---
+  const totalCount = data.filter(d => d.hasIssue).length;
+  const rewashCount = data.filter(d => d.priemkaClass === 'rewash').length;
+  const firstTryCount = data.filter(d => d.priemkaClass === 'first').length;
+  const classifiedCount = rewashCount + firstTryCount;
+  document.getElementById('statViolTotal').textContent = totalCount;
+  document.getElementById('statViolRewash').textContent = rewashCount;
+  document.getElementById('statViolFirstTry').textContent = firstTryCount;
+  document.getElementById('statViolPct').textContent = classifiedCount > 0 ? Math.round(rewashCount / classifiedCount * 100) + '%' : '–';
+
+  if(rows.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'За выбранный период все корпуса приняты на «10» без замечаний — несоответствий нет. Отлично! 🎉';
+    wrapEl.style.display = 'none';
+    return;
+  }
+
+  // --- Круговая диаграмма ---
+  const labels = rows.map(r => r.uchastok);
+  const values = rows.map(r => r.total);
+  const colors = rows.map((_, i) => VIOL_PIE_COLORS[i % VIOL_PIE_COLORS.length]);
+
+  const trace = {
+    type:'pie',
+    labels, values,
+    marker:{ colors, line:{ color:'#ffffff', width:2 } },
+    textinfo:'label+percent',
+    textposition:'outside',
+    automargin:true,
+    hovertemplate:'<b>%{label}</b><br>Несоответствий: %{value} (%{percent})<extra></extra>'
+  };
+  const layout = {
+    margin:{ t:20, b:20, l:20, r:20 },
+    showlegend:true,
+    legend:{ orientation:'v', x:1.02, y:0.5, font:{ size:12, color:'#3a2f1e' } },
+    font:{ family:"'Segoe UI', Arial, sans-serif", color:'#3a2f1e' },
+    paper_bgcolor:'rgba(0,0,0,0)',
+    plot_bgcolor:'rgba(0,0,0,0)'
+  };
+  Plotly.newPlot('violPie', [trace], layout, { responsive:true, displaylogo:false });
+  document.getElementById('violPie').on('plotly_click', (ev) => {
+    const uchastok = ev.points[0].label;
+    showViolDetail(uchastok);
+  });
+
+  // --- Таблица сводки по участкам ---
+  lastViolFilteredData = data; // сохраняем для клика по строке/сектору (детализация ниже)
+  hideViolDetail();
+  const tbody = document.getElementById('violByUchastokBody');
+  tbody.innerHTML = rows.map(r => {
+    const pct = r.total > 0 ? Math.round(r.rewash / r.total * 100) : 0;
+    const avgBall = r.ballCount > 0 ? (r.ballSum / r.ballCount).toFixed(1) : '–';
+    return `<tr class="viol-row-clickable" data-uchastok="${r.uchastok.replace(/"/g,'&quot;')}"><td>${r.uchastok}</td><td>${r.total}</td><td>${r.rewash}</td><td>${pct}%</td><td>${avgBall}</td></tr>`;
+  }).join('');
+  tbody.querySelectorAll('tr').forEach(tr => {
+    tr.addEventListener('click', () => showViolDetail(tr.dataset.uchastok));
+  });
+}
+
+let lastViolFilteredData = [];
+
+function showViolDetail(uchastok){
+  const rowsForUchastok = lastViolFilteredData.filter(d => d.uchastok === uchastok && d.hasIssue);
+  if(rowsForUchastok.length === 0) return;
+
+  const byName = new Map();
+  rowsForUchastok.forEach(d => {
+    const key = d.site || '(не указано)';
+    if(!byName.has(key)) byName.set(key, { name:key, total:0, rewash:0, ballSum:0, ballCount:0 });
+    const o = byName.get(key);
+    o.total++;
+    if(d.priemkaClass === 'rewash') o.rewash++;
+    o.ballSum += d.score; o.ballCount++;
+  });
+  const detailRows = Array.from(byName.values()).sort((a,b) => a.ballSum/a.ballCount - b.ballSum/b.ballCount);
+
+  document.getElementById('violDetailTitle').textContent = uchastok;
+  const tbody = document.getElementById('violDetailBody');
+  tbody.innerHTML = detailRows.map(r => {
+    const avgBall = r.ballCount > 0 ? (r.ballSum / r.ballCount).toFixed(1) : '–';
+    return `<tr><td>${r.name}</td><td>${r.total}</td><td>${r.rewash}</td><td>${avgBall}</td></tr>`;
+  }).join('');
+  document.getElementById('violDetailPanel').style.display = 'block';
+  document.getElementById('violDetailPanel').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function hideViolDetail(){
+  document.getElementById('violDetailPanel').style.display = 'none';
+}
+
+document.getElementById('btnCloseViolDetail').addEventListener('click', hideViolDetail);
+
+/* ==========================================================================
+   БЛОК 4 — НЕСООТВЕТСТВИЯ ПО КОНТРОЛЬНЫМ ТОЧКАМ
+   ========================================================================== */
+let lastKpFilteredRows = []; // {pointName, row} — плоский список для детализации по клику
+
+function renderControlPointsPie(){
+  const data = getFilteredActRows();
+  const emptyEl = document.getElementById('kpEmpty');
+  const wrapEl = document.getElementById('kpContentWrap');
+  const btnPng = document.getElementById('btnPngKp');
+
+  if(!actLoaded || actRowsAll.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Загрузите файл «Акт приёма мойки», чтобы увидеть статистику.';
+    wrapEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  // Разворачиваем: одна строка Акта -> несколько контрольных точек
+  const flat = [];
+  data.forEach(row => {
+    (row.controlPoints || []).forEach(pointName => {
+      flat.push({ pointName, row });
+    });
+  });
+
+  if(flat.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'За выбранный период нет заполненных контрольных точек с замечаниями.';
+    wrapEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  wrapEl.style.display = 'block';
+  btnPng.disabled = false;
+
+  const byPoint = new Map();
+  flat.forEach(f => {
+    if(!byPoint.has(f.pointName)) byPoint.set(f.pointName, 0);
+    byPoint.set(f.pointName, byPoint.get(f.pointName) + 1);
+  });
+  const rows = Array.from(byPoint.entries()).map(([name,count]) => ({ name, count })).sort((a,b) => b.count - a.count);
+
+  const labels = rows.map(r => r.name);
+  const values = rows.map(r => r.count);
+  const colors = rows.map((_, i) => VIOL_PIE_COLORS[i % VIOL_PIE_COLORS.length]);
+
+  const trace = {
+    type:'pie',
+    labels, values,
+    marker:{ colors, line:{ color:'#ffffff', width:2 } },
+    textinfo:'percent',
+    textposition:'inside',
+    automargin:true,
+    hovertemplate:'<b>%{label}</b><br>Упоминаний: %{value} (%{percent})<extra></extra>'
+  };
+  const layout = {
+    margin:{ t:20, b:20, l:20, r:20 },
+    showlegend:true,
+    legend:{ orientation:'v', x:1.02, y:0.5, font:{ size:11, color:'#3a2f1e' } },
+    font:{ family:"'Segoe UI', Arial, sans-serif", color:'#3a2f1e' },
+    paper_bgcolor:'rgba(0,0,0,0)',
+    plot_bgcolor:'rgba(0,0,0,0)'
+  };
+  Plotly.newPlot('kpPie', [trace], layout, { responsive:true, displaylogo:false });
+  document.getElementById('kpPie').on('plotly_click', (ev) => showKpDetail(ev.points[0].label));
+
+  lastKpFilteredRows = flat;
+  hideKpDetail();
+  const tbody = document.getElementById('kpByPointBody');
+  tbody.innerHTML = rows.map(r => `<tr class="viol-row-clickable" data-point="${escapeHtml(r.name).replace(/"/g,'&quot;')}"><td>${escapeHtml(r.name)}</td><td>${r.count}</td></tr>`).join('');
+  tbody.querySelectorAll('tr').forEach(tr => {
+    tr.addEventListener('click', () => showKpDetail(tr.dataset.point));
+  });
+}
+
+function showKpDetail(pointName){
+  const matches = lastKpFilteredRows.filter(f => f.pointName === pointName);
+  if(matches.length === 0) return;
+  document.getElementById('kpDetailTitle').textContent = pointName;
+  const tbody = document.getElementById('kpDetailBody');
+  const sorted = [...matches].sort((a,b) => a.row.date - b.row.date);
+  tbody.innerHTML = sorted.map(f => `
+    <tr>
+      <td>${escapeHtml(f.row.site)}</td>
+      <td>${fmtDate(f.row.date)}</td>
+      <td>${f.row.score}</td>
+      <td>${escapeHtml(f.row.nonconformity || '–')}</td>
+    </tr>
+  `).join('');
+  document.getElementById('kpDetailPanel').style.display = 'block';
+  document.getElementById('kpDetailPanel').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+function hideKpDetail(){
+  document.getElementById('kpDetailPanel').style.display = 'none';
+}
+document.getElementById('btnCloseKpDetail').addEventListener('click', hideKpDetail);
+
+/* ==========================================================================
+   БЛОК 1б — ТАБЛИЦА ЗАПИСЕЙ МОЙКИ ЗА ПЕРИОД
+   ========================================================================== */
+function scoreClass(score){
+  return score >= 9 ? 'good' : (score === 8 ? 'warn' : 'bad');
+}
+function scoreColorVar(cls){
+  return cls === 'good' ? 'var(--ok)' : (cls === 'warn' ? '#c98a2e' : 'var(--nok)');
+}
+function priemkaBadge(row){
+  if(row.priemkaClass === 'rewash') return {cls:'badge-rewash', label:'🔁 со 2-го раза'};
+  if(row.priemkaClass === 'first')  return {cls:'badge-first',  label:'✅ с 1-го раза'};
+  return {cls:'badge-unspec', label: row.priemkaRaw ? escapeHtml(row.priemkaRaw) : 'обычная мойка'};
+}
+
+// Маленький инлайн-спарклайн истории баллов корпуса (по ВСЕЙ загруженной истории,
+// а не только по отфильтрованной неделе) — быстрый визуальный тренд прямо на плитке.
+function buildSparklineSvg(visits){
+  const pts = visits.slice(-8); // последние до 8 визитов
+  if(pts.length < 2){
+    const only = pts[0];
+    const c = only ? scoreColorVar(scoreClass(only.score)) : '#ccc';
+    return `<svg class="tile-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><circle cx="50" cy="14" r="3.5" fill="${c}"/></svg>`;
+  }
+  const w = 100, h = 28, pad = 4;
+  const stepX = (w - pad*2) / (pts.length - 1);
+  const yFor = s => h - pad - ((s - 1) / 9) * (h - pad*2); // балл 1..10 -> y
+  const coords = pts.map((p,i) => [pad + i*stepX, yFor(p.score)]);
+  const line = coords.map(c => c.join(',')).join(' ');
+  const dots = coords.map((c,i) => {
+    const col = scoreColorVar(scoreClass(pts[i].score));
+    return `<circle cx="${c[0].toFixed(1)}" cy="${c[1].toFixed(1)}" r="2.6" fill="${col}"/>`;
+  }).join('');
+  return `<svg class="tile-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+    <polyline points="${line}" fill="none" stroke="#c9bd9e" stroke-width="1.4"/>
+    ${dots}
+  </svg>`;
+}
+
+let lastCorpusGroups = new Map();  // site -> [rows] за текущий отфильтрованный период
+let siteHistoryAll = new Map();    // site -> [rows] за ВЕСЬ загруженный период (для спарклайна и графика в модалке)
+
+function renderRecordsTable(){
+  const data = getFilteredActRows();
+  const emptyEl = document.getElementById('recordsEmpty');
+  const wrapEl = document.getElementById('recordsWrap');
+  const btnPng = document.getElementById('btnPngRecords');
+
+  if(!actLoaded){
+    emptyEl.style.display = 'block';
+    wrapEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+  if(data.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Нет записей мойки за выбранный период.';
+    wrapEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  wrapEl.style.display = 'block';
+  btnPng.disabled = false;
+
+  // Полная история по каждому корпусу (не зависит от фильтра недели) — для спарклайнов/графика в модалке
+  siteHistoryAll = new Map();
+  actRowsAll.forEach(r => {
+    if(!siteHistoryAll.has(r.site)) siteHistoryAll.set(r.site, []);
+    siteHistoryAll.get(r.site).push(r);
+  });
+  siteHistoryAll.forEach(list => list.sort((a,b) => a.date - b.date));
+
+  // Группируем по конкретной площадке/корпусу — если за период было несколько
+  // визитов (например перемывка на следующий день), на плитке показываем
+  // самый свежий результат, а всю историю — внутри карточки по клику.
+  const groups = new Map();
+  data.forEach(r => {
+    if(!groups.has(r.site)) groups.set(r.site, []);
+    groups.get(r.site).push(r);
+  });
+  groups.forEach(list => list.sort((a,b) => a.date - b.date));
+  lastCorpusGroups = groups;
+
+  const tiles = Array.from(groups.entries()).map(([site, list]) => {
+    const latest = list[list.length - 1];
+    return { site, uchastok: latest.uchastok, latest, visits: list };
+  });
+  // худшие баллы — первыми, чтобы проблемные корпуса сразу бросались в глаза
+  tiles.sort((a,b) => a.latest.score - b.latest.score || a.site.localeCompare(b.site, 'ru'));
+
+  const grid = document.getElementById('corpusGrid');
+  grid.innerHTML = tiles.map((t, i) => {
+    const cls = scoreClass(t.latest.score);
+    const badge = priemkaBadge(t.latest);
+    const hint = t.latest.nonconformity
+      ? escapeHtml(t.latest.nonconformity.length > 40 ? t.latest.nonconformity.slice(0,38) + '…' : t.latest.nonconformity)
+      : (t.latest.hasIssue ? 'есть замечания' : 'без замечаний');
+    const multi = t.visits.length > 1 ? `<div class="tile-multi">${t.visits.length} записи за период</div>` : '';
+    const spark = buildSparklineSvg(siteHistoryAll.get(t.site) || t.visits);
+    const delay = Math.min(i * 18, 400);
+    return `<div class="corpus-tile tile-${cls}" style="animation-delay:${delay}ms;" data-site="${escapeHtml(t.site).replace(/"/g,'&quot;')}" data-delay="${delay}">
+      <div>
+        <div class="tile-site">${escapeHtml(t.site)}</div>
+        <div class="tile-uchastok">Участок ${escapeHtml(t.uchastok)}</div>
+        <div class="tile-date">📅 ${fmtDate(t.latest.date)}</div>
+      </div>
+      <div class="tile-score-row"><span class="tile-score${cls==='bad' ? ' pulse-alert' : ''}" data-target="${t.latest.score}">0</span><span class="tile-score-max">/10</span></div>
+      <span class="tile-badge ${badge.cls}">${badge.label}</span>
+      <div class="tile-issue-hint">${hint}</div>
+      ${multi}
+      ${spark}
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.corpus-tile').forEach(tile => {
+    tile.addEventListener('click', () => openCorpusModal(tile.dataset.site));
+  });
+
+  // Анимация появления: счётчик балла "разгоняется" от 0, а линия спарклайна
+  // дорисовывается слева направо — запускаем чуть позже, чтобы совпасть по
+  // времени с концом ступенчатого fade-in самой плитки.
+  grid.querySelectorAll('.corpus-tile').forEach(tile => {
+    const tileDelay = parseInt(tile.dataset.delay, 10) || 0;
+    const scoreEl = tile.querySelector('.tile-score');
+    if(scoreEl){
+      const target = parseFloat(scoreEl.dataset.target);
+      setTimeout(() => animateScoreCountUp(scoreEl, target), tileDelay);
+    }
+    const poly = tile.querySelector('.tile-spark polyline');
+    if(poly){
+      const len = poly.getTotalLength();
+      poly.style.strokeDasharray = String(len);
+      poly.style.strokeDashoffset = String(len);
+      setTimeout(() => {
+        poly.style.transition = 'stroke-dashoffset .65s ease';
+        poly.style.strokeDashoffset = '0';
+      }, tileDelay + 120);
+    }
+  });
+}
+
+/* ===== Модальное окно детализации по корпусу ===== */
+function normalizeZoneForMatch(z){
+  return String(z || '').replace(/^Корпус\s+/i, '').trim().toUpperCase();
+}
+
+function openCorpusModal(site){
+  const visits = lastCorpusGroups.get(site);
+  if(!visits || visits.length === 0) return;
+  const fullHistory = siteHistoryAll.get(site) || visits;
+  const latest = visits[visits.length - 1];
+  const cls = scoreClass(latest.score);
+
+  // Сравнение со средним баллом по всему участку (той же группе корпусов) —
+  // помогает понять, это разовый провал именно этого корпуса или общая
+  // картина по участку.
+  const uchastokRows = actRowsAll.filter(r => r.uchastok === latest.uchastok);
+  const uchastokAvg = uchastokRows.length ? uchastokRows.reduce((s,r) => s + r.score, 0) / uchastokRows.length : null;
+  let vsAvgHtml = '';
+  if(uchastokAvg !== null && uchastokRows.length > 1){
+    const diff = latest.score - uchastokAvg;
+    let arrow, vsClass, vsText;
+    if(diff > 0.4){ arrow = '▲'; vsClass = 'vs-good'; vsText = `выше среднего по участку ${escapeHtml(latest.uchastok)} (${uchastokAvg.toFixed(1)})`; }
+    else if(diff < -0.4){ arrow = '▼'; vsClass = 'vs-bad'; vsText = `ниже среднего по участку ${escapeHtml(latest.uchastok)} (${uchastokAvg.toFixed(1)})`; }
+    else { arrow = '≈'; vsClass = 'vs-mid'; vsText = `на уровне среднего по участку ${escapeHtml(latest.uchastok)} (${uchastokAvg.toFixed(1)})`; }
+    vsAvgHtml = `<div class="cm-vs-avg ${vsClass}">${arrow} ${vsText}</div>`;
+  }
+
+  const meta = [
+    { lab:'Дата (последний визит)', val: fmtDate(latest.date) },
+    { lab:'Смена', val: latest.shift || '–' },
+    { lab:'Мастер мойки', val: latest.master || '–' },
+    { lab:'Участок', val: latest.uchastok }
+  ];
+  const badge = priemkaBadge(latest);
+
+  let controlPointsHtml = '';
+  if(latest.controlPoints && latest.controlPoints.length){
+    controlPointsHtml = `
+      <div class="cm-section-title">Контрольные точки с замечаниями</div>
+      <div class="cm-chips">${latest.controlPoints.map(p => `<span class="cm-chip">${escapeHtml(p)}</span>`).join('')}</div>`;
+  }
+
+  let nesootHtml = '';
+  if(latest.nonconformity){
+    nesootHtml = `
+      <div class="cm-section-title">Что было не так</div>
+      <div class="cm-nesoot-text">${escapeHtml(latest.nonconformity)}</div>`;
+  }else if(!latest.hasIssue){
+    nesootHtml = `<div class="cm-clean">✓ Принято на 10 без замечаний</div>`;
+  }
+
+  let historyHtml = '';
+  if(visits.length > 1){
+    const rows = [...visits].reverse().map(v => {
+      const vcls = scoreClass(v.score);
+      return `<div class="cm-visit visit-${vcls}">
+        <div class="cm-visit-head"><span class="score" style="color:${vcls==='good'?'var(--ok)':(vcls==='warn'?'#c98a2e':'var(--nok)')}">${v.score}</span>
+        <span>${fmtDate(v.date)} · ${escapeHtml(v.shift || '–')} · ${escapeHtml(v.master || '–')}</span></div>
+        ${v.nonconformity ? `<div style="font-size:12.5px; color:var(--text-muted); margin-top:2px;">${escapeHtml(v.nonconformity)}</div>` : ''}
+      </div>`;
+    }).join('');
+    historyHtml = `<div class="cm-section-title">Все визиты за выбранный период (${visits.length})</div>${rows}`;
+  }
+
+  const trendHtml = fullHistory.length > 1
+    ? `<div class="cm-section-title">Динамика баллов по датам (вся история с ${fmtDate(BASE_DATE)})</div>
+       <div id="cmTrendChart" class="cm-trend-chart"></div>`
+    : '';
+
+  // Сопоставление со смывами МБ именно ЭТОГО корпуса (а не всего цеха) —
+  // "Корпус / Помещение" в своде МБ и "Площадка/корпус" в акте — один и тот
+  // же код (напр. "Корпус Г5-1" в своде = "Г5-1" в акте), поэтому можно
+  // сопоставить напрямую.
+  const siteKey = normalizeZoneForMatch(site);
+  const siteMb = mbDataAll
+    .filter(m => normalizeZoneForMatch(m.zone) === siteKey)
+    .sort((a,b) => b.date - a.date);
+  let mbHtml = '';
+  if(siteMb.length > 0){
+    const nokCount = siteMb.filter(m => m.status === 'NOK').length;
+    const rows = siteMb.map(m => {
+      const stCls = m.status === 'NOK' ? 'mb-nok' : (m.status === 'OK' ? 'mb-ok' : '');
+      return `<tr class="${stCls}">
+        <td>${fmtDate(m.date)}</td>
+        <td>${escapeHtml(m.point)}</td>
+        <td style="font-size:12px;">${escapeHtml(m.result)}</td>
+        <td><b>${m.status}</b></td>
+      </tr>`;
+    }).join('');
+    mbHtml = `
+      <div class="cm-section-title">Смывы МБ по этому корпусу (${siteMb.length}${nokCount > 0 ? `, из них NOK: ${nokCount}` : ''})</div>
+      <div class="table-wrap" style="max-height:200px;">
+        <table class="data-table"><thead><tr><th>Дата</th><th>Точка отбора</th><th>Результат</th><th>Статус</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+      </div>`;
+  }else if(mbLoaded){
+    mbHtml = `<div class="cm-section-title">Смывы МБ по этому корпусу</div>
+      <div class="cm-clean" style="background:#f7f3e6; border-color:var(--border); color:var(--text-muted);">Смывы именно по этому корпусу в загруженном своде не найдены (либо их ещё не брали, либо код помещения в своде записан иначе).</div>`;
+  }
+
+  const scoreColor = scoreColorVar(cls);
+
+  document.getElementById('corpusModalBody').innerHTML = `
+    <div class="cm-header cm-anim" style="animation-delay:0ms;">
+      <div>
+        <div class="cm-title">${escapeHtml(site)}</div>
+        <div class="cm-subtitle">Участок ${escapeHtml(latest.uchastok)} · последний визит ${fmtDate(latest.date)}</div>
+        <span class="tile-badge ${badge.cls}" style="margin-top:8px; display:inline-block;">${badge.label}</span>
+      </div>
+      <div>
+        <div class="cm-score-big" id="cmScoreBig" style="color:${scoreColor};">0</div>
+        <div class="cm-score-max">из 10</div>
+      </div>
+    </div>
+    ${vsAvgHtml ? `<div class="cm-anim" style="animation-delay:30ms;">${vsAvgHtml}</div>` : ''}
+    <div class="cm-meta-row cm-anim" style="animation-delay:60ms;">
+      ${meta.map(m => `<div class="cm-meta-item"><div class="lab">${m.lab}</div><div class="val">${escapeHtml(String(m.val))}</div></div>`).join('')}
+    </div>
+    <div class="cm-anim" style="animation-delay:110ms;">${trendHtml}</div>
+    <div class="cm-anim" style="animation-delay:160ms;">${controlPointsHtml}</div>
+    <div class="cm-anim" style="animation-delay:200ms;">${nesootHtml}</div>
+    <div class="cm-anim" style="animation-delay:240ms;">${mbHtml}</div>
+    <div class="cm-anim" style="animation-delay:280ms;">${historyHtml}</div>
+  `;
+
+  // Плавный "разгон" числа балла от 0 до фактического значения
+  animateScoreCountUp(document.getElementById('cmScoreBig'), latest.score);
+
+  if(fullHistory.length > 1){
+    renderTrendChart(fullHistory);
+  }
+
+  const overlayEl = document.getElementById('corpusModalOverlay');
+  positionFixedLikeOverlay(overlayEl);
+  overlayEl.classList.add('open');
+  startModalTracking();
+}
+function closeCorpusModal(){
+  document.getElementById('corpusModalOverlay').classList.remove('open');
+  stopModalTracking();
+}
+document.getElementById('corpusModalClose').addEventListener('click', closeCorpusModal);
+document.getElementById('corpusModalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'corpusModalOverlay') closeCorpusModal();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeCorpusModal();
+});
+
+// Пока модалка открыта, держим её позицию в актуальном состоянии — если
+// пользователь (или родительская страница-оболочка) прокрутит экран.
+let modalTrackHandler = null;
+function startModalTracking(){
+  stopModalTracking();
+  modalTrackHandler = () => positionFixedLikeOverlay(document.getElementById('corpusModalOverlay'));
+  window.addEventListener('resize', modalTrackHandler);
+  try{
+    if(window.parent && window.parent !== window){
+      window.parent.addEventListener('scroll', modalTrackHandler, { passive:true });
+      window.parent.addEventListener('resize', modalTrackHandler);
+    }
+  }catch(e){}
+}
+function stopModalTracking(){
+  if(!modalTrackHandler) return;
+  window.removeEventListener('resize', modalTrackHandler);
+  try{
+    if(window.parent && window.parent !== window){
+      window.parent.removeEventListener('scroll', modalTrackHandler);
+      window.parent.removeEventListener('resize', modalTrackHandler);
+    }
+  }catch(e){}
+  modalTrackHandler = null;
+}
+
+// Плавный "разгон" счётчика балла — от 0 до целевого значения за ~500мс
+function animateScoreCountUp(el, target){
+  if(!el) return;
+  const start = performance.now();
+  const dur = 500;
+  function step(now){
+    const t = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+    const val = target * eased;
+    el.textContent = t < 1 ? val.toFixed(1) : String(target);
+    if(t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// Небольшой график динамики баллов конкретного корпуса по датам (Plotly),
+// внутри модального окна — вся история с начала загруженного периода.
+function renderTrendChart(history){
+  const x = history.map(v => v.date);
+  const y = history.map(v => v.score);
+  const markerColors = y.map(s => s >= 9 ? '#1a9e63' : (s === 8 ? '#c98a2e' : '#d94f4f'));
+  const symbols = history.map(v => v.priemkaClass === 'rewash' ? 'diamond' : (v.priemkaClass === 'first' ? 'circle' : 'square'));
+  const hover = history.map(v => `${fmtDate(v.date)}<br>Балл: ${v.score}<br>${escapeHtml(v.shift || '–')} · ${escapeHtml(v.master || '–')}`);
+
+  const trace = {
+    type:'scatter', mode:'lines+markers',
+    x, y,
+    line:{ color:'#c9bd9e', width:1.6 },
+    marker:{ color:markerColors, size:9, symbol:symbols, line:{ color:'#fff', width:1.5 } },
+    text: hover,
+    hovertemplate:'%{text}<extra></extra>'
+  };
+  const layout = {
+    margin:{ t:8, b:28, l:30, r:8 },
+    height:150,
+    xaxis:{ tickformat:'%d.%m', gridcolor:'#eee2c4', tickfont:{ size:10.5 } },
+    yaxis:{ range:[0.5,10.5], dtick:2, gridcolor:'#eee2c4', tickfont:{ size:10.5 } },
+    font:{ family:"'Segoe UI', Arial, sans-serif", color:'#3a2f1e' },
+    paper_bgcolor:'rgba(0,0,0,0)',
+    plot_bgcolor:'rgba(0,0,0,0)',
+    showlegend:false
+  };
+  Plotly.newPlot('cmTrendChart', [trace], layout, { responsive:true, displaylogo:false, displayModeBar:false });
+}
+
+
+function renderActChart(){
+  const data = getFilteredAct();
+  const emptyEl = document.getElementById('actEmpty');
+  const chartEl = document.getElementById('actChart');
+  const btnPng = document.getElementById('btnPngAct');
+
+  if(!actLoaded){
+    emptyEl.style.display = 'block';
+    chartEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  if(data.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Нет данных о мойке за выбранный период.';
+    chartEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  chartEl.style.display = 'block';
+  btnPng.disabled = false;
+
+  const x = data.map(d => d.date);
+  const y = data.map(d => d.score);
+  const avg = y.reduce((a,b)=>a+b,0) / y.length;
+  const maxScore = Math.max(10, ...y);
+
+  // --- Сопоставляем каждую дату мойки со смывами МБ этого же дня (если есть) ---
+  const mbData = getFilteredMb();
+  const mbByDate = new Map();
+  if(mbLoaded && mbData.length){
+    aggregateMbByDate(mbData).forEach(d => mbByDate.set(d.date.getTime(), d));
+  }
+
+  // KPI-числа встроены прямо в ту же фигуру, что и график — вместе выгружаются одной картинкой
+  const kpiRecords = {
+    type:'indicator', mode:'number',
+    value: data.length,
+    number:{ font:{ size:34, color:'#3a2f1e' } },
+    title:{ text:'Записей за период', font:{ size:14, color:'#7a6d52' } },
+    domain:{ x:[0.02, 0.46], y:[0.85, 1] }
+  };
+  const kpiAvg = {
+    type:'indicator', mode:'number',
+    value: avg,
+    number:{ valueformat:'.1f', suffix:' / 10', font:{ size:34, color:'#12938c' } },
+    title:{ text:'Средний балл за период', font:{ size:14, color:'#7a6d52' } },
+    domain:{ x:[0.56, 1], y:[0.85, 1] }
+  };
+
+  // Мягкая подложка под KPI-цифрами — визуально выделяет их как "карточки"
+  const kpiCardShapes = [
+    { type:'rect', xref:'paper', yref:'paper', x0:0, x1:0.49, y0:0.83, y1:1, fillcolor:'#f7f9fc', line:{ color:'#e1d6b3', width:1 }, layer:'below' },
+    { type:'rect', xref:'paper', yref:'paper', x0:0.51, x1:1, y0:0.83, y1:1, fillcolor:'#f0f9f7', line:{ color:'#cfe9e6', width:1 }, layer:'below' },
+    // Линия среднего значения — пунктиром на самом графике
+    { type:'line', xref:'x', yref:'y', x0:x[0], x1:x[x.length-1], y0:avg, y1:avg, line:{ color:'#c9bd97', width:1.5, dash:'dot' } }
+  ];
+
+  // Точки окрашены по абсолютной шкале акта (10=отлично...7-6=критично), а не по среднему за период
+  const colorForScore = v => v >= 9 ? '#12938c' : (v === 8 ? '#e2a23c' : '#d94f4f');
+  const lineColorForScore = v => v >= 9 ? '#0d6f6a' : (v === 8 ? '#b8791f' : '#a02f2f');
+  const barColors = y.map(colorForScore);
+  const barLineColors = y.map(lineColorForScore);
+
+  const trace = {
+    x, y,
+    type:'scatter', mode:'lines+markers',
+    line:{ color:'#12938c', width:3, shape:'spline', smoothing:0.4 },
+    marker:{ size:10, color:barColors, line:{ color:barLineColors, width:2 } },
+    xaxis:'x', yaxis:'y',
+    hovertemplate:'<b>%{x|%d.%m.%Y}</b><br>Средний балл по мойке: %{y:.1f}<extra></extra>'
+  };
+
+  // Подпись со значением балла прямо над каждым столбцом
+  const scoreLabels = data.map((d,i) => ({
+    x:d.date, y:y[i], yshift:22, xref:'x', yref:'y',
+    text:`<b>${y[i].toFixed(1)}</b>`,
+    showarrow:false,
+    font:{ size:20, color:'#3a2f1e' }
+  }));
+
+  // Привязка к смывам этой же даты — компактный чип: сколько взято/OK/NOK
+  const linkChips = data.map((d,i) => {
+    const mb = mbByDate.get(d.date.getTime());
+    let text, bg, border, fcolor;
+    if(!mb){
+      text = '· нет смывов';
+      bg = 'rgba(122,109,82,0.08)'; border = '#d8cfae'; fcolor = '#948a6c';
+    }else if(mb.nok > 0){
+      text = `⚠ смывы: ${mb.total}, NOK ${mb.nok}`;
+      bg = 'rgba(217,79,79,0.14)'; border = '#e2635c'; fcolor = '#8f2d29';
+    }else{
+      text = `✓ смывы: ${mb.total}, OK`;
+      bg = 'rgba(26,158,99,0.13)'; border = '#5fc4bd'; fcolor = '#0d6f6a';
+    }
+    return {
+      x:d.date, y:y[i], yshift:52, xref:'x', yref:'y',
+      text, showarrow:false,
+      font:{ size:13, color:fcolor, family:'Segoe UI, Arial, sans-serif' },
+      bgcolor:bg, bordercolor:border, borderwidth:1, borderpad:4
+    };
+  });
+
+  const layout = {
+    margin:{ t:10, r:20, b:60, l:60 },
+    xaxis:{ title:{ text:'Дата', font:{ size:15 } }, type:'date', tickformat:'%d.%m', tickfont:{ size:15 }, gridcolor:'#f1ede0', griddash:'dot', gridwidth:1, domain:[0,1], anchor:'y' },
+    yaxis:{ title:{ text:'Средний балл', font:{ size:15 } }, tickfont:{ size:14 }, gridcolor:'#f1ede0', griddash:'dot', zeroline:false, domain:[0,0.74], anchor:'x', range:[0, maxScore*1.52] },
+    shapes:kpiCardShapes,
+    annotations:[...scoreLabels, ...linkChips],
+    bargap:0.38,
+    hoverlabel:{ bgcolor:'#3a2f1e', font:{ color:'#fff', size:14 }, bordercolor:'#3a2f1e' },
+    plot_bgcolor:'rgba(0,0,0,0)',
+    paper_bgcolor:'rgba(0,0,0,0)',
+    font:{ family:'Segoe UI, Arial, sans-serif', color:'#3a2f1e' },
+    showlegend:false
+  };
+
+  Plotly.newPlot('actChart', [kpiRecords, kpiAvg, trace], layout, { responsive:true, displaylogo:false });
+}
+
+/* ==========================================================================
+   АГРЕГАЦИЯ ДАННЫХ МБ ПО ДНЯМ И ПО ТОЧКАМ ОТБОРА
+   ========================================================================== */
+function aggregateMbByDate(data){
+  const map = new Map();
+  data.forEach(d => {
+    const key = d.date.getTime();
+    if(!map.has(key)) map.set(key, { date: d.date, ok:0, nok:0, na:0, total:0, nokFindings:[] });
+    const o = map.get(key);
+    o.total++;
+    if(d.status === 'OK') o.ok++;
+    else if(d.status === 'NOK'){
+      o.nok++;
+      // "Наименование исследования / что обнаружено" — точка отбора + результат
+      const label = escapeHtml(d.point || '(точка не указана)') + (d.result ? (': ' + escapeHtml(d.result)) : '');
+      o.nokFindings.push(label);
+    }
+    else o.na++;
+  });
+  return Array.from(map.values())
+    .map(o => {
+      const uniqFindings = Array.from(new Set(o.nokFindings));
+      let findingsStr = 'без отклонений';
+      if(uniqFindings.length){
+        findingsStr = uniqFindings.slice(0,3).join('<br>');
+        if(uniqFindings.length > 3) findingsStr += `<br>и ещё ${uniqFindings.length - 3}`;
+      }
+      return { ...o, pctOk: o.total > 0 ? (o.ok / o.total * 100) : null, findingsStr };
+    })
+    .sort((a,b) => a.date - b.date);
+}
+
+/* ==========================================================================
+   БЛОК 2 — КПИ + СМЫВЫ МБ: общие цифры, график динамики, таблицы (только NOK)
+   ========================================================================== */
+/* ==========================================================================
+   БЛОК 1в — ХРОНОЛОГИЯ ПРИЁМКИ КОРПУСОВ И СМЫВОВ (combo-график по датам)
+   ========================================================================== */
+let lastTimelineByDate = new Map(); // dateKey(getTime) -> [строки акта за этот день]
+
+function renderTimelineChart(){
+  const actRows = getFilteredActRows();
+  const mbRows = getFilteredMb();
+  const emptyEl = document.getElementById('timelineEmpty');
+  const wrapEl = document.getElementById('timelineWrap');
+  const btnPng = document.getElementById('btnPngTimeline');
+
+  if(!actLoaded){
+    emptyEl.style.display = 'block';
+    wrapEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+  if(actRows.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Нет записей мойки за выбранный период.';
+    wrapEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  wrapEl.style.display = 'block';
+  btnPng.disabled = false;
+  hideDayDetail();
+
+  // Группируем строки акта по дате — нужно и для лёгкого "разброса" точек внутри
+  // одного дня (чтобы несколько корпусов в один день не сливались в одну точку),
+  // и для карточки дня по клику.
+  const byDate = new Map();
+  actRows.forEach(r => {
+    const key = r.date.getTime();
+    if(!byDate.has(key)) byDate.set(key, []);
+    byDate.get(key).push(r);
+  });
+  lastTimelineByDate = byDate;
+
+  const mbByDate = aggregateMbByDate(mbRows);
+
+  // Дневной средний балл — плавная линия (без разрозненных "точек" по каждому
+  // корпусу отдельно); детальный разбор по корпусам остаётся по клику ниже.
+  const dayAgg = Array.from(byDate.entries())
+    .map(([key, rows]) => ({
+      key,
+      date: rows[0].date,
+      avg: rows.reduce((s,r) => s + r.score, 0) / rows.length,
+      count: rows.length
+    }))
+    .sort((a,b) => a.date - b.date);
+
+  const lineX = dayAgg.map(o => o.date);
+  const lineY = dayAgg.map(o => o.avg);
+  const lineColors = dayAgg.map(o => o.avg >= 9 ? '#1a9e63' : (o.avg >= 8 ? '#c98a2e' : '#d94f4f'));
+  const lineText = dayAgg.map(o => `<b>${fmtDate(o.date)}</b><br>Ср. балл: ${o.avg.toFixed(1)}<br>Корпусов принято: ${o.count}`);
+  const lineCustom = dayAgg.map(o => o.key);
+
+  const barX = mbByDate.map(o => o.date);
+  const barY = mbByDate.map(o => o.total);
+  const barText = mbByDate.map(o => `${fmtDate(o.date)}<br>${o.total} смывов МБ<br>NOK: ${o.nok}`);
+  const barCustom = mbByDate.map(o => o.date.getTime());
+
+  const barTrace = {
+    type:'bar', x:barX, y:barY,
+    name:'Смывы МБ',
+    marker:{ color:'rgba(95,196,189,0.30)', line:{ color:'rgba(95,196,189,0.55)', width:1 } },
+    yaxis:'y2',
+    text: barText,
+    customdata: barCustom,
+    hovertemplate:'%{text}<extra></extra>',
+    width: 18 * 3600 * 1000
+  };
+  const lineTrace = {
+    type:'scatter', mode:'lines+markers',
+    x:lineX, y:lineY,
+    name:'Средний балл мойки',
+    line:{ color:'#cdbf98', width:2.2, shape:'spline', smoothing:0.35 },
+    marker:{ color:lineColors, size:12, line:{ color:'#fff', width:2 } },
+    fill:'tozeroy',
+    fillcolor:'rgba(18,147,140,0.06)',
+    text: lineText,
+    customdata: lineCustom,
+    hovertemplate:'%{text}<extra></extra>'
+  };
+
+  const layout = {
+    margin:{ t:10, b:34, l:44, r:50 },
+    xaxis:{ tickformat:'%d.%m', gridcolor:'#eee2c4' },
+    yaxis:{ title:'Балл мойки', range:[0.5,10.9], dtick:2, gridcolor:'#eee2c4' },
+    yaxis2:{ title:'Смывов МБ', overlaying:'y', side:'right', showgrid:false, rangemode:'tozero' },
+    font:{ family:"'Segoe UI', Arial, sans-serif", color:'#3a2f1e' },
+    paper_bgcolor:'rgba(0,0,0,0)',
+    plot_bgcolor:'rgba(0,0,0,0)',
+    showlegend:false,
+    hovermode:'closest',
+    transition:{ duration:400, easing:'cubic-in-out' }
+  };
+
+  const chartEl = document.getElementById('timelineChart');
+  chartEl.style.clipPath = 'inset(0 100% 0 0)';
+  Plotly.newPlot(chartEl, [barTrace, lineTrace], layout, { responsive:true, displaylogo:false }).then(() => {
+    chartEl.style.transition = 'clip-path .85s cubic-bezier(.22,.8,.22,1)';
+    requestAnimationFrame(() => { chartEl.style.clipPath = 'inset(0 0 0 0)'; });
+  });
+  chartEl.on('plotly_click', (ev) => {
+    const p = ev.points[0];
+    if(p && p.customdata !== undefined) openDayDetail(p.customdata);
+  });
+}
+
+function openDayDetail(dateKey){
+  const rows = lastTimelineByDate.get(dateKey);
+  if(!rows || rows.length === 0) return;
+  const dateObj = rows[0].date;
+  const mbRows = getFilteredMb().filter(d => d.date.getTime() === dateKey);
+  const mbTotal = mbRows.length;
+  const mbNok = mbRows.filter(d => d.status === 'NOK').length;
+  const issueCount = rows.filter(r => r.hasIssue).length;
+
+  document.getElementById('dayDetailTitle').textContent = 'Детали дня: ' + fmtDate(dateObj);
+
+  const stats = [
+    { icon:'🏠', lab:'Корпусов принято', val: rows.length },
+    { icon:'⚠️', lab:'С несоответствиями', val: issueCount },
+    { icon:'🧫', lab:'Смывов МБ', val: mbTotal },
+    { icon:'🔴', lab:'NOK смывов', val: mbNok, cls: mbNok > 0 ? 'accent-nok' : '' }
+  ];
+  document.getElementById('dayDetailStats').innerHTML = stats.map(s =>
+    `<div class="stat-pill ${s.cls || ''}"><span class="icon-emoji">${s.icon}</span><div class="lab">${s.lab}</div><div class="val ${s.cls ? 'nok pulse-alert' : ''}">${s.val}</div></div>`
+  ).join('');
+
+  const sorted = [...rows].sort((a,b) => a.score - b.score);
+  document.getElementById('dayDetailBody').innerHTML = sorted.map(r => {
+    const badge = priemkaBadge(r);
+    const kpCount = (r.controlPoints || []).length;
+    const scoreColor = scoreColorVar(scoreClass(r.score));
+    const nesootShort = r.nonconformity
+      ? escapeHtml(r.nonconformity.length > 70 ? r.nonconformity.slice(0,68) + '…' : r.nonconformity)
+      : '–';
+    return `<tr>
+      <td>${escapeHtml(r.site)}</td>
+      <td style="color:${scoreColor}; font-weight:700;">${r.score}</td>
+      <td><span class="tile-badge ${badge.cls}">${badge.label}</span></td>
+      <td>${kpCount}</td>
+      <td style="font-size:12px;">${nesootShort}</td>
+    </tr>`;
+  }).join('');
+
+  const panel = document.getElementById('dayDetailPanel');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+function hideDayDetail(){
+  document.getElementById('dayDetailPanel').style.display = 'none';
+}
+document.getElementById('btnCloseDayDetail').addEventListener('click', hideDayDetail);
+
+/* ==========================================================================
+   БЛОК 2 — КПИ + СМЫВЫ МБ: общие цифры, график динамики, таблицы (только NOK)
+   ========================================================================== */
+function renderMbSummary(){
+  const data = getFilteredMb();
+  const emptyEl = document.getElementById('mbEmpty');
+  const statsEl = document.getElementById('statsMb');
+  const contentWrap = document.getElementById('mbContentWrap');
+  const btnPngKpi = document.getElementById('btnPngKpi');
+  const nokSectionEl = document.getElementById('nokSection');
+
+  if(!mbLoaded){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Загрузите файл «Свод рабочих журналов МБ», чтобы увидеть данные.';
+    statsEl.style.display = 'none';
+    contentWrap.style.display = 'none';
+    nokSectionEl.style.display = 'none';
+    btnPngKpi.disabled = true;
+    return;
+  }
+
+  if(data.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Нет данных лабораторных смывов за выбранный период.';
+    statsEl.style.display = 'none';
+    contentWrap.style.display = 'none';
+    nokSectionEl.style.display = 'none';
+    btnPngKpi.disabled = true;
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  statsEl.style.display = 'flex';
+  contentWrap.style.display = 'block';
+  nokSectionEl.style.display = 'block';
+  btnPngKpi.disabled = false;
+
+  const total = data.length;
+  const okCount = data.filter(d => d.status === 'OK').length;
+  const nokCount = data.filter(d => d.status === 'NOK').length;
+  const naCount = data.filter(d => d.status === 'Н/Д').length;
+  const pctOk = total > 0 ? (okCount / total * 100) : 0;
+  const pctNok = total > 0 ? (nokCount / total * 100) : 0;
+  const pctNa = total > 0 ? (naCount / total * 100) : 0;
+  let minDate = data[0].date, maxDate = data[0].date;
+  data.forEach(d => { if(d.date < minDate) minDate = d.date; if(d.date > maxDate) maxDate = d.date; });
+
+  document.getElementById('statMbCount').textContent = total;
+  document.getElementById('statMbPeriod').textContent = fmtDate(minDate) + ' \u2013 ' + fmtDate(maxDate);
+  document.getElementById('statMbOk').textContent = okCount;
+  document.getElementById('statMbNok').textContent = nokCount;
+  document.getElementById('statMbPct').textContent = pctOk.toFixed(1) + '%';
+  document.getElementById('statMbPctNok').textContent = pctNok.toFixed(1) + '%';
+  document.getElementById('statMbPctNa').textContent = pctNa.toFixed(1) + '%';
+
+  // --- Проб по дням (агрегация) ---
+  const dailyAsc = aggregateMbByDate(data);
+  const dailyDesc = [...dailyAsc].sort((a,b) => b.date - a.date);
+
+  document.getElementById('mbByDateBody').innerHTML = dailyDesc.map(d => `
+    <tr>
+      <td>${fmtDate(d.date)}</td>
+      <td>${d.total}</td>
+      <td style="color:#1a9e63; font-weight:600;">${d.ok}</td>
+      <td style="color:${d.nok > 0 ? '#d94f4f' : '#7a6d52'}; font-weight:${d.nok > 0 ? '700' : '400'};">${d.nok}</td>
+    </tr>
+  `).join('');
+
+  // --- График динамики КПИ: столбцы «взято по дням» + линия «% в норме» ---
+  const dX = dailyAsc.map(d => d.date);
+  const dTotal = dailyAsc.map(d => d.total);
+  const dPct = dailyAsc.map(d => d.pctOk === null ? null : d.pctOk);
+  const dColors = dailyAsc.map(d => d.nok > 0 ? '#e2635c' : '#12938c');
+  const dLineColors = dailyAsc.map(d => d.nok > 0 ? '#b23b36' : '#0d6f6a');
+  const dCustom = dailyAsc.map(d => [d.total, d.ok, d.nok, d.findingsStr]);
+  const maxTotal = Math.max(1, ...dTotal);
+
+  const barTrace = {
+    x:dX, y:dTotal,
+    type:'scatter', mode:'lines+markers',
+    line:{ color:'#12938c', width:3, shape:'spline', smoothing:0.4 },
+    marker:{ size:9, color:dColors, line:{ color:dLineColors, width:2 } },
+    name:'Взято смывов, шт',
+    yaxis:'y',
+    customdata:dCustom,
+    hovertemplate:'<b>%{x|%d.%m.%Y}</b><br>Взято: %{customdata[0]} · OK: %{customdata[1]} · NOK: %{customdata[2]}<br>Обнаружено: %{customdata[3]}<extra></extra>'
+  };
+  const pctTrace = {
+    x:dX, y:dPct,
+    type:'scatter', mode:'lines+markers',
+    line:{ color:'#c98a2e', width:3, shape:'spline', smoothing:0.5 },
+    marker:{ size:8, color:'#fff', line:{ color:'#c98a2e', width:2.5 } },
+    name:'% в норме',
+    yaxis:'y2',
+    hovertemplate:'<b>%{x|%d.%m.%Y}</b><br>В норме: %{y:.0f}%<extra></extra>'
+  };
+
+  // Подписи-«бейджи» прямо на столбцах — компактно и видно даже на скачанной PNG.
+  // Для дней с NOK дополнительно показываем, что именно обнаружено.
+  const dynAnnotations = dailyAsc.map(d => {
+    let text;
+    if(d.nok > 0){
+      let shortFind = d.findingsStr.replace(/<br>/g, '; ');
+      if(shortFind.length > 40) shortFind = shortFind.slice(0, 38) + '…';
+      text = `<span style="font-weight:700;">⚠ NOK ${d.nok}</span><br><span style="font-size:9.5px;">${shortFind}</span>`;
+    }else{
+      text = `✓ ${d.total}`;
+    }
+    return {
+      x:d.date, y:d.total, yshift: d.nok > 0 ? 30 : 20, xref:'x', yref:'y',
+      text,
+      showarrow:false,
+      align:'center',
+      font:{ size:10.5, color: d.nok > 0 ? '#8f2d29' : '#0d6f6a', family:'Segoe UI, Arial, sans-serif' },
+      bgcolor: d.nok > 0 ? 'rgba(217,79,79,0.14)' : 'rgba(26,158,99,0.13)',
+      bordercolor: d.nok > 0 ? '#e2635c' : '#5fc4bd',
+      borderwidth:1,
+      borderpad:4
+    };
+  });
+
+  const dynLayout = {
+    margin:{ t:50, r:60, b:50, l:55 },
+    title:{ text:'', font:{ size:1 } },
+    xaxis:{ type:'date', tickformat:'%d.%m', title:'Дата отбора пробы', gridcolor:'#f1ede0', griddash:'dot', showline:true, linecolor:'#e1d6b3', domain:[0,1], anchor:'y' },
+    yaxis:{ title:'Смывов, шт', rangemode:'tozero', range:[0, maxTotal*1.45], gridcolor:'#f1ede0', griddash:'dot', showline:false, zeroline:false, domain:[0, 1], anchor:'x' },
+    yaxis2:{ title:'% в норме', overlaying:'y', side:'right', range:[0,105], showgrid:false, ticksuffix:'%', domain:[0, 1], anchor:'x' },
+    annotations:dynAnnotations,
+    hoverlabel:{ bgcolor:'#3a2f1e', font:{ color:'#fff' }, bordercolor:'#3a2f1e' },
+    plot_bgcolor:'rgba(0,0,0,0)',
+    paper_bgcolor:'rgba(0,0,0,0)',
+    font:{ family:'Segoe UI, Arial, sans-serif', color:'#3a2f1e' },
+    bargap:0.35,
+    legend:{ orientation:'h', x:0.5, xanchor:'center', y:1.08, font:{ size:12 } }
+  };
+
+  Plotly.newPlot('kpiChart', [barTrace, pctTrace], dynLayout, { responsive:true, displaylogo:false });
+
+  // --- Обнаружено (только NOK): дата, где, что / наименование исследования ---
+  const nokRows = data.filter(d => d.status === 'NOK').sort((a,b) => b.date - a.date);
+  const nokWrap = document.getElementById('mbNokWrap');
+  const nokEmpty = document.getElementById('mbNokEmpty');
+  const btnPngNok = document.getElementById('btnPngNok');
+  if(nokRows.length === 0){
+    nokWrap.style.display = 'none';
+    nokEmpty.style.display = 'block';
+    btnPngNok.disabled = true;
+  }else{
+    nokWrap.style.display = 'flex';
+    nokEmpty.style.display = 'none';
+    btnPngNok.disabled = false;
+    nokWrap.innerHTML = nokRows.map(d => `
+      <div class="nok-card">
+        <div class="nok-date">📅 ${fmtDate(d.date)}</div>
+        <div class="nok-where">
+          <div class="nok-lab">Где обнаружено</div>
+          <div class="nok-val">${escapeHtml(d.point)}${d.zone ? ' \u00b7 ' + escapeHtml(d.zone) : ''}</div>
+        </div>
+        <div class="nok-what">
+          <div class="nok-lab">Что обнаружено / наименование исследования</div>
+          <div class="nok-val"><span class="badge nok" style="margin-right:6px; vertical-align:middle;">NOK</span>⚠ ${escapeHtml(d.result)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function renderAll(){
+  updateRangeBadge();
+  renderActChart();
+  renderRecordsTable();
+  renderTimelineChart();
+  renderMbSummary();
+  renderViolationsPie();
+  renderControlPointsPie();
+}
+
+/* ==========================================================================
+   ЭКСПОРТ ГРАФИКОВ В PNG (для вставки в PowerPoint)
+   ========================================================================== */
+/* ==========================================================================
+   ЭКСПОРТ СЛАЙДОВ В PNG (для вставки в PowerPoint / отчёт)
+   Захватывается ВСЯ карточка целиком: заголовок, KPI-цифры, график, список находок —
+   именно так, как её видно на странице, одним изображением.
+   ========================================================================== */
+async function downloadSlide(cardId, filename, btn){
+  const card = document.getElementById(cardId);
+  const btnOriginalText = btn.textContent;
+  const nokList = card.querySelector('.nok-card-list');
+  const prevMaxHeight = nokList ? nokList.style.maxHeight : null;
+  const prevOverflow = nokList ? nokList.style.overflowY : null;
+
+  // Снимаем собственный (белый) фон карточки и её тень на время съёмки — иначе они всё равно попадут в PNG сплошным прямоугольником
+  const prevCardBg = card.style.backgroundColor;
+  const prevCardShadow = card.style.boxShadow;
+  card.style.backgroundColor = 'transparent';
+  card.style.boxShadow = 'none';
+
+  // Прячем блоки, которые не должны попадать в скачанный слайд (заголовки, таблица «Проб по дням» и т.п.)
+  const excluded = card.querySelectorAll('.export-exclude');
+  const prevExcludedDisplay = [];
+  excluded.forEach(el => { prevExcludedDisplay.push(el.style.display); el.style.display = 'none'; });
+
+  // Прячем подпись оси X («Дата…») на время съёмки — на странице она остаётся
+  const plotDiv = card.querySelector('.js-plotly-plot');
+  let prevXaxisTitle = undefined;
+  if(plotDiv && plotDiv.layout && plotDiv.layout.xaxis){
+    prevXaxisTitle = plotDiv.layout.xaxis.title;
+    try{ await Plotly.relayout(plotDiv, {'xaxis.title': ''}); }catch(e){}
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Готовим слайд…';
+  btn.style.visibility = 'hidden'; // сама кнопка не должна попасть в картинку
+
+  // Разворачиваем список находок целиком (без внутренней прокрутки), чтобы он вошёл в слайд полностью
+  if(nokList){ nokList.style.maxHeight = 'none'; nokList.style.overflowY = 'visible'; }
+
+  try{
+    await new Promise(r => setTimeout(r, 60)); // дать браузеру перерисовать layout
+    const canvas = await html2canvas(card, {
+      backgroundColor:null,
+      scale:2,
+      useCORS:true
+    });
+    const link = document.createElement('a');
+    link.download = filename + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }catch(err){
+    alert('Не удалось собрать слайд: ' + err.message);
+  }finally{
+    if(nokList){ nokList.style.maxHeight = prevMaxHeight; nokList.style.overflowY = prevOverflow; }
+    excluded.forEach((el, i) => { el.style.display = prevExcludedDisplay[i]; });
+    if(plotDiv && prevXaxisTitle !== undefined){
+      try{ await Plotly.relayout(plotDiv, {'xaxis.title': prevXaxisTitle}); }catch(e){}
+    }
+    card.style.backgroundColor = prevCardBg;
+    card.style.boxShadow = prevCardShadow;
+    btn.style.visibility = 'visible';
+    btn.disabled = false;
+    btn.textContent = btnOriginalText;
+  }
+}
+
+document.getElementById('btnPngAct').addEventListener('click', (e) => {
+  downloadSlide('actCard', 'slide_moyka_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+document.getElementById('btnPngRecords').addEventListener('click', (e) => {
+  downloadSlide('recordsCard', 'slide_zapisi_moyki_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+document.getElementById('btnPngTimeline').addEventListener('click', (e) => {
+  downloadSlide('timelineCard', 'slide_khronologiya_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+document.getElementById('btnPngKpi').addEventListener('click', (e) => {
+  downloadSlide('smyvyCard', 'slide_dinamika_kpi_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+document.getElementById('btnPngNok').addEventListener('click', (e) => {
+  downloadSlide('nokSection', 'slide_obnaruzheno_nok_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+document.getElementById('btnPngViol').addEventListener('click', (e) => {
+  downloadSlide('violCard', 'slide_nesootvetstviya_uchastki_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+document.getElementById('btnPngKp').addEventListener('click', (e) => {
+  downloadSlide('kpCard', 'slide_nesootvetstviya_tochki_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+
+/* ==========================================================================
+   ИНИЦИАЛИЗАЦИЯ
+   ========================================================================== */
+renderAll();
+</script>
+</body>
+</html>

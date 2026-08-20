@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Дэшборд качества мойки и МБ смывов/воды — УКПФ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --primary:#12938c;
+    --primary-dark:#0d6f6a;
+    --primary-light:#5fc4bd;
+    --ok:#1a9e63;
+    --nok:#d94f4f;
+    --bg:#efe6cc;
+    --card-bg:#ffffff;
+    --border:#e1d6b3;
+    --text:#3a2f1e;
+    --text-muted:#7a6d52;
+    --shadow:0 2px 10px rgba(58,47,30,0.08), 0 1px 2px rgba(58,47,30,0.05);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', Arial, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+  }
+  header.app-header{
+    background:linear-gradient(120deg,#0d6f6a 0%, #12938c 55%, #1fb0a8 100%);
+    color:#fff;
+    padding:22px 32px;
+    box-shadow:var(--shadow);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  header.app-header .brand-text h1{
+    margin:0 0 4px 0;
+    font-size:24px;
+    font-weight:700;
+    letter-spacing:0.2px;
+  }
+  header.app-header .brand-text p{
+    margin:0;
+    font-size:14px;
+    opacity:0.92;
+  }
+  header.app-header .brand-logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:rgba(255,255,255,0.14);
+    padding:8px 16px;
+    border-radius:10px;
+    font-size:13px;
+    opacity:0.95;
+  }
+  header.app-header .brand-logo img{
+    height:36px;
+    display:block;
+  }
+  .container{
+    max-width:1400px;
+    margin:0 auto;
+    padding:24px 32px 60px;
+  }
+  .grid-upload{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-bottom:24px;
+  }
+  @media (max-width:900px){
+    .grid-upload{grid-template-columns:1fr;}
+  }
+  /* Внутри общей оболочки файл "Свод" грузится один раз в шапке — своя зона скрыта */
+  body.embedded-in-shell .grid-upload{ grid-template-columns:1fr; }
+  body.embedded-in-shell #dz-mb{ display:none; }
+  .dropzone{
+    background:var(--card-bg);
+    border:2px dashed var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    text-align:center;
+    cursor:pointer;
+    transition:all .2s ease;
+    box-shadow:var(--shadow);
+    position:relative;
+  }
+  .dropzone:hover{border-color:var(--primary); background:#f8faff;}
+  .dropzone.dragover{border-color:var(--primary); background:#eaf1ff;}
+  .dropzone.loaded{border-color:var(--ok); background:#f3fbf5;}
+  .dropzone .icon{font-size:30px; margin-bottom:8px;}
+  .dropzone h3{margin:0 0 6px 0; font-size:15px; font-weight:600;}
+  .dropzone .hint{font-size:12.5px; color:var(--text-muted);}
+  .dropzone .status-line{
+    margin-top:10px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ok);
+    min-height:16px;
+  }
+  .dropzone .status-line.error{color:var(--nok);}
+  .dropzone input[type=file]{display:none;}
+
+  .controls-bar{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px 20px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:14px;
+    margin-bottom:24px;
+  }
+  .controls-bar label{font-size:13px; font-weight:600; color:var(--text-muted);}
+  .controls-bar input[type=number]{
+    width:80px;
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:14px;
+  }
+  .btn{
+    border:none;
+    border-radius:8px;
+    padding:9px 16px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .btn-primary{background:var(--primary); color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-secondary{background:#eef1f6; color:var(--text);}
+  .btn-secondary:hover{background:#e1e6ee;}
+  .btn-download{
+    background:#fff;
+    color:var(--primary);
+    border:1px solid var(--primary);
+    padding:6px 12px;
+    font-size:12.5px;
+  }
+  .btn-download:hover{background:var(--primary); color:#fff;}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .range-badge{
+    background:#eaf1ff;
+    color:var(--primary-dark);
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:13px;
+    font-weight:600;
+    margin-left:auto;
+  }
+
+  .card{
+    background:var(--card-bg);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:20px 22px;
+    margin-bottom:24px;
+  }
+  .card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .card-header h2{
+    margin:0;
+    font-size:17px;
+    font-weight:700;
+  }
+  .card-header .sub{
+    font-size:12.5px;
+    color:var(--text-muted);
+    margin-top:3px;
+  }
+  .stats-row{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:12px;
+    margin-bottom:14px;
+  }
+  @media (max-width:1000px){
+    .stats-row{ grid-template-columns:repeat(4, 1fr); }
+  }
+  @media (max-width:560px){
+    .stats-row{ grid-template-columns:repeat(2, 1fr); }
+  }
+  .stat-pill{
+    background:#f7f9fc;
+    border:1px solid var(--border);
+    border-top:3px solid var(--primary);
+    border-radius:12px;
+    padding:14px 10px 12px;
+    transition:transform .15s ease, box-shadow .15s ease;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-start;
+    gap:4px;
+    text-align:center;
+  }
+  .stat-pill:hover{ transform:translateY(-2px); box-shadow:0 6px 16px rgba(58,47,30,0.1); }
+  .stat-pill.accent-nok{ border-top-color:var(--nok); }
+  .stat-pill.accent-ok{ border-top-color:var(--ok); }
+  .stat-pill .icon-emoji{ font-size:18px; line-height:1; }
+  .stat-pill .lab{ font-size:10.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.4px; white-space:nowrap; }
+  .stat-pill .val-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .stat-pill .val{font-size:24px; font-weight:800; color:var(--primary-dark); line-height:1.3;}
+  .stat-pill .val.nok{color:var(--nok);}
+  .stat-pill .val.ok{color:var(--ok);}
+
+  .nok-card-list{ display:flex; flex-direction:column; gap:10px; max-height:420px; overflow-y:auto; padding-right:4px; }
+  .nok-card{
+    display:grid;
+    grid-template-columns:110px 1fr 1.4fr;
+    gap:16px;
+    align-items:center;
+    background:#fdf3f2;
+    border:1px solid #f0c6c3;
+    border-left:5px solid var(--nok);
+    border-radius:10px;
+    padding:12px 16px;
+  }
+  .nok-card .nok-date{ font-size:15px; font-weight:700; color:#3a2f1e; white-space:nowrap; }
+  .nok-card .nok-where .nok-lab, .nok-card .nok-what .nok-lab{ font-size:10.5px; color:#a06a63; text-transform:uppercase; letter-spacing:.3px; margin-bottom:2px; }
+  .nok-card .nok-where .nok-val{ font-size:14px; color:#3a2f1e; font-weight:600; }
+  .nok-card .nok-what .nok-val{ font-size:14.5px; color:#8f2d29; font-weight:700; }
+  @media (max-width:760px){
+    .nok-card{ grid-template-columns:1fr; gap:6px; }
+  }
+
+  .chart-box{width:100%; height:420px;}
+  .chart-box.tall{height:520px;}
+
+  table.data-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    margin-top:10px;
+  }
+  table.data-table th{
+    text-align:left;
+    background:#f7f9fc;
+    padding:9px 10px;
+    border-bottom:2px solid var(--border);
+    color:var(--text-muted);
+    font-weight:600;
+    position:sticky;
+    top:0;
+  }
+  table.data-table td{
+    padding:8px 10px;
+    border-bottom:1px solid var(--border);
+  }
+  table.data-table tr.row-nok{background:#fef2f2;}
+  table.data-table tr.row-nok td{color:#991b1b; font-weight:600;}
+  .table-wrap{max-height:360px; overflow-y:auto; border:1px solid var(--border); border-radius:10px;}
+  .badge{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:20px;
+    font-size:11.5px;
+    font-weight:700;
+  }
+  .badge.ok{background:#dcfce7; color:#166534;}
+  .badge.nok{background:#fee2e2; color:#991b1b;}
+  .badge.na{background:#f1f5f9; color:#475569;}
+
+  .empty-state{
+    text-align:center;
+    color:var(--text-muted);
+    padding:50px 20px;
+    font-size:14px;
+  }
+  .banner{
+    padding:12px 16px;
+    border-radius:10px;
+    font-size:13.5px;
+    margin-bottom:16px;
+    display:none;
+  }
+  .banner.error{background:#fef2f2; color:#991b1b; border:1px solid #fecaca;}
+  .banner.info{background:#eff6ff; color:#1e40af; border:1px solid #bfdbfe;}
+  .overlay{
+    position:absolute; left:0; right:0;
+    background:rgba(15,23,42,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+  }
+  .overlay.show{display:flex;}
+  .overlay-box{
+    background:#fff;
+    padding:28px 34px;
+    border-radius:14px;
+    text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.2);
+    max-width:320px;
+  }
+  .spinner{
+    width:38px; height:38px;
+    border:4px solid #e2e8f0;
+    border-top-color:var(--primary);
+    border-radius:50%;
+    margin:0 auto 14px;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .footer-note{
+    text-align:center;
+    font-size:12px;
+    color:var(--text-muted);
+    margin-top:10px;
+  }
+  .chart-subtitle{
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--text);
+    margin:22px 0 10px 0;
+    padding-bottom:6px;
+    border-bottom:2px solid var(--border);
+  }
+  .chart-subtitle-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin:22px 0 10px 0;
+    padding-bottom:6px;
+    border-bottom:2px solid var(--border);
+  }
+  .chart-subtitle-row .chart-subtitle{ margin:0; padding-bottom:0; border-bottom:none; }
+  .btn-small{ padding:5px 11px; font-size:11.5px; white-space:nowrap; }
+  .table-search{
+    width:100%;
+    padding:9px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:13.5px;
+    margin-top:4px;
+  }
+  .table-search:focus{ outline:none; border-color:var(--primary); }
+  .empty-state-inline{
+    text-align:center;
+    color:var(--ok);
+    background:#eefaf2;
+    border:1px solid #cdeedd;
+    border-radius:10px;
+    padding:16px;
+    font-size:13.5px;
+    font-weight:600;
+    margin-top:10px;
+  }
+
+  /* ===== Модальное окно "детали дня" (клик по точке на графике Динамики) ===== */
+  .day-modal-overlay{
+    display:none;
+    position:absolute;
+    left:0; right:0;
+    background:rgba(30,24,14,.45);
+    z-index:200;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    opacity:0;
+    transition:opacity .16s ease;
+  }
+  .day-modal-overlay.open{ display:flex; opacity:1; }
+  .day-modal{
+    background:#fffdf8;
+    border-radius:16px;
+    max-width:560px;
+    width:100%;
+    max-height:86vh;
+    overflow-y:auto;
+    padding:28px 30px;
+    position:relative;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);
+    transform:translateY(10px) scale(.98);
+    opacity:0;
+    transition:transform .18s ease, opacity .18s ease;
+  }
+  .day-modal-overlay.open .day-modal{ transform:translateY(0) scale(1); opacity:1; }
+  .day-modal-close{
+    position:absolute;
+    top:16px; right:16px;
+    width:32px; height:32px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:#fff;
+    font-size:14px;
+    cursor:pointer;
+    color:var(--text-muted);
+  }
+  .day-modal-close:hover{ background:#f7f3e6; color:#2a2117; }
+  .dm-title{ font-size:22px; font-weight:800; color:#2a2117; padding-right:34px; margin-bottom:14px; }
+  .dm-score-row{ display:flex; align-items:baseline; gap:14px; margin-bottom:18px; }
+  .dm-score-big{ font-size:44px; font-weight:800; line-height:1; }
+  .dm-score-lab{ font-size:13px; color:var(--text-muted); }
+  .dm-anim{ animation:dmFadeIn .34s ease backwards; }
+  @keyframes dmFadeIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+  .dm-section-title{
+    font-size:13px; font-weight:800; color:#7a6d52;
+    text-transform:uppercase; letter-spacing:.04em; margin:16px 0 8px;
+  }
+  tr.mb-nok td{ background:#fdf2f2; }
+  tr.mb-ok td{ background:#f3faf6; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand-text">
+    <h1>📊 Дэшборд качества мойки и МБ смывов/воды</h1>
+    <p>УКПФ · Цех инкубации</p>
+  </div>
+  <div class="brand-logo">🐣&nbsp; AITAS&nbsp;UKPF</div>
+</header>
+
+<div class="container">
+
+  <div id="globalBanner" class="banner error"></div>
+
+  <div class="grid-upload">
+    <div class="dropzone" id="dz-act" onclick="document.getElementById('file-act').click()">
+      <input type="file" id="file-act" accept=".xlsx,.xls">
+      <div class="icon">🧼</div>
+      <h3>Файл 1 — Акт приёма мойки</h3>
+      <div class="hint">Excel (.xlsx). Лист «ГРАФИК ДИНАМИКИ». Перетащите файл сюда или нажмите для выбора.</div>
+      <div class="status-line" id="status-act"></div>
+    </div>
+
+    <div class="dropzone" id="dz-mb" onclick="document.getElementById('file-mb').click()">
+      <input type="file" id="file-mb" accept=".xlsx,.xls">
+      <div class="icon">🧫</div>
+      <h3>Файл 2 — Свод рабочих журналов МБ</h3>
+      <div class="hint">Excel (.xlsx). Лист «Sheet1». Перетащите файл сюда или нажмите для выбора. Файл может быть большим — обработка займёт время.</div>
+      <div class="status-line" id="status-mb"></div>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <label for="weekInput">Номер недели (2026 год):</label>
+    <input type="number" id="weekInput" min="1" max="53" placeholder="напр. 29">
+    <button class="btn btn-primary" id="btnApplyWeek" disabled>Применить</button>
+    <button class="btn btn-secondary" id="btnResetFilter" disabled>Сбросить фильтр</button>
+    <span class="range-badge" id="rangeBadge">Данные не загружены</span>
+  </div>
+
+  <!-- БЛОК 1: ДИНАМИКА МОЙКИ (отдельный слайд для отчёта) -->
+  <div class="card" id="actCard">
+    <div class="card-header export-exclude">
+      <div>
+        <h2>Динамика качества мойки</h2>
+        <div class="sub">Средний балл по мойке по датам</div>
+        <div class="sub" style="margin-top:2px;">🟢 в этот день пробы (смывы/вода) без отклонений &nbsp;·&nbsp; 🔴 обнаружен NOK &nbsp;·&nbsp; серый — пробы в этот день не отбирались</div>
+        <div class="sub" style="margin-top:2px;">👆 Нажмите на точку графика, чтобы посмотреть все смывы этого дня</div>
+      </div>
+      <button class="btn btn-download" id="btnPngAct" disabled>🖼 Скачать слайд «Мойка» (PNG)</button>
+    </div>
+    <div id="actChart" class="chart-box" style="height:560px;"></div>
+    <div id="actEmpty" class="empty-state">Загрузите файл «Акт приёма мойки», чтобы увидеть график.</div>
+  </div>
+
+  <!-- БЛОК 2: КПИ + СМЫВЫ МБ (отдельный слайд для отчёта) -->
+  <div class="card" id="smyvyCard">
+    <div class="card-header export-exclude">
+      <div>
+        <h2>КПИ + Смывы/Вода МБ</h2>
+        <div class="sub">Только пробы АО «Усть-Каменогорская Птицефабрика» (УКПФ) · Цех инкубации / Инкубатор · Смывы + Вода · общие цифры, динамика по дням и детали по NOK</div>
+        <div class="sub" style="margin-top:2px;">🔎 Автоматически отфильтровано: Предприятие = УКПФ · Подразделение содержит «инкубац» · Группа материала = «Смывы» или «Вода» · бахильные пробы исключены</div>
+      </div>
+      <button class="btn btn-download" id="btnPngKpi" disabled>🖼 Скачать слайд «Динамика КПИ» (PNG)</button>
+    </div>
+
+    <div class="stats-row" id="statsMb" style="display:none;">
+      <div class="stat-pill"><span class="icon-emoji">🧫</span><div class="lab">Проб взято</div><div class="val" id="statMbCount">–</div></div>
+      <div class="stat-pill"><span class="icon-emoji">📆</span><div class="lab">Период отбора</div><div class="val" id="statMbPeriod" style="font-size:13px; white-space:nowrap;">–</div></div>
+      <div class="stat-pill accent-ok"><span class="icon-emoji">✅</span><div class="lab">OK</div><div class="val ok" id="statMbOk">–</div></div>
+      <div class="stat-pill accent-nok"><span class="icon-emoji">⚠️</span><div class="lab">NOK</div><div class="val nok" id="statMbNok">–</div></div>
+      <div class="stat-pill accent-ok"><span class="icon-emoji">🎯</span><div class="lab">% в норме</div><div class="val ok" id="statMbPct">–</div></div>
+      <div class="stat-pill accent-nok"><span class="icon-emoji">🚩</span><div class="lab">% NOK</div><div class="val nok" id="statMbPctNok">–</div></div>
+      <div class="stat-pill"><span class="icon-emoji">⏳</span><div class="lab">% в ожидании</div><div class="val" id="statMbPctNa">–</div></div>
+    </div>
+
+    <div id="mbEmpty" class="empty-state">Загрузите файл «Свод рабочих журналов МБ», чтобы увидеть данные.</div>
+
+    <div id="mbContentWrap" style="display:none;">
+      <h3 class="chart-subtitle export-exclude">Динамика КПИ по дням</h3>
+      <div id="kpiChart" class="chart-box" style="height:460px;"></div>
+
+      <div class="export-exclude">
+        <h3 class="chart-subtitle">Проб по дням</h3>
+        <div class="table-wrap" style="max-height:220px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Дата отбора пробы</th><th>Проб взято</th><th>OK</th><th>NOK</th></tr>
+            </thead>
+            <tbody id="mbByDateBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ОБНАРУЖЕНО (NOK) — отдельная карточка, скачивается отдельно от КПИ-графика -->
+  <div class="card" id="nokSection" style="display:none;">
+    <div class="chart-subtitle-row" style="margin-top:0;">
+      <h3 class="chart-subtitle" style="margin:0;">⚠ Обнаружено (только отклонения — NOK)</h3>
+      <button class="btn btn-download btn-small" id="btnPngNok" disabled>🖼 Скачать карточку «Обнаружено» (PNG)</button>
+    </div>
+    <div id="mbNokWrap" class="nok-card-list"></div>
+    <div id="mbNokEmpty" class="empty-state-inline">За выбранный период отклонений (NOK) не обнаружено — отлично! 🎉</div>
+  </div>
+
+  </div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-box">
+    <div class="spinner"></div>
+    <div id="overlayText">Обработка файла…</div>
+  </div>
+</div>
+
+<div class="day-modal-overlay" id="dayModalOverlay">
+  <div class="day-modal" id="dayModal">
+    <button type="button" class="day-modal-close" id="dayModalClose">✕</button>
+    <div id="dayModalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И КОНСТАНТЫ
+   ========================================================================== */
+const BASE_DATE = new Date(2026, 6, 1); // 01.07.2026 (месяцы в JS с 0)
+let actDataAll = [];   // {date: Date, score: Number}  -- отфильтровано с 01.07.2026, агрегировано по дате
+let mbDataAll  = [];   // {date: Date, point: String, result: String, status: 'OK'|'NOK'|'Н/Д'}
+
+let actLoaded = false;
+let mbLoaded  = false;
+
+let currentRange = null; // {start: Date, end: Date} для активного фильтра по неделе, либо null = весь диапазон с 01.07.2026
+
+/* ==========================================================================
+   ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+   ========================================================================== */
+
+function normHeader(v){
+  if(v === null || v === undefined) return '';
+  return String(v).replace(/\n/g,' ').replace(/\s+/g,' ').trim();
+}
+
+function toDate(v){
+  if(v === null || v === undefined || v === '') return null;
+  if(v instanceof Date){
+    if(isNaN(v.getTime())) return null;
+    return v;
+  }
+  if(typeof v === 'number'){
+    // Excel serial date -> JS Date (система отсчёта 1900, epoch offset 25569 дней)
+    const utcDays = Math.floor(v - 25569);
+    const utcValue = utcDays * 86400;
+    const d = new Date(utcValue * 1000);
+    if(isNaN(d.getTime())) return null;
+    return d;
+  }
+  if(typeof v === 'string'){
+    const s = v.trim();
+    let m = s.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/);
+    if(m){
+      const d = new Date(+m[3], +m[2]-1, +m[1]);
+      if(!isNaN(d.getTime())) return d;
+    }
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if(m){
+      const d = new Date(+m[1], +m[2]-1, +m[3]);
+      if(!isNaN(d.getTime())) return d;
+    }
+    const d2 = new Date(s);
+    if(!isNaN(d2.getTime())) return d2;
+  }
+  return null;
+}
+
+function dateOnly(d){
+  // Округляем к ближайшим суткам, а не просто обрезаем время.
+  // Даты в исходных файлах (выгрузка из Power Apps) из-за погрешности
+  // числа с плавающей точкой в Excel часто хранятся не как ровная
+  // полночь, а как "23:59:xx" предыдущих суток (например, вместо
+  // 31.07.2026 00:00:00 реально записано 30.07.2026 23:59:12).
+  // Простое обрезание (getFullYear/getMonth/getDate) в этом случае
+  // "теряет" последний день — весь график сдвигается на сутки назад.
+  // Прибавляем 12 часов перед обрезанием, чтобы дата всегда
+  // округлялась к ближайшим фактическим суткам.
+  const rounded = new Date(d.getTime() + 12*60*60*1000);
+  return new Date(rounded.getFullYear(), rounded.getMonth(), rounded.getDate());
+}
+
+function fmtDate(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
+}
+
+// Стандартный расчёт диапазона ISO-недели (понедельник-воскресенье) для заданного года/номера недели
+function isoWeekRange(year, week){
+  const jan4 = new Date(year, 0, 4);
+  const jan4Day = (jan4.getDay() + 6) % 7; // 0=понедельник ... 6=воскресенье
+  const week1Monday = new Date(jan4);
+  week1Monday.setDate(jan4.getDate() - jan4Day);
+  const start = new Date(week1Monday);
+  start.setDate(week1Monday.getDate() + (week - 1) * 7);
+  start.setHours(0,0,0,0);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23,59,59,999);
+  return { start, end };
+}
+
+function showOverlay(text){
+  document.getElementById('overlayText').textContent = text;
+  positionFixedLikeOverlay(document.getElementById('overlay'));
+  document.getElementById('overlay').classList.add('show');
+}
+function hideOverlay(){
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ---------------------------------------------------------------------------
+// Этот файл может быть встроен как <iframe> в общую оболочку "Сводный дэшборд
+// УКПФ", высота которого подгоняется под весь контент (без внутреннего
+// скролла). В таком случае обычный position:fixed внутри iframe считает
+// "видимой областью" весь iframe целиком, а не то, что сейчас видно
+// пользователю на экране родителя — оверлей "уезжает" не туда. Поэтому вместо
+// fixed используем absolute + считаем top/height относительно родительского
+// окна (если мы внутри iframe той же origin).
+function getVisibleRegion(){
+  try{
+    if(window.frameElement && window.parent && window.parent !== window){
+      const rect = window.frameElement.getBoundingClientRect();
+      const parentH = window.parent.innerHeight || document.documentElement.clientHeight;
+      return { top: Math.max(0, -rect.top), height: parentH };
+    }
+  }catch(e){ /* межстраничный доступ запрещён — используем локальный viewport */ }
+  return { top: window.scrollY || document.documentElement.scrollTop, height: window.innerHeight };
+}
+function positionFixedLikeOverlay(el){
+  if(!el) return;
+  const region = getVisibleRegion();
+  el.style.top = region.top + 'px';
+  el.style.height = region.height + 'px';
+}
+
+function showBanner(msg, type){
+  const b = document.getElementById('globalBanner');
+  b.textContent = msg;
+  b.className = 'banner ' + (type || 'error');
+  b.style.display = 'block';
+  clearTimeout(window.__bannerTimeout);
+  window.__bannerTimeout = setTimeout(()=>{ b.style.display='none'; }, 7000);
+}
+
+/* ==========================================================================
+   ИСПРАВЛЕНИЕ ДИАПАЗОНА ЛИСТА
+   Некоторые файлы (особенно сформированные автоматически, например через
+   Power Automate / Power Apps) содержат некорректный или заниженный
+   диапазон данных (!ref) в метаданных листа — из-за этого SheetJS может
+   "видеть" только заголовки и считать лист пустым, хотя реальные данные
+   на месте. Эта функция пересчитывает реальный диапазон по фактическим
+   ячейкам листа, не доверяя заявленным метаданным.
+   ========================================================================== */
+function fixSheetRange(ws){
+  let maxR = -1, maxC = -1;
+  for(const key in ws){
+    if(key.charCodeAt(0) === 33) continue; // пропускаем служебные ключи вида "!ref", "!margins" и т.п.
+    let cell;
+    try{ cell = XLSX.utils.decode_cell(key); } catch(e){ continue; }
+    if(cell.r > maxR) maxR = cell.r;
+    if(cell.c > maxC) maxC = cell.c;
+  }
+  if(maxR >= 0 && maxC >= 0){
+    ws['!ref'] = XLSX.utils.encode_range({ s:{ r:0, c:0 }, e:{ r:maxR, c:maxC } });
+  }
+}
+
+/* ==========================================================================
+   ПАРСИНГ ФАЙЛА 1 — АКТ ПРИЁМА МОЙКИ (лист «ГРАФИК ДИНАМИКИ»)
+   ========================================================================== */
+async function parseActFile(file){
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type:'array', cellDates:true });
+
+  let sheetName = wb.SheetNames.find(n => n.trim() === 'ГРАФИК ДИНАМИКИ');
+  if(!sheetName) sheetName = wb.SheetNames.find(n => n.includes('ГРАФИК'));
+  if(!sheetName) throw new Error('В файле «Акт приёма мойки» не найден лист «ГРАФИК ДИНАМИКИ».');
+
+  const ws = wb.Sheets[sheetName];
+  fixSheetRange(ws);
+  const rows = XLSX.utils.sheet_to_json(ws, { header:1, raw:true, defval:null });
+
+  let headerRowIdx = -1, colDate = -1, colScore = -1;
+  for(let r = 0; r < Math.min(rows.length, 15); r++){
+    const row = rows[r];
+    if(!row) continue;
+    let dIdx = -1, sIdx = -1;
+    row.forEach((cell, ci) => {
+      const n = normHeader(cell);
+      if(n === 'Дата') dIdx = ci;
+      if(n.includes('Средний балл')) sIdx = ci;
+    });
+    if(dIdx >= 0 && sIdx >= 0){
+      headerRowIdx = r; colDate = dIdx; colScore = sIdx;
+      break;
+    }
+  }
+  if(headerRowIdx === -1){
+    throw new Error('На листе «ГРАФИК ДИНАМИКИ» не найдены заголовки «Дата» и «Средний балл по мойке».');
+  }
+
+  const parsed = [];
+  for(let r = headerRowIdx + 1; r < rows.length; r++){
+    const row = rows[r];
+    if(!row) continue;
+    const dRaw = row[colDate];
+    const sRaw = row[colScore];
+    if(dRaw === null || dRaw === undefined || dRaw === '') continue;
+    if(sRaw === null || sRaw === undefined || sRaw === '') continue;
+    const d = toDate(dRaw);
+    const score = parseFloat(sRaw);
+    if(!d || isNaN(score)) continue;
+    parsed.push({ date: dateOnly(d), score });
+  }
+
+  // Базовый фильтр по дате + агрегирование дублирующихся дат (среднее значение)
+  const map = new Map();
+  parsed.filter(x => x.date >= BASE_DATE).forEach(({date, score}) => {
+    const key = date.getTime();
+    if(!map.has(key)) map.set(key, { date, sum:0, count:0 });
+    const o = map.get(key);
+    o.sum += score; o.count += 1;
+  });
+  const result = Array.from(map.values())
+    .map(o => ({ date:o.date, score: o.sum / o.count }))
+    .sort((a,b) => a.date - b.date);
+
+  return result;
+}
+
+/* ==========================================================================
+   ПАРСИНГ ФАЙЛА 2 — СВОД ЖУРНАЛОВ МБ (лист «Sheet1»)
+   --------------------------------------------------------------------------
+   Этот файл может содержать сотни тысяч строк и десятки столбцов.
+   Полный разбор через SheetJS (объект на каждую ячейку) может не
+   укладываться в память браузера и приводить к тому, что лист "теряется".
+   Поэтому здесь применяется ПОТОКОВЫЙ разбор: xlsx распаковывается как
+   zip-архив (через JSZip), и из XML листа извлекаются данные ТОЛЬКО
+   4 нужных столбцов (остальные ~36 столбцов полностью игнорируются на
+   лету и никогда не попадают в память), что кардинально снижает нагрузку.
+   ========================================================================== */
+
+function decodeXmlEntities(s){
+  if(s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&lt;/g,'<')
+    .replace(/&gt;/g,'>')
+    .replace(/&quot;/g,'"')
+    .replace(/&apos;/g,"'")
+    .replace(/&amp;/g,'&');
+}
+
+/* ==========================================================================
+   ПОТОКОВОЕ ЧТЕНИЕ БОЛЬШИХ XML-ЧАСТЕЙ ВНУТРИ XLSX (zip)
+   --------------------------------------------------------------------------
+   Для очень больших листов (сотни тысяч строк) расшифрованный XML может
+   превышать максимально допустимую длину JS-строки в браузере (ошибка
+   "Invalid string length"). Поэтому здесь файл читается как байты
+   (Uint8Array — у него такого ограничения нет) и декодируется небольшими
+   кусками по 8 МБ. Полный XML целиком в памяти никогда не собирается —
+   обрабатываются только уже полностью считанные элементы (<row>...</row>
+   или <si>...</si>), после чего их текст сразу отбрасывается.
+   ========================================================================== */
+async function streamXmlElements(zipEntryFile, tagName, handler, chunkSizeBytes){
+  chunkSizeBytes = chunkSizeBytes || (8 * 1024 * 1024);
+  const u8 = await zipEntryFile.async('uint8array');
+  const decoder = new TextDecoder('utf-8');
+  const closeTag = '</' + tagName + '>';
+  const elementRegex = new RegExp('<' + tagName + '\\b[^>]*>([\\s\\S]*?)<\\/' + tagName + '>', 'g');
+  let buffer = '';
+  let iter = 0;
+
+  function flush(isFinal){
+    let cutIdx;
+    if(isFinal){
+      cutIdx = buffer.length;
+    }else{
+      const idx = buffer.lastIndexOf(closeTag);
+      if(idx === -1) return; // полного элемента в буфере ещё нет — ждём следующий кусок
+      cutIdx = idx + closeTag.length;
+    }
+    const completeRegion = buffer.slice(0, cutIdx);
+    buffer = buffer.slice(cutIdx);
+    elementRegex.lastIndex = 0;
+    let m;
+    while((m = elementRegex.exec(completeRegion)) !== null){
+      handler(m[1]);
+    }
+  }
+
+  if(u8.length === 0) return;
+
+  for(let offset = 0; offset < u8.length; offset += chunkSizeBytes){
+    const end = Math.min(offset + chunkSizeBytes, u8.length);
+    const slice = u8.subarray(offset, end);
+    const isLastSlice = end >= u8.length;
+    buffer += decoder.decode(slice, { stream: !isLastSlice });
+    flush(false);
+    iter++;
+    if(iter % 4 === 0){
+      await new Promise(r => setTimeout(r, 0)); // не подвешиваем вкладку на очень больших файлах
+    }
+  }
+  flush(true);
+}
+
+
+// Извлечение ячеек из XML одной строки <row>...</row> -> [{col:'A', attrs:'...', inner:'...'}]
+function extractRowCells(rowXml){
+  const cells = [];
+  const cellRegex = /<c\s+r="([A-Z]+)\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+  let m;
+  while((m = cellRegex.exec(rowXml)) !== null){
+    cells.push({ col: m[1], attrs: m[2] || '', inner: m[3] || '' });
+  }
+  return cells;
+}
+
+// Получить значение ячейки (с учётом типа: shared string / inline string / число)
+function getCellValue(cell, sharedStrings){
+  if(!cell.inner) return null;
+  const typeMatch = cell.attrs.match(/\st="([^"]*)"/);
+  const type = typeMatch ? typeMatch[1] : null;
+
+  if(type === 'inlineStr'){
+    let text = '';
+    const tRegex = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+    let tm;
+    while((tm = tRegex.exec(cell.inner)) !== null){
+      text += decodeXmlEntities(tm[1]);
+    }
+    return text;
+  }
+
+  const vMatch = cell.inner.match(/<v>([\s\S]*?)<\/v>/);
+  if(!vMatch) return null;
+  const raw = vMatch[1];
+
+  if(type === 's'){
+    const idx = parseInt(raw, 10);
+    return sharedStrings[idx] !== undefined ? sharedStrings[idx] : '';
+  }
+  if(type === 'str' || type === 'b'){
+    return decodeXmlEntities(raw);
+  }
+  return raw; // число (в т.ч. дата в виде серийного номера Excel) — как строка, распарсим позже
+}
+
+// Определить путь к XML-файлу листа по его имени (например, "Sheet1") через workbook.xml + rels
+async function resolveSheetPath(zip, wantedSheetName){
+  const workbookXml = await zip.file('xl/workbook.xml').async('string');
+  const sheetTags = workbookXml.match(/<sheet\b[^>]*\/>/g) || [];
+
+  let chosenTag = sheetTags.find(tag => {
+    const nameM = tag.match(/name="([^"]*)"/);
+    return nameM && nameM[1].trim() === wantedSheetName;
+  });
+  if(!chosenTag) chosenTag = sheetTags[0];
+  if(!chosenTag) throw new Error('В файле не найдено ни одного листа (workbook.xml повреждён).');
+
+  const ridMatch = chosenTag.match(/r:id="([^"]*)"/);
+  if(!ridMatch) throw new Error('Не удалось определить ссылку на лист в workbook.xml.');
+  const rid = ridMatch[1];
+
+  const relsFile = zip.file('xl/_rels/workbook.xml.rels');
+  if(!relsFile) throw new Error('Не найден файл xl/_rels/workbook.xml.rels.');
+  const relsXml = await relsFile.async('string');
+  const relTags = relsXml.match(/<Relationship\b[^>]*\/>/g) || [];
+
+  let target = null;
+  for(const tag of relTags){
+    const idM = tag.match(/Id="([^"]*)"/);
+    if(idM && idM[1] === rid){
+      const targetM = tag.match(/Target="([^"]*)"/);
+      target = targetM ? targetM[1] : null;
+      break;
+    }
+  }
+  if(!target) throw new Error('Не удалось определить путь к файлу листа.');
+
+  target = target.replace(/^\.?\//, '');
+  const sheetPath = target.startsWith('xl/') ? target : ('xl/' + target);
+  return sheetPath;
+}
+
+async function parseMbFile(file){
+  let zip;
+  try{
+    const buf = await file.arrayBuffer();
+    zip = await JSZip.loadAsync(buf);
+  }catch(e){
+    throw new Error('Не удалось открыть файл как Excel/zip-архив: ' + e.message);
+  }
+
+  const sheetPath = await resolveSheetPath(zip, 'Sheet1');
+  const sheetFile = zip.file(sheetPath);
+  if(!sheetFile) throw new Error('Не найден файл листа внутри архива: ' + sheetPath);
+
+  // --- Shared strings (таблица строк) — тоже читаем потоково на случай, если она большая ---
+  const sharedStrings = [];
+  const sstFile = zip.file('xl/sharedStrings.xml');
+  if(sstFile){
+    await streamXmlElements(sstFile, 'si', (inner) => {
+      let text = '';
+      const tRegex = /<t\b[^>]*>([\s\S]*?)<\/t>/g;
+      let tm;
+      while((tm = tRegex.exec(inner)) !== null){
+        text += decodeXmlEntities(tm[1]);
+      }
+      sharedStrings.push(text);
+    });
+  }
+
+  // Этот свод МБ ведётся по всей фабрике (бройлерные участки, выращивание, корма и т.д.),
+  // а не только по цеху инкубации. Отбираем ТОЛЬКО пробы, относящиеся к цеху инкубации/инкубатору,
+  // чтобы результат соответствовал контексту «Акта приёма мойки».
+  function isIncubationDept(v){
+    if(v === null || v === undefined) return false;
+    return String(v).toLowerCase().includes('инкубац');
+  }
+
+  // Свод содержит несколько предприятий (УКПФ, Макинская птицефабрика и т.д.), и у некоторых
+  // из них тоже есть подразделение «Цех инкубации». Этот дэшборд — только про УКПФ
+  // (АО «Усть-Каменогорская Птицефабрика»), поэтому дополнительно фильтруем по столбцу «Предприятие».
+  function isUkpfCompany(v){
+    if(v === null || v === undefined) return false;
+    const s = String(v).toLowerCase();
+    return s.includes('усть') && s.includes('каменогор');
+  }
+
+  // Отбираем смывы (Группа материала = «Смывы») И пробы воды (Группа материала = «Вода»),
+  // исключая прочие типы проб (биоматериал, инкубационное яйцо и т.п.) — по решению пользователя
+  // от 2026-08-05: NOK по воде должны учитываться в общей статистике вместе со смывами.
+  function isSmyvyGroup(v){
+    if(v === null || v === undefined) return false;
+    const g = String(v).trim().toLowerCase();
+    return g === 'смывы' || g === 'вода';
+  }
+
+  // Исключаем бахильные пробы (это обувной смыв персонала, а не смыв с оборудования/помещения).
+  function isBahilnayaProba(v){
+    if(v === null || v === undefined) return false;
+    return String(v).toLowerCase().includes('бахильн');
+  }
+
+  let headerResolved = false;
+  let sawAnyRow = false;
+  let colDateLetter = null, colPointLetter = null, colResultLetter = null, colOkLetter = null;
+  let colDeptLetter = null, colZoneLetter = null, colCompanyLetter = null, colMatGroupLetter = null, colMatSubgroupLetter = null;
+  let targetLetters = null;
+
+  const result = [];
+  let totalScanned = 0;
+  let totalAfterDate = 0;
+  let headerError = null;
+
+  function handleRow(rowInner){
+    sawAnyRow = true;
+    const cells = extractRowCells(rowInner);
+
+    if(!headerResolved){
+      // --- Первая встреченная строка листа — заголовки: определяем буквы нужных столбцов ---
+      cells.forEach(c => {
+        const val = getCellValue(c, sharedStrings);
+        const n = normHeader(val);
+        if(n === 'Дата отбора пробы') colDateLetter = c.col;
+        if(n.startsWith('Точка отбора пробы')) colPointLetter = c.col;
+        if(n === 'Результат') colResultLetter = c.col;
+        if(n.includes('допустимых пределах')) colOkLetter = c.col;
+        if(n === 'Подразделение') colDeptLetter = c.col;                 // напр. «Цех_инкубации», «Цех_инкубации_»
+        if(n === 'Корпус / Помещение') colZoneLetter = c.col;            // напр. «Зона вывода цыплят», «Зона инкубации»
+        if(n === 'Предприятие') colCompanyLetter = c.col;                // напр. «АО_Усть_Каменогорская_Птицефабрика»
+        if(n === 'Группа материала') colMatGroupLetter = c.col;          // напр. «Смывы»
+        if(n === 'Подгруппа материала') colMatSubgroupLetter = c.col;    // напр. «Бахильная_проба» — исключаем
+      });
+      if(!colDateLetter || !colPointLetter || !colResultLetter || !colOkLetter){
+        headerError = 'На листе «Sheet1» не найдены все необходимые столбцы: «Дата отбора пробы», «Точка отбора пробы», «Результат», «Результат в допустимых пределах ОК или NOK».';
+        throw new Error(headerError);
+      }
+      targetLetters = new Set([colDateLetter, colPointLetter, colResultLetter, colOkLetter]);
+      if(colDeptLetter) targetLetters.add(colDeptLetter);
+      if(colZoneLetter) targetLetters.add(colZoneLetter);
+      if(colCompanyLetter) targetLetters.add(colCompanyLetter);
+      if(colMatGroupLetter) targetLetters.add(colMatGroupLetter);
+      if(colMatSubgroupLetter) targetLetters.add(colMatSubgroupLetter);
+      headerResolved = true;
+      return;
+    }
+
+    // --- Обычная строка данных: извлекаем ТОЛЬКО нужные столбцы ---
+    let dRaw = null, pointRaw = null, resultRaw = null, okRaw = null, deptRaw = null, zoneRaw = null;
+    let companyRaw = null, matGroupRaw = null, matSubgroupRaw = null;
+    for(let i = 0; i < cells.length; i++){
+      const c = cells[i];
+      if(!targetLetters.has(c.col)) continue;
+      const val = getCellValue(c, sharedStrings);
+      if(c.col === colDateLetter) dRaw = val;
+      else if(c.col === colPointLetter) pointRaw = val;
+      else if(c.col === colResultLetter) resultRaw = val;
+      else if(c.col === colOkLetter) okRaw = val;
+      else if(colDeptLetter && c.col === colDeptLetter) deptRaw = val;
+      else if(colZoneLetter && c.col === colZoneLetter) zoneRaw = val;
+      else if(colCompanyLetter && c.col === colCompanyLetter) companyRaw = val;
+      else if(colMatGroupLetter && c.col === colMatGroupLetter) matGroupRaw = val;
+      else if(colMatSubgroupLetter && c.col === colMatSubgroupLetter) matSubgroupRaw = val;
+    }
+
+    if(dRaw === null || dRaw === '') return;
+    totalScanned++;
+    const dNum = (typeof dRaw === 'string' && /^-?\d+(\.\d+)?$/.test(dRaw)) ? parseFloat(dRaw) : dRaw;
+    const d = toDate(dNum);
+    if(!d) return;
+    const dOnly = dateOnly(d);
+    if(dOnly < BASE_DATE) return; // отсекаем сразу же, чтобы не хранить лишние записи (файл большой)
+    totalAfterDate++;
+
+    // Фильтр «только цех инкубации»
+    if(colDeptLetter && !isIncubationDept(deptRaw)) return;
+
+    // Фильтр «только УКПФ» (исключает другие предприятия свода с таким же подразделением,
+    // например ТОО «Макинская птицефабрика»)
+    if(colCompanyLetter && !isUkpfCompany(companyRaw)) return;
+
+    // Фильтр «смывы + вода» (исключает биоматериал, инкубационное яйцо и т.п.)
+    if(colMatGroupLetter && !isSmyvyGroup(matGroupRaw)) return;
+
+    // Исключаем бахильные пробы
+    if(colMatSubgroupLetter && isBahilnayaProba(matSubgroupRaw)) return;
+
+    const point = (pointRaw === null || pointRaw === undefined || pointRaw === '') ? '(не указано)' : String(pointRaw).trim();
+    const resVal = (resultRaw === null || resultRaw === undefined) ? '' : String(resultRaw).trim();
+    const okNorm = (okRaw === null || okRaw === undefined) ? '' : String(okRaw).trim().toUpperCase();
+    const zone = (zoneRaw === null || zoneRaw === undefined || zoneRaw === '') ? '' : String(zoneRaw).trim();
+
+    let status = 'Н/Д';
+    if(okNorm.includes('NOK')) status = 'NOK';
+    else if(okNorm.includes('OK')) status = 'OK';
+
+    result.push({ date: dOnly, point: point || '(не указано)', zone, result: resVal, status });
+  }
+
+  await streamXmlElements(sheetFile, 'row', handleRow);
+
+  if(!sawAnyRow){
+    throw new Error('Не удалось прочитать строки на листе «Sheet1» — лист пуст или повреждён.');
+  }
+  if(!headerResolved){
+    throw new Error(headerError || 'Не удалось определить заголовки столбцов на листе «Sheet1».');
+  }
+  if(totalAfterDate === 0){
+    throw new Error('Данные прочитаны, но после фильтрации по дате (с 01.07.2026) не найдено ни одной записи. Проверьте столбец «Дата отбора пробы» в файле.');
+  }
+  if(result.length === 0){
+    throw new Error('За период с 01.07.2026 найдено ' + totalAfterDate + ' проб по всей фабрике, но ни одной — по УКПФ / цеху инкубации / смывам и воде (столбцы «Предприятие», «Подразделение», «Группа материала»). Проверьте, что в файле есть пробы АО «Усть-Каменогорская Птицефабрика» с подразделением, содержащим «инкубац», и группой материала «Смывы» или «Вода».');
+  }
+
+  result.sort((a,b) => a.date - b.date);
+  result.__meta = {
+    totalAfterDate,
+    totalIncubation: result.length,
+    deptFilterApplied: !!colDeptLetter,
+    companyFilterApplied: !!colCompanyLetter,
+    matGroupFilterApplied: !!colMatGroupLetter,
+    matSubgroupFilterApplied: !!colMatSubgroupLetter
+  };
+  return result;
+}
+
+/* ==========================================================================
+   ОБРАБОТКА ЗАГРУЗКИ ФАЙЛОВ (drag&drop + выбор)
+   ========================================================================== */
+function setupDropzone(dzId, inputId, onFile){
+  const dz = document.getElementById(dzId);
+  const input = document.getElementById(inputId);
+
+  input.addEventListener('change', (e) => {
+    if(e.target.files.length) onFile(e.target.files[0]);
+  });
+
+  dz.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dz.classList.add('dragover');
+  });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    if(e.dataTransfer.files.length) onFile(e.dataTransfer.files[0]);
+  });
+}
+
+setupDropzone('dz-act', 'file-act', async (file) => {
+  const statusEl = document.getElementById('status-act');
+  const dz = document.getElementById('dz-act');
+  statusEl.classList.remove('error');
+  statusEl.textContent = 'Загрузка...';
+  showOverlay('Обработка файла «Акт приёма мойки»…');
+  try{
+    const data = await parseActFile(file);
+    if(data.length === 0){
+      throw new Error('После фильтрации по дате (с 01.07.2026) в файле не найдено ни одной записи.');
+    }
+    actDataAll = data;
+    actLoaded = true;
+    dz.classList.add('loaded');
+    statusEl.textContent = `✓ Загружено: ${file.name} (${data.length} записей)`;
+    onDataReady();
+  }catch(err){
+    statusEl.classList.add('error');
+    statusEl.textContent = '✗ ' + err.message;
+    showBanner('Ошибка при обработке файла «Акт приёма мойки»: ' + err.message, 'error');
+  }finally{
+    hideOverlay();
+  }
+});
+
+async function handleMbFile(file){
+  const statusEl = document.getElementById('status-mb');
+  const dz = document.getElementById('dz-mb');
+  statusEl.classList.remove('error');
+  statusEl.textContent = 'Загрузка...';
+  showOverlay('Обработка файла «Свод рабочих журналов МБ»… Файл может быть большим, это может занять до минуты.');
+  try{
+    const data = await parseMbFile(file);
+    mbDataAll = data;
+    mbLoaded = true;
+    dz.classList.add('loaded');
+    const meta = data.__meta || {};
+    const missingFilters = [];
+    if(!meta.deptFilterApplied) missingFilters.push('«Подразделение» (цех инкубации)');
+    if(!meta.companyFilterApplied) missingFilters.push('«Предприятие» (УКПФ)');
+    if(!meta.matGroupFilterApplied) missingFilters.push('«Группа материала» (смывы/вода)');
+    if(!meta.matSubgroupFilterApplied) missingFilters.push('«Подгруппа материала» (искл. бахильные пробы)');
+    if(missingFilters.length === 0){
+      statusEl.textContent = `✓ Загружено: ${file.name} — ${data.length} проб (смывы+вода) по УКПФ / Цеху инкубации (из ${meta.totalAfterDate} проб по всей фабрике за период)`;
+    }else{
+      statusEl.textContent = `✓ Загружено: ${file.name} (${data.length} записей). Внимание: столбцы не найдены — ${missingFilters.join(', ')} — соответствующие фильтры не применены, показаны более широкие данные.`;
+    }
+    onDataReady();
+    try{
+      if(window.parent && window.parent !== window){
+        window.parent.postMessage({type:'mb-status', key: window.__DASH_KEY__, ok:true, count:data.length, missingFilters}, '*');
+      }
+    }catch(e){}
+  }catch(err){
+    statusEl.classList.add('error');
+    statusEl.textContent = '✗ ' + err.message;
+    showBanner('Ошибка при обработке файла «Свод рабочих журналов МБ»: ' + err.message, 'error');
+    try{
+      if(window.parent && window.parent !== window){
+        window.parent.postMessage({type:'mb-status', key: window.__DASH_KEY__, ok:false, error: err.message}, '*');
+      }
+    }catch(e){}
+  }finally{
+    hideOverlay();
+  }
+}
+window.handleMbFile = handleMbFile;
+setupDropzone('dz-mb', 'file-mb', handleMbFile);
+
+/* приём файла "Свод" из общей оболочки (если дэшборд встроен как вкладка) */
+window.__DASH_KEY__ = 'incubation';
+window.addEventListener('message', (e) => {
+  const d = e.data;
+  if(!d || d.type !== 'mb-file') return;
+  try{
+    const file = new File([d.buffer], d.name || 'svod.xlsx');
+    handleMbFile(file);
+  }catch(err){
+    try{
+      window.parent.postMessage({type:'mb-status', key: window.__DASH_KEY__, ok:false, error: 'Не удалось прочитать переданный файл: ' + err.message}, '*');
+    }catch(e2){}
+  }
+});
+
+function onDataReady(){
+  document.getElementById('btnResetFilter').disabled = !(actLoaded || mbLoaded);
+  document.getElementById('btnApplyWeek').disabled = !(actLoaded || mbLoaded);
+  currentRange = null;
+  renderAll();
+}
+
+/* ==========================================================================
+   ФИЛЬТРАЦИЯ ПО НЕДЕЛЕ
+   ========================================================================== */
+document.getElementById('btnApplyWeek').addEventListener('click', () => {
+  const weekVal = parseInt(document.getElementById('weekInput').value, 10);
+  if(!weekVal || weekVal < 1 || weekVal > 53){
+    showBanner('Введите корректный номер недели (1-53).', 'error');
+    return;
+  }
+  currentRange = isoWeekRange(2026, weekVal);
+  renderAll();
+});
+
+document.getElementById('btnResetFilter').addEventListener('click', () => {
+  currentRange = null;
+  document.getElementById('weekInput').value = '';
+  renderAll();
+});
+
+function getFilteredAct(){
+  if(!currentRange) return actDataAll;
+  return actDataAll.filter(d => d.date >= currentRange.start && d.date <= currentRange.end);
+}
+function getFilteredMb(){
+  if(!currentRange) return mbDataAll;
+  return mbDataAll.filter(d => d.date >= currentRange.start && d.date <= currentRange.end);
+}
+
+/* ==========================================================================
+   ОТРИСОВКА ГРАФИКОВ И ТАБЛИЦ
+   ========================================================================== */
+function updateRangeBadge(){
+  const badge = document.getElementById('rangeBadge');
+  if(!actLoaded && !mbLoaded){
+    badge.textContent = 'Данные не загружены';
+    return;
+  }
+  if(currentRange){
+    badge.textContent = `Неделя: ${fmtDate(currentRange.start)} — ${fmtDate(currentRange.end)}`;
+  }else{
+    badge.textContent = `Весь период с ${fmtDate(BASE_DATE)}`;
+  }
+}
+
+function renderActChart(){
+  const data = getFilteredAct();
+  const emptyEl = document.getElementById('actEmpty');
+  const chartEl = document.getElementById('actChart');
+  const btnPng = document.getElementById('btnPngAct');
+
+  if(!actLoaded){
+    emptyEl.style.display = 'block';
+    chartEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  if(data.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Нет данных о мойке за выбранный период.';
+    chartEl.style.display = 'none';
+    btnPng.disabled = true;
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  chartEl.style.display = 'block';
+  btnPng.disabled = false;
+
+  const x = data.map(d => d.date);
+  const y = data.map(d => d.score);
+  const avg = y.reduce((a,b)=>a+b,0) / y.length;
+  const maxScore = Math.max(10, ...y);
+
+  // --- Сопоставляем каждую дату мойки со смывами МБ этого же дня (если есть) ---
+  const mbData = getFilteredMb();
+  const mbByDate = new Map();
+  if(mbLoaded && mbData.length){
+    aggregateMbByDate(mbData).forEach(d => mbByDate.set(d.date.getTime(), d));
+  }
+
+  // KPI-числа встроены прямо в ту же фигуру, что и график — вместе выгружаются одной картинкой
+  const kpiRecords = {
+    type:'indicator', mode:'number',
+    value: data.length,
+    number:{ font:{ size:34, color:'#3a2f1e' } },
+    title:{ text:'Записей за период', font:{ size:14, color:'#7a6d52' } },
+    domain:{ x:[0.02, 0.46], y:[0.85, 1] }
+  };
+  const kpiAvg = {
+    type:'indicator', mode:'number',
+    value: avg,
+    number:{ valueformat:'.1f', suffix:' / 10', font:{ size:34, color:'#12938c' } },
+    title:{ text:'Средний балл за период', font:{ size:14, color:'#7a6d52' } },
+    domain:{ x:[0.56, 1], y:[0.85, 1] }
+  };
+
+  // Мягкая подложка под KPI-цифрами — визуально выделяет их как "карточки"
+  const kpiCardShapes = [
+    { type:'rect', xref:'paper', yref:'paper', x0:0, x1:0.49, y0:0.83, y1:1, fillcolor:'#f7f9fc', line:{ color:'#e1d6b3', width:1 }, layer:'below' },
+    { type:'rect', xref:'paper', yref:'paper', x0:0.51, x1:1, y0:0.83, y1:1, fillcolor:'#f0f9f7', line:{ color:'#cfe9e6', width:1 }, layer:'below' },
+    // Линия среднего значения — пунктиром на самом графике
+    { type:'line', xref:'x', yref:'y', x0:x[0], x1:x[x.length-1], y0:avg, y1:avg, line:{ color:'#c9bd97', width:1.5, dash:'dot' } }
+  ];
+
+  // Столбцы окрашены по баллу: ниже среднего — тёплый оттенок, на уровне/выше среднего — бирюзовый
+  const barColors = y.map(v => v >= avg ? '#12938c' : '#e2a23c');
+  const barLineColors = y.map(v => v >= avg ? '#0d6f6a' : '#b8791f');
+
+  const trace = {
+    x, y,
+    type:'scatter', mode:'lines+markers',
+    line:{ color:'#12938c', width:3, shape:'spline', smoothing:0.4 },
+    marker:{ size:11, color:barColors, line:{ color:barLineColors, width:2 } },
+    xaxis:'x', yaxis:'y',
+    customdata: data.map(d => d.date.getTime()),
+    hovertemplate:'<b>%{x|%d.%m.%Y}</b><br>Средний балл по мойке: %{y:.1f}<br><i>Нажмите, чтобы посмотреть смывы этого дня</i><extra></extra>'
+  };
+
+  // Подпись со значением балла прямо над каждым столбцом
+  const scoreLabels = data.map((d,i) => ({
+    x:d.date, y:y[i], yshift:22, xref:'x', yref:'y',
+    text:`<b>${y[i].toFixed(1)}</b>`,
+    showarrow:false,
+    font:{ size:20, color:'#3a2f1e' }
+  }));
+
+  // Привязка к смывам этой же даты — компактный чип: сколько взято/OK/NOK
+  const linkChips = data.map((d,i) => {
+    const mb = mbByDate.get(d.date.getTime());
+    let text, bg, border, fcolor;
+    if(!mb){
+      text = '· нет проб';
+      bg = 'rgba(122,109,82,0.08)'; border = '#d8cfae'; fcolor = '#948a6c';
+    }else if(mb.nok > 0){
+      text = `⚠ проб: ${mb.total}, NOK ${mb.nok}`;
+      bg = 'rgba(217,79,79,0.14)'; border = '#e2635c'; fcolor = '#8f2d29';
+    }else{
+      text = `✓ проб: ${mb.total}, OK`;
+      bg = 'rgba(26,158,99,0.13)'; border = '#5fc4bd'; fcolor = '#0d6f6a';
+    }
+    return {
+      x:d.date, y:y[i], yshift:52, xref:'x', yref:'y',
+      text, showarrow:false,
+      font:{ size:13, color:fcolor, family:'Segoe UI, Arial, sans-serif' },
+      bgcolor:bg, bordercolor:border, borderwidth:1, borderpad:4
+    };
+  });
+
+  const layout = {
+    margin:{ t:10, r:20, b:60, l:60 },
+    xaxis:{ title:{ text:'Дата', font:{ size:15 } }, type:'date', tickformat:'%d.%m', tickfont:{ size:15 }, gridcolor:'#f1ede0', griddash:'dot', gridwidth:1, domain:[0,1], anchor:'y', tickmode:'linear', tick0:x[0], dtick:86400000 },
+    yaxis:{ title:{ text:'Средний балл', font:{ size:15 } }, tickfont:{ size:14 }, gridcolor:'#f1ede0', griddash:'dot', zeroline:false, domain:[0,0.74], anchor:'x', range:[0, maxScore*1.52] },
+    shapes:kpiCardShapes,
+    annotations:[...scoreLabels, ...linkChips],
+    bargap:0.38,
+    hoverlabel:{ bgcolor:'#3a2f1e', font:{ color:'#fff', size:14 }, bordercolor:'#3a2f1e' },
+    plot_bgcolor:'rgba(0,0,0,0)',
+    paper_bgcolor:'rgba(0,0,0,0)',
+    font:{ family:'Segoe UI, Arial, sans-serif', color:'#3a2f1e' },
+    showlegend:false
+  };
+
+  Plotly.newPlot('actChart', [kpiRecords, kpiAvg, trace], layout, { responsive:true, displaylogo:false });
+  chartEl.removeAllListeners && chartEl.removeAllListeners('plotly_click');
+  chartEl.on('plotly_click', (ev) => {
+    const p = ev.points.find(pt => pt.customdata !== undefined);
+    if(p) openDayDetail(p.customdata);
+  });
+}
+
+/* ==========================================================================
+   МОДАЛЬНОЕ ОКНО "ДЕТАЛИ ДНЯ" — клик по точке на графике "Динамика качества мойки"
+   ========================================================================== */
+function animateScoreCountUp(el, target){
+  if(!el) return;
+  const start = performance.now();
+  const dur = 500;
+  function step(now){
+    const t = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const val = target * eased;
+    el.textContent = t < 1 ? val.toFixed(1) : target.toFixed(1);
+    if(t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function openDayDetail(dateKey){
+  const dayScore = actDataAll.find(d => d.date.getTime() === dateKey);
+  if(!dayScore) return;
+  const dateObj = dayScore.date;
+  const mbRows = mbDataAll.filter(m => m.date.getTime() === dateKey);
+  const nokCount = mbRows.filter(m => m.status === 'NOK').length;
+  const scoreColor = dayScore.score >= 9 ? '#1a9e63' : (dayScore.score >= 8 ? '#c98a2e' : '#d94f4f');
+
+  let mbHtml = '';
+  if(mbRows.length > 0){
+    const sorted = [...mbRows].sort((a,b) => (a.status === 'NOK' ? -1 : 1) - (b.status === 'NOK' ? -1 : 1));
+    const rows = sorted.map(m => {
+      const stCls = m.status === 'NOK' ? 'mb-nok' : (m.status === 'OK' ? 'mb-ok' : '');
+      return `<tr class="${stCls}">
+        <td>${escapeHtml(m.point)}</td>
+        <td style="font-size:12px;">${escapeHtml(m.result)}</td>
+        <td><b>${m.status}</b></td>
+      </tr>`;
+    }).join('');
+    mbHtml = `
+      <div class="dm-section-title">Смывы МБ в этот день (${mbRows.length}${nokCount > 0 ? `, из них NOK: ${nokCount}` : ''})</div>
+      <div class="table-wrap" style="max-height:280px;">
+        <table class="data-table"><thead><tr><th>Точка отбора</th><th>Результат</th><th>Статус</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+      </div>`;
+  }else{
+    mbHtml = `<div class="dm-section-title">Смывы МБ в этот день</div>
+      <div class="empty-state-inline" style="color:var(--text-muted); background:#f7f3e6; border-color:var(--border);">Проб в этот день не найдено в загруженном своде.</div>`;
+  }
+
+  document.getElementById('dayModalBody').innerHTML = `
+    <div class="dm-anim" style="animation-delay:0ms;">
+      <div class="dm-title">${fmtDate(dateObj)}</div>
+      <div class="dm-score-row">
+        <div class="dm-score-big" id="dmScoreBig" style="color:${scoreColor};">0.0</div>
+        <div class="dm-score-lab">средний балл мойки<br>за этот день</div>
+      </div>
+    </div>
+    <div class="dm-anim" style="animation-delay:90ms;">${mbHtml}</div>
+  `;
+  animateScoreCountUp(document.getElementById('dmScoreBig'), dayScore.score);
+
+  positionFixedLikeOverlay(document.getElementById('dayModalOverlay'));
+  document.getElementById('dayModalOverlay').classList.add('open');
+  startDayModalTracking();
+}
+function closeDayDetail(){
+  document.getElementById('dayModalOverlay').classList.remove('open');
+  stopDayModalTracking();
+}
+document.getElementById('dayModalClose').addEventListener('click', closeDayDetail);
+document.getElementById('dayModalOverlay').addEventListener('click', (e) => {
+  if(e.target.id === 'dayModalOverlay') closeDayDetail();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeDayDetail();
+});
+let dayModalTrackHandler = null;
+function startDayModalTracking(){
+  stopDayModalTracking();
+  dayModalTrackHandler = () => positionFixedLikeOverlay(document.getElementById('dayModalOverlay'));
+  window.addEventListener('resize', dayModalTrackHandler);
+  try{
+    if(window.parent && window.parent !== window){
+      window.parent.addEventListener('scroll', dayModalTrackHandler, { passive:true });
+      window.parent.addEventListener('resize', dayModalTrackHandler);
+    }
+  }catch(e){}
+}
+function stopDayModalTracking(){
+  if(!dayModalTrackHandler) return;
+  window.removeEventListener('resize', dayModalTrackHandler);
+  try{
+    if(window.parent && window.parent !== window){
+      window.parent.removeEventListener('scroll', dayModalTrackHandler);
+      window.parent.removeEventListener('resize', dayModalTrackHandler);
+    }
+  }catch(e){}
+  dayModalTrackHandler = null;
+}
+
+/* ==========================================================================
+   АГРЕГАЦИЯ ДАННЫХ МБ ПО ДНЯМ И ПО ТОЧКАМ ОТБОРА
+   ========================================================================== */
+function aggregateMbByDate(data){
+  const map = new Map();
+  data.forEach(d => {
+    const key = d.date.getTime();
+    if(!map.has(key)) map.set(key, { date: d.date, ok:0, nok:0, na:0, total:0, nokFindings:[] });
+    const o = map.get(key);
+    o.total++;
+    if(d.status === 'OK') o.ok++;
+    else if(d.status === 'NOK'){
+      o.nok++;
+      // "Наименование исследования / что обнаружено" — точка отбора + результат
+      const label = escapeHtml(d.point || '(точка не указана)') + (d.result ? (': ' + escapeHtml(d.result)) : '');
+      o.nokFindings.push(label);
+    }
+    else o.na++;
+  });
+  return Array.from(map.values())
+    .map(o => {
+      const uniqFindings = Array.from(new Set(o.nokFindings));
+      let findingsStr = 'без отклонений';
+      if(uniqFindings.length){
+        findingsStr = uniqFindings.slice(0,3).join('<br>');
+        if(uniqFindings.length > 3) findingsStr += `<br>и ещё ${uniqFindings.length - 3}`;
+      }
+      const determined = o.ok + o.nok;
+      return { ...o, pctOk: determined > 0 ? (o.ok / determined * 100) : null, findingsStr };
+    })
+    .sort((a,b) => a.date - b.date);
+}
+
+/* ==========================================================================
+   БЛОК 2 — КПИ + СМЫВЫ МБ: общие цифры, график динамики, таблицы (только NOK)
+   ========================================================================== */
+function renderMbSummary(){
+  const data = getFilteredMb();
+  const emptyEl = document.getElementById('mbEmpty');
+  const statsEl = document.getElementById('statsMb');
+  const contentWrap = document.getElementById('mbContentWrap');
+  const btnPngKpi = document.getElementById('btnPngKpi');
+  const nokSectionEl = document.getElementById('nokSection');
+
+  if(!mbLoaded){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Загрузите файл «Свод рабочих журналов МБ», чтобы увидеть данные.';
+    statsEl.style.display = 'none';
+    contentWrap.style.display = 'none';
+    nokSectionEl.style.display = 'none';
+    btnPngKpi.disabled = true;
+    return;
+  }
+
+  if(data.length === 0){
+    emptyEl.style.display = 'block';
+    emptyEl.textContent = 'Нет данных лабораторных проб (смывы/вода) за выбранный период.';
+    statsEl.style.display = 'none';
+    contentWrap.style.display = 'none';
+    nokSectionEl.style.display = 'none';
+    btnPngKpi.disabled = true;
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  statsEl.style.display = 'flex';
+  contentWrap.style.display = 'block';
+  nokSectionEl.style.display = 'block';
+  btnPngKpi.disabled = false;
+
+  const total = data.length;
+  const okCount = data.filter(d => d.status === 'OK').length;
+  const nokCount = data.filter(d => d.status === 'NOK').length;
+  const naCount = data.filter(d => d.status === 'Н/Д').length;
+  const pctOk = total > 0 ? (okCount / total * 100) : 0;
+  const pctNok = total > 0 ? (nokCount / total * 100) : 0;
+  const pctNa = total > 0 ? (naCount / total * 100) : 0;
+  let minDate = data[0].date, maxDate = data[0].date;
+  data.forEach(d => { if(d.date < minDate) minDate = d.date; if(d.date > maxDate) maxDate = d.date; });
+
+  document.getElementById('statMbCount').textContent = total;
+  document.getElementById('statMbPeriod').textContent = fmtDate(minDate) + ' \u2013 ' + fmtDate(maxDate);
+  document.getElementById('statMbOk').textContent = okCount;
+  document.getElementById('statMbNok').textContent = nokCount;
+  document.getElementById('statMbPct').textContent = pctOk.toFixed(1) + '%';
+  document.getElementById('statMbPctNok').textContent = pctNok.toFixed(1) + '%';
+  document.getElementById('statMbPctNa').textContent = pctNa.toFixed(1) + '%';
+
+  // --- Проб по дням (агрегация) ---
+  const dailyAsc = aggregateMbByDate(data);
+  const dailyDesc = [...dailyAsc].sort((a,b) => b.date - a.date);
+
+  document.getElementById('mbByDateBody').innerHTML = dailyDesc.map(d => `
+    <tr>
+      <td>${fmtDate(d.date)}</td>
+      <td>${d.total}</td>
+      <td style="color:#1a9e63; font-weight:600;">${d.ok}</td>
+      <td style="color:${d.nok > 0 ? '#d94f4f' : '#7a6d52'}; font-weight:${d.nok > 0 ? '700' : '400'};">${d.nok}</td>
+    </tr>
+  `).join('');
+
+  // --- График динамики КПИ: столбцы «взято по дням» + линия «% в норме» ---
+  const dX = dailyAsc.map(d => d.date);
+  const dTotal = dailyAsc.map(d => d.total);
+  const dPct = dailyAsc.map(d => d.pctOk === null ? null : d.pctOk);
+  const dColors = dailyAsc.map(d => d.nok > 0 ? '#e2635c' : '#12938c');
+  const dLineColors = dailyAsc.map(d => d.nok > 0 ? '#b23b36' : '#0d6f6a');
+  const dCustom = dailyAsc.map(d => [d.total, d.ok, d.nok, d.findingsStr]);
+  const maxTotal = Math.max(1, ...dTotal);
+
+  const barTrace = {
+    x:dX, y:dTotal,
+    type:'scatter', mode:'lines+markers',
+    line:{ color:'#12938c', width:3, shape:'spline', smoothing:0.4 },
+    marker:{ size:11, color:dColors, line:{ color:dLineColors, width:2 } },
+    name:'Взято проб, шт',
+    yaxis:'y',
+    customdata:dCustom,
+    hovertemplate:'<b>%{x|%d.%m.%Y}</b><br>Взято: %{customdata[0]} · OK: %{customdata[1]} · NOK: %{customdata[2]}<br>Обнаружено: %{customdata[3]}<extra></extra>'
+  };
+  const pctTrace = {
+    x:dX, y:dPct,
+    type:'scatter', mode:'lines+markers',
+    line:{ color:'#c98a2e', width:3, shape:'spline', smoothing:0.5 },
+    marker:{ size:8, color:'#fff', line:{ color:'#c98a2e', width:2.5 } },
+    name:'% в норме',
+    yaxis:'y2',
+    hovertemplate:'<b>%{x|%d.%m.%Y}</b><br>В норме: %{y:.0f}%<extra></extra>'
+  };
+
+  // Подписи-«бейджи» прямо на столбцах — компактно и видно даже на скачанной PNG.
+  // Для дней с NOK дополнительно показываем, что именно обнаружено.
+  const dynAnnotations = dailyAsc.map(d => {
+    let text;
+    if(d.nok > 0){
+      let shortFind = d.findingsStr.replace(/<br>/g, '; ');
+      if(shortFind.length > 40) shortFind = shortFind.slice(0, 38) + '…';
+      text = `<span style="font-weight:700;">⚠ NOK ${d.nok}</span><br><span style="font-size:9.5px;">${shortFind}</span>`;
+    }else{
+      text = `✓ ${d.total}`;
+    }
+    return {
+      x:d.date, y:d.total, yshift: d.nok > 0 ? 30 : 20, xref:'x', yref:'y',
+      text,
+      showarrow:false,
+      align:'center',
+      font:{ size:10.5, color: d.nok > 0 ? '#8f2d29' : '#0d6f6a', family:'Segoe UI, Arial, sans-serif' },
+      bgcolor: d.nok > 0 ? 'rgba(217,79,79,0.14)' : 'rgba(26,158,99,0.13)',
+      bordercolor: d.nok > 0 ? '#e2635c' : '#5fc4bd',
+      borderwidth:1,
+      borderpad:4
+    };
+  });
+
+  const dynLayout = {
+    margin:{ t:50, r:60, b:50, l:55 },
+    title:{ text:'', font:{ size:1 } },
+    xaxis:{ type:'date', tickformat:'%d.%m', title:'Дата отбора пробы', gridcolor:'#f1ede0', griddash:'dot', showline:true, linecolor:'#e1d6b3', domain:[0,1], anchor:'y' },
+    yaxis:{ title:'Смывов, шт', rangemode:'tozero', range:[0, maxTotal*1.45], gridcolor:'#f1ede0', griddash:'dot', showline:false, zeroline:false, domain:[0, 1], anchor:'x' },
+    yaxis2:{ title:'% в норме', overlaying:'y', side:'right', range:[0,105], showgrid:false, ticksuffix:'%', domain:[0, 1], anchor:'x' },
+    annotations:dynAnnotations,
+    hoverlabel:{ bgcolor:'#3a2f1e', font:{ color:'#fff' }, bordercolor:'#3a2f1e' },
+    plot_bgcolor:'rgba(0,0,0,0)',
+    paper_bgcolor:'rgba(0,0,0,0)',
+    font:{ family:'Segoe UI, Arial, sans-serif', color:'#3a2f1e' },
+    bargap:0.35,
+    legend:{ orientation:'h', x:0.5, xanchor:'center', y:1.08, font:{ size:12 } }
+  };
+
+  Plotly.newPlot('kpiChart', [barTrace, pctTrace], dynLayout, { responsive:true, displaylogo:false });
+
+  // --- Обнаружено (только NOK): дата, где, что / наименование исследования ---
+  const nokRows = data.filter(d => d.status === 'NOK').sort((a,b) => b.date - a.date);
+  const nokWrap = document.getElementById('mbNokWrap');
+  const nokEmpty = document.getElementById('mbNokEmpty');
+  const btnPngNok = document.getElementById('btnPngNok');
+  if(nokRows.length === 0){
+    nokWrap.style.display = 'none';
+    nokEmpty.style.display = 'block';
+    btnPngNok.disabled = true;
+  }else{
+    nokWrap.style.display = 'flex';
+    nokEmpty.style.display = 'none';
+    btnPngNok.disabled = false;
+    nokWrap.innerHTML = nokRows.map(d => `
+      <div class="nok-card">
+        <div class="nok-date">📅 ${fmtDate(d.date)}</div>
+        <div class="nok-where">
+          <div class="nok-lab">Где обнаружено</div>
+          <div class="nok-val">${escapeHtml(d.point)}${d.zone ? ' \u00b7 ' + escapeHtml(d.zone) : ''}</div>
+        </div>
+        <div class="nok-what">
+          <div class="nok-lab">Что обнаружено / наименование исследования</div>
+          <div class="nok-val">⚠ ${escapeHtml(d.result)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function renderAll(){
+  updateRangeBadge();
+  renderActChart();
+  renderMbSummary();
+}
+
+/* ==========================================================================
+   ЭКСПОРТ ГРАФИКОВ В PNG (для вставки в PowerPoint)
+   ========================================================================== */
+/* ==========================================================================
+   ЭКСПОРТ СЛАЙДОВ В PNG (для вставки в PowerPoint / отчёт)
+   Захватывается ВСЯ карточка целиком: заголовок, KPI-цифры, график, список находок —
+   именно так, как её видно на странице, одним изображением.
+   ========================================================================== */
+async function downloadSlide(cardId, filename, btn){
+  const card = document.getElementById(cardId);
+  const btnOriginalText = btn.textContent;
+  const nokList = card.querySelector('.nok-card-list');
+  const prevMaxHeight = nokList ? nokList.style.maxHeight : null;
+  const prevOverflow = nokList ? nokList.style.overflowY : null;
+
+  // Снимаем собственный (белый) фон карточки и её тень на время съёмки — иначе они всё равно попадут в PNG сплошным прямоугольником
+  const prevCardBg = card.style.backgroundColor;
+  const prevCardShadow = card.style.boxShadow;
+  card.style.backgroundColor = 'transparent';
+  card.style.boxShadow = 'none';
+
+  // Прячем блоки, которые не должны попадать в скачанный слайд (заголовки, таблица «Проб по дням» и т.п.)
+  const excluded = card.querySelectorAll('.export-exclude');
+  const prevExcludedDisplay = [];
+  excluded.forEach(el => { prevExcludedDisplay.push(el.style.display); el.style.display = 'none'; });
+
+  // Прячем подпись оси X («Дата…») на время съёмки — на странице она остаётся
+  const plotDiv = card.querySelector('.js-plotly-plot');
+  let prevXaxisTitle = undefined;
+  if(plotDiv && plotDiv.layout && plotDiv.layout.xaxis){
+    prevXaxisTitle = plotDiv.layout.xaxis.title;
+    try{ await Plotly.relayout(plotDiv, {'xaxis.title': ''}); }catch(e){}
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Готовим слайд…';
+  btn.style.visibility = 'hidden'; // сама кнопка не должна попасть в картинку
+
+  // Разворачиваем список находок целиком (без внутренней прокрутки), чтобы он вошёл в слайд полностью
+  if(nokList){ nokList.style.maxHeight = 'none'; nokList.style.overflowY = 'visible'; }
+
+  try{
+    await new Promise(r => setTimeout(r, 60)); // дать браузеру перерисовать layout
+    const canvas = await html2canvas(card, {
+      backgroundColor:null,
+      scale:2,
+      useCORS:true
+    });
+    const link = document.createElement('a');
+    link.download = filename + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }catch(err){
+    alert('Не удалось собрать слайд: ' + err.message);
+  }finally{
+    if(nokList){ nokList.style.maxHeight = prevMaxHeight; nokList.style.overflowY = prevOverflow; }
+    excluded.forEach((el, i) => { el.style.display = prevExcludedDisplay[i]; });
+    if(plotDiv && prevXaxisTitle !== undefined){
+      try{ await Plotly.relayout(plotDiv, {'xaxis.title': prevXaxisTitle}); }catch(e){}
+    }
+    card.style.backgroundColor = prevCardBg;
+    card.style.boxShadow = prevCardShadow;
+    btn.style.visibility = 'visible';
+    btn.disabled = false;
+    btn.textContent = btnOriginalText;
+  }
+}
+
+document.getElementById('btnPngAct').addEventListener('click', (e) => {
+  downloadSlide('actCard', 'slide_moyka_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+document.getElementById('btnPngKpi').addEventListener('click', (e) => {
+  downloadSlide('smyvyCard', 'slide_dinamika_kpi_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+document.getElementById('btnPngNok').addEventListener('click', (e) => {
+  downloadSlide('nokSection', 'slide_obnaruzheno_nok_' + (currentRange ? 'nedelya' : 'polnyy_period'), e.currentTarget);
+});
+
+/* ==========================================================================
+   ИНИЦИАЛИЗАЦИЯ
+   ========================================================================== */
+renderAll();
+</script>
+</body>
+</html>

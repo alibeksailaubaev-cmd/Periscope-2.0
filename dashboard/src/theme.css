@@ -1,0 +1,714 @@
+/* ==========================================================================
+   AITAS UKPF — корпоративная тема дэшбордов (панели внутри оболочки)
+   Подключается ПОСЛЕ базовых стилей панели и переопределяет оформление:
+   цвета, карточки, кнопки, KPI-плитки, таблицы, модальные окна, анимации.
+   Логика панелей не затрагивается — только внешний вид и микроанимации.
+   ========================================================================== */
+
+:root{
+  /* Фирменная палитра: песочный фон + бирюза + графит */
+  --sand:        #e6dfc6;
+  --sand-deep:   #ded5b8;
+  --sand-soft:   #f2eddc;
+  --paper:       #fffdf7;
+  --teal:        #0e9a92;
+  --teal-dark:   #0a6f69;
+  --teal-light:  #57c4bc;
+  --teal-wash:   #e8f5f3;
+  --ink:         #1e1a12;
+  --ink-soft:    #4a4232;
+  --clay:        #7a6e52;
+  --line:        #ded4b4;
+  --line-soft:   #ece5d0;
+  --green:       #2e7d52;
+  --green-wash:  #e8f5ec;
+  --red:         #c0392f;
+  --red-wash:    #fdeeec;
+  --amber:       #c2871f;
+  --amber-wash:  #fbf2df;
+
+  /* Переопределяем токены базовой темы панели */
+  --primary:      var(--teal);
+  --primary-dark: var(--teal-dark);
+  --primary-light:var(--teal-light);
+  --ok:           var(--green);
+  --nok:          var(--red);
+  --bg:           var(--sand);
+  --card-bg:      var(--paper);
+  --border:       var(--line);
+  --text:         var(--ink);
+  --text-muted:   var(--clay);
+
+  --radius:       18px;
+  --radius-sm:    10px;
+  --shadow-1: 0 1px 2px rgba(30,26,18,.06), 0 2px 8px rgba(30,26,18,.05);
+  --shadow-2: 0 2px 6px rgba(30,26,18,.07), 0 12px 28px rgba(30,26,18,.09);
+  --shadow-3: 0 18px 50px rgba(30,26,18,.18);
+  --ease: cubic-bezier(.2,.7,.3,1);
+  --ease-out: cubic-bezier(.16,1,.3,1);
+}
+
+/* ---------- базовая типографика ---------- */
+body{
+  font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', 'Roboto', Arial, sans-serif;
+  background:var(--sand);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:.005em;
+}
+body.embedded-in-shell{ background:transparent; }
+.container{ max-width:1460px; padding:22px 30px 56px; }
+body.embedded-in-shell .container{ padding:4px 4px 18px; }
+
+/* цифры — моноширинные, чтобы не «прыгали» при анимации счётчика */
+.stat-pill .val, .tile-score, .dm-score-big, .cm-score-big,
+table.data-table td, .range-badge{ font-variant-numeric:tabular-nums; }
+
+/* ---------- шапка панели ---------- */
+header.app-header{
+  background:linear-gradient(115deg, #0a6f69 0%, #0e9a92 52%, #17b3a9 100%);
+  padding:24px 32px;
+  border-radius:0;
+  position:relative;
+  overflow:hidden;
+  box-shadow:var(--shadow-1);
+}
+header.app-header::after{
+  content:"";
+  position:absolute; inset:0;
+  background:
+    radial-gradient(120px 120px at 88% -10%, rgba(255,255,255,.16), transparent 70%),
+    radial-gradient(200px 160px at 8% 130%, rgba(255,255,255,.10), transparent 70%);
+  pointer-events:none;
+}
+header.app-header .brand-text h1{ font-size:23px; font-weight:700; letter-spacing:.1px; }
+header.app-header .brand-logo{
+  background:rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:12px;
+  font-weight:600;
+  letter-spacing:.08em;
+  text-transform:lowercase;
+}
+/* в общей оболочке шапка панели не нужна — её роль играет шапка оболочки */
+body.embedded-in-shell header.app-header{ display:none; }
+
+/* ---------- зоны загрузки файлов ---------- */
+.dropzone{
+  background:var(--paper);
+  border:1.5px dashed var(--line);
+  border-radius:var(--radius);
+  padding:24px 22px;
+  box-shadow:var(--shadow-1);
+  transition:border-color .22s var(--ease), background .22s var(--ease),
+             transform .22s var(--ease), box-shadow .22s var(--ease);
+  overflow:hidden;
+}
+.dropzone::before{
+  content:"";
+  position:absolute; inset:auto -40% -70% -40%;
+  height:120%;
+  background:radial-gradient(closest-side, rgba(14,154,146,.10), transparent 72%);
+  opacity:0; transition:opacity .3s var(--ease);
+  pointer-events:none;
+}
+.dropzone:hover{
+  border-color:var(--teal);
+  background:var(--paper);
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-2);
+}
+.dropzone:hover::before{ opacity:1; }
+.dropzone.dragover{
+  border-color:var(--teal);
+  border-style:solid;
+  background:var(--teal-wash);
+  transform:scale(1.008);
+}
+.dropzone.loaded{
+  border-color:var(--green);
+  border-style:solid;
+  background:linear-gradient(180deg, var(--green-wash), var(--paper) 62%);
+}
+.dropzone .icon{
+  font-size:30px;
+  margin-bottom:10px;
+  display:inline-block;
+  transition:transform .35s var(--ease-out);
+}
+.dropzone:hover .icon{ transform:translateY(-3px) scale(1.06); }
+.dropzone.loaded .icon{ animation:aitasPop .5s var(--ease-out); }
+.dropzone h3{ font-size:15.5px; font-weight:700; letter-spacing:.01em; }
+.dropzone .hint{ font-size:12.5px; color:var(--clay); line-height:1.5; }
+.dropzone .status-line{ color:var(--green); }
+
+/* в общей оболочке остаётся одна зона загрузки — делаем её компактной строкой */
+body.embedded-in-shell .dropzone{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  text-align:left;
+  padding:16px 20px;
+}
+body.embedded-in-shell .dropzone .icon{
+  margin:0;
+  width:50px; height:50px;
+  flex:none;
+  border-radius:14px;
+  background:var(--teal-wash);
+  display:flex; align-items:center; justify-content:center;
+}
+body.embedded-in-shell .dropzone h3{ margin:0 0 3px; }
+body.embedded-in-shell .dropzone .hint{ margin:0; }
+body.embedded-in-shell .dropzone .status-line{ margin-top:5px; }
+body.embedded-in-shell .dropzone .dz-text{ min-width:0; }
+
+@keyframes aitasPop{
+  0%{ transform:scale(.6) rotate(-8deg); opacity:.4; }
+  60%{ transform:scale(1.15) rotate(3deg); opacity:1; }
+  100%{ transform:scale(1) rotate(0); }
+}
+
+/* ---------- панель управления (фильтр по неделе) ---------- */
+.controls-bar{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-1);
+  padding:14px 18px;
+  gap:12px;
+}
+.controls-bar label{
+  font-size:11.5px;
+  font-weight:700;
+  color:var(--clay);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.controls-bar input[type=number]{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 12px;
+  background:#fff;
+  color:var(--ink);
+  font-weight:600;
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+.controls-bar input[type=number]:focus{
+  outline:none;
+  border-color:var(--teal);
+  box-shadow:0 0 0 4px rgba(14,154,146,.15);
+}
+.range-badge{
+  background:var(--teal-wash);
+  color:var(--teal-dark);
+  border:1px solid rgba(14,154,146,.28);
+  border-radius:999px;
+  padding:7px 16px;
+  font-size:12.5px;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+
+/* ==========================================================================
+   КНОПКИ — единая система
+   ========================================================================== */
+.btn{
+  position:relative;
+  isolation:isolate;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:1px solid transparent;
+  border-radius:11px;
+  padding:10px 18px;
+  font-size:13.5px;
+  font-weight:650;
+  line-height:1.15;
+  letter-spacing:.01em;
+  cursor:pointer;
+  overflow:hidden;
+  white-space:nowrap;
+  transition:transform .16s var(--ease), box-shadow .2s var(--ease),
+             background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease);
+}
+.btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(14,154,146,.28); }
+.btn:active{ transform:translateY(1px) scale(.985); }
+.btn::after{ /* блик при наведении */
+  content:"";
+  position:absolute; top:0; bottom:0; left:-60%;
+  width:45%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.42), transparent);
+  transform:skewX(-18deg);
+  opacity:0;
+  pointer-events:none;
+  z-index:-1;
+}
+.btn:hover::after{ animation:aitasSheen .7s var(--ease-out); }
+@keyframes aitasSheen{
+  0%{ left:-60%; opacity:0; }
+  25%{ opacity:.9; }
+  100%{ left:120%; opacity:0; }
+}
+
+.btn-primary{
+  background:linear-gradient(180deg, var(--teal) 0%, #0b8a83 100%);
+  color:#fff;
+  box-shadow:0 1px 2px rgba(10,111,105,.35), 0 6px 16px rgba(10,111,105,.22);
+}
+.btn-primary:hover{
+  background:linear-gradient(180deg, #10a79e 0%, var(--teal-dark) 100%);
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(10,111,105,.34), 0 12px 26px rgba(10,111,105,.28);
+}
+.btn-secondary{
+  background:#fff;
+  color:var(--ink-soft);
+  border-color:var(--line);
+  box-shadow:var(--shadow-1);
+}
+.btn-secondary:hover{
+  background:var(--sand-soft);
+  border-color:var(--sand-deep);
+  color:var(--ink);
+  transform:translateY(-1px);
+}
+.btn-download{
+  background:#fff;
+  color:var(--teal-dark);
+  border:1.5px solid rgba(14,154,146,.45);
+  padding:9px 15px;
+  font-size:12.5px;
+  box-shadow:var(--shadow-1);
+}
+.btn-download:hover{
+  background:var(--teal);
+  border-color:var(--teal);
+  color:#fff;
+  transform:translateY(-1px);
+  box-shadow:0 10px 22px rgba(10,111,105,.26);
+}
+.btn-small{ padding:7px 12px; font-size:11.5px; border-radius:9px; }
+.btn:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+  transform:none !important;
+  box-shadow:none;
+  filter:grayscale(.35);
+}
+.btn:disabled::after{ display:none; }
+
+/* «волна» от клика (добавляет theme.js) */
+.aitas-ripple{
+  position:absolute;
+  border-radius:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:currentColor;
+  opacity:.22;
+  pointer-events:none;
+  animation:aitasRipple .55s var(--ease-out) forwards;
+  z-index:-1;
+}
+@keyframes aitasRipple{ to{ transform:translate(-50%,-50%) scale(2.6); opacity:0; } }
+
+/* сегментированный переключатель (охват несоответствий) */
+.viol-scope-toggle{
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--sand-soft);
+  padding:3px;
+  gap:3px;
+  box-shadow:inset 0 1px 2px rgba(30,26,18,.05);
+}
+.viol-scope-btn{
+  position:relative;
+  border:none;
+  border-right:none !important;
+  background:transparent;
+  color:var(--clay);
+  border-radius:9px;
+  padding:8px 15px;
+  font-size:12.5px;
+  font-weight:650;
+  overflow:hidden;
+  transition:background .2s var(--ease), color .2s var(--ease), transform .16s var(--ease);
+}
+.viol-scope-btn:hover{ background:rgba(255,255,255,.85); color:var(--ink); }
+.viol-scope-btn.active{
+  background:linear-gradient(180deg, var(--teal), #0b8a83);
+  color:#fff;
+  box-shadow:0 4px 12px rgba(10,111,105,.28);
+}
+
+/* ==========================================================================
+   КАРТОЧКИ
+   ========================================================================== */
+.card{
+  background:var(--paper);           /* только background-color — важно для экспорта PNG */
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-1);
+  padding:24px 26px;
+  margin-bottom:22px;
+  position:relative;
+  overflow:hidden;
+  transition:box-shadow .28s var(--ease), transform .28s var(--ease), border-color .28s var(--ease);
+}
+.card::before{ /* фирменная бирюзовая полоса сверху */
+  content:"";
+  position:absolute; left:0; right:0; top:0;
+  height:3px;
+  background:linear-gradient(90deg, var(--teal) 0%, var(--teal-light) 42%, rgba(14,154,146,0) 100%);
+  opacity:.9;
+}
+.card:hover{
+  box-shadow:var(--shadow-2);
+  border-color:var(--sand-deep);
+}
+.card-header{ margin-bottom:16px; align-items:flex-start; }
+.card-header h2{
+  font-size:19px;
+  font-weight:750;
+  letter-spacing:-.01em;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.card-header h2::before{
+  content:"";
+  width:4px; height:19px;
+  border-radius:3px;
+  background:linear-gradient(180deg, var(--teal), var(--teal-light));
+  flex:none;
+}
+.card-header .sub{ font-size:12.5px; color:var(--clay); line-height:1.55; }
+
+/* появление карточек: мягкий подъём, каскадом (класс ставит theme.js) */
+.aitas-reveal{ opacity:0; transform:translateY(14px); }
+.aitas-reveal.is-in{
+  opacity:1; transform:none;
+  transition:opacity .5s var(--ease-out), transform .55s var(--ease-out);
+}
+
+/* ==========================================================================
+   KPI-ПЛИТКИ
+   ========================================================================== */
+.stats-row{ gap:12px; margin-bottom:18px; }
+.stat-pill{
+  position:relative;
+  background:#fff;
+  border:1px solid var(--line);
+  border-top:1px solid var(--line);
+  border-radius:14px;
+  padding:15px 12px 14px;
+  gap:5px;
+  overflow:hidden;
+  box-shadow:var(--shadow-1);
+  transition:transform .2s var(--ease), box-shadow .22s var(--ease), border-color .22s var(--ease);
+}
+.stat-pill::before{
+  content:"";
+  position:absolute; left:0; top:0; bottom:0;
+  width:4px;
+  background:linear-gradient(180deg, var(--teal), var(--teal-light));
+}
+.stat-pill.accent-ok::before{ background:linear-gradient(180deg, var(--green), #6cc38f); }
+.stat-pill.accent-nok::before{ background:linear-gradient(180deg, var(--red), #e88b82); }
+.stat-pill:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--shadow-2);
+  border-color:var(--sand-deep);
+}
+.stat-pill .icon-emoji{ font-size:17px; opacity:.9; }
+.stat-pill .lab{
+  font-size:10px;
+  font-weight:700;
+  color:var(--clay);
+  letter-spacing:.07em;
+}
+.stat-pill .val{
+  font-size:26px;
+  font-weight:800;
+  color:var(--teal-dark);
+  line-height:1.25;
+  letter-spacing:-.02em;
+}
+.stat-pill .val.ok{ color:var(--green); }
+.stat-pill .val.nok{ color:var(--red); }
+.stat-pill .val.aitas-bump{ animation:aitasBump .45s var(--ease-out); }
+@keyframes aitasBump{
+  0%{ transform:scale(1); }
+  40%{ transform:scale(1.09); }
+  100%{ transform:scale(1); }
+}
+.pulse-alert{ animation:aitasPulse 2.2s ease-in-out infinite; }
+@keyframes aitasPulse{
+  0%,100%{ opacity:1; transform:scale(1); }
+  50%{ opacity:.72; transform:scale(1.03); }
+}
+
+/* ==========================================================================
+   СПИСОК NOK / карточки находок
+   ========================================================================== */
+.nok-card-list{ gap:11px; }
+.nok-card{
+  background:linear-gradient(180deg, var(--red-wash), #fff 78%);
+  border:1px solid #f0cdc8;
+  border-left:5px solid var(--red);
+  border-radius:13px;
+  padding:14px 18px;
+  transition:transform .18s var(--ease), box-shadow .2s var(--ease);
+  animation:aitasSlideIn .4s var(--ease-out) backwards;
+}
+.nok-card:hover{ transform:translateX(3px); box-shadow:0 8px 20px rgba(192,57,47,.13); }
+.nok-card .nok-date{ font-size:15px; font-weight:750; color:var(--ink); }
+.nok-card .nok-where .nok-lab, .nok-card .nok-what .nok-lab{
+  font-size:10px; font-weight:700; letter-spacing:.06em; color:#a8756c;
+}
+.nok-card .nok-what .nok-val{ color:#8f2d29; font-weight:750; }
+@keyframes aitasSlideIn{
+  from{ opacity:0; transform:translateY(8px); }
+  to{ opacity:1; transform:none; }
+}
+.empty-state-inline{
+  background:var(--green-wash);
+  border:1px solid #cbe8d5;
+  border-radius:13px;
+  color:var(--green);
+  padding:18px;
+}
+.empty-state{ color:var(--clay); padding:46px 20px; font-size:13.5px; }
+
+/* ==========================================================================
+   ПЛИТКИ КОРПУСОВ
+   ========================================================================== */
+.corpus-tile{
+  background:#fff;
+  border:1px solid var(--line);
+  border-left:5px solid var(--line);
+  border-radius:13px;
+  padding:13px 15px;
+  box-shadow:var(--shadow-1);
+  transition:transform .18s var(--ease), box-shadow .2s var(--ease), border-color .2s var(--ease);
+}
+.corpus-tile:hover{
+  transform:translateY(-3px);
+  box-shadow:var(--shadow-2);
+}
+.corpus-tile.tile-good{ border-left-color:var(--green); }
+.corpus-tile.tile-warn{ border-left-color:var(--amber); }
+.corpus-tile.tile-bad{ border-left-color:var(--red); }
+.corpus-tile .tile-site{ font-size:15px; font-weight:800; letter-spacing:-.01em; }
+.corpus-tile .tile-score{ font-size:27px; font-weight:800; letter-spacing:-.02em; }
+.tile-badge.badge-first{ background:var(--green-wash); color:var(--green); }
+.tile-badge.badge-rewash{ background:var(--red-wash); color:var(--red); }
+.tile-badge.badge-unspec{ background:var(--sand-soft); color:var(--clay); }
+
+/* ==========================================================================
+   ТАБЛИЦЫ
+   ========================================================================== */
+.table-wrap{
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+  box-shadow:var(--shadow-1);
+}
+table.data-table{ font-size:13px; margin-top:0; }
+table.data-table th{
+  background:var(--sand-soft);
+  color:var(--clay);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:11px 12px;
+  border-bottom:1px solid var(--line);
+  z-index:2;
+}
+table.data-table td{ padding:10px 12px; border-bottom:1px solid var(--line-soft); }
+table.data-table tbody tr{ transition:background .15s var(--ease); }
+table.data-table tbody tr:hover{ background:var(--teal-wash); }
+table.data-table tr.row-nok{ background:var(--red-wash); }
+table.data-table tr.row-nok:hover{ background:#fbe3df; }
+table.data-table tr.viol-row-clickable:hover{ background:var(--teal-wash); }
+table.data-table tr.viol-row-clickable:active{ transform:none; background:#d9efec; }
+tr.mb-nok td{ background:var(--red-wash); }
+tr.mb-ok td{ background:var(--green-wash); }
+
+.badge{ padding:3px 10px; font-size:11px; font-weight:750; letter-spacing:.02em; }
+.badge.ok{ background:var(--green-wash); color:var(--green); }
+.badge.nok{ background:var(--red-wash); color:var(--red); }
+.badge.na{ background:var(--sand-soft); color:var(--clay); }
+
+.table-search{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:10px 13px;
+  background:#fff;
+  transition:border-color .18s var(--ease), box-shadow .18s var(--ease);
+}
+.table-search:focus{ border-color:var(--teal); box-shadow:0 0 0 4px rgba(14,154,146,.15); }
+
+.chart-subtitle, .chart-subtitle-row{
+  border-bottom:1px solid var(--line);
+  padding-bottom:9px;
+  color:var(--ink);
+  font-size:13px;
+  font-weight:750;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+.chart-subtitle-row .chart-subtitle{ text-transform:uppercase; }
+
+/* ==========================================================================
+   ГРАФИКИ
+   ========================================================================== */
+.chart-box{
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(242,237,220,.35));
+  padding:6px 4px 2px;
+}
+/* стартовое состояние — только если тема-скрипт жив (иначе график виден сразу) */
+body.aitas-js .chart-box{ opacity:0; transform:translateY(10px) scale(.995); }
+.chart-box.aitas-chart-in{
+  opacity:1; transform:none;
+  transition:opacity .55s var(--ease-out), transform .6s var(--ease-out);
+}
+.js-plotly-plot .modebar{ opacity:0; transition:opacity .2s var(--ease); }
+.chart-box:hover .modebar{ opacity:1; }
+
+/* подсветка карточки при переходе из навигации оболочки */
+.card.aitas-flash{ animation:aitasFlash 1.5s var(--ease); }
+@keyframes aitasFlash{
+  0%{ box-shadow:0 0 0 0 rgba(14,154,146,.5), var(--shadow-2); }
+  100%{ box-shadow:0 0 0 18px rgba(14,154,146,0), var(--shadow-1); }
+}
+
+/* ==========================================================================
+   МОДАЛЬНЫЕ ОКНА
+   ========================================================================== */
+.day-modal-overlay, .corpus-modal-overlay{
+  background:rgba(30,26,18,.42);
+  -webkit-backdrop-filter:blur(3px);
+  backdrop-filter:blur(3px);
+  transition:opacity .2s var(--ease);
+}
+.day-modal, .corpus-modal{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:var(--shadow-3);
+  padding:30px 32px;
+  transform:translateY(16px) scale(.97);
+  transition:transform .28s var(--ease-out), opacity .22s var(--ease-out);
+}
+.day-modal::before, .corpus-modal::before{
+  content:"";
+  position:absolute; left:0; right:0; top:0; height:4px;
+  border-radius:20px 20px 0 0;
+  background:linear-gradient(90deg, var(--teal), var(--teal-light) 55%, rgba(14,154,146,0));
+}
+.day-modal-close, .corpus-modal-close{
+  width:34px; height:34px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--clay);
+  transition:background .18s var(--ease), color .18s var(--ease), transform .18s var(--ease);
+}
+.day-modal-close:hover, .corpus-modal-close:hover{
+  background:var(--red-wash);
+  color:var(--red);
+  transform:rotate(90deg);
+}
+.dm-title, .cm-title{ font-size:22px; font-weight:800; letter-spacing:-.01em; color:var(--ink); }
+.dm-score-big, .cm-score-big{ font-size:46px; font-weight:800; letter-spacing:-.03em; }
+.dm-section-title, .cm-section-title{
+  color:var(--clay); font-size:11.5px; font-weight:800; letter-spacing:.08em;
+}
+.cm-chip{
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--sand-soft);
+  transition:transform .16s var(--ease);
+}
+.cm-chip:hover{ transform:translateY(-1px); }
+
+/* ==========================================================================
+   ЗАГРУЗЧИК И БАННЕРЫ
+   ========================================================================== */
+.overlay{ background:rgba(30,26,18,.45); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+.overlay-box{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:20px;
+  box-shadow:var(--shadow-3);
+  padding:30px 36px;
+  animation:aitasPopIn .32s var(--ease-out);
+}
+@keyframes aitasPopIn{
+  from{ opacity:0; transform:translateY(12px) scale(.96); }
+  to{ opacity:1; transform:none; }
+}
+.spinner{
+  width:44px; height:44px;
+  border:3px solid var(--sand-deep);
+  border-top-color:var(--teal);
+  border-right-color:var(--teal-light);
+  animation:spin .85s cubic-bezier(.5,.1,.4,.9) infinite;
+}
+.overlay-box #overlayText{ font-size:13.5px; font-weight:650; color:var(--ink-soft); }
+.overlay-box::after{ /* тонкая «бегущая» полоса прогресса */
+  content:"";
+  display:block;
+  height:3px;
+  margin-top:16px;
+  border-radius:3px;
+  background:linear-gradient(90deg, transparent, var(--teal), transparent);
+  background-size:45% 100%;
+  background-repeat:no-repeat;
+  animation:aitasBar 1.1s var(--ease) infinite;
+}
+@keyframes aitasBar{
+  0%{ background-position:-45% 0; }
+  100%{ background-position:145% 0; }
+}
+.banner{ border-radius:13px; padding:13px 16px; font-size:13px; }
+.banner.error{ background:var(--red-wash); color:#8f2d29; border:1px solid #f0cdc8; }
+.banner.info{ background:var(--teal-wash); color:var(--teal-dark); border:1px solid rgba(14,154,146,.28); }
+
+/* ---------- полосы прокрутки ---------- */
+.table-wrap::-webkit-scrollbar, .nok-card-list::-webkit-scrollbar,
+.day-modal::-webkit-scrollbar, .corpus-modal::-webkit-scrollbar{ width:9px; height:9px; }
+.table-wrap::-webkit-scrollbar-thumb, .nok-card-list::-webkit-scrollbar-thumb,
+.day-modal::-webkit-scrollbar-thumb, .corpus-modal::-webkit-scrollbar-thumb{
+  background:var(--sand-deep); border-radius:8px; border:2px solid transparent; background-clip:padding-box;
+}
+.table-wrap::-webkit-scrollbar-thumb:hover, .nok-card-list::-webkit-scrollbar-thumb:hover{ background:var(--teal-light); background-clip:padding-box; }
+.table-wrap::-webkit-scrollbar-track, .nok-card-list::-webkit-scrollbar-track{ background:transparent; }
+
+/* ==========================================================================
+   РЕЖИМ ЭКСПОРТА PNG — отключаем всё, что может «смазать» слайд
+   ========================================================================== */
+body.aitas-exporting *,
+body.aitas-exporting *::before,
+body.aitas-exporting *::after{
+  animation:none !important;
+  transition:none !important;
+}
+body.aitas-exporting .card::before{ display:none; }
+body.aitas-exporting .card{ transform:none !important; box-shadow:none !important; }
+body.aitas-exporting .chart-box{ background:transparent !important; opacity:1 !important; transform:none !important; }
+body.aitas-exporting .stat-pill{ transform:none !important; }
+
+@media print{
+  .card{ break-inside:avoid; box-shadow:none; }
+  .btn, .dropzone, .controls-bar{ display:none !important; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  .aitas-reveal{ opacity:1; transform:none; }
+  .chart-box{ opacity:1; transform:none; }
+}

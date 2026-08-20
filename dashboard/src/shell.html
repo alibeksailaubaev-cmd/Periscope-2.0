@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AITAS UKPF — сводный дэшборд качества мойки и МБ смывов</title>
+<style>
+  :root{
+    --sand:        #e6dfc6;
+    --sand-deep:   #ded5b8;
+    --sand-soft:   #f2eddc;
+    --paper:       #fffdf7;
+    --teal:        #0e9a92;
+    --teal-dark:   #0a6f69;
+    --teal-light:  #57c4bc;
+    --teal-wash:   #e8f5f3;
+    --ink:         #1e1a12;
+    --ink-soft:    #4a4232;
+    --clay:        #7a6e52;
+    --line:        #ded4b4;
+    --green:       #2e7d52;
+    --green-wash:  #e8f5ec;
+    --red:         #c0392f;
+    --red-wash:    #fdeeec;
+    --amber:       #c2871f;
+    --amber-wash:  #fbf2df;
+    --rail:        58px;
+    --shadow-1: 0 1px 2px rgba(30,26,18,.06), 0 2px 8px rgba(30,26,18,.05);
+    --shadow-2: 0 2px 6px rgba(30,26,18,.07), 0 12px 28px rgba(30,26,18,.09);
+    --shadow-3: 0 18px 50px rgba(30,26,18,.18);
+    --ease: cubic-bezier(.2,.7,.3,1);
+    --ease-out: cubic-bezier(.16,1,.3,1);
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    padding-left:var(--rail);
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Inter, Roboto, Arial, sans-serif;
+    background:var(--sand);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- декоративная орнаментная колонка слева ---------- */
+  .ornament-rail{
+    position:fixed;
+    left:0; top:0; bottom:0;
+    width:var(--rail);
+    background:var(--sand);
+    border-right:1px solid rgba(30,26,18,.08);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:4px 0;
+    gap:2px;
+    overflow:hidden;
+    z-index:60;
+  }
+  .ornament-rail .orn{
+    width:46px; height:46px;
+    flex:none;
+    background:var(--teal);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transform:translateY(-12px);
+    animation:ornIn .5s var(--ease-out) forwards;
+  }
+  .ornament-rail .orn svg{ width:30px; height:30px; display:block; }
+  .ornament-rail .orn.plain{ background:transparent; color:var(--teal); }
+  @keyframes ornIn{ to{ opacity:1; transform:none; } }
+
+  /* ---------- индикатор прокрутки ---------- */
+  .scroll-progress{
+    position:fixed;
+    top:0; left:var(--rail); right:0;
+    height:3px;
+    background:linear-gradient(90deg, var(--teal), var(--teal-light));
+    transform-origin:0 50%;
+    transform:scaleX(0);
+    z-index:80;
+    transition:transform .12s linear;
+  }
+
+  /* ---------- фирменная шапка ---------- */
+  .brand-bar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:26px;
+    flex-wrap:wrap;
+    padding:26px 34px 22px;
+    background:var(--sand);
+    position:relative;
+  }
+  .brand-bar .title-block{ flex:1 1 420px; min-width:280px; }
+  .brand-bar .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-size:11px;
+    font-weight:750;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--teal-dark);
+    background:rgba(14,154,146,.10);
+    border:1px solid rgba(14,154,146,.25);
+    padding:5px 12px;
+    border-radius:999px;
+    margin-bottom:12px;
+  }
+  .brand-bar h1{
+    margin:0;
+    font-size:31px;
+    line-height:1.18;
+    font-weight:750;
+    letter-spacing:-.02em;
+    color:var(--ink);
+  }
+  .brand-bar p.lead{
+    margin:9px 0 0;
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    max-width:760px;
+  }
+  .logo-lockup{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:6px 4px;
+  }
+  .logo-lockup .mark{ width:52px; height:52px; color:var(--ink); flex:none; }
+  .logo-lockup .word{ line-height:1; }
+  .logo-lockup .word b{
+    display:block;
+    font-size:27px;
+    font-weight:600;
+    letter-spacing:.01em;
+    color:var(--ink);
+  }
+  .logo-lockup .word span{
+    display:block;
+    margin-top:5px;
+    font-size:9.5px;
+    letter-spacing:.055em;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- корпус ---------- */
+  .shell-body{
+    max-width:1520px;
+    margin:0 auto;
+    padding:0 34px 40px;
+  }
+  .section-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:11.5px;
+    font-weight:800;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--clay);
+    margin:0 0 12px;
+  }
+  .section-title::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:linear-gradient(90deg, var(--line), transparent);
+  }
+
+  /* ---------- зона загрузки общего файла ---------- */
+  .intake{
+    display:grid;
+    grid-template-columns:minmax(320px, 1.15fr) minmax(280px, .85fr);
+    gap:18px;
+    margin-bottom:24px;
+  }
+  @media (max-width:980px){ .intake{ grid-template-columns:1fr; } }
+
+  .shared-upload{
+    position:relative;
+    background:var(--paper);
+    border:1.5px dashed var(--line);
+    border-radius:20px;
+    padding:22px 26px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    cursor:pointer;
+    overflow:hidden;
+    box-shadow:var(--shadow-1);
+    transition:border-color .22s var(--ease), background .22s var(--ease),
+               transform .22s var(--ease), box-shadow .22s var(--ease);
+  }
+  .shared-upload::after{
+    content:"";
+    position:absolute; right:-30px; bottom:-40px;
+    width:170px; height:170px;
+    background:radial-gradient(closest-side, rgba(14,154,146,.12), transparent 72%);
+    opacity:0;
+    transition:opacity .3s var(--ease);
+    pointer-events:none;
+  }
+  .shared-upload:hover{ border-color:var(--teal); transform:translateY(-2px); box-shadow:var(--shadow-2); }
+  .shared-upload:hover::after{ opacity:1; }
+  .shared-upload.dragover{ border-style:solid; border-color:var(--teal); background:var(--teal-wash); transform:scale(1.006); }
+  .shared-upload.loaded{ border-style:solid; border-color:var(--green); background:linear-gradient(180deg, var(--green-wash), var(--paper) 65%); }
+  .shared-upload .icon{
+    width:56px; height:56px;
+    flex:none;
+    border-radius:16px;
+    background:var(--teal-wash);
+    color:var(--teal-dark);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+    transition:transform .35s var(--ease-out), background .25s var(--ease);
+  }
+  .shared-upload:hover .icon{ transform:translateY(-3px) scale(1.05); }
+  .shared-upload.loaded .icon{ background:var(--green-wash); color:var(--green); animation:pop .5s var(--ease-out); }
+  @keyframes pop{
+    0%{ transform:scale(.65) rotate(-8deg); }
+    60%{ transform:scale(1.12) rotate(3deg); }
+    100%{ transform:scale(1); }
+  }
+  .shared-upload .txt h3{ margin:0 0 4px; font-size:16px; font-weight:750; letter-spacing:-.01em; }
+  .shared-upload .txt .hint{ font-size:12.5px; color:var(--clay); line-height:1.55; }
+  .shared-upload .txt .status-line{ font-size:12.5px; font-weight:700; margin-top:8px; color:var(--green); min-height:17px; }
+  .shared-upload .txt .status-line.error{ color:var(--red); }
+  .shared-upload input[type=file]{ display:none; }
+
+  /* ---------- статусы вкладок ---------- */
+  .status-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:18px 22px;
+    box-shadow:var(--shadow-1);
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .status-card .status-head{
+    font-size:11px; font-weight:800; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--clay);
+  }
+  .mb-status-item{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-size:12.5px;
+    font-weight:650;
+    padding:9px 13px;
+    border-radius:12px;
+    background:var(--sand-soft);
+    border:1px solid transparent;
+    color:var(--clay);
+    transition:background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+  }
+  .mb-status-item .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:currentColor; opacity:.55; flex:none;
+  }
+  .mb-status-item.pending{ background:var(--amber-wash); color:#8a6a1a; border-color:#eed9a8; }
+  .mb-status-item.pending .dot{ animation:blink 1s ease-in-out infinite; opacity:1; }
+  @keyframes blink{ 0%,100%{ opacity:1; } 50%{ opacity:.25; } }
+  .mb-status-item.ok{ background:var(--green-wash); color:var(--green); border-color:#cbe8d5; }
+  .mb-status-item.ok .dot{ opacity:1; }
+  .mb-status-item.error{ background:var(--red-wash); color:var(--red); border-color:#f0cdc8; }
+  .mb-status-item.error .dot{ opacity:1; }
+
+  /* ---------- панель вкладок ---------- */
+  .tabbar{
+    position:sticky;
+    top:0;
+    z-index:55;
+    margin:0 -34px 20px;
+    padding:12px 34px;
+    background:rgba(230,223,198,.88);
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid transparent;
+    transition:border-color .25s var(--ease), box-shadow .25s var(--ease);
+  }
+  .tabbar.stuck{
+    border-bottom-color:var(--line);
+    box-shadow:0 10px 24px -18px rgba(30,26,18,.55);
+  }
+  .tabbar-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .tabs{
+    position:relative;
+    display:flex;
+    gap:4px;
+    padding:4px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:16px;
+    box-shadow:var(--shadow-1);
+  }
+  .tab-indicator{
+    position:absolute;
+    top:4px; left:4px;
+    height:calc(100% - 8px);
+    border-radius:12px;
+    background:linear-gradient(180deg, var(--teal), #0b8a83);
+    box-shadow:0 6px 16px rgba(10,111,105,.28);
+    transition:transform .38s var(--ease-out), width .38s var(--ease-out);
+    z-index:0;
+  }
+  .tab-btn{
+    position:relative;
+    z-index:1;
+    border:none;
+    background:transparent;
+    padding:11px 20px;
+    border-radius:12px;
+    font-size:13.5px;
+    font-weight:700;
+    color:var(--clay);
+    cursor:pointer;
+    white-space:nowrap;
+    overflow:hidden;
+    transition:color .25s var(--ease), transform .18s var(--ease);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .tab-btn:hover{ color:var(--ink); }
+  .tab-btn.active{ color:#fff; }
+  .tab-btn .tab-dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--line);
+    transition:background .25s var(--ease), transform .25s var(--ease);
+  }
+  .tab-btn .tab-dot.ok{ background:var(--green); }
+  .tab-btn .tab-dot.error{ background:var(--red); }
+  .tab-btn .tab-dot.pending{ background:var(--amber); animation:blink 1s ease-in-out infinite; }
+  .tab-btn.active .tab-dot{ box-shadow:0 0 0 2px rgba(255,255,255,.5); }
+  .tab-btn:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(14,154,146,.4); }
+
+  .btn{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border:1px solid transparent;
+    border-radius:12px;
+    padding:11px 18px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    overflow:hidden;
+    white-space:nowrap;
+    transition:transform .16s var(--ease), box-shadow .2s var(--ease),
+               background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease);
+  }
+  .btn:focus-visible{ outline:none; box-shadow:0 0 0 4px rgba(14,154,146,.28); }
+  .btn:active{ transform:translateY(1px) scale(.985); }
+  .btn-primary{
+    background:linear-gradient(180deg, var(--teal), #0b8a83);
+    color:#fff;
+    box-shadow:0 1px 2px rgba(10,111,105,.35), 0 6px 16px rgba(10,111,105,.22);
+  }
+  .btn-primary:hover{ transform:translateY(-1px); box-shadow:0 2px 4px rgba(10,111,105,.34), 0 12px 26px rgba(10,111,105,.28); }
+  .btn-ghost{
+    background:var(--paper);
+    color:var(--ink-soft);
+    border-color:var(--line);
+    box-shadow:var(--shadow-1);
+  }
+  .btn-ghost:hover{ background:var(--sand-soft); color:var(--ink); transform:translateY(-1px); }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none !important; box-shadow:none; }
+  .btn .spin{
+    width:14px; height:14px;
+    border:2px solid rgba(255,255,255,.45);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+    display:none;
+  }
+  .btn.busy .spin{ display:block; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .ripple{
+    position:absolute;
+    border-radius:50%;
+    transform:translate(-50%,-50%) scale(0);
+    background:currentColor;
+    opacity:.22;
+    pointer-events:none;
+    animation:rippleOut .55s var(--ease-out) forwards;
+  }
+  @keyframes rippleOut{ to{ transform:translate(-50%,-50%) scale(2.6); opacity:0; } }
+
+  /* ---------- быстрая навигация по разделам вкладки ---------- */
+  .section-rail{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:10px;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:thin;
+  }
+  .section-rail::-webkit-scrollbar{ height:6px; }
+  .section-rail::-webkit-scrollbar-thumb{ background:var(--sand-deep); border-radius:6px; }
+  .section-rail .rail-label{
+    font-size:10.5px; font-weight:800; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--clay); white-space:nowrap;
+  }
+  .section-chip{
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink-soft);
+    border-radius:999px;
+    padding:7px 14px;
+    font-size:12px;
+    font-weight:650;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all .2s var(--ease);
+    animation:chipIn .35s var(--ease-out) backwards;
+  }
+  .section-chip:hover{
+    border-color:var(--teal);
+    color:var(--teal-dark);
+    background:var(--teal-wash);
+    transform:translateY(-1px);
+  }
+  @keyframes chipIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+
+  /* ---------- панели с дэшбордами ---------- */
+  .panels{ position:relative; }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; animation:panelIn .42s var(--ease-out); }
+  @keyframes panelIn{
+    from{ opacity:0; transform:translateY(14px); }
+    to{ opacity:1; transform:none; }
+  }
+  .iframe-wrap{
+    background:transparent;
+    border:none;
+    border-radius:0;
+    overflow:hidden;
+  }
+  iframe.dash-frame{
+    width:100%;
+    border:none;
+    display:block;
+    background:transparent;
+    min-height:520px;
+  }
+  .frame-skeleton{
+    display:grid;
+    gap:16px;
+    padding:4px 0 12px;
+  }
+  .frame-skeleton .sk{
+    border-radius:18px;
+    background:linear-gradient(100deg, rgba(255,253,247,.75) 30%, rgba(255,255,255,.98) 50%, rgba(255,253,247,.75) 70%);
+    background-size:220% 100%;
+    border:1px solid var(--line);
+    animation:shimmer 1.4s linear infinite;
+  }
+  .frame-skeleton .sk.h1{ height:96px; }
+  .frame-skeleton .sk.h2{ height:280px; }
+  @keyframes shimmer{ from{ background-position:120% 0; } to{ background-position:-120% 0; } }
+
+  /* ---------- всплывающие уведомления ---------- */
+  .toast-stack{
+    position:fixed;
+    right:22px; bottom:22px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    z-index:90;
+  }
+  .toast{
+    background:var(--ink);
+    color:#fffdf7;
+    border-radius:14px;
+    padding:13px 18px;
+    font-size:13px;
+    font-weight:600;
+    box-shadow:var(--shadow-3);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    animation:toastIn .32s var(--ease-out);
+    max-width:340px;
+  }
+  .toast.out{ animation:toastOut .28s var(--ease) forwards; }
+  .toast.ok{ background:#14524a; }
+  .toast.error{ background:#7d2a23; }
+  @keyframes toastIn{ from{ opacity:0; transform:translateY(14px) scale(.96); } to{ opacity:1; transform:none; } }
+  @keyframes toastOut{ to{ opacity:0; transform:translateY(10px) scale(.97); } }
+
+  /* ---------- подвал ---------- */
+  .brand-footer{
+    margin-top:26px;
+    padding:18px 34px 26px;
+    border-top:1px solid rgba(30,26,18,.14);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    flex-wrap:wrap;
+    font-size:11.5px;
+    color:var(--clay);
+  }
+  .brand-footer .mini-mark{ display:flex; align-items:center; gap:9px; color:var(--ink); }
+  .brand-footer .mini-mark svg{ width:26px; height:26px; }
+  .brand-footer .mini-mark b{ font-size:15px; font-weight:600; letter-spacing:.02em; }
+
+  .to-top{
+    position:fixed;
+    right:22px; bottom:22px;
+    width:46px; height:46px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--teal-dark);
+    font-size:17px;
+    cursor:pointer;
+    box-shadow:var(--shadow-2);
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(10px);
+    transition:opacity .25s var(--ease), transform .25s var(--ease), background .2s var(--ease);
+    z-index:70;
+  }
+  .to-top.show{ opacity:1; pointer-events:auto; transform:none; }
+  .to-top:hover{ background:var(--teal); color:#fff; border-color:var(--teal); }
+
+  @media (max-width:760px){
+    :root{ --rail:0px; }
+    .ornament-rail{ display:none; }
+    .brand-bar{ padding:20px 18px 16px; }
+    .brand-bar h1{ font-size:24px; }
+    .shell-body{ padding:0 16px 30px; }
+    .tabbar{ margin:0 -16px 16px; padding:10px 16px; }
+    .brand-footer{ padding:16px 18px 22px; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- орнаментальная колонка (фирменный элемент) -->
+<aside class="ornament-rail" id="ornRail" aria-hidden="true"></aside>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- фирменные орнаментальные знаки -->
+    <symbol id="orn-koshkar" viewBox="0 0 32 32">
+      <path d="M16 27V13M16 13c0-5 4-8 8-8 3 0 5 2 5 4.5S27 14 24.5 14 21 12 22 10.5"
+            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <path d="M16 13c0-5-4-8-8-8-3 0-5 2-5 4.5S5.5 14 8 14s3.5-2 2.5-3.5"
+            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="orn-drop" viewBox="0 0 32 32">
+      <path d="M16 4c5 5.5 8 9.5 8 13.5A8 8 0 1 1 8 17.5C8 13.5 11 9.5 16 4Z"
+            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+      <circle cx="16" cy="18" r="3.2" fill="currentColor"/>
+    </symbol>
+    <symbol id="orn-flower" viewBox="0 0 32 32">
+      <path d="M16 5c2.6 2.4 3.8 4.8 3.8 7.2S18.6 17 16 19c-2.6-2-3.8-4.4-3.8-6.8S13.4 7.4 16 5Z" fill="currentColor"/>
+      <path d="M7 14c3.2.4 5.4 1.6 6.6 3.4M25 14c-3.2.4-5.4 1.6-6.6 3.4M16 19v8"
+            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="16" cy="27" r="1.8" fill="currentColor"/>
+    </symbol>
+    <symbol id="orn-sun" viewBox="0 0 32 32">
+      <circle cx="16" cy="16" r="5" fill="currentColor"/>
+      <circle cx="16" cy="16" r="9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="2.6 3.4"/>
+      <circle cx="16" cy="16" r="13.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1.6 3.6"/>
+    </symbol>
+    <symbol id="orn-bird" viewBox="0 0 32 32">
+      <path d="M6 20c4-1 6.5-3.5 8-7 1 3.5 3 5.5 6 6.5-1.5 4-5 6.5-9 6.5-2.6 0-4.4-2-5-6Z" fill="currentColor"/>
+      <path d="M20 12.5c1.4-2.5 3.4-3.8 6-4-1 2.4-1.6 4.4-1.6 6.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+      <circle cx="16.5" cy="13.5" r="1.2" fill="currentColor"/>
+    </symbol>
+    <symbol id="orn-diamond" viewBox="0 0 32 32">
+      <path d="M16 3 29 16 16 29 3 16Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M16 9.5 22.5 16 16 22.5 9.5 16Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="orn-tulip" viewBox="0 0 32 32">
+      <path d="M16 6c3 3 5 6 5 9a5 5 0 0 1-10 0c0-3 2-6 5-9Z" fill="currentColor"/>
+      <path d="M16 20v8M11 24c1.8-.4 3.4 0 5 1M21 24c-1.8-.4-3.4 0-5 1"
+            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="orn-spiral" viewBox="0 0 32 32">
+      <path d="M16 26c-5.5 0-10-4.5-10-10S10.5 6 16 6s9 4 9 8.5-3.5 7.5-7.5 7.5-6.5-2.6-6.5-5.6 2.4-5.4 5.2-5.4 4.4 1.8 4.4 3.8-1.4 3.2-3 3.2"
+            fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+    </symbol>
+    <!-- знак «птица» для логотипа -->
+    <symbol id="mark-aitas" viewBox="0 0 64 64">
+      <path d="M14 46c8-2 13.5-7 16-15 2.2 7.5 6.4 11.8 12.5 13.5C39.5 52 32 56 23.5 56 18 56 14.8 52.5 14 46Z"
+            fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M40 28c3-5.5 7.4-8.4 13-8.6-2.2 5.2-3.4 9.6-3.4 13.4"
+            fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path d="M30 31c-1.5-6 .5-11 6-15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="34" cy="30" r="2.1" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="brand-bar">
+  <div class="title-block">
+    <span class="eyebrow">Контроль качества · санитария</span>
+    <h1>Сводный дэшборд качества мойки и МБ смывов</h1>
+    <p class="lead">
+      Файл «Свод рабочих журналов МБ» загружается один раз и автоматически расходится по всем вкладкам.
+      Акты приёма мойки — отдельный файл на каждой вкладке. Каждый блок можно выгрузить как готовый слайд PNG для отчёта.
+    </p>
+  </div>
+  <div class="logo-lockup">
+    <svg class="mark" aria-hidden="true"><use href="#mark-aitas"></use></svg>
+    <div class="word">
+      <b>aitas ukpf</b>
+      <span>усть-каменогорская птицефабрика</span>
+    </div>
+  </div>
+</header>
+
+<div class="shell-body">
+
+  <h2 class="section-title">Исходные данные</h2>
+  <div class="intake">
+    <div class="shared-upload" id="sharedDz" tabindex="0" role="button"
+         aria-label="Загрузить общий файл «Свод рабочих журналов МБ»">
+      <input type="file" id="sharedFileInput" accept=".xlsx,.xls">
+      <div class="icon">🧫</div>
+      <div class="txt">
+        <h3>Свод рабочих журналов МБ — общий файл</h3>
+        <div class="hint">
+          Excel (.xlsx). Загрузите один раз — данные уйдут во все вкладки, каждая отфильтрует свои строки.
+          Можно перетащить файл прямо сюда.
+        </div>
+        <div class="status-line" id="sharedStatus"></div>
+      </div>
+    </div>
+
+    <div class="status-card">
+      <div class="status-head">Приём файла по вкладкам</div>
+      <div class="mb-status-item" id="mbStatus-incubation"><span class="dot"></span><span class="txt">Цех инкубации — ожидание файла</span></div>
+      <div class="mb-status-item" id="mbStatus-zpp"><span class="dot"></span><span class="txt">ЗПП — ожидание файла</span></div>
+      <div class="mb-status-item" id="mbStatus-broiler"><span class="dot"></span><span class="txt">Бройлерное производство — ожидание файла</span></div>
+    </div>
+  </div>
+
+  <div class="tabbar" id="tabbar">
+    <div class="tabbar-row">
+      <div class="tabs" id="tabs">
+        <span class="tab-indicator" id="tabIndicator"></span>
+        <button class="tab-btn active" data-tab="incubation"><span class="tab-dot"></span>Цех инкубации</button>
+        <button class="tab-btn" data-tab="zpp"><span class="tab-dot"></span>ЗПП</button>
+        <button class="tab-btn" data-tab="broiler"><span class="tab-dot"></span>Бройлерное производство</button>
+      </div>
+      <button class="btn btn-primary" id="btnExportAll" title="Скачать все слайды активной вкладки в PNG">
+        <span class="spin"></span><span class="lbl">🖼 Скачать все слайды вкладки</span>
+      </button>
+      <button class="btn btn-ghost" id="btnScrollTop">↑ К началу</button>
+    </div>
+    <div class="section-rail" id="sectionRail">
+      <span class="rail-label">Разделы:</span>
+    </div>
+  </div>
+
+  <div class="panels">
+    <div class="tab-panel active" id="panel-incubation">
+      <div class="iframe-wrap">
+        <div class="frame-skeleton" id="sk-incubation"><div class="sk h1"></div><div class="sk h2"></div></div>
+        <iframe class="dash-frame" id="frame-incubation" title="Дэшборд цеха инкубации"></iframe>
+      </div>
+    </div>
+    <div class="tab-panel" id="panel-zpp">
+      <div class="iframe-wrap">
+        <div class="frame-skeleton" id="sk-zpp"><div class="sk h1"></div><div class="sk h2"></div></div>
+        <iframe class="dash-frame" id="frame-zpp" title="Дэшборд ЗПП"></iframe>
+      </div>
+    </div>
+    <div class="tab-panel" id="panel-broiler">
+      <div class="iframe-wrap">
+        <div class="frame-skeleton" id="sk-broiler"><div class="sk h1"></div><div class="sk h2"></div></div>
+        <iframe class="dash-frame" id="frame-broiler" title="Дэшборд бройлерного производства"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="brand-footer">
+  <div class="mini-mark">
+    <svg aria-hidden="true"><use href="#mark-aitas"></use></svg>
+    <b>aitas</b>
+  </div>
+  <div>Сводный дэшборд качества мойки и МБ смывов · АО «Усть-Каменогорская птицефабрика»</div>
+</footer>
+
+<button class="to-top" id="toTop" title="Наверх" aria-label="Наверх">↑</button>
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* ==========================================================================
+   Оболочка дэшборда: вкладки, общий файл, навигация по разделам, экспорт
+   ========================================================================== */
+const DASH_B64 = __DASH_B64_JSON__;
+
+const KEYS = ['incubation','zpp','broiler'];
+const TAB_LABELS = {
+  incubation: 'Цех инкубации',
+  zpp: 'ЗПП',
+  broiler: 'Бройлерное производство'
+};
+
+const frames = {};
+const frameReady = {};
+const sections = { incubation:[], zpp:[], broiler:[] };
+let sharedMbFile = null;
+let activeKey = 'incubation';
+
+/* ---------- орнаментальная колонка ---------- */
+(function buildRail(){
+  const rail = document.getElementById('ornRail');
+  const glyphs = ['orn-bird','orn-koshkar','orn-drop','orn-tulip','orn-flower','orn-sun','orn-diamond','orn-spiral'];
+  const count = Math.max(8, Math.ceil(window.innerHeight / 50));
+  for(let i = 0; i < count; i++){
+    const g = glyphs[i % glyphs.length];
+    const cell = document.createElement('div');
+    cell.className = 'orn' + (i % 4 === 3 ? ' plain' : '');
+    cell.style.animationDelay = (i * 45) + 'ms';
+    cell.innerHTML = '<svg><use href="#' + g + '"></use></svg>';
+    rail.appendChild(cell);
+  }
+})();
+
+/* ---------- уведомления ---------- */
+function toast(text, kind, ttl){
+  const stack = document.getElementById('toastStack');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.textContent = text;
+  stack.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 300);
+  }, ttl || 3200);
+  return el;
+}
+
+/* ---------- «волна» на кнопках ---------- */
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn, .tab-btn, .section-chip');
+  if(!btn || btn.disabled) return;
+  const rect = btn.getBoundingClientRect();
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const size = Math.max(rect.width, rect.height) * 1.05;
+  r.style.width = r.style.height = size + 'px';
+  r.style.left = (e.clientX - rect.left) + 'px';
+  r.style.top = (e.clientY - rect.top) + 'px';
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+});
+
+/* ---------- вкладки ---------- */
+function moveIndicator(){
+  const active = document.querySelector('.tab-btn.active');
+  const ind = document.getElementById('tabIndicator');
+  if(!active || !ind) return;
+  ind.style.width = active.offsetWidth + 'px';
+  ind.style.transform = 'translateX(' + (active.offsetLeft - 4) + 'px)';
+}
+
+function switchTab(key, scroll){
+  if(!KEYS.includes(key)) return;
+  activeKey = key;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === key));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + key));
+  moveIndicator();
+  renderSectionRail();
+  resizeFrame(key);
+  // графики внутри скрытой вкладки рисуются в нулевую ширину — просим пересчитать
+  const f = frames[key];
+  if(f && f.contentWindow){
+    const nudge = () => { try{ f.contentWindow.dispatchEvent(new Event('resize')); resizeFrame(key); }catch(e){} };
+    nudge();
+    setTimeout(nudge, 260);
+  }
+  if(scroll){
+    const top = document.getElementById('tabbar').offsetTop;
+    window.scrollTo({ top: Math.max(0, top - 4), behavior:'smooth' });
+  }
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab, true));
+});
+window.addEventListener('resize', moveIndicator);
+window.addEventListener('load', moveIndicator);
+moveIndicator();
+
+// быстрые переключения: Alt+1 / Alt+2 / Alt+3
+document.addEventListener('keydown', (e) => {
+  if(!e.altKey) return;
+  const i = ['1','2','3'].indexOf(e.key);
+  if(i > -1){ e.preventDefault(); switchTab(KEYS[i], true); }
+});
+
+/* ---------- навигация по разделам активной вкладки ---------- */
+function renderSectionRail(){
+  const rail = document.getElementById('sectionRail');
+  rail.querySelectorAll('.section-chip').forEach(c => c.remove());
+  const list = sections[activeKey] || [];
+  list.forEach((s, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'section-chip';
+    chip.type = 'button';
+    chip.textContent = s.title.replace(/^[^\p{L}\d]+/u, '').slice(0, 44);
+    chip.style.animationDelay = (i * 40) + 'ms';
+    chip.addEventListener('click', () => {
+      const f = frames[activeKey];
+      if(f && f.contentWindow) f.contentWindow.postMessage({ type:'aitas-scroll-to', id:s.id }, '*');
+    });
+    rail.appendChild(chip);
+  });
+  rail.style.display = list.length ? 'flex' : 'none';
+}
+
+/* ---------- статусы приёма файла ---------- */
+function updateTabMbStatus(key, state, detail){
+  const el = document.getElementById('mbStatus-' + key);
+  const dot = document.querySelector('.tab-btn[data-tab="' + key + '"] .tab-dot');
+  if(!el) return;
+  const label = TAB_LABELS[key] || key;
+  el.classList.remove('ok','error','pending');
+  if(dot) dot.classList.remove('ok','error','pending');
+  const txt = el.querySelector('.txt');
+  if(state === 'sending'){
+    el.classList.add('pending'); if(dot) dot.classList.add('pending');
+    txt.textContent = label + ' — передача файла…';
+  }else if(state === 'ok'){
+    el.classList.add('ok'); if(dot) dot.classList.add('ok');
+    txt.textContent = label + ' — принято: ' + detail;
+  }else if(state === 'error'){
+    el.classList.add('error'); if(dot) dot.classList.add('error');
+    txt.textContent = label + ' — ошибка: ' + detail;
+  }else{
+    txt.textContent = label + ' — ожидание файла';
+  }
+}
+
+/* ---------- инициализация панелей ---------- */
+function decodeUtf8Base64(b64){
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function initFrame(key){
+  const iframe = document.getElementById('frame-' + key);
+  frames[key] = iframe;
+  frameReady[key] = false;
+  iframe.srcdoc = decodeUtf8Base64(DASH_B64[key]);
+  iframe.addEventListener('load', () => {
+    try{ iframe.contentDocument.body.classList.add('embedded-in-shell'); }catch(e){}
+    frameReady[key] = true;
+    const sk = document.getElementById('sk-' + key);
+    if(sk){ sk.style.opacity = '0'; setTimeout(() => sk.remove(), 250); }
+    resizeFrame(key);
+    if(sharedMbFile) sendFileToFrame(key, sharedMbFile);
+  });
+}
+
+function resizeFrame(key){
+  const iframe = frames[key];
+  if(!iframe) return;
+  try{
+    const d = iframe.contentWindow.document;
+    const h = Math.max(d.documentElement.scrollHeight, d.body ? d.body.scrollHeight : 0);
+    if(h > 0) iframe.style.height = (h + 24) + 'px';
+  }catch(e){}
+}
+
+function sendFileToFrame(key, file){
+  const iframe = frames[key];
+  if(!iframe || !frameReady[key]) return;
+  updateTabMbStatus(key, 'sending');
+  file.arrayBuffer().then(buf => {
+    iframe.contentWindow.postMessage({ type:'mb-file', name:file.name, buffer:buf }, '*');
+  }).catch(err => {
+    updateTabMbStatus(key, 'error', 'не удалось прочитать файл: ' + err.message);
+  });
+}
+
+/* ---------- сообщения от панелей ---------- */
+let exportBtnState = null;
+
+window.addEventListener('message', (e) => {
+  const d = e.data;
+  if(!d || typeof d !== 'object') return;
+
+  if(d.type === 'mb-status'){
+    if(d.ok){
+      updateTabMbStatus(d.key, 'ok', d.count + ' записей');
+    }else{
+      updateTabMbStatus(d.key, 'error', d.error || 'ошибка обработки');
+      toast(TAB_LABELS[d.key] + ': ' + (d.error || 'ошибка обработки файла'), 'error', 5000);
+    }
+  }
+
+  if(d.type === 'aitas-sections'){
+    sections[d.key] = d.sections || [];
+    if(d.key === activeKey) renderSectionRail();
+  }
+
+  if(d.type === 'aitas-scroll-request'){
+    const wrap = document.getElementById('panel-' + d.key);
+    if(!wrap) return;
+    const top = wrap.getBoundingClientRect().top + window.pageYOffset + d.y - 96;
+    window.scrollTo({ top:Math.max(0, top), behavior:'smooth' });
+  }
+
+  if(d.type === 'aitas-export-progress' && exportBtnState){
+    exportBtnState.toast.textContent = 'Готовим слайды: ' + (d.done + 1) + ' из ' + d.total + '…';
+  }
+
+  if(d.type === 'aitas-export-done'){
+    const btn = document.getElementById('btnExportAll');
+    btn.classList.remove('busy');
+    btn.disabled = false;
+    if(exportBtnState){
+      exportBtnState.toast.classList.add('out');
+      setTimeout(() => exportBtnState.toast.remove(), 300);
+      exportBtnState = null;
+    }
+    if(d.total > 0) toast('Готово: слайдов выгружено — ' + d.total, 'ok');
+    else toast('На этой вкладке пока нечего выгружать — сначала загрузите файлы', 'error', 4200);
+  }
+});
+
+/* ---------- выгрузка всех слайдов активной вкладки ---------- */
+document.getElementById('btnExportAll').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  const f = frames[activeKey];
+  if(!f || !frameReady[activeKey]) return;
+  btn.classList.add('busy');
+  btn.disabled = true;
+  exportBtnState = { toast: toast('Готовим слайды…', '', 60000) };
+  f.contentWindow.postMessage({ type:'aitas-export-all' }, '*');
+});
+
+/* ---------- общий файл «Свод» ---------- */
+const sharedDz = document.getElementById('sharedDz');
+const sharedInput = document.getElementById('sharedFileInput');
+const sharedStatus = document.getElementById('sharedStatus');
+
+function handleSharedFile(file){
+  sharedMbFile = file;
+  sharedDz.classList.add('loaded');
+  sharedStatus.classList.remove('error');
+  sharedStatus.textContent = '✓ ' + file.name + ' — расходится по вкладкам…';
+  KEYS.forEach(key => sendFileToFrame(key, file));
+  toast('Файл «' + file.name + '» отправлен во все вкладки', 'ok');
+  setTimeout(() => {
+    sharedStatus.textContent = '✓ ' + file.name + ' загружен. Статус по вкладкам — справа.';
+  }, 700);
+}
+
+sharedDz.addEventListener('click', () => sharedInput.click());
+sharedDz.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); sharedInput.click(); }
+});
+sharedInput.addEventListener('change', (e) => {
+  if(e.target.files.length) handleSharedFile(e.target.files[0]);
+});
+sharedDz.addEventListener('dragover', (e) => { e.preventDefault(); sharedDz.classList.add('dragover'); });
+sharedDz.addEventListener('dragleave', () => sharedDz.classList.remove('dragover'));
+sharedDz.addEventListener('drop', (e) => {
+  e.preventDefault();
+  sharedDz.classList.remove('dragover');
+  if(e.dataTransfer.files.length) handleSharedFile(e.dataTransfer.files[0]);
+});
+
+/* ---------- прокрутка: прогресс, «наверх», липкая панель вкладок ---------- */
+const progress = document.getElementById('scrollProgress');
+const toTop = document.getElementById('toTop');
+const tabbar = document.getElementById('tabbar');
+
+function onScroll(){
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  const p = h > 0 ? window.pageYOffset / h : 0;
+  progress.style.transform = 'scaleX(' + p + ')';
+  toTop.classList.toggle('show', window.pageYOffset > 600);
+  tabbar.classList.toggle('stuck', tabbar.getBoundingClientRect().top <= 0.5);
+}
+window.addEventListener('scroll', onScroll, { passive:true });
+onScroll();
+
+toTop.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+document.getElementById('btnScrollTop').addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+/* ---------- старт ---------- */
+KEYS.forEach(initFrame);
+setInterval(() => KEYS.forEach(key => { if(frameReady[key]) resizeFrame(key); }), 900);
+renderSectionRail();
+</script>
+
+</body>
+</html>
