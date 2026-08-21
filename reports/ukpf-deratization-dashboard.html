@@ -141,6 +141,7 @@ h1{font-size:clamp(27px,3.6vw,40px); font-weight:800; letter-spacing:-.03em; mar
 .kp-none{font-size:12.5px; color:var(--muted);}
 .wrap-seg{flex-wrap:wrap; align-self:flex-start;}
 .seg button[aria-pressed="false"]{opacity:.62;}
+.seg.num button{min-width:30px; padding:6px 9px; font-family:"IBM Plex Mono",monospace; font-weight:600;}
 .strip{
   background:var(--ink); color:var(--sand); border-radius:var(--r); padding:16px 22px;
   font-size:14px; box-shadow:var(--sh); line-height:1.55;
@@ -340,10 +341,13 @@ tr.hl td{background:var(--teal-wash);}
           <button data-own="kkz" aria-pressed="true">ККЗ</button>
           <button data-own="abk" aria-pressed="true">АБК</button>
         </div>
-        <span class="ctl-lbl">Численность</span>
-        <div class="seg wrap-seg" role="group" aria-label="Численность">
-          <button data-head="2">2 дератизатора</button>
-          <button data-head="4" aria-pressed="true">4 дератизатора</button>
+        <span class="ctl-lbl">Численность, человек</span>
+        <div class="seg wrap-seg num" role="group" aria-label="Численность">
+          <button data-head="2">2</button><button data-head="3">3</button>
+          <button data-head="4" aria-pressed="true">4</button><button data-head="5">5</button>
+          <button data-head="6">6</button><button data-head="7">7</button>
+          <button data-head="8">8</button><button data-head="9">9</button>
+          <button data-head="10">10</button>
         </div>
         <span class="ctl-lbl">Что считаем</span>
         <div class="seg wrap-seg" role="group" aria-label="Составляющие">
@@ -445,7 +449,7 @@ tr.hl td{background:var(--teal-wash);}
           <tbody id="tbHead"></tbody>
         </table>
       </div>
-      <p class="hint">Материалы от численности не зависят: норма ядов и станций привязана к точкам, а не к людям. Каждые +2 дератизатора добавляют только фонд оплаты труда.</p>
+      <p class="hint" id="headHint">—</p>
     </div>
 
     <div class="card">
@@ -803,13 +807,16 @@ function render(){
     [money(u.s.mat*WARM+u.w.mat*COLD), "материалы за год, от численности не зависят"]
   ].map(x=>`<div class="tile"><span class="tv n">${x[0]}</span><span class="tl">${x[1]}</span></div>`).join("");
 
-  document.getElementById("tbHead").innerHTML=[2,4].map(h=>{
+  document.getElementById("tbHead").innerHTML=[2,3,4,5,6,7,8,9,10].map(h=>{
     const uu=ukpf(h), matY=uu.s.mat*WARM+uu.w.mat*COLD;
-    return `<tr class="${h===head?"hl":""}"><td>${h} дератизатора</td>
+    return `<tr class="${h===head?"hl":""}"><td>${h} ${h>=5?"человек":"дератизатора"}</td>
       <td class="n">${money(uu.salary)}</td><td class="n">${money(uu.salary*12)}</td>
       <td class="n">${money(uu.s.mat)}</td><td class="n">${money(uu.w.mat)}</td><td class="n">${money(matY)}</td>
       <td class="n">${money(uu.salary*12+matY)}</td></tr>`;
   }).join("");
+
+  document.getElementById("headHint").innerHTML =
+    `Материалы от численности не зависят: норма ядов и станций привязана к точкам, а не к людям. Каждый дополнительный дератизатор добавляет только фонд оплаты труда — <b>${money(u.per)}</b> в месяц, <b>${money(u.per*12)}</b> в год.`;
 
   const L=[
     ["Фонд оплаты труда",head+" чел., 5/2",money(u.per)+" / чел",u.s.salary,u.w.salary],
