@@ -17,8 +17,6 @@ import {
 const HF_BG = "data:image/jpeg;base64,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";
 
 
-/* Атмосферный подклад интро-сцены — тоже Higgsfield (nano_banana_pro), data-URI. */
-const HF_INTRO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDACweISchHCwnJCcyLyw1Qm9IQj09QohhZlBvoY2ppp6Nm5ixx//Ysbzxv5ib3v/g8f//////rNX/////////////2wBDAS8yMkI6QoJISIL/t5u3////////////////////////////////////////////////////////////////////wAARCAE4AjADASIAAhEBAxEB/8QAGQABAQEBAQEAAAAAAAAAAAAAAAEDAgQF/8QALRABAAICAAQEBQQDAQAAAAAAAAECAxESITFRBCIyQRMjYXGBFDNCkQVSoTT/xAAXAQEBAQEAAAAAAAAAAAAAAAAAAQID/8QAGxEBAQEBAAMBAAAAAAAAAAAAAAERMQIhQRL/2gAMAwEAAhEDEQA/APeA5tAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKAAoKigAoAAKAqCgAAAAAAAAAAAACAAgCKgqAIqAgCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACgKAAKAAoAKigAqoAAAAAAAAAAAAAAgqAIqIoioAigOQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAUFRQAUAAFAVBQAAAAAAAAAAAAAAARUARQEARUAByAgAAAAAAAAAAAAAAAAAAAAAAAAAAAmwUczZnbNWPdcVrs28/xbT6aSu8s+0QuDfiOJhrL3g1l7wYPRtdvNvLHtEnxbR6qSYPSrCuas+7SLbTEdqkSoCooACooAAAAAAAAAAAAAAACKgAAIAioADkBAAAAAAAAAAAAAAAAAAAAAAAAATZM6ZZMkV+/ZcV3a+mU5ZtOqRv6pFLZJ3fp2bVpERyheDGMVreu34hpXFEdIaRCpo54V4VNoiaXUGzahwpwrtQZWxRbrDOcVq+i0/aXpNLowrlms6vGvq2reJS1ImOcMZpbHO6dOy9HqiVYY8sW+k9m0TtBQBFAAAAAAAAAAAAAAAARQEABAEVAAcgIAAAAAAAAAAAAAAAAAAAAAACTOiZ0xy5Nco5zKyKmTJO+GvOy48euc85XFj1znnM9ZaxGl0IjSo5m2mU11MuZtpnN5tOqx+SMe+dp21jO7xZyx7c/snHeelf7aRSI6Q64TYZWPzO0L8ztDXS6NPyx47x1r/Sxlj35fdrwuZpE9YNiZVi8S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";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    1. ДИЗАЙН-ТОКЕНЫ — светлая премиальная тема по умолчанию + тёмная
@@ -2195,393 +2193,209 @@ function CaseModal({ T, onClose }) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   7.5 ИНТРО: что такое биобезопасность и почему контуров два.
-   Четырёхтактная зацикленная сцена: объект → угроза → барьер → два контура.
+   7.5 ИНТРО: биобезопасность — 26 направлений, которые делятся на два контура.
+   Клик по сцене разводит общий круг на внешний и внутренний контур.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const IVB = { w: 960, h: 470 };
-const ICC = { x: 480, y: 222 };
+const IVB = { w: 960, h: 406 };
+const ICC = { x: 480, y: 186 };
+const IEXT = { x: 246, y: 186 };
+const IINT = { x: 714, y: 186 };
 
-const THREATS = [
-  { x: 96,  y: 78,  label: "Транспорт",       kind: "truck"  },
-  { x: 64,  y: 236, label: "Люди",            kind: "person" },
-  { x: 96,  y: 392, label: "Сырьё и ТМЦ",     kind: "box"    },
-  { x: 864, y: 78,  label: "Подрядчики",      kind: "person" },
-  { x: 896, y: 236, label: "Грызуны и птица", kind: "bug"    },
-  { x: 864, y: 392, label: "Техника",         kind: "truck"  },
-];
-
-const INTRO_STEPS = [
-  {
-    eyebrow: "01 · объект",
-    title: "Есть живое производство",
-    text: "Площадка работает непрерывно: птица, корма, техника, люди, сырьё и готовая продукция движутся каждый день.",
-    tone: "blue",
-  },
-  {
-    eyebrow: "02 · угроза",
-    title: "Возбудитель заходит вместе с потоком",
-    text: "Инфекция не появляется сама: её привозят транспорт и тара, приносят люди, заносят грызуны и дикая птица.",
-    tone: "red",
-  },
-  {
-    eyebrow: "03 · защита",
-    title: "Биобезопасность — это барьер вокруг объекта",
-    text: "Система правил, обработок и проверок, которая не даёт возбудителю попасть на площадку и закрепиться на ней.",
-    tone: "teal",
-  },
-  {
-    eyebrow: "04 · два контура",
-    title: "Барьер делится на два контура",
-    text: "Внешний контур — всё, что заходит на территорию. Внутренний контур — всё, что происходит и перемещается внутри.",
-    tone: "violet",
-  },
-];
-
-function ThreatGlyph({ T, kind, c }) {
-  if (kind === "truck")
-    return (
-      <g>
-        <rect x={-15} y={-6} width="19" height="13" rx="3" fill={c} />
-        <rect x={3} y={-2} width="10" height="9" rx="2.5" fill={c} opacity="0.62" />
-        <circle cx={-8} cy={9} r="2.6" fill={T.text} opacity="0.45" />
-        <circle cx={8} cy={9} r="2.6" fill={T.text} opacity="0.45" />
-      </g>
-    );
-  if (kind === "person")
-    return (
-      <g>
-        <circle cx={0} cy={-7} r="5.4" fill={c} />
-        <path d="M -7 11 L -6 -1 Q 0 -5 6 -1 L 7 11 Z" fill={c} opacity="0.82" />
-      </g>
-    );
-  if (kind === "box")
-    return (
-      <g>
-        <rect x={-9} y={-8} width="18" height="16" rx="2.6" fill={c} opacity="0.9" />
-        <line x1={0} y1={-8} x2={0} y2={8} stroke={T.surface} strokeWidth="1.6" opacity="0.8" />
-        <line x1={-9} y1={-1} x2={9} y2={-1} stroke={T.surface} strokeWidth="1.4" opacity="0.55" />
-      </g>
-    );
-  return (
-    <g>
-      <ellipse cx={0} cy={0} rx="6.2" ry="8.4" fill={c} opacity="0.92" />
-      <line x1={-9} y1={-6} x2={-3.5} y2={-2.5} stroke={c} strokeWidth="1.7" strokeLinecap="round" />
-      <line x1={9} y1={-6} x2={3.5} y2={-2.5} stroke={c} strokeWidth="1.7" strokeLinecap="round" />
-      <line x1={-9} y1={5} x2={-4} y2={2.5} stroke={c} strokeWidth="1.7" strokeLinecap="round" />
-      <line x1={9} y1={5} x2={4} y2={2.5} stroke={c} strokeWidth="1.7" strokeLinecap="round" />
-    </g>
-  );
-}
-
-/* производственная площадка в центре сцены */
-function IntroCore({ T, alarmed }) {
-  const roof = (x, w, h, fill) => (
-    <g>
-      <rect x={x} y={-h / 2} width={w} height={h} rx="3" fill={fill} />
-      <path d={`M ${x - 3} ${-h / 2} L ${x + w / 2} ${-h / 2 - 9} L ${x + w + 3} ${-h / 2} Z`} fill={fill} opacity="0.75" />
-    </g>
-  );
-  return (
-    <g transform={`translate(${ICC.x}, ${ICC.y})`}>
-      <ellipse cx={0} cy={40} rx="96" ry="15" fill={T.ground} opacity={T.key === "dark" ? 0.35 : 0.55} />
-      <motion.g
-        animate={alarmed ? { x: [0, -1.4, 1.4, 0] } : { x: 0 }}
-        transition={alarmed ? { duration: 0.45, repeat: Infinity, ease: "easeInOut" } : { duration: 0.4 }}
-      >
-        <g transform="translate(-58, 8)">{roof(0, 42, 34, T.blue)}</g>
-        <g transform="translate(2, 2)">{roof(0, 50, 44, T.cyan)}</g>
-        <g transform="translate(60, 12)">{roof(0, 34, 28, T.teal)}</g>
-        {/* птица */}
-        <g transform="translate(-4, -46)">
-          <ellipse cx={0} cy={0} rx="11" ry="9" fill={T.amber} opacity="0.95" />
-          <circle cx={9} cy={-7} r="5" fill={T.amber} />
-          <path d="M 13 -9 L 19 -7 L 13 -5 Z" fill={T.red} opacity="0.85" />
-          <path d="M -10 -6 q -3 -6 2 -7 q 2 4 1 7 Z" fill={T.red} opacity="0.6" />
-        </g>
-      </motion.g>
-      <text x={0} y={64} textAnchor="middle" fontSize="12.5" letterSpacing="1.4" fontWeight="700" fill={T.faint}>
-        ПРОИЗВОДСТВЕННАЯ ПЛОЩАДКА
-      </text>
-    </g>
-  );
-}
+const SHIELD = "M 0 -50 L 21 -42 L 21 -25 Q 21 -8 0 -1 Q -21 -8 -21 -25 L -21 -42 Z";
 
 function BiosecurityIntro({ T }) {
-  const [step, setStep] = useState(0);
-  const [auto, setAuto] = useState(true);
+  const [split, setSplit] = useState(false);
 
-  useEffect(() => {
-    if (!auto) return;
-    const id = setInterval(() => setStep((s) => (s + 1) % INTRO_STEPS.length), 4200);
-    return () => clearInterval(id);
-  }, [auto]);
+  const ext = TASKS.filter((t) => t.contour === "external");
+  const int = TASKS.filter((t) => t.contour === "internal");
 
-  const S = INTRO_STEPS[step];
-  const toneOf = { blue: T.blue, red: T.red, teal: T.teal, violet: T.violet };
-  const accent = toneOf[S.tone];
+  const dots = TASKS.map((t, i) => {
+    const am = ((-90 + (i * 360) / TASKS.length) * Math.PI) / 180;
+    const isExt = t.contour === "external";
+    const list = isExt ? ext : int;
+    const j = list.indexOf(t);
+    const as = ((-90 + (j * 360) / list.length) * Math.PI) / 180;
+    const c = isExt ? IEXT : IINT;
+    const rr = isExt ? 108 : 114;
+    return {
+      id: t.id,
+      i,
+      mx: ICC.x + 160 * Math.cos(am),
+      my: ICC.y + 160 * Math.sin(am),
+      sx: c.x + rr * Math.cos(as),
+      sy: c.y + rr * Math.sin(as),
+      color: isExt ? T.violet : T.cyan,
+    };
+  });
 
-  const shielded = step >= 2;
-  const split = step === 3;
-  const stopR = split ? 186 : shielded ? 152 : 44;
-
-  const outerScale = split ? 1.86 : shielded ? 1.52 : 1.52;
-  const outerColor = split ? T.violet : T.teal;
+  const spring = { type: "spring", stiffness: 90, damping: 18, mass: 0.9 };
 
   return (
-    <div>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-        {/* ── сцена ─────────────────────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-2xl"
-             style={{ background: T.panel, border: `1px solid ${T.border}` }}>
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              backgroundImage: `url(${HF_INTRO})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              opacity: T.key === "dark" ? 0.12 : 0.3,
-            }}
-          />
-          <svg viewBox={`0 0 ${IVB.w} ${IVB.h}`} className="relative block w-full">
-            <defs>
-              <radialGradient id="intro-core" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={T.surface} stopOpacity={T.key === "dark" ? 0.5 : 0.95} />
-                <stop offset="100%" stopColor={T.surface} stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="intro-alarm" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={T.red} stopOpacity="0.22" />
-                <stop offset="100%" stopColor={T.red} stopOpacity="0" />
-              </radialGradient>
-            </defs>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => setSplit((v) => !v)}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSplit((v) => !v); }}
+      className="relative cursor-pointer select-none overflow-hidden rounded-2xl outline-none"
+      style={{ background: T.panel, border: `1px solid ${T.border}` }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `radial-gradient(60% 70% at 22% 40%, ${T.glowA}, transparent 70%), radial-gradient(55% 65% at 78% 60%, ${T.glowB}, transparent 70%)`,
+        }}
+      />
 
-            <circle cx={ICC.x} cy={ICC.y} r={210} fill="url(#intro-core)" />
-            <AnimatePresence>
-              {step === 1 && (
-                <motion.circle
-                  key="alarm" cx={ICC.x} cy={ICC.y} r={190} fill="url(#intro-alarm)"
-                  initial={{ opacity: 0 }} animate={{ opacity: [0.6, 1, 0.6] }} exit={{ opacity: 0 }}
-                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-                />
-              )}
-            </AnimatePresence>
+      <svg viewBox={`0 0 ${IVB.w} ${IVB.h}`} className="relative block w-full">
+        <defs>
+          <radialGradient id="intro-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={T.surface} stopOpacity={T.key === "dark" ? 0.45 : 0.95} />
+            <stop offset="100%" stopColor={T.surface} stopOpacity="0" />
+          </radialGradient>
+        </defs>
 
-            {/* заливка между контурами */}
-            <AnimatePresence>
-              {split && (
-                <motion.g key="annulus" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.7 }}>
-                  <circle cx={ICC.x} cy={ICC.y} r={186} fill={T.violet} opacity={0.055} />
-                  <circle cx={ICC.x} cy={ICC.y} r={106} fill={T.cyan} opacity={0.07} />
-                </motion.g>
-              )}
-            </AnimatePresence>
+        {/* сияние под сценой */}
+        <motion.circle
+          cx={ICC.x} cy={ICC.y} r={210} fill="url(#intro-glow)"
+          animate={{ opacity: split ? 0 : 1 }} transition={{ duration: 0.6 }}
+        />
+        <motion.circle
+          cx={IEXT.x} cy={IEXT.y} r={150} fill="url(#intro-glow)"
+          animate={{ opacity: split ? 1 : 0 }} transition={{ duration: 0.6 }}
+        />
+        <motion.circle
+          cx={IINT.x} cy={IINT.y} r={150} fill="url(#intro-glow)"
+          animate={{ opacity: split ? 1 : 0 }} transition={{ duration: 0.6 }}
+        />
 
-            {/* внешний барьер */}
-            <motion.circle
-              cx={ICC.x} cy={ICC.y} r={100} fill="none" stroke={outerColor}
-              strokeWidth={1.5} strokeDasharray="10 7"
-              initial={{ scale: 1.52, opacity: 0 }}
-              animate={{ scale: outerScale, opacity: shielded ? 1 : 0, rotate: 360 }}
-              transition={{
-                scale: { duration: 1, ease: EASE },
-                opacity: { duration: 0.6 },
-                rotate: { duration: 150, repeat: Infinity, ease: "linear" },
+        {/* 26 направлений */}
+        {dots.map((d) => (
+          <g key={d.id}>
+            <motion.line
+              stroke={split ? d.color : T.teal} strokeWidth={0.8} strokeDasharray="2 7"
+              initial={false}
+              animate={{
+                x1: split ? d.sx : d.mx, y1: split ? d.sy : d.my,
+                x2: split ? (d.color === T.violet ? IEXT.x : IINT.x) : ICC.x,
+                y2: ICC.y,
+                opacity: 0.3,
               }}
-              style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+              transition={spring}
             />
             <motion.circle
-              cx={ICC.x} cy={ICC.y} r={100} fill="none" stroke={outerColor}
-              strokeWidth={0.8}
-              initial={{ scale: 1.52, opacity: 0 }}
-              animate={{ scale: outerScale * 1.045, opacity: shielded ? 0.45 : 0 }}
-              transition={{ duration: 1, ease: EASE }}
-              style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
-            />
-
-            {/* внутренний контур */}
-            <motion.circle
-              cx={ICC.x} cy={ICC.y} r={100} fill="none" stroke={T.cyan}
-              strokeWidth={1.5} strokeDasharray="6 6"
-              initial={{ scale: 0.3, opacity: 0 }}
-              animate={{ scale: split ? 1.06 : 0.3, opacity: split ? 1 : 0, rotate: -360 }}
-              transition={{
-                scale: { duration: 0.9, ease: EASE, delay: split ? 0.25 : 0 },
-                opacity: { duration: 0.6, delay: split ? 0.25 : 0 },
-                rotate: { duration: 120, repeat: Infinity, ease: "linear" },
+              r={7} initial={false}
+              animate={{
+                cx: split ? d.sx : d.mx,
+                cy: split ? d.sy : d.my,
+                fill: split ? d.color : T.teal,
               }}
+              transition={spring}
+              style={{ filter: T.key === "dark" ? `drop-shadow(0 0 5px ${d.color})` : "none" }}
+            />
+            <motion.circle
+              r={14} initial={false}
+              animate={{
+                cx: split ? d.sx : d.mx,
+                cy: split ? d.sy : d.my,
+                fill: split ? d.color : T.teal,
+                opacity: [0.08, 0.2, 0.08],
+              }}
+              transition={{
+                ...spring,
+                opacity: { duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: d.i * 0.11 },
+              }}
+            />
+          </g>
+        ))}
+
+        {/* общий круг «Биобезопасность» */}
+        <motion.g
+          animate={{ opacity: split ? 0 : 1, scale: split ? 0.72 : 1 }}
+          transition={{ duration: 0.5, ease: EASE }}
+          style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+        >
+          {[0, 1].map((k) => (
+            <motion.circle
+              key={k} cx={ICC.x} cy={ICC.y} r={114} fill="none" stroke={T.teal} strokeWidth={1.2}
+              initial={{ scale: 1, opacity: 0.35 }}
+              animate={{ scale: [1, 1.22], opacity: [0.35, 0] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut", delay: k * 1.6 }}
               style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
             />
-
-            {/* импульс в момент появления барьера */}
-            <AnimatePresence>
-              {shielded && (
-                <motion.circle
-                  key="pulse" cx={ICC.x} cy={ICC.y} r={100} fill="none"
-                  stroke={outerColor} strokeWidth={1.6}
-                  initial={{ scale: 0.6, opacity: 0.85 }}
-                  animate={{ scale: [0.6, outerScale * 1.16], opacity: [0.85, 0] }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
-                  style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
-                  pointerEvents="none"
-                />
-              )}
-            </AnimatePresence>
-
-            <IntroCore T={T} alarmed={step === 1} />
-
-            {/* подписи контуров */}
-            <AnimatePresence>
-              {split && (
-                <motion.g key="labels" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.6, delay: 0.5 }}>
-                  <rect x={ICC.x - 104} y={ICC.y - 200} width={208} height={26} rx={13} fill={T.solid} stroke={`${T.violet}66`} />
-                  <text x={ICC.x} y={ICC.y - 182} textAnchor="middle" fontSize="13" fontWeight="700" letterSpacing="1.6" fill={T.violet}>
-                    ВНЕШНИЙ КОНТУР
-                  </text>
-                  <rect x={ICC.x - 112} y={ICC.y + 118} width={224} height={26} rx={13} fill={T.solid} stroke={`${T.cyan}66`} />
-                  <text x={ICC.x} y={ICC.y + 136} textAnchor="middle" fontSize="13" fontWeight="700" letterSpacing="1.6" fill={T.cyan}>
-                    ВНУТРЕННИЙ КОНТУР
-                  </text>
-                </motion.g>
-              )}
-            </AnimatePresence>
-
-            {/* источники угрозы + летящие частицы */}
-            {THREATS.map((t, i) => {
-              const dx = ICC.x - t.x;
-              const dy = ICC.y - t.y;
-              const len = Math.hypot(dx, dy);
-              const ux = dx / len;
-              const uy = dy / len;
-              const sx = t.x + ux * 26;
-              const sy = t.y + uy * 26;
-              const ex = ICC.x - ux * stopR;
-              const ey = ICC.y - uy * stopR;
-              const bx = ex - ux * 54;
-              const by = ey - uy * 54;
-              const pc = shielded ? T.teal : T.red;
-              const dur = 2.8;
-              const delay = i * 0.3;
-              return (
-                <g key={t.label}>
-                  <line x1={sx} y1={sy} x2={ex} y2={ey} stroke={T.faint} strokeWidth={0.8} strokeDasharray="2 9" opacity={0.35} />
-                  <motion.g
-                    initial={{ opacity: 0, scale: 0.4 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.1 + i * 0.08, type: "spring", stiffness: 180, damping: 16 }}
-                  >
-                    <motion.circle
-                      cx={t.x} cy={t.y} r={25} fill={pc} opacity={0.1}
-                      animate={{ scale: [1, 1.18, 1] }}
-                      transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
-                      style={{ originX: `${t.x}px`, originY: `${t.y}px` }}
-                    />
-                    <circle cx={t.x} cy={t.y} r={19.5} fill={T.solid} stroke={`${pc}55`} strokeWidth={1.2} />
-                    <g transform={`translate(${t.x}, ${t.y})`}>
-                      <ThreatGlyph T={T} kind={t.kind} c={pc} />
-                    </g>
-                    <text x={t.x} y={t.y + 38} textAnchor="middle" fontSize="13" fill={T.muted}>{t.label}</text>
-                  </motion.g>
-
-                  <motion.circle
-                    key={`p-${step}-${t.label}`}
-                    r={5.4} fill={pc}
-                    initial={{ cx: sx, cy: sy, opacity: 0 }}
-                    animate={{
-                      cx: shielded ? [sx, ex, bx] : [sx, ex],
-                      cy: shielded ? [sy, ey, by] : [sy, ey],
-                      opacity: shielded ? [0, 1, 1, 0] : [0, 1, 1, 0],
-                    }}
-                    transition={{
-                      duration: dur, repeat: Infinity, delay, ease: "easeInOut",
-                      opacity: { duration: dur, repeat: Infinity, delay, times: [0, 0.12, 0.72, 1] },
-                    }}
-                  />
-                  {shielded && (
-                    <motion.circle
-                      key={`s-${step}-${t.label}`}
-                      cx={ex} cy={ey} r={7} fill="none" stroke={outerColor} strokeWidth={1.4}
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: [0.5, 2.1], opacity: [0.9, 0] }}
-                      transition={{ duration: 1, repeat: Infinity, repeatDelay: dur - 1, delay: delay + dur * 0.55, ease: "easeOut" }}
-                      style={{ originX: `${ex}px`, originY: `${ey}px` }}
-                    />
-                  )}
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* индикатор такта */}
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
-            {INTRO_STEPS.map((s, i) => (
-              <button
-                key={s.eyebrow}
-                onClick={() => { setAuto(false); setStep(i); }}
-                className="h-1.5 rounded-full transition-all"
-                style={{
-                  width: i === step ? 34 : 14,
-                  background: i === step ? accent : T.border,
-                }}
-                aria-label={s.title}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* ── пояснение такта ───────────────────────────────────────── */}
-        <div className="flex flex-col gap-3">
-          <div className="relative overflow-hidden rounded-2xl p-5"
-               style={{ background: T.solid, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
-            <div
-              className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full"
-              style={{ background: accent, filter: "blur(52px)", opacity: 0.2, transition: "background 0.5s ease" }}
-            />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={S.eyebrow}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -14 }}
-                transition={{ duration: 0.4, ease: EASE }}
-                className="relative"
-              >
-                <div className="font-mono text-[12.5px] uppercase tracking-[0.16em]" style={{ color: accent }}>
-                  {S.eyebrow}
-                </div>
-                <div className="mt-2 text-[19px] font-semibold leading-tight" style={{ color: T.text }}>
-                  {S.title}
-                </div>
-                <div className="mt-2 text-[14.5px] leading-relaxed" style={{ color: T.muted }}>
-                  {S.text}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          {[
-            { c: T.violet, t: "Внешний контур", d: "всё, что заходит на территорию: транспорт, люди, сырьё, подрядчики" },
-            { c: T.cyan, t: "Внутренний контур", d: "всё, что происходит и перемещается внутри: обработки, зоны, площадки" },
-          ].map((x, i) => (
-            <motion.div
-              key={x.t}
-              initial={{ opacity: 0, x: 18 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15 + i * 0.1, duration: 0.5, ease: EASE }}
-              className="rounded-2xl px-4 py-3.5"
-              style={{ background: T.panelHi, border: `1px solid ${T.border}` }}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ background: x.c }} />
-                <span className="text-[15.5px] font-semibold" style={{ color: T.text }}>{x.t}</span>
-              </div>
-              <div className="mt-1 text-[14px] leading-snug" style={{ color: T.muted }}>{x.d}</div>
-            </motion.div>
           ))}
-        </div>
-      </div>
+          <circle cx={ICC.x} cy={ICC.y} r={114} fill={T.solid} stroke={T.borderHi} strokeWidth={1.4} />
+          <motion.circle
+            cx={ICC.x} cy={ICC.y} r={126} fill="none" stroke={T.teal}
+            strokeWidth={1.3} strokeDasharray="9 8" opacity={0.75}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+            style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+          />
+          <g transform={`translate(${ICC.x}, ${ICC.y - 6})`}>
+            <path d={SHIELD} fill={T.teal} opacity={0.14} />
+            <path d={SHIELD} fill="none" stroke={T.teal} strokeWidth={2} strokeLinejoin="round" />
+            <path d="M -9 -28 L -3 -21 L 10 -35" fill="none" stroke={T.teal} strokeWidth={2.6}
+                  strokeLinecap="round" strokeLinejoin="round" />
+            <text x={0} y={24} textAnchor="middle" fontSize="15" fontWeight="700"
+                  letterSpacing="0.5" fill={T.text}>
+              БИОБЕЗОПАСНОСТЬ
+            </text>
+            <text x={0} y={50} textAnchor="middle" fontSize="15" fill={T.muted}>
+              26 направлений
+            </text>
+          </g>
+        </motion.g>
+
+        {/* два контура */}
+        {[
+          { c: IEXT, color: T.violet, l1: "ВНЕШНИЙ", l2: "КОНТУР", d: -1 },
+          { c: IINT, color: T.cyan, l1: "ВНУТРЕННИЙ", l2: "КОНТУР", d: 1 },
+        ].map((k) => (
+          <motion.g
+            key={k.l1}
+            initial={false}
+            animate={{
+              opacity: split ? 1 : 0,
+              x: split ? k.c.x - ICC.x : 0,
+              scale: split ? 1 : 1.5,
+            }}
+            transition={{ opacity: { duration: 0.45, delay: split ? 0.2 : 0 }, ...spring }}
+            style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+          >
+            <circle cx={ICC.x} cy={ICC.y} r={80} fill={T.solid} stroke={`${k.color}88`} strokeWidth={1.6} />
+            <circle cx={ICC.x} cy={ICC.y} r={80} fill={k.color} opacity={0.07} />
+            <motion.circle
+              cx={ICC.x} cy={ICC.y} r={91} fill="none" stroke={k.color}
+              strokeWidth={1.3} strokeDasharray="7 7" opacity={0.8}
+              animate={{ rotate: 360 * k.d }}
+              transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+              style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+            />
+            <text x={ICC.x} y={ICC.y - 4} textAnchor="middle" fontSize="14" fontWeight="700"
+                  letterSpacing="0.5" fill={k.color}>
+              {k.l1}
+            </text>
+            <text x={ICC.x} y={ICC.y + 18} textAnchor="middle" fontSize="14" fontWeight="700"
+                  letterSpacing="0.5" fill={k.color}>
+              {k.l2}
+            </text>
+          </motion.g>
+        ))}
+
+        <AnimatePresence mode="wait">
+          <motion.text
+            key={split ? "b" : "a"}
+            x={ICC.x} y={IVB.h - 22} textAnchor="middle" fontSize="14" fill={T.faint}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
+          >
+            {split ? "нажмите ещё раз, чтобы собрать" : "нажмите, чтобы увидеть деление на два контура"}
+          </motion.text>
+        </AnimatePresence>
+      </svg>
     </div>
   );
 }
@@ -2619,23 +2433,7 @@ export default function BiosecurityExecutiveDashboard() {
         {/* ── ЧТО ТАКОЕ БИОБЕЗОПАСНОСТЬ ───────────────────────────────── */}
         <div className="mt-7">
           <Panel T={T}>
-            <SectionHead
-              T={T}
-              eyebrow="С чего всё начинается"
-              title="Что такое биобезопасность и почему контуров два"
-              right={
-                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
-                     style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
-                  <ArrowRight size={13} color={T.cyan} />
-                  объект · угроза · барьер · два контура
-                </div>
-              }
-            />
-            <p className="mb-4 max-w-[900px] text-[15.5px] leading-relaxed" style={{ color: T.muted }}>
-              Биобезопасность — это <b style={{ color: T.text }}>защита поголовья от заноса и распространения возбудителя</b>.
-              Не отдельная проверка, а сплошной барьер вокруг производства: всё, что въезжает, заходит,
-              завозится и перемещается внутри, проходит через правила, обработку и контроль.
-            </p>
+            <SectionHead T={T} eyebrow="С чего всё начинается" title="Биобезопасность" />
             <BiosecurityIntro T={T} />
           </Panel>
         </div>
