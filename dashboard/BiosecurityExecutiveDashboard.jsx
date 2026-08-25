@@ -403,10 +403,12 @@ function SectionHead({ T, eyebrow, title, right }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <div className="font-mono text-[13px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
-          {eyebrow}
-        </div>
-        <h2 className="mt-1 text-[20px] font-semibold" style={{ color: T.text }}>{title}</h2>
+        {eyebrow ? (
+          <div className="font-mono text-[13px] uppercase tracking-[0.2em]" style={{ color: T.faint }}>
+            {eyebrow}
+          </div>
+        ) : null}
+        <h2 className={`text-[20px] font-semibold ${eyebrow ? "mt-1" : ""}`} style={{ color: T.text }}>{title}</h2>
       </div>
       {right}
     </div>
@@ -2204,7 +2206,7 @@ const IINT = { x: 714, y: 186 };
 
 const SHIELD = "M 0 -50 L 21 -42 L 21 -25 Q 21 -8 0 -1 Q -21 -8 -21 -25 L -21 -42 Z";
 
-function BiosecurityIntro({ T }) {
+function BiosecurityIntro({ T, onPick }) {
   const [split, setSplit] = useState(false);
 
   const ext = TASKS.filter((t) => t.contour === "external");
@@ -2349,19 +2351,21 @@ function BiosecurityIntro({ T }) {
 
         {/* два контура */}
         {[
-          { c: IEXT, color: T.violet, l1: "ВНЕШНИЙ", l2: "КОНТУР", d: -1 },
-          { c: IINT, color: T.cyan, l1: "ВНУТРЕННИЙ", l2: "КОНТУР", d: 1 },
+          { c: IEXT, color: T.violet, l1: "ВНЕШНИЙ", l2: "КОНТУР", d: -1, id: "external" },
+          { c: IINT, color: T.cyan, l1: "ВНУТРЕННИЙ", l2: "КОНТУР", d: 1, id: "internal" },
         ].map((k) => (
           <motion.g
             key={k.l1}
             initial={false}
+            onClick={(e) => { if (split) { e.stopPropagation(); onPick(k.id); } }}
             animate={{
               opacity: split ? 1 : 0,
               x: split ? k.c.x - ICC.x : 0,
               scale: split ? 1 : 1.5,
             }}
             transition={{ opacity: { duration: 0.45, delay: split ? 0.2 : 0 }, ...spring }}
-            style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+            style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px`, cursor: split ? "pointer" : "default" }}
+            pointerEvents={split ? "auto" : "none"}
           >
             <circle cx={ICC.x} cy={ICC.y} r={80} fill={T.solid} stroke={`${k.color}88`} strokeWidth={1.6} />
             <circle cx={ICC.x} cy={ICC.y} r={80} fill={k.color} opacity={0.07} />
@@ -2380,6 +2384,13 @@ function BiosecurityIntro({ T }) {
                   letterSpacing="0.5" fill={k.color}>
               {k.l2}
             </text>
+            <motion.text
+              x={ICC.x} y={ICC.y + 46} textAnchor="middle" fontSize="12" fill={k.color}
+              animate={{ opacity: [0.45, 0.9, 0.45] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+            >
+              открыть список →
+            </motion.text>
           </motion.g>
         ))}
 
@@ -2392,7 +2403,9 @@ function BiosecurityIntro({ T }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
           >
-            {split ? "нажмите ещё раз, чтобы собрать" : "нажмите, чтобы увидеть деление на два контура"}
+            {split
+              ? "нажмите на контур, чтобы открыть его список направлений"
+              : "нажмите, чтобы увидеть деление на два контура"}
           </motion.text>
         </AnimatePresence>
       </svg>
@@ -2404,7 +2417,14 @@ export default function BiosecurityExecutiveDashboard() {
   const [theme, setTheme] = useState("light");
   const [period, setPeriod] = useState("week");
   const [open, setOpen] = useState("external");   // 'external' | 'internal' | null
+  const contoursRef = useRef(null);
   const T = THEMES[theme];
+
+  /* из интро — сразу в список направлений выбранного контура */
+  const goToContour = (c) => {
+    setOpen(c);
+    setTimeout(() => contoursRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  };
 
   const P = PERIODS[period];
   const demand = Math.round(METRICS.demandWeek * P.k);
@@ -2433,8 +2453,8 @@ export default function BiosecurityExecutiveDashboard() {
         {/* ── ЧТО ТАКОЕ БИОБЕЗОПАСНОСТЬ ───────────────────────────────── */}
         <div className="mt-7">
           <Panel T={T}>
-            <SectionHead T={T} eyebrow="С чего всё начинается" title="Биобезопасность" />
-            <BiosecurityIntro T={T} />
+            <SectionHead T={T} title="Биобезопасность" />
+            <BiosecurityIntro T={T} onPick={goToContour} />
           </Panel>
         </div>
 
@@ -2443,7 +2463,7 @@ export default function BiosecurityExecutiveDashboard() {
         </div>
 
         {/* ── ДВА КОНТУРА ─────────────────────────────────────────────── */}
-        <div className="mt-5">
+        <div className="mt-5 scroll-mt-6" ref={contoursRef}>
           <Panel T={T}>
             <div className="mb-4 flex justify-end">
               <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
