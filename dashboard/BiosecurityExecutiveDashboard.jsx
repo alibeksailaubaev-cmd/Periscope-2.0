@@ -16,6 +16,10 @@ import {
    ═══════════════════════════════════════════════════════════════════════════ */
 const HF_BG = "data:image/jpeg;base64,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";
 
+
+/* Атмосферный подклад интро-сцены — тоже Higgsfield (nano_banana_pro), data-URI. */
+const HF_INTRO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDACweISchHCwnJCcyLyw1Qm9IQj09QohhZlBvoY2ppp6Nm5ixx//Ysbzxv5ib3v/g8f//////rNX/////////////2wBDAS8yMkI6QoJISIL/t5u3////////////////////////////////////////////////////////////////////wAARCAE4AjADASIAAhEBAxEB/8QAGQABAQEBAQEAAAAAAAAAAAAAAAEDAgQF/8QALRABAAICAAQEBQQDAQAAAAAAAAECAxESITFRBCIyQRMjYXGBFDNCkQVSoTT/xAAXAQEBAQEAAAAAAAAAAAAAAAAAAQID/8QAGxEBAQEBAAMBAAAAAAAAAAAAAAERMQIhQRL/2gAMAwEAAhEDEQA/APeA5tAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKAAoKigAoAAKAqCgAAAAAAAAAAAACAAgCKgqAIqAgCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACgKAAKAAoAKigAqoAAAAAAAAAAAAAAgqAIqIoioAigOQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAUFRQAUAAFAVBQAAAAAAAAAAAAAAARUARQEARUAByAgAAAAAAAAAAAAAAAAAAAAAAAAAAAmwUczZnbNWPdcVrs28/xbT6aSu8s+0QuDfiOJhrL3g1l7wYPRtdvNvLHtEnxbR6qSYPSrCuas+7SLbTEdqkSoCooACooAAAAAAAAAAAAAAACKgAAIAioADkBAAAAAAAAAAAAAAAAAAAAAAAAATZM6ZZMkV+/ZcV3a+mU5ZtOqRv6pFLZJ3fp2bVpERyheDGMVreu34hpXFEdIaRCpo54V4VNoiaXUGzahwpwrtQZWxRbrDOcVq+i0/aXpNLowrlms6vGvq2reJS1ImOcMZpbHO6dOy9HqiVYY8sW+k9m0TtBQBFAAAAAAAAAAAAAAAARQEABAEVAAcgIAAAAAAAAAAAAAAAAAAAAAACTOiZ0xy5Nco5zKyKmTJO+GvOy48euc85XFj1znnM9ZaxGl0IjSo5m2mU11MuZtpnN5tOqx+SMe+dp21jO7xZyx7c/snHeelf7aRSI6Q64TYZWPzO0L8ztDXS6NPyx47x1r/Sxlj35fdrwuZpE9YNiZVi8S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";
+
 /* ═══════════════════════════════════════════════════════════════════════════
    1. ДИЗАЙН-ТОКЕНЫ — светлая премиальная тема по умолчанию + тёмная
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -800,7 +804,7 @@ function ContourTaskList({ T, contour }) {
             {C.title}
           </span>
           <span className="text-[14.5px]" style={{ color: T.muted }}>
-            {C.items.length} направлений · {fmt(C.demand, 1)} нормо-часов в неделю · закрыто {C.coverage}%
+            {C.items.length} направлений контроля
           </span>
         </div>
 
@@ -808,8 +812,6 @@ function ContourTaskList({ T, contour }) {
           {groups.map((g) => {
             const GIcon = g.icon;
             const tone = toneMap[g.tone];
-            const gh = sum(g.items, (t) => t.hours);
-            const gc = sum(g.items, (t) => t.covered);
             return (
               <div key={g.id}>
                 <div className="mb-2.5 flex items-center gap-2.5">
@@ -817,16 +819,11 @@ function ContourTaskList({ T, contour }) {
                     <GIcon size={14} />
                   </div>
                   <span className="text-[15.5px] font-semibold" style={{ color: T.text }}>{g.title}</span>
-                  <span className="font-mono text-[13px]" style={{ color: T.faint }}>
-                    {g.items.length} · {fmt(gh, 1)} ч/нед · закрыто {Math.round((gc / gh) * 100)}%
-                  </span>
                   <div className="h-px flex-1" style={{ background: T.border }} />
                 </div>
                 <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
                   {g.items.map((t) => {
                     const Icon = t.icon;
-                    const pct = Math.round((t.covered / t.hours) * 100);
-                    const state = pct >= 80 ? T.teal : pct >= 40 ? T.amber : T.red;
                     const delay = 0.04 * idx++;
                     return (
                       <motion.div
@@ -846,20 +843,6 @@ function ContourTaskList({ T, contour }) {
                             <div className="text-[15px] font-semibold leading-tight" style={{ color: T.text }}>{t.name}</div>
                             <div className="mt-0.5 text-[13.5px] leading-snug" style={{ color: T.faint }}>{t.note}</div>
                           </div>
-                        </div>
-                        <div className="mt-2.5 flex items-center gap-2">
-                          <div className="h-1 flex-1 overflow-hidden rounded-full" style={{ background: T.grid }}>
-                            <motion.div
-                              className="h-full rounded-full" style={{ background: state }}
-                              initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                              transition={{ delay: delay + 0.15, duration: 0.7, ease: EASE }}
-                            />
-                          </div>
-                          <span className="font-mono text-[12.5px]" style={{ color: state }}>{pct}%</span>
-                        </div>
-                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[12px]" style={{ background: T.grid, color: T.faint }}>{t.freq}</span>
-                          <span className="rounded-md px-1.5 py-0.5 font-mono text-[12px]" style={{ background: T.grid, color: T.faint }}>{fmt(t.hours, 1)} ч/нед</span>
                         </div>
                       </motion.div>
                     );
@@ -1157,39 +1140,31 @@ function WorkloadStage({ T }) {
 
           <line x1={CC.x} y1={CC.y - 70} x2={CC.x} y2={CC.y + 42}
                 stroke={T.borderHi} strokeWidth={1} strokeDasharray="3 6" opacity={0.7} />
-          <text x={CC.x - 52} y={CC.y + 56} textAnchor="middle" fontSize="12.5"
+          <text x={CC.x - 52} y={CC.y + 56} textAnchor="middle" fontSize="12"
                 fontWeight="700" letterSpacing="0.6" fill={T.blue}>
-            ЕСТЬ {STAFF}
+            ЕСТЬ
           </text>
-          <text x={CC.x + 52} y={CC.y + 56} textAnchor="middle" fontSize="12.5"
+          <text x={CC.x + 52} y={CC.y + 56} textAnchor="middle" fontSize="12"
                 fontWeight="700" letterSpacing="0.6" fill={T.teal}>
-            НУЖНО +{METRICS.gap}
+            НУЖНО
           </text>
         </g>
 
-        {/* шкала загрузки */}
+        {/* подпись отдела — принимающая сторона всего потока */}
         <g pointerEvents="none">
-          <rect x={CC.x - 78} y={CC.y + 72} width={156} height={9} rx={4.5} fill={T.grid} />
-          <motion.rect
-            x={CC.x - 78} y={CC.y + 72} height={9} rx={4.5} fill="url(#ws-meter)"
-            initial={{ width: 0 }} whileInView={{ width: 156 }} viewport={{ once: true }}
-            transition={{ duration: 1.4, ease: EASE, delay: 0.25 }}
-          />
-          <motion.rect
-            x={CC.x + 6} y={CC.y + 72} width={72} height={9} rx={4.5} fill={T.red}
-            animate={{ opacity: [0.3, 0.85, 0.3] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <line x1={CC.x + 6} y1={CC.y + 67} x2={CC.x + 6} y2={CC.y + 86}
-                stroke={T.text} strokeWidth={1} opacity={0.3} />
-          <text x={CC.x + 6} y={CC.y + 99} textAnchor="middle" fontSize="11.5" fill={T.faint}>норма 100%</text>
+          <rect x={CC.x - 134} y={CC.y + 118} width={268} height={28} rx={14}
+                fill={T.solid} stroke={T.borderHi} strokeWidth={1} />
+          <text x={CC.x} y={CC.y + 137} textAnchor="middle" fontSize="12.5"
+                fontWeight="700" letterSpacing="1.4" fill={T.teal}>
+            ОТДЕЛ БИОБЕЗОПАСНОСТИ
+          </text>
         </g>
 
         <text x={CC.x} y={22} textAnchor="middle" fontSize="14" fontWeight="700" letterSpacing="2.2" fill={T.faint}>
-          {TASKS.length} НАПРАВЛЕНИЙ · {fmt(METRICS.demandWeek, 0)} НОРМО-ЧАСОВ
+          {TASKS.length} НАПРАВЛЕНИЙ КОНТРОЛЯ
         </text>
         <text x={CC.x} y={VB.h - 16} textAnchor="middle" fontSize="13.5" fill={T.faint}>
-          дефицит {METRICS.deficitHours} нормо-часов в неделю — задачи не исчезают, они копятся
+          все направления сходятся на отдел биобезопасности — задачи не исчезают, они копятся
         </text>
       </svg>
 
@@ -1205,9 +1180,8 @@ function WorkloadStage({ T }) {
           <Gauge size={15} color={T.red} />
           <span className="text-[14.5px] font-semibold" style={{ color: T.red }}>Виджет перегрузки</span>
         </div>
-        <div className="mt-2 flex items-end gap-2">
-          <span className="text-[34px] font-semibold leading-none" style={{ color: T.red }}>{METRICS.load}%</span>
-          <span className="pb-1 text-[13.5px]" style={{ color: T.muted }}>загрузка</span>
+        <div className="mt-2 text-[15px] leading-snug" style={{ color: T.text }}>
+          Объём направлений заметно больше того, что физически успевают двое.
         </div>
         <div className="mt-2.5 h-1.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
           <motion.div
@@ -1219,19 +1193,7 @@ function WorkloadStage({ T }) {
         </div>
         <div className="mt-3 flex items-start gap-2 text-[14px] leading-snug" style={{ color: T.muted }}>
           <AlertTriangle size={13} color={T.amber} className="mt-0.5 shrink-0" />
-          Риск пропуска критических задач: {METRICS.critWeak} из{" "}
-          {TASKS.filter((t) => t.group === "crit").length} критических направлений закрыты менее чем наполовину.
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {[
-            { l: "ресурс", v: `${METRICS.capacityWeek} ч`, c: T.teal },
-            { l: "требуется", v: `${METRICS.demandWeek} ч`, c: T.red },
-          ].map((x) => (
-            <div key={x.l} className="rounded-lg px-2.5 py-1.5" style={{ background: T.panel, border: `1px solid ${T.border}` }}>
-              <div className="font-mono text-[12px] uppercase tracking-wider" style={{ color: T.faint }}>{x.l}</div>
-              <div className="text-[16.5px] font-semibold" style={{ color: x.c }}>{x.v}</div>
-            </div>
-          ))}
+          Часть критических направлений закрывается меньше чем наполовину — это и есть риск пропуска.
         </div>
       </motion.div>
     </div>
@@ -2232,6 +2194,398 @@ function CaseModal({ T, onClose }) {
    13. ГЛАВНЫЙ КОМПОНЕНТ
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   7.5 ИНТРО: что такое биобезопасность и почему контуров два.
+   Четырёхтактная зацикленная сцена: объект → угроза → барьер → два контура.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+const IVB = { w: 960, h: 470 };
+const ICC = { x: 480, y: 222 };
+
+const THREATS = [
+  { x: 96,  y: 78,  label: "Транспорт",       kind: "truck"  },
+  { x: 64,  y: 236, label: "Люди",            kind: "person" },
+  { x: 96,  y: 392, label: "Сырьё и ТМЦ",     kind: "box"    },
+  { x: 864, y: 78,  label: "Подрядчики",      kind: "person" },
+  { x: 896, y: 236, label: "Грызуны и птица", kind: "bug"    },
+  { x: 864, y: 392, label: "Техника",         kind: "truck"  },
+];
+
+const INTRO_STEPS = [
+  {
+    eyebrow: "01 · объект",
+    title: "Есть живое производство",
+    text: "Площадка работает непрерывно: птица, корма, техника, люди, сырьё и готовая продукция движутся каждый день.",
+    tone: "blue",
+  },
+  {
+    eyebrow: "02 · угроза",
+    title: "Возбудитель заходит вместе с потоком",
+    text: "Инфекция не появляется сама: её привозят транспорт и тара, приносят люди, заносят грызуны и дикая птица.",
+    tone: "red",
+  },
+  {
+    eyebrow: "03 · защита",
+    title: "Биобезопасность — это барьер вокруг объекта",
+    text: "Система правил, обработок и проверок, которая не даёт возбудителю попасть на площадку и закрепиться на ней.",
+    tone: "teal",
+  },
+  {
+    eyebrow: "04 · два контура",
+    title: "Барьер делится на два контура",
+    text: "Внешний контур — всё, что заходит на территорию. Внутренний контур — всё, что происходит и перемещается внутри.",
+    tone: "violet",
+  },
+];
+
+function ThreatGlyph({ T, kind, c }) {
+  if (kind === "truck")
+    return (
+      <g>
+        <rect x={-15} y={-6} width="19" height="13" rx="3" fill={c} />
+        <rect x={3} y={-2} width="10" height="9" rx="2.5" fill={c} opacity="0.62" />
+        <circle cx={-8} cy={9} r="2.6" fill={T.text} opacity="0.45" />
+        <circle cx={8} cy={9} r="2.6" fill={T.text} opacity="0.45" />
+      </g>
+    );
+  if (kind === "person")
+    return (
+      <g>
+        <circle cx={0} cy={-7} r="5.4" fill={c} />
+        <path d="M -7 11 L -6 -1 Q 0 -5 6 -1 L 7 11 Z" fill={c} opacity="0.82" />
+      </g>
+    );
+  if (kind === "box")
+    return (
+      <g>
+        <rect x={-9} y={-8} width="18" height="16" rx="2.6" fill={c} opacity="0.9" />
+        <line x1={0} y1={-8} x2={0} y2={8} stroke={T.surface} strokeWidth="1.6" opacity="0.8" />
+        <line x1={-9} y1={-1} x2={9} y2={-1} stroke={T.surface} strokeWidth="1.4" opacity="0.55" />
+      </g>
+    );
+  return (
+    <g>
+      <ellipse cx={0} cy={0} rx="6.2" ry="8.4" fill={c} opacity="0.92" />
+      <line x1={-9} y1={-6} x2={-3.5} y2={-2.5} stroke={c} strokeWidth="1.7" strokeLinecap="round" />
+      <line x1={9} y1={-6} x2={3.5} y2={-2.5} stroke={c} strokeWidth="1.7" strokeLinecap="round" />
+      <line x1={-9} y1={5} x2={-4} y2={2.5} stroke={c} strokeWidth="1.7" strokeLinecap="round" />
+      <line x1={9} y1={5} x2={4} y2={2.5} stroke={c} strokeWidth="1.7" strokeLinecap="round" />
+    </g>
+  );
+}
+
+/* производственная площадка в центре сцены */
+function IntroCore({ T, alarmed }) {
+  const roof = (x, w, h, fill) => (
+    <g>
+      <rect x={x} y={-h / 2} width={w} height={h} rx="3" fill={fill} />
+      <path d={`M ${x - 3} ${-h / 2} L ${x + w / 2} ${-h / 2 - 9} L ${x + w + 3} ${-h / 2} Z`} fill={fill} opacity="0.75" />
+    </g>
+  );
+  return (
+    <g transform={`translate(${ICC.x}, ${ICC.y})`}>
+      <ellipse cx={0} cy={40} rx="96" ry="15" fill={T.ground} opacity={T.key === "dark" ? 0.35 : 0.55} />
+      <motion.g
+        animate={alarmed ? { x: [0, -1.4, 1.4, 0] } : { x: 0 }}
+        transition={alarmed ? { duration: 0.45, repeat: Infinity, ease: "easeInOut" } : { duration: 0.4 }}
+      >
+        <g transform="translate(-58, 8)">{roof(0, 42, 34, T.blue)}</g>
+        <g transform="translate(2, 2)">{roof(0, 50, 44, T.cyan)}</g>
+        <g transform="translate(60, 12)">{roof(0, 34, 28, T.teal)}</g>
+        {/* птица */}
+        <g transform="translate(-4, -46)">
+          <ellipse cx={0} cy={0} rx="11" ry="9" fill={T.amber} opacity="0.95" />
+          <circle cx={9} cy={-7} r="5" fill={T.amber} />
+          <path d="M 13 -9 L 19 -7 L 13 -5 Z" fill={T.red} opacity="0.85" />
+          <path d="M -10 -6 q -3 -6 2 -7 q 2 4 1 7 Z" fill={T.red} opacity="0.6" />
+        </g>
+      </motion.g>
+      <text x={0} y={64} textAnchor="middle" fontSize="12.5" letterSpacing="1.4" fontWeight="700" fill={T.faint}>
+        ПРОИЗВОДСТВЕННАЯ ПЛОЩАДКА
+      </text>
+    </g>
+  );
+}
+
+function BiosecurityIntro({ T }) {
+  const [step, setStep] = useState(0);
+  const [auto, setAuto] = useState(true);
+
+  useEffect(() => {
+    if (!auto) return;
+    const id = setInterval(() => setStep((s) => (s + 1) % INTRO_STEPS.length), 4200);
+    return () => clearInterval(id);
+  }, [auto]);
+
+  const S = INTRO_STEPS[step];
+  const toneOf = { blue: T.blue, red: T.red, teal: T.teal, violet: T.violet };
+  const accent = toneOf[S.tone];
+
+  const shielded = step >= 2;
+  const split = step === 3;
+  const stopR = split ? 186 : shielded ? 152 : 44;
+
+  const outerScale = split ? 1.86 : shielded ? 1.52 : 1.52;
+  const outerColor = split ? T.violet : T.teal;
+
+  return (
+    <div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+        {/* ── сцена ─────────────────────────────────────────────────── */}
+        <div className="relative overflow-hidden rounded-2xl"
+             style={{ background: T.panel, border: `1px solid ${T.border}` }}>
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              backgroundImage: `url(${HF_INTRO})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: T.key === "dark" ? 0.12 : 0.3,
+            }}
+          />
+          <svg viewBox={`0 0 ${IVB.w} ${IVB.h}`} className="relative block w-full">
+            <defs>
+              <radialGradient id="intro-core" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={T.surface} stopOpacity={T.key === "dark" ? 0.5 : 0.95} />
+                <stop offset="100%" stopColor={T.surface} stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="intro-alarm" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={T.red} stopOpacity="0.22" />
+                <stop offset="100%" stopColor={T.red} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+
+            <circle cx={ICC.x} cy={ICC.y} r={210} fill="url(#intro-core)" />
+            <AnimatePresence>
+              {step === 1 && (
+                <motion.circle
+                  key="alarm" cx={ICC.x} cy={ICC.y} r={190} fill="url(#intro-alarm)"
+                  initial={{ opacity: 0 }} animate={{ opacity: [0.6, 1, 0.6] }} exit={{ opacity: 0 }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* заливка между контурами */}
+            <AnimatePresence>
+              {split && (
+                <motion.g key="annulus" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.7 }}>
+                  <circle cx={ICC.x} cy={ICC.y} r={186} fill={T.violet} opacity={0.055} />
+                  <circle cx={ICC.x} cy={ICC.y} r={106} fill={T.cyan} opacity={0.07} />
+                </motion.g>
+              )}
+            </AnimatePresence>
+
+            {/* внешний барьер */}
+            <motion.circle
+              cx={ICC.x} cy={ICC.y} r={100} fill="none" stroke={outerColor}
+              strokeWidth={1.5} strokeDasharray="10 7"
+              initial={{ scale: 1.52, opacity: 0 }}
+              animate={{ scale: outerScale, opacity: shielded ? 1 : 0, rotate: 360 }}
+              transition={{
+                scale: { duration: 1, ease: EASE },
+                opacity: { duration: 0.6 },
+                rotate: { duration: 150, repeat: Infinity, ease: "linear" },
+              }}
+              style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+            />
+            <motion.circle
+              cx={ICC.x} cy={ICC.y} r={100} fill="none" stroke={outerColor}
+              strokeWidth={0.8}
+              initial={{ scale: 1.52, opacity: 0 }}
+              animate={{ scale: outerScale * 1.045, opacity: shielded ? 0.45 : 0 }}
+              transition={{ duration: 1, ease: EASE }}
+              style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+            />
+
+            {/* внутренний контур */}
+            <motion.circle
+              cx={ICC.x} cy={ICC.y} r={100} fill="none" stroke={T.cyan}
+              strokeWidth={1.5} strokeDasharray="6 6"
+              initial={{ scale: 0.3, opacity: 0 }}
+              animate={{ scale: split ? 1.06 : 0.3, opacity: split ? 1 : 0, rotate: -360 }}
+              transition={{
+                scale: { duration: 0.9, ease: EASE, delay: split ? 0.25 : 0 },
+                opacity: { duration: 0.6, delay: split ? 0.25 : 0 },
+                rotate: { duration: 120, repeat: Infinity, ease: "linear" },
+              }}
+              style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+            />
+
+            {/* импульс в момент появления барьера */}
+            <AnimatePresence>
+              {shielded && (
+                <motion.circle
+                  key="pulse" cx={ICC.x} cy={ICC.y} r={100} fill="none"
+                  stroke={outerColor} strokeWidth={1.6}
+                  initial={{ scale: 0.6, opacity: 0.85 }}
+                  animate={{ scale: [0.6, outerScale * 1.16], opacity: [0.85, 0] }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
+                  style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+                  pointerEvents="none"
+                />
+              )}
+            </AnimatePresence>
+
+            <IntroCore T={T} alarmed={step === 1} />
+
+            {/* подписи контуров */}
+            <AnimatePresence>
+              {split && (
+                <motion.g key="labels" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.6, delay: 0.5 }}>
+                  <rect x={ICC.x - 104} y={ICC.y - 200} width={208} height={26} rx={13} fill={T.solid} stroke={`${T.violet}66`} />
+                  <text x={ICC.x} y={ICC.y - 182} textAnchor="middle" fontSize="13" fontWeight="700" letterSpacing="1.6" fill={T.violet}>
+                    ВНЕШНИЙ КОНТУР
+                  </text>
+                  <rect x={ICC.x - 112} y={ICC.y + 118} width={224} height={26} rx={13} fill={T.solid} stroke={`${T.cyan}66`} />
+                  <text x={ICC.x} y={ICC.y + 136} textAnchor="middle" fontSize="13" fontWeight="700" letterSpacing="1.6" fill={T.cyan}>
+                    ВНУТРЕННИЙ КОНТУР
+                  </text>
+                </motion.g>
+              )}
+            </AnimatePresence>
+
+            {/* источники угрозы + летящие частицы */}
+            {THREATS.map((t, i) => {
+              const dx = ICC.x - t.x;
+              const dy = ICC.y - t.y;
+              const len = Math.hypot(dx, dy);
+              const ux = dx / len;
+              const uy = dy / len;
+              const sx = t.x + ux * 26;
+              const sy = t.y + uy * 26;
+              const ex = ICC.x - ux * stopR;
+              const ey = ICC.y - uy * stopR;
+              const bx = ex - ux * 54;
+              const by = ey - uy * 54;
+              const pc = shielded ? T.teal : T.red;
+              const dur = 2.8;
+              const delay = i * 0.3;
+              return (
+                <g key={t.label}>
+                  <line x1={sx} y1={sy} x2={ex} y2={ey} stroke={T.faint} strokeWidth={0.8} strokeDasharray="2 9" opacity={0.35} />
+                  <motion.g
+                    initial={{ opacity: 0, scale: 0.4 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.1 + i * 0.08, type: "spring", stiffness: 180, damping: 16 }}
+                  >
+                    <motion.circle
+                      cx={t.x} cy={t.y} r={25} fill={pc} opacity={0.1}
+                      animate={{ scale: [1, 1.18, 1] }}
+                      transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
+                      style={{ originX: `${t.x}px`, originY: `${t.y}px` }}
+                    />
+                    <circle cx={t.x} cy={t.y} r={19.5} fill={T.solid} stroke={`${pc}55`} strokeWidth={1.2} />
+                    <g transform={`translate(${t.x}, ${t.y})`}>
+                      <ThreatGlyph T={T} kind={t.kind} c={pc} />
+                    </g>
+                    <text x={t.x} y={t.y + 38} textAnchor="middle" fontSize="13" fill={T.muted}>{t.label}</text>
+                  </motion.g>
+
+                  <motion.circle
+                    key={`p-${step}-${t.label}`}
+                    r={5.4} fill={pc}
+                    initial={{ cx: sx, cy: sy, opacity: 0 }}
+                    animate={{
+                      cx: shielded ? [sx, ex, bx] : [sx, ex],
+                      cy: shielded ? [sy, ey, by] : [sy, ey],
+                      opacity: shielded ? [0, 1, 1, 0] : [0, 1, 1, 0],
+                    }}
+                    transition={{
+                      duration: dur, repeat: Infinity, delay, ease: "easeInOut",
+                      opacity: { duration: dur, repeat: Infinity, delay, times: [0, 0.12, 0.72, 1] },
+                    }}
+                  />
+                  {shielded && (
+                    <motion.circle
+                      key={`s-${step}-${t.label}`}
+                      cx={ex} cy={ey} r={7} fill="none" stroke={outerColor} strokeWidth={1.4}
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: [0.5, 2.1], opacity: [0.9, 0] }}
+                      transition={{ duration: 1, repeat: Infinity, repeatDelay: dur - 1, delay: delay + dur * 0.55, ease: "easeOut" }}
+                      style={{ originX: `${ex}px`, originY: `${ey}px` }}
+                    />
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+
+          {/* индикатор такта */}
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+            {INTRO_STEPS.map((s, i) => (
+              <button
+                key={s.eyebrow}
+                onClick={() => { setAuto(false); setStep(i); }}
+                className="h-1.5 rounded-full transition-all"
+                style={{
+                  width: i === step ? 34 : 14,
+                  background: i === step ? accent : T.border,
+                }}
+                aria-label={s.title}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ── пояснение такта ───────────────────────────────────────── */}
+        <div className="flex flex-col gap-3">
+          <div className="relative overflow-hidden rounded-2xl p-5"
+               style={{ background: T.solid, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+            <div
+              className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full"
+              style={{ background: accent, filter: "blur(52px)", opacity: 0.2, transition: "background 0.5s ease" }}
+            />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={S.eyebrow}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -14 }}
+                transition={{ duration: 0.4, ease: EASE }}
+                className="relative"
+              >
+                <div className="font-mono text-[12.5px] uppercase tracking-[0.16em]" style={{ color: accent }}>
+                  {S.eyebrow}
+                </div>
+                <div className="mt-2 text-[19px] font-semibold leading-tight" style={{ color: T.text }}>
+                  {S.title}
+                </div>
+                <div className="mt-2 text-[14.5px] leading-relaxed" style={{ color: T.muted }}>
+                  {S.text}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {[
+            { c: T.violet, t: "Внешний контур", d: "всё, что заходит на территорию: транспорт, люди, сырьё, подрядчики" },
+            { c: T.cyan, t: "Внутренний контур", d: "всё, что происходит и перемещается внутри: обработки, зоны, площадки" },
+          ].map((x, i) => (
+            <motion.div
+              key={x.t}
+              initial={{ opacity: 0, x: 18 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 + i * 0.1, duration: 0.5, ease: EASE }}
+              className="rounded-2xl px-4 py-3.5"
+              style={{ background: T.panelHi, border: `1px solid ${T.border}` }}
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: x.c }} />
+                <span className="text-[15.5px] font-semibold" style={{ color: T.text }}>{x.t}</span>
+              </div>
+              <div className="mt-1 text-[14px] leading-snug" style={{ color: T.muted }}>{x.d}</div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BiosecurityExecutiveDashboard() {
   const [theme, setTheme] = useState("light");
   const [period, setPeriod] = useState("week");
@@ -2262,7 +2616,31 @@ export default function BiosecurityExecutiveDashboard() {
       <div className="relative mx-auto max-w-[1280px] px-4 py-8 sm:px-7 sm:py-10">
         <Header T={T} period={period} setPeriod={setPeriod} theme={theme} setTheme={setTheme} />
 
-        <div className="mt-7 flex flex-wrap gap-4">
+        {/* ── ЧТО ТАКОЕ БИОБЕЗОПАСНОСТЬ ───────────────────────────────── */}
+        <div className="mt-7">
+          <Panel T={T}>
+            <SectionHead
+              T={T}
+              eyebrow="С чего всё начинается"
+              title="Что такое биобезопасность и почему контуров два"
+              right={
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
+                     style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
+                  <ArrowRight size={13} color={T.cyan} />
+                  объект · угроза · барьер · два контура
+                </div>
+              }
+            />
+            <p className="mb-4 max-w-[900px] text-[15.5px] leading-relaxed" style={{ color: T.muted }}>
+              Биобезопасность — это <b style={{ color: T.text }}>защита поголовья от заноса и распространения возбудителя</b>.
+              Не отдельная проверка, а сплошной барьер вокруг производства: всё, что въезжает, заходит,
+              завозится и перемещается внутри, проходит через правила, обработку и контроль.
+            </p>
+            <BiosecurityIntro T={T} />
+          </Panel>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-4">
           {stats.map((s, i) => <StatCard key={s.label} T={T} item={s} index={i} />)}
         </div>
 
