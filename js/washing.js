@@ -11,24 +11,33 @@
 const ACT_STORAGE_KEY = "aitas_act_datasets_v1";
 const MB_STORAGE_KEY = "aitas_washing_datasets_v1";
 
+// Порядок в каждом списке важен: сначала — точные формулировки из реального
+// свода рабочих журналов МБ («Дата отбора пробы», «Результат в допустимых
+// пределах ОК или NOK», «Подразделение», «Группа материала», «Подгруппа
+// материала»), затем — более общие варианты для файлов с другой структурой.
 const MB_FIELD_PATTERNS = {
-  date: ["дата", "date"],
-  zone: ["точка", "зона", "участок", "место", "объект", "location", "zone", "цех", "площадк"],
+  date: ["дата отбор", "дата", "date"],
+  zone: ["точка отбор", "точка", "корпус", "помещен", "зона", "участок", "место", "объект", "location", "zone", "площадк"],
   indicator: ["показат", "тест", "parameter", "возбудит", "микроорг", "indicator"],
-  result: ["результат", "result", "значен", "value", "кое", "титр"],
+  result: ["результат исследован", "результат", "result", "значен", "value", "кое", "титр"],
   norm: ["норматив", "норма", "predel", "предел", "limit", "norm"],
-  status: ["статус", "заключен", "status", "соответств", "вывод", "conclusion"],
-  enterprise: ["предприят", "enterprise"],
-  department: ["подразделен", "цех", "отдел", "department"],
+  status: ["допустим", "ок или nok", "ok или nok", "статус", "заключен", "status", "соответств", "вывод", "conclusion"],
+  enterprise: ["предприят", "организац", "компан", "enterprise"],
+  department: ["подразделен", "department"],
   materialGroup: ["групп материал", "группа материала", "материал"],
+  materialSubgroup: ["подгруппа материала", "подгруппа"],
 };
 
-// Значения фильтров по умолчанию (как в своде рабочих журналов МБ):
-// Предприятие = МПФ · Подразделение содержит «инкубац» · Группа материала = Смывы/Вода
+// Значения фильтров по умолчанию — как в реальном своде рабочих журналов МБ:
+// Предприятие = МПФ (Макинская птицефабрика) · Подразделение содержит
+// «инкубац»/«инкубатор» (это РАЗНЫЕ подстроки — «Инкубатор» не содержит
+// «инкубац») · Группа материала = Смывы/Вода · подгруппа «бахильная» (смыв с
+// обуви персонала, а не с оборудования) исключается отдельно.
 const MB_DEFAULT_FILTERS = {
-  enterpriseFilter: "мпф",
-  departmentFilter: "инкубац",
+  enterpriseFilter: "мпф,макинск",
+  departmentFilter: "инкубац,инкубатор",
   materialGroupFilter: "смывы,вода",
+  materialSubgroupExclude: "бахильн",
 };
 
 const wEls = {
@@ -105,6 +114,8 @@ const wEls = {
   mapDepartmentFilter: document.getElementById("mapDepartmentFilter"),
   mapMaterialGroup: document.getElementById("mapMaterialGroup"),
   mapMaterialGroupFilter: document.getElementById("mapMaterialGroupFilter"),
+  mapMaterialSubgroup: document.getElementById("mapMaterialSubgroup"),
+  mapMaterialSubgroupExclude: document.getElementById("mapMaterialSubgroupExclude"),
 };
 
 const wState = {
@@ -439,7 +450,7 @@ function guessMbMapping(headers) {
   // Подставляем стандартные значения фильтров только если нашли
   // соответствующую колонку — иначе поле фильтра остаётся пустым.
   Object.entries(MB_DEFAULT_FILTERS).forEach(([filterField, def]) => {
-    const colField = filterField.replace("Filter", "");
+    const colField = filterField.replace(/Filter$|Exclude$/, "");
     mapping[filterField] = mapping[colField] ? def : "";
   });
   return mapping;
@@ -493,21 +504,97 @@ function resolveMbStatus(row, mapping) {
 // содержит «инкубац»/«инкубатор» · Группа материала = «Смывы» или «Вода»)
 // ---------------------------------------------------------------------------
 
+function bizFilterNeedles(mapping, filterField) {
+  return (mapping[filterField] || "")
+    .trim()
+    .split(",")
+    .map((s) => normalizeMbHeader(s.trim()))
+    .filter(Boolean);
+}
+
+function includeMatch(row, mapping, colField, filterField) {
+  const col = mapping[colField];
+  const needles = bizFilterNeedles(mapping, filterField);
+  if (!col || !needles.length) return true;
+  const cellVal = normalizeMbHeader(String(row[col] || ""));
+  return needles.some((n) => cellVal.includes(n));
+}
+
+function excludeMatch(row, mapping, colField, filterField) {
+  const col = mapping[colField];
+  const needles = bizFilterNeedles(mapping, filterField);
+  if (!col || !needles.length) return true;
+  const cellVal = normalizeMbHeader(String(row[col] || ""));
+  return !needles.some((n) => cellVal.includes(n));
+}
+
 function rowMatchesBizFilter(row, mapping) {
-  const check = (colField, filterField) => {
-    const col = mapping[colField];
-    const filterRaw = (mapping[filterField] || "").trim();
-    if (!col || !filterRaw) return true;
-    const cellVal = normalizeMbHeader(String(row[col] || ""));
-    const needles = filterRaw.split(",").map((s) => normalizeMbHeader(s.trim())).filter(Boolean);
-    if (!needles.length) return true;
-    return needles.some((n) => cellVal.includes(n));
-  };
   return (
-    check("enterprise", "enterpriseFilter") &&
-    check("department", "departmentFilter") &&
-    check("materialGroup", "materialGroupFilter")
+    includeMatch(row, mapping, "enterprise", "enterpriseFilter") &&
+    includeMatch(row, mapping, "department", "departmentFilter") &&
+    includeMatch(row, mapping, "materialGroup", "materialGroupFilter") &&
+    excludeMatch(row, mapping, "materialSubgroup", "materialSubgroupExclude")
   );
+}
+
+// Пошаговая диагностика: сколько строк прошло каждый фильтр и какие значения
+// реально встречаются в колонке — чтобы объяснить, почему после загрузки
+// файла на дэшборде пусто, а не просто показать тишину.
+function diagnoseMbDataset(ds) {
+  const m = ds.mapping;
+  const sample = (set, v) => {
+    if (set.size < 8) {
+      const s = String(v ?? "").trim();
+      if (s) set.add(s);
+    }
+  };
+  const stats = {
+    total: ds.rows.length,
+    passEnt: 0,
+    passDept: 0,
+    passGroup: 0,
+    passFinal: 0,
+    sampleEnt: new Set(),
+    sampleDept: new Set(),
+    sampleGroup: new Set(),
+  };
+  ds.rows.forEach((row) => {
+    if (m.enterprise) sample(stats.sampleEnt, row[m.enterprise]);
+    if (m.department) sample(stats.sampleDept, row[m.department]);
+    if (m.materialGroup) sample(stats.sampleGroup, row[m.materialGroup]);
+    if (!includeMatch(row, m, "enterprise", "enterpriseFilter")) return;
+    stats.passEnt++;
+    if (!includeMatch(row, m, "department", "departmentFilter")) return;
+    stats.passDept++;
+    if (!includeMatch(row, m, "materialGroup", "materialGroupFilter")) return;
+    stats.passGroup++;
+    if (!excludeMatch(row, m, "materialSubgroup", "materialSubgroupExclude")) return;
+    stats.passFinal++;
+  });
+  return stats;
+}
+
+function sampleListText(set) {
+  return [...set].slice(0, 8).map((s) => `«${s}»`).join(", ") || "(пусто)";
+}
+
+function buildMbDiagnosticMessage(ds) {
+  const stats = diagnoseMbDataset(ds);
+  if (stats.passFinal > 0 || stats.total === 0) {
+    return { ok: true, text: `Загружено: ${stats.passFinal} из ${stats.total} строк` };
+  }
+  const m = ds.mapping;
+  let text;
+  if (m.enterprise && stats.passEnt === 0) {
+    text = `Фильтр «Предприятие» отсеял все строки. В файле встречаются: ${sampleListText(stats.sampleEnt)}.`;
+  } else if (m.department && stats.passDept === 0) {
+    text = `Фильтр «Подразделение» отсеял все строки (по предприятию прошло ${stats.passEnt}). В файле встречаются: ${sampleListText(stats.sampleDept)}.`;
+  } else if (m.materialGroup && stats.passGroup === 0) {
+    text = `Фильтр «Группа материала» отсеял все строки (по подразделению прошло ${stats.passDept}). В файле встречаются: ${sampleListText(stats.sampleGroup)}.`;
+  } else {
+    text = `После фильтров осталось 0 строк из ${stats.total}. Проверьте сопоставление колонок и значения фильтров.`;
+  }
+  return { ok: false, text };
 }
 
 // ---------------------------------------------------------------------------
@@ -1466,6 +1553,7 @@ function openMappingDialog() {
     enterprise: wEls.mapEnterprise,
     department: wEls.mapDepartment,
     materialGroup: wEls.mapMaterialGroup,
+    materialSubgroup: wEls.mapMaterialSubgroup,
   };
 
   Object.entries(selects).forEach(([field, select]) => {
@@ -1478,6 +1566,7 @@ function openMappingDialog() {
   wEls.mapEnterpriseFilter.value = guess.enterpriseFilter || "";
   wEls.mapDepartmentFilter.value = guess.departmentFilter || "";
   wEls.mapMaterialGroupFilter.value = guess.materialGroupFilter || "";
+  wEls.mapMaterialSubgroupExclude.value = guess.materialSubgroupExclude || "";
 
   wEls.mappingPreview.innerHTML = `
     <table>
@@ -1521,11 +1610,14 @@ wEls.buildChartsBtn.addEventListener("click", () => {
       departmentFilter: wEls.mapDepartmentFilter.value,
       materialGroup: wEls.mapMaterialGroup.value,
       materialGroupFilter: wEls.mapMaterialGroupFilter.value,
+      materialSubgroup: wEls.mapMaterialSubgroup.value,
+      materialSubgroupExclude: wEls.mapMaterialSubgroupExclude.value,
     },
   };
   wState.mbDatasets.push(dataset);
   saveMbDatasets();
-  setDzStatus(wEls.mbStatus, wEls.dzMb, `Загружено: ${dataset.rows.length} строк`, false);
+  const diag = buildMbDiagnosticMessage(dataset);
+  setDzStatus(wEls.mbStatus, wEls.dzMb, diag.text, !diag.ok);
   wEls.uploadDialog.close();
   wState.pendingMb = null;
   renderFileChips(wEls.mbFileChips, wState.mbDatasets, toggleMbDataset, removeMbDataset);

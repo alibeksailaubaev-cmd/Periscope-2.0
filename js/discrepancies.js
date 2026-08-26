@@ -56,6 +56,11 @@ const els = {
   viewToggle: document.getElementById("viewToggle"),
   listView: document.getElementById("listView"),
 
+  lightbox: document.getElementById("lightbox"),
+  lightboxImg: document.getElementById("lightboxImg"),
+  lightboxCaption: document.getElementById("lightboxCaption"),
+  lightboxClose: document.getElementById("lightboxClose"),
+
   openAddBtn: document.getElementById("openAddBtn"),
   addDialog: document.getElementById("addDialog"),
   addForm: document.getElementById("addForm"),
@@ -300,11 +305,12 @@ function renderListView(list) {
         severity === "critical" ? "var(--status-critical)" : severity === "low" ? "var(--status-good)" : "var(--status-warning)";
       const statusColor = status === "new" ? "var(--status-critical)" : status === "progress" ? "var(--status-warning)" : "var(--status-good)";
       return `
-        <button class="list-card" data-idx="${idx}">
-          <div class="list-card-photo">
+        <div class="list-card" data-idx="${idx}">
+          <div class="list-card-photo" data-role="photo" title="${entry.photo ? "Открыть фото целиком" : "Нет фото"}">
             ${entry.photo ? `<img src="${entry.photo}" alt="" />` : "📷"}
+            ${entry.photo ? '<span class="zoom-hint">⤢</span>' : ""}
           </div>
-          <div class="list-card-body">
+          <div class="list-card-body" data-role="open">
             <div class="list-card-location">${escapeHtml(entry.location)}</div>
             <div class="list-card-text">${escapeHtml(entry.text) || "—"}</div>
             <div class="list-card-meta">
@@ -313,18 +319,50 @@ function renderListView(list) {
               <span class="list-card-date">${formatShortDate(entry.date)}</span>
             </div>
           </div>
-        </button>
+        </div>
       `;
     })
     .join("");
 
   els.listView.querySelectorAll(".list-card").forEach((card) => {
-    card.addEventListener("click", () => {
-      state.index = Number(card.dataset.idx);
+    const idx = Number(card.dataset.idx);
+    const entry = list[idx];
+    card.querySelector('[data-role="photo"]').addEventListener("click", () => {
+      if (entry.photo) openLightbox(entry.photo, entry.location);
+      else {
+        state.index = idx;
+        setViewMode("cards");
+      }
+    });
+    card.querySelector('[data-role="open"]').addEventListener("click", () => {
+      state.index = idx;
       setViewMode("cards");
     });
   });
 }
+
+// ---------------------------------------------------------------------------
+// Полноэкранный просмотр фото
+// ---------------------------------------------------------------------------
+
+function openLightbox(src, caption) {
+  els.lightboxImg.src = src;
+  els.lightboxCaption.textContent = caption || "";
+  els.lightbox.hidden = false;
+}
+
+function closeLightbox() {
+  els.lightbox.hidden = true;
+  els.lightboxImg.src = "";
+}
+
+els.lightboxClose.addEventListener("click", closeLightbox);
+els.lightbox.addEventListener("click", (e) => {
+  if (e.target === els.lightbox) closeLightbox();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !els.lightbox.hidden) closeLightbox();
+});
 
 function setViewMode(mode) {
   state.viewMode = mode;
@@ -355,7 +393,7 @@ function renderCard(entry, direction) {
   const status = entry.status || "new";
 
   card.innerHTML = `
-    <div class="card-photo" id="cardPhoto" title="Нажмите, чтобы загрузить/заменить фото">
+    <div class="card-photo" id="cardPhoto" title="${entry.photo ? "Нажмите, чтобы посмотреть фото целиком" : "Нажмите, чтобы загрузить фото"}">
       ${
         entry.photo
           ? `<img src="${entry.photo}" alt="Фото несоответствия" />`
@@ -366,6 +404,7 @@ function renderCard(entry, direction) {
         <span class="badge badge-severity ${severity}">${SEVERITY_LABEL[severity]}</span>
         <button class="card-delete" id="cardDelete" title="Удалить">✕</button>
       </div>
+      ${entry.photo ? `<button class="card-photo-replace" id="cardPhotoReplace" title="Заменить фото">🔄 Заменить</button>` : ""}
     </div>
     <div class="card-body">
       <div class="card-location">${escapeHtml(entry.location)}</div>
@@ -385,7 +424,13 @@ function renderCard(entry, direction) {
   els.cardStage.appendChild(card);
 
   card.querySelector("#cardPhoto").addEventListener("click", (e) => {
-    if (e.target.closest("#cardDelete")) return;
+    if (e.target.closest("#cardDelete") || e.target.closest("#cardPhotoReplace")) return;
+    if (entry.photo) openLightbox(entry.photo, entry.location);
+    else promptReplacePhoto(entry.id);
+  });
+
+  card.querySelector("#cardPhotoReplace")?.addEventListener("click", (e) => {
+    e.stopPropagation();
     promptReplacePhoto(entry.id);
   });
 

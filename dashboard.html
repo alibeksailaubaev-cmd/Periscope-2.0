@@ -333,6 +333,13 @@
     </div>
   </div>
 
+  <!-- ===== Полноэкранный просмотр фото ===== -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox-close" id="lightboxClose" title="Закрыть">✕</button>
+    <img id="lightboxImg" alt="Фото несоответствия" />
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+
   <!-- ===== Модалка: новое несоответствие (фото) ===== -->
   <dialog id="addDialog" class="add-dialog">
     <form method="dialog" id="addForm" class="add-form">
@@ -443,6 +450,14 @@
         <label class="field">
           <span>Значения через запятую</span>
           <input type="text" id="mapMaterialGroupFilter" placeholder="смывы, вода" />
+        </label>
+        <label class="field">
+          <span>Колонка «Подгруппа материала»</span>
+          <select id="mapMaterialSubgroup"></select>
+        </label>
+        <label class="field">
+          <span>Исключить значения (напр. бахильн)</span>
+          <input type="text" id="mapMaterialSubgroupExclude" placeholder="бахильн" />
         </label>
       </div>
 
