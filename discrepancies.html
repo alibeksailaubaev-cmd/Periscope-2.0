@@ -4,21 +4,36 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Несоответствия — aitas ukpf</title>
+  <link rel="stylesheet" href="css/corporate.css" />
   <link rel="stylesheet" href="css/discrepancies.css" />
 </head>
 <body>
+
+  <div class="brand-strip" id="brandStrip"></div>
+
+  <header class="topnav">
+    <div class="topnav-brand">
+      <span class="mark"><svg viewBox="0 0 26 26"><path d="M4 14c2-4 6-6 10-5 3 .7 5 3 6 6-1.5.6-3 .6-4.5 0" /><circle cx="17" cy="8" r="1" /></svg></span>
+      <div class="word">
+        <strong>aitas ukpf</strong>
+        <span>усть-каменогорская птицефабрика</span>
+      </div>
+    </div>
+    <nav class="topnav-tabs">
+      <a href="discrepancies.html">Несоответствия</a>
+      <a href="washing.html">Мойка и смывы</a>
+    </nav>
+    <div class="topnav-spacer"></div>
+    <a href="index.html" class="topnav-live">Прямой эфир ↗</a>
+  </header>
 
   <div class="dash">
 
     <!-- ===== Левая панель ===== -->
     <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <span class="brand-mark">🐔</span>
-        <div class="brand-text">
-          <strong>aitas ukpf</strong>
-          <span>несоответствия</span>
-        </div>
-        <a href="index.html" class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</a>
+      <div class="sidebar-head">
+        <span class="sidebar-title">Разделы</span>
+        <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
       </div>
 
       <button class="btn-add" id="openAddBtn">
@@ -141,6 +156,7 @@
     </form>
   </dialog>
 
+  <script src="js/corporate.js"></script>
   <script src="js/discrepancies.js"></script>
 </body>
 </html>

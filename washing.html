@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Мойка и смывы — aitas ukpf</title>
+  <link rel="stylesheet" href="css/corporate.css" />
+  <link rel="stylesheet" href="css/washing.css" />
+</head>
+<body>
+
+  <div class="brand-strip" id="brandStrip"></div>
+
+  <header class="topnav">
+    <div class="topnav-brand">
+      <span class="mark"><svg viewBox="0 0 26 26"><path d="M4 14c2-4 6-6 10-5 3 .7 5 3 6 6-1.5.6-3 .6-4.5 0" /><circle cx="17" cy="8" r="1" /></svg></span>
+      <div class="word">
+        <strong>aitas ukpf</strong>
+        <span>усть-каменогорская птицефабрика</span>
+      </div>
+    </div>
+    <nav class="topnav-tabs">
+      <a href="discrepancies.html">Несоответствия</a>
+      <a href="washing.html">Мойка и смывы</a>
+    </nav>
+    <div class="topnav-spacer"></div>
+    <a href="index.html" class="topnav-live">Прямой эфир ↗</a>
+  </header>
+
+  <div class="dash">
+
+    <!-- ===== Левая панель ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <span class="sidebar-title">Данные</span>
+        <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
+      </div>
+
+      <button class="btn-add" id="openUploadBtn">
+        <span class="plus">+</span> Загрузить файл
+      </button>
+
+      <div class="dataset-list" id="datasetList">
+        <p class="dataset-empty" id="datasetEmpty">Пока нет загруженных файлов</p>
+      </div>
+
+      <div class="sidebar-section" id="zoneFilterSection" hidden>
+        <span class="sidebar-title">Точки контроля</span>
+        <div class="nav-sub" id="zoneFilterList"></div>
+      </div>
+
+      <div class="sidebar-stats" id="sidebarStats">
+        <div class="stat"><span class="dot dot-done"></span>Соответствует <b id="statPass">0</b></div>
+        <div class="stat"><span class="dot dot-new"></span>Не соответствует <b id="statFail">0</b></div>
+        <div class="stat"><span class="dot dot-progress"></span>Не определено <b id="statUnknown">0</b></div>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- ===== Основная область ===== -->
+    <main class="main">
+      <header class="main-top">
+        <button class="icon-btn menu-btn" id="menuBtn" title="Меню">☰</button>
+        <h1>Качество мойки и смывы</h1>
+        <div class="main-top-actions">
+          <input type="search" id="tableSearch" class="table-search" placeholder="Поиск по таблице…" hidden />
+        </div>
+      </header>
+
+      <div class="content" id="content">
+        <!-- ===== Пустое состояние ===== -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">🧪</div>
+          <h2>Нет данных для анализа</h2>
+          <p>
+            Загрузите CSV-файл с результатами смывов (экспорт из Excel в формате CSV) —
+            дашборд сам предложит сопоставить колонки и построит графики.
+          </p>
+          <button class="btn-primary" id="emptyUploadBtn">Загрузить файл</button>
+        </div>
+
+        <!-- ===== KPI ===== -->
+        <section class="kpi-row" id="kpiRow" hidden>
+          <div class="kpi-card">
+            <span class="kpi-label">Всего смывов</span>
+            <span class="kpi-value" id="kpiTotal">0</span>
+          </div>
+          <div class="kpi-card kpi-good">
+            <span class="kpi-label">Соответствует норме</span>
+            <span class="kpi-value" id="kpiPassRate">0%</span>
+          </div>
+          <div class="kpi-card kpi-critical">
+            <span class="kpi-label">Не соответствует</span>
+            <span class="kpi-value" id="kpiFail">0</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Точек с нарушениями</span>
+            <span class="kpi-value" id="kpiZones">0</span>
+          </div>
+        </section>
+
+        <!-- ===== Графики ===== -->
+        <section class="charts-grid" id="chartsGrid" hidden>
+          <div class="chart-card chart-card-wide">
+            <div class="chart-head">
+              <h3>Динамика соответствия по датам</h3>
+              <div class="legend" id="legendTrend"></div>
+            </div>
+            <div class="chart-body" id="chartTrend"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head">
+              <h3>Точки с наибольшим числом нарушений</h3>
+            </div>
+            <div class="chart-body" id="chartZones"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head">
+              <h3>Структура результатов</h3>
+            </div>
+            <div class="chart-body chart-body-donut" id="chartDonut"></div>
+          </div>
+        </section>
+
+        <!-- ===== Таблица ===== -->
+        <section class="table-card" id="tableCard" hidden>
+          <div class="table-scroll">
+            <table id="dataTable">
+              <thead id="dataTableHead"></thead>
+              <tbody id="dataTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-footer" id="tableFooter"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== Модалка загрузки + сопоставления колонок ===== -->
+  <dialog id="uploadDialog" class="upload-dialog">
+    <div class="upload-form">
+      <h2>Загрузка результатов смывов</h2>
+
+      <div class="upload-step" id="stepFile">
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-hint" id="dropzoneHint">
+            <div class="dropzone-icon">📄</div>
+            <p>Нажмите или перетащите CSV-файл сюда</p>
+            <span class="dropzone-sub">Экспортируйте таблицу из Excel в формате CSV (разделитель «;» или «,»)</span>
+          </div>
+          <input type="file" id="fieldFile" accept=".csv,.txt" hidden />
+        </div>
+        <p class="upload-error" id="uploadError" hidden></p>
+      </div>
+
+      <div class="upload-step" id="stepMapping" hidden>
+        <p class="mapping-hint">Файл распознан: <b id="mappingFileInfo"></b>. Сопоставьте колонки:</p>
+
+        <div class="mapping-grid">
+          <label class="field">
+            <span>Дата</span>
+            <select id="mapDate"></select>
+          </label>
+          <label class="field">
+            <span>Точка / зона контроля</span>
+            <select id="mapZone"></select>
+          </label>
+          <label class="field">
+            <span>Показатель (необязательно)</span>
+            <select id="mapIndicator"></select>
+          </label>
+          <label class="field">
+            <span>Результат</span>
+            <select id="mapResult"></select>
+          </label>
+          <label class="field">
+            <span>Норматив (необязательно)</span>
+            <select id="mapNorm"></select>
+          </label>
+          <label class="field">
+            <span>Статус / заключение</span>
+            <select id="mapStatus"></select>
+          </label>
+        </div>
+
+        <div class="mapping-preview" id="mappingPreview"></div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" id="cancelUploadBtn">Отмена</button>
+        <button type="button" class="btn-primary" id="buildChartsBtn" hidden>Построить графики</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/corporate.js"></script>
+  <script src="js/washing.js"></script>
+</body>
+</html>
