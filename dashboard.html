@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Дэшборд — aitas ukpf</title>
+  <link rel="stylesheet" href="css/corporate.css" />
+  <link rel="stylesheet" href="css/discrepancies.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <script src="js/vendor/xlsx.full.min.js"></script>
+</head>
+<body>
+
+  <div class="brand-strip" id="brandStrip"></div>
+
+  <header class="topnav">
+    <div class="topnav-brand">
+      <span class="mark"><svg viewBox="0 0 26 26"><path d="M4 14c2-4 6-6 10-5 3 .7 5 3 6 6-1.5.6-3 .6-4.5 0" /><circle cx="17" cy="8" r="1" /></svg></span>
+      <div class="word">
+        <strong>aitas ukpf</strong>
+        <span>усть-каменогорская птицефабрика</span>
+      </div>
+    </div>
+    <div class="topnav-spacer"></div>
+    <a href="index.html" class="topnav-live">Прямой эфир ↗</a>
+  </header>
+
+  <div class="app-shell">
+
+    <!-- ===== Общая левая панель разделов ===== -->
+    <aside class="master-sidebar" id="masterSidebar">
+      <div class="master-sidebar-head">
+        <span class="sidebar-title">Разделы</span>
+        <button class="icon-btn master-sidebar-close" id="masterSidebarClose" title="Закрыть меню">✕</button>
+      </div>
+
+      <nav class="nav-groups">
+        <div class="nav-group" data-group="incubator">
+          <button class="nav-group-head" id="incubatorGroupHead">
+            <span class="nav-icon">🥚</span>
+            <span class="nav-label">Инкубатор</span>
+            <span class="chevron">▾</span>
+          </button>
+          <div class="nav-sub">
+            <button class="nav-sub-item" data-view="washing">🧼&nbsp; Качество мойки</button>
+            <button class="nav-sub-item" data-view="swabs">🧫&nbsp; Качество смывов</button>
+          </div>
+        </div>
+
+        <button class="nav-all" data-view="discrepancies">
+          <span>📷&nbsp; Несоответствия</span>
+        </button>
+      </nav>
+    </aside>
+
+    <div class="master-sidebar-backdrop" id="masterSidebarBackdrop"></div>
+
+    <!-- ===== Контент ===== -->
+    <div class="app-content">
+
+      <!-- ================= РАЗДЕЛ: Качество мойки ================= -->
+      <section class="view" data-view="washing">
+        <div class="view-title">
+          <button class="icon-btn master-menu-btn" data-master-menu>☰</button>
+          <h1>Качество мойки</h1>
+          <span>Инкубатор · Акт приёма мойки</span>
+        </div>
+
+        <div class="upload-box" id="dzAct">
+          <input type="file" id="fieldActFile" accept=".xlsx,.xls" hidden />
+          <div class="dz-icon">🧼</div>
+          <div class="upload-box-text">
+            <h3>Акт приёма мойки</h3>
+            <p class="dz-hint">Excel (.xlsx) — лист с колонками «Дата», «Балл», «Несоответствие». Нажмите или перетащите файл сюда.</p>
+            <div class="dz-status" id="actStatus"></div>
+          </div>
+        </div>
+
+        <div class="file-chips" id="actFileChips" hidden></div>
+
+        <div class="controls-bar" id="actControlsBar" hidden>
+          <div class="ctrl-group">
+            <label for="actWeekSelect">🗓 Неделя проверки</label>
+            <select id="actWeekSelect" class="week-select">
+              <option value="">Весь период</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label for="actWeekInput">или номер недели</label>
+            <div class="ctrl-inline">
+              <input type="number" id="actWeekInput" min="1" max="53" placeholder="напр. 32" />
+              <button class="btn-secondary btn-small" id="actBtnApplyWeek">Применить</button>
+              <button class="btn-secondary btn-small" id="actBtnResetWeek">Сбросить</button>
+            </div>
+          </div>
+          <span class="range-badge" id="actRangeBadge">Весь период</span>
+        </div>
+
+        <div class="empty-state" id="actEmptyState">
+          <div class="empty-icon">🧼</div>
+          <p>Загрузите файл акта мойки выше — появятся баллы, график динамики и журнал несоответствий.</p>
+        </div>
+
+        <section class="kpi-row" id="actKpiRow" hidden>
+          <div class="kpi-card">
+            <span class="kpi-label">Проверок</span>
+            <span class="kpi-value" id="actKpiChecks">0</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Средний балл</span>
+            <span class="kpi-value" id="actKpiAvg">0</span>
+          </div>
+          <div class="kpi-card kpi-critical">
+            <span class="kpi-label">Несоответствий</span>
+            <span class="kpi-value" id="actKpiViol">0</span>
+          </div>
+          <div class="kpi-card kpi-critical">
+            <span class="kpi-label">Критично (≤7)</span>
+            <span class="kpi-value" id="actKpiCritical">0</span>
+          </div>
+          <div class="kpi-card kpi-good">
+            <span class="kpi-label">С первого раза</span>
+            <span class="kpi-value" id="actKpiFirstTry">0%</span>
+          </div>
+        </section>
+
+        <section class="chart-card" id="actTrendCard" hidden>
+          <div class="chart-head">
+            <div>
+              <h3>Динамика качества мойки</h3>
+              <span class="chart-sub">Балл по дням · 🟢 9–10 норма · 🟡 8 удовлетворительно · 🔴 ≤7 критично</span>
+            </div>
+          </div>
+          <div class="chart-body" id="chartActTrend"></div>
+        </section>
+
+        <section class="charts-grid" id="actBottomGrid" hidden>
+          <div class="chart-card">
+            <div class="chart-head"><h3>Средний балл по неделям</h3></div>
+            <div class="chart-body" id="chartActWeekly"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head">
+              <h3>Журнал несоответствий</h3>
+              <span class="chart-sub" id="actViolCount"></span>
+            </div>
+            <div class="incident-list" id="actIncidentList"></div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ================= РАЗДЕЛ: Качество смывов ================= -->
+      <section class="view" data-view="swabs" hidden>
+        <div class="view-title">
+          <button class="icon-btn master-menu-btn" data-master-menu>☰</button>
+          <h1>Качество смывов</h1>
+          <span>Инкубатор · Смывы и вода (МБ)</span>
+        </div>
+
+        <div class="upload-box" id="dzMb">
+          <input type="file" id="fieldMbFile" accept=".xlsx,.xls,.csv" hidden />
+          <div class="dz-icon">🧫</div>
+          <div class="upload-box-text">
+            <h3>Сводка смывов / воды</h3>
+            <p class="dz-hint">Excel (.xlsx) или CSV. Нажмите или перетащите файл — колонки нужно будет сопоставить вручную.</p>
+            <div class="dz-status" id="mbStatus"></div>
+          </div>
+        </div>
+
+        <div class="file-chips" id="mbFileChips" hidden></div>
+        <div class="zone-chip-row" id="zoneChipRow" hidden></div>
+
+        <div class="controls-bar" id="mbControlsBar" hidden>
+          <div class="ctrl-group">
+            <label for="mbWeekSelect">🗓 Неделя отбора проб</label>
+            <select id="mbWeekSelect" class="week-select">
+              <option value="">Весь период</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label for="mbWeekInput">или номер недели</label>
+            <div class="ctrl-inline">
+              <input type="number" id="mbWeekInput" min="1" max="53" placeholder="напр. 32" />
+              <button class="btn-secondary btn-small" id="mbBtnApplyWeek">Применить</button>
+              <button class="btn-secondary btn-small" id="mbBtnResetWeek">Сбросить</button>
+            </div>
+          </div>
+          <span class="range-badge" id="mbRangeBadge">Весь период</span>
+        </div>
+
+        <div class="empty-state" id="mbEmptyState">
+          <div class="empty-icon">🧫</div>
+          <p>Загрузите сводку выше — дашборд предложит сопоставить колонки и построит графики по результатам смывов.</p>
+        </div>
+
+        <section class="kpi-row" id="kpiRow" hidden>
+          <div class="kpi-card">
+            <span class="kpi-label">Всего смывов</span>
+            <span class="kpi-value" id="kpiTotal">0</span>
+          </div>
+          <div class="kpi-card kpi-good">
+            <span class="kpi-label">Соответствует норме</span>
+            <span class="kpi-value" id="kpiPassRate">0%</span>
+          </div>
+          <div class="kpi-card kpi-critical">
+            <span class="kpi-label">Не соответствует</span>
+            <span class="kpi-value" id="kpiFail">0</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Точек с нарушениями</span>
+            <span class="kpi-value" id="kpiZones">0</span>
+          </div>
+        </section>
+
+        <section class="charts-grid" id="chartsGrid" hidden>
+          <div class="chart-card chart-card-wide">
+            <div class="chart-head">
+              <h3>Динамика соответствия по датам</h3>
+              <div class="legend" id="legendTrend"></div>
+            </div>
+            <div class="chart-body" id="chartTrend"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head"><h3>Точки с наибольшим числом нарушений</h3></div>
+            <div class="chart-body" id="chartZones"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head"><h3>Структура результатов</h3></div>
+            <div class="chart-body chart-body-donut" id="chartDonut"></div>
+          </div>
+        </section>
+
+        <section class="table-card" id="tableCard" hidden>
+          <div class="table-card-head">
+            <h3>Все записи</h3>
+            <input type="search" id="tableSearch" class="table-search" placeholder="Поиск по таблице…" />
+          </div>
+          <div class="table-scroll">
+            <table id="dataTable">
+              <thead id="dataTableHead"></thead>
+              <tbody id="dataTableBody"></tbody>
+            </table>
+          </div>
+          <div class="table-footer" id="tableFooter"></div>
+        </section>
+      </section>
+
+      <!-- ================= РАЗДЕЛ: Несоответствия (фото) ================= -->
+      <section class="view" data-view="discrepancies" hidden>
+        <div class="view-discrepancies-inner">
+          <div class="dash">
+
+            <aside class="sidebar" id="sidebar">
+              <div class="sidebar-head">
+                <span class="sidebar-title">Разделы</span>
+                <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
+              </div>
+
+              <button class="btn-add" id="openAddBtn">
+                <span class="plus">+</span> Новое несоответствие
+              </button>
+
+              <nav class="nav-groups" id="navGroups">
+                <button class="nav-all" id="filterAll" data-filter="all">
+                  <span>Все несоответствия</span>
+                  <span class="count" id="countAll">0</span>
+                </button>
+
+                <div class="nav-group" data-category="incubator">
+                  <button class="nav-group-head" data-filter="incubator">
+                    <span class="nav-icon">🥚</span>
+                    <span class="nav-label">Инкубатор</span>
+                    <span class="count" id="countIncubator">0</span>
+                    <span class="chevron">▾</span>
+                  </button>
+                  <div class="nav-sub" id="subIncubator"></div>
+                </div>
+
+                <div class="nav-group" data-category="broiler">
+                  <button class="nav-group-head" data-filter="broiler">
+                    <span class="nav-icon">🏭</span>
+                    <span class="nav-label">Бройлерные площадки</span>
+                    <span class="count" id="countBroiler">0</span>
+                    <span class="chevron">▾</span>
+                  </button>
+                  <div class="nav-sub" id="subBroiler"></div>
+                </div>
+              </nav>
+
+              <div class="sidebar-stats" id="sidebarStats">
+                <div class="stat"><span class="dot dot-new"></span>Новые <b id="statNew">0</b></div>
+                <div class="stat"><span class="dot dot-progress"></span>В работе <b id="statProgress">0</b></div>
+                <div class="stat"><span class="dot dot-done"></span>Устранено <b id="statDone">0</b></div>
+              </div>
+            </aside>
+
+            <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+            <main class="main">
+              <header class="main-top">
+                <button class="icon-btn menu-btn" id="menuBtn" title="Меню">☰</button>
+                <h1 id="viewTitle">Все несоответствия</h1>
+                <div class="main-top-actions">
+                  <span class="progress-label" id="progressLabel"></span>
+                </div>
+              </header>
+
+              <section class="viewer" id="viewer">
+                <div class="empty-state" id="emptyState" hidden>
+                  <div class="empty-icon">📷</div>
+                  <p>Пока нет несоответствий в этом разделе</p>
+                  <button class="btn-primary" id="emptyAddBtn">Загрузить фото</button>
+                </div>
+
+                <button class="nav-arrow nav-arrow-left" id="prevBtn" title="Предыдущее">‹</button>
+                <div class="card-stage" id="cardStage"></div>
+                <button class="nav-arrow nav-arrow-right" id="nextBtn" title="Следующее">›</button>
+              </section>
+
+              <div class="dots" id="dots"></div>
+            </main>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===== Модалка: новое несоответствие (фото) ===== -->
+  <dialog id="addDialog" class="add-dialog">
+    <form method="dialog" id="addForm" class="add-form">
+      <h2>Новое несоответствие</h2>
+
+      <label class="field">
+        <span>Раздел</span>
+        <select id="fieldCategory" required>
+          <option value="incubator">Инкубатор</option>
+          <option value="broiler">Бройлерные площадки</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Место / участок</span>
+        <input id="fieldLocation" type="text" list="locationOptions" placeholder="напр. Зал №2, Площадка №5" required />
+        <datalist id="locationOptions"></datalist>
+      </label>
+
+      <label class="field">
+        <span>Серьёзность</span>
+        <select id="fieldSeverity">
+          <option value="critical">Критично</option>
+          <option value="medium" selected>Средне</option>
+          <option value="low">Незначительно</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Фото</span>
+        <div class="dropzone" id="dropzone">
+          <img id="dropPreview" hidden />
+          <div class="dropzone-hint" id="dropzoneHint">
+            <div class="dropzone-icon">📎</div>
+            <p>Нажмите или перетащите фото сюда</p>
+          </div>
+          <input type="file" id="fieldPhoto" accept="image/*" hidden />
+        </div>
+      </label>
+
+      <label class="field">
+        <span>Описание несоответствия</span>
+        <textarea id="fieldText" rows="3" placeholder="Опишите, что не так..." required></textarea>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" id="cancelAddBtn">Отмена</button>
+        <button type="submit" class="btn-primary" id="saveAddBtn">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== Модалка: сопоставление колонок (смывы) ===== -->
+  <dialog id="uploadDialog" class="upload-dialog">
+    <div class="upload-form">
+      <h2>Сопоставление колонок — смывы / вода</h2>
+      <p class="mapping-hint">Файл распознан: <b id="mappingFileInfo"></b>. Сопоставьте колонки:</p>
+
+      <div class="mapping-grid">
+        <label class="field">
+          <span>Дата</span>
+          <select id="mapDate"></select>
+        </label>
+        <label class="field">
+          <span>Точка / зона контроля</span>
+          <select id="mapZone"></select>
+        </label>
+        <label class="field">
+          <span>Показатель (необязательно)</span>
+          <select id="mapIndicator"></select>
+        </label>
+        <label class="field">
+          <span>Результат</span>
+          <select id="mapResult"></select>
+        </label>
+        <label class="field">
+          <span>Норматив (необязательно)</span>
+          <select id="mapNorm"></select>
+        </label>
+        <label class="field">
+          <span>Статус / заключение</span>
+          <select id="mapStatus"></select>
+        </label>
+      </div>
+
+      <div class="mapping-preview" id="mappingPreview"></div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" id="cancelUploadBtn">Отмена</button>
+        <button type="button" class="btn-primary" id="buildChartsBtn">Построить графики</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/corporate.js"></script>
+  <script src="js/washing.js"></script>
+  <script src="js/discrepancies.js"></script>
+  <script src="js/dashboard-shell.js"></script>
+</body>
+</html>

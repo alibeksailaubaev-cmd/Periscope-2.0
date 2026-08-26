@@ -1,12 +1,11 @@
 "use strict";
 
 /**
- * Дэшборд «Мойка и смывы» (aitas ukpf).
- * Два независимых источника данных:
+ * Разделы «Качество мойки» и «Качество смывов» общего дэшборда (aitas ukpf).
  *  — «Акт приёма мойки» (.xlsx, фиксированная структура: Дата/Балл/Несоответствие…)
  *  — «Смывы / вода» (.xlsx или .csv, структура произвольная — колонки сопоставляются вручную)
- * Оба фильтруются общим фильтром по неделе. Всё считается и хранится локально
- * (localStorage), бэкенд не нужен.
+ * У каждого раздела свой независимый фильтр по неделе. Всё считается и хранится
+ * локально (localStorage), бэкенд не нужен.
  */
 
 const ACT_STORAGE_KEY = "aitas_act_datasets_v1";
@@ -24,37 +23,33 @@ const MB_FIELD_PATTERNS = {
   status: ["статус", "заключен", "status", "соответств", "вывод", "conclusion"],
 };
 
-const els = {
-  dash: document.querySelector(".dash"),
-  sidebar: document.getElementById("sidebar"),
-  sidebarBackdrop: document.getElementById("sidebarBackdrop"),
-  sidebarClose: document.getElementById("sidebarClose"),
-  menuBtn: document.getElementById("menuBtn"),
-
-  actDatasetList: document.getElementById("actDatasetList"),
-  actDatasetEmpty: document.getElementById("actDatasetEmpty"),
-  mbDatasetList: document.getElementById("mbDatasetList"),
-  mbDatasetEmpty: document.getElementById("mbDatasetEmpty"),
-  zoneFilterSection: document.getElementById("zoneFilterSection"),
-  zoneFilterList: document.getElementById("zoneFilterList"),
-  statPass: document.getElementById("statPass"),
-  statFail: document.getElementById("statFail"),
-  statUnknown: document.getElementById("statUnknown"),
-
+const wEls = {
   dzAct: document.getElementById("dzAct"),
   fieldActFile: document.getElementById("fieldActFile"),
   actStatus: document.getElementById("actStatus"),
+  actFileChips: document.getElementById("actFileChips"),
+
   dzMb: document.getElementById("dzMb"),
   fieldMbFile: document.getElementById("fieldMbFile"),
   mbStatus: document.getElementById("mbStatus"),
+  mbFileChips: document.getElementById("mbFileChips"),
+  zoneChipRow: document.getElementById("zoneChipRow"),
 
-  controlsBar: document.getElementById("controlsBar"),
-  weekSelect: document.getElementById("weekSelect"),
-  weekInput: document.getElementById("weekInput"),
-  btnApplyWeek: document.getElementById("btnApplyWeek"),
-  btnResetWeek: document.getElementById("btnResetWeek"),
-  rangeBadge: document.getElementById("rangeBadge"),
+  actControlsBar: document.getElementById("actControlsBar"),
+  actWeekSelect: document.getElementById("actWeekSelect"),
+  actWeekInput: document.getElementById("actWeekInput"),
+  actBtnApplyWeek: document.getElementById("actBtnApplyWeek"),
+  actBtnResetWeek: document.getElementById("actBtnResetWeek"),
+  actRangeBadge: document.getElementById("actRangeBadge"),
 
+  mbControlsBar: document.getElementById("mbControlsBar"),
+  mbWeekSelect: document.getElementById("mbWeekSelect"),
+  mbWeekInput: document.getElementById("mbWeekInput"),
+  mbBtnApplyWeek: document.getElementById("mbBtnApplyWeek"),
+  mbBtnResetWeek: document.getElementById("mbBtnResetWeek"),
+  mbRangeBadge: document.getElementById("mbRangeBadge"),
+
+  actEmptyState: document.getElementById("actEmptyState"),
   actKpiRow: document.getElementById("actKpiRow"),
   actKpiChecks: document.getElementById("actKpiChecks"),
   actKpiAvg: document.getElementById("actKpiAvg"),
@@ -98,10 +93,12 @@ const els = {
   mapStatus: document.getElementById("mapStatus"),
 };
 
-const state = {
-  actDatasets: loadJson(ACT_STORAGE_KEY, []),
-  mbDatasets: loadJson(MB_STORAGE_KEY, []),
-  filter: { zone: null, week: null },
+const wState = {
+  actDatasets: wLoadJson(ACT_STORAGE_KEY, []),
+  mbDatasets: wLoadJson(MB_STORAGE_KEY, []),
+  actWeek: null,
+  mbWeek: null,
+  zone: null,
   search: "",
   pendingMb: null, // { filename, headers, rows }
 };
@@ -110,7 +107,7 @@ const state = {
 // Storage
 // ---------------------------------------------------------------------------
 
-function loadJson(key, fallback) {
+function wLoadJson(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
     return raw ? JSON.parse(raw) : fallback;
@@ -122,7 +119,7 @@ function loadJson(key, fallback) {
 
 function saveActDatasets() {
   try {
-    localStorage.setItem(ACT_STORAGE_KEY, JSON.stringify(state.actDatasets));
+    localStorage.setItem(ACT_STORAGE_KEY, JSON.stringify(wState.actDatasets));
   } catch (err) {
     console.warn("Не удалось сохранить данные акта мойки локально", err);
   }
@@ -130,13 +127,13 @@ function saveActDatasets() {
 
 function saveMbDatasets() {
   try {
-    localStorage.setItem(MB_STORAGE_KEY, JSON.stringify(state.mbDatasets));
+    localStorage.setItem(MB_STORAGE_KEY, JSON.stringify(wState.mbDatasets));
   } catch (err) {
     console.warn("Не удалось сохранить данные смывов локально (файл может быть слишком большим)", err);
   }
 }
 
-function cryptoId(prefix) {
+function wCryptoId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
@@ -194,9 +191,17 @@ function getIsoWeek(date) {
   return { year: monday.getFullYear(), week: 1 };
 }
 
-function inWeekFilter(date) {
-  if (!state.filter.week || !date) return true;
-  return date >= state.filter.week.start && date <= state.filter.week.end;
+function inWeek(date, weekFilter) {
+  if (!weekFilter || !date) return true;
+  return date >= weekFilter.start && date <= weekFilter.end;
+}
+
+function formatShortDate(d) {
+  return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+}
+
+function wFormatDate(d) {
+  return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 // ---------------------------------------------------------------------------
@@ -284,7 +289,7 @@ function parseActWorkbook(wb) {
         detergent: colMap.detergent !== undefined ? cellToString(row[colMap.detergent]) : "",
         disinfectant: colMap.disinfectant !== undefined ? cellToString(row[colMap.disinfectant]) : "",
         firstTryOk: firstTryRaw.includes("первого") && !firstTryRaw.includes("второго"),
-        correctionDone: !firstTryRawStartsNe(correctionRaw) && correctionRaw.includes("проведен"),
+        correctionDone: !/^не\b/.test(correctionRaw.trim()) && correctionRaw.includes("проведен"),
         violation: score < 10,
         severity: score >= 9 ? "ok" : score === 8 ? "warning" : "critical",
       });
@@ -297,10 +302,6 @@ function parseActWorkbook(wb) {
   }
 
   throw new Error('Не найден лист с колонками «Дата» и «Балл». Проверьте структуру файла акта мойки.');
-}
-
-function firstTryRawStartsNe(s) {
-  return /^не\b/.test(s.trim());
 }
 
 // ---------------------------------------------------------------------------
@@ -405,10 +406,6 @@ function guessMbMapping(headers) {
   return mapping;
 }
 
-function parseMbDate(raw) {
-  return excelToDate(raw);
-}
-
 function parseNumber(raw) {
   if (raw === undefined || raw === null) return null;
   const m = String(raw).replace(",", ".").match(/-?\d+(\.\d+)?/);
@@ -441,7 +438,7 @@ function resolveMbStatus(row, mapping) {
 // ---------------------------------------------------------------------------
 
 function getIncludedActDatasets() {
-  return state.actDatasets.filter((d) => d.included !== false);
+  return wState.actDatasets.filter((d) => d.included !== false);
 }
 
 function getAllActRows() {
@@ -453,7 +450,7 @@ function getAllActRows() {
 }
 
 function getFilteredActRows() {
-  return getAllActRows().filter((r) => inWeekFilter(r.date));
+  return getAllActRows().filter((r) => inWeek(r.date, wState.actWeek));
 }
 
 // ---------------------------------------------------------------------------
@@ -461,7 +458,7 @@ function getFilteredActRows() {
 // ---------------------------------------------------------------------------
 
 function getIncludedMbDatasets() {
-  return state.mbDatasets.filter((d) => d.included !== false);
+  return wState.mbDatasets.filter((d) => d.included !== false);
 }
 
 function getAllMbRows() {
@@ -472,7 +469,7 @@ function getAllMbRows() {
       out.push({
         id: `${ds.id}_${idx}`,
         datasetId: ds.id,
-        date: m.date ? parseMbDate(raw[m.date]) : null,
+        date: m.date ? excelToDate(raw[m.date]) : null,
         dateRaw: m.date ? raw[m.date] : "",
         zone: (m.zone && raw[m.zone]) || "Без указания",
         indicator: m.indicator ? raw[m.indicator] : "",
@@ -486,201 +483,10 @@ function getAllMbRows() {
 }
 
 function getFilteredMbRows() {
-  let rows = getAllMbRows().filter((r) => inWeekFilter(r.date));
-  if (state.filter.zone) rows = rows.filter((r) => r.zone === state.filter.zone);
+  let rows = getAllMbRows().filter((r) => inWeek(r.date, wState.mbWeek));
+  if (wState.zone) rows = rows.filter((r) => r.zone === wState.zone);
   return rows;
 }
-
-// ---------------------------------------------------------------------------
-// Панель фильтра по неделям
-// ---------------------------------------------------------------------------
-
-function renderControlsBar() {
-  const actRows = getAllActRows();
-  const mbRows = getAllMbRows().filter((r) => r.date);
-  const hasAny = actRows.length > 0 || mbRows.length > 0;
-  els.controlsBar.hidden = !hasAny;
-  if (!hasAny) return;
-
-  const weekMap = new Map();
-  [...actRows, ...mbRows].forEach((r) => {
-    const iw = getIsoWeek(r.date);
-    const key = `${iw.year}-${iw.week}`;
-    if (!weekMap.has(key)) weekMap.set(key, iw);
-  });
-
-  const current = state.filter.week ? `${state.filter.week.year}-${state.filter.week.week}` : "";
-  els.weekSelect.innerHTML = '<option value="">Весь период</option>';
-  [...weekMap.entries()]
-    .sort((a, b) => a[1].year - b[1].year || a[1].week - b[1].week)
-    .forEach(([key, iw]) => {
-      const { start, end } = isoWeekRange(iw.year, iw.week);
-      const opt = document.createElement("option");
-      opt.value = key;
-      opt.textContent = `${iw.week} неделя (${formatShortDate(start)}–${formatShortDate(end)})`;
-      if (key === current) opt.selected = true;
-      els.weekSelect.appendChild(opt);
-    });
-
-  if (state.filter.week) {
-    const { week, start, end } = state.filter.week;
-    els.rangeBadge.textContent = `${week} неделя · ${formatShortDate(start)}–${formatShortDate(end)}`;
-  } else {
-    els.rangeBadge.textContent = "Весь период";
-  }
-}
-
-els.weekSelect.addEventListener("change", () => {
-  const val = els.weekSelect.value;
-  if (!val) {
-    state.filter.week = null;
-  } else {
-    const [year, week] = val.split("-").map(Number);
-    const { start, end } = isoWeekRange(year, week);
-    state.filter.week = { year, week, start, end };
-  }
-  renderAll();
-});
-
-els.btnApplyWeek.addEventListener("click", () => {
-  const weekNum = parseInt(els.weekInput.value, 10);
-  if (!weekNum || weekNum < 1 || weekNum > 53) return;
-  const allDates = [...getAllActRows(), ...getAllMbRows().filter((r) => r.date)].map((r) => r.date);
-  const year = allDates.length ? getIsoWeek(allDates[0]).year : new Date().getFullYear();
-  const { start, end } = isoWeekRange(year, weekNum);
-  state.filter.week = { year, week: weekNum, start, end };
-  renderAll();
-});
-
-els.btnResetWeek.addEventListener("click", () => {
-  state.filter.week = null;
-  state.filter.zone = null;
-  els.weekInput.value = "";
-  renderAll();
-});
-
-function formatShortDate(d) {
-  return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
-}
-
-function formatDate(d) {
-  return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-// ---------------------------------------------------------------------------
-// Сайдбар: список датасетов
-// ---------------------------------------------------------------------------
-
-function renderDatasetGroup(datasets, listEl, emptyEl, onToggle, onRemove) {
-  listEl.querySelectorAll(".dataset-item").forEach((el) => el.remove());
-  emptyEl.hidden = datasets.length > 0;
-
-  datasets
-    .slice()
-    .reverse()
-    .forEach((ds) => {
-      const item = document.createElement("div");
-      item.className = "dataset-item";
-      item.innerHTML = `
-        <input type="checkbox" ${ds.included !== false ? "checked" : ""} />
-        <div class="dataset-info">
-          <span class="dataset-name">${escapeHtml(ds.filename)}</span>
-          <span class="dataset-meta">${ds.rows.length} строк · ${formatDate(new Date(ds.uploadedAt))}</span>
-        </div>
-        <button class="dataset-remove" title="Удалить">✕</button>
-      `;
-      item.querySelector('input[type="checkbox"]').addEventListener("change", (e) => onToggle(ds, e.target.checked));
-      item.querySelector(".dataset-remove").addEventListener("click", () => {
-        if (confirm(`Удалить файл «${ds.filename}»?`)) onRemove(ds);
-      });
-      listEl.appendChild(item);
-    });
-}
-
-function renderSidebarDatasets() {
-  renderDatasetGroup(
-    state.actDatasets,
-    els.actDatasetList,
-    els.actDatasetEmpty,
-    (ds, checked) => {
-      ds.included = checked;
-      saveActDatasets();
-      renderAll();
-    },
-    (ds) => {
-      state.actDatasets = state.actDatasets.filter((d) => d.id !== ds.id);
-      saveActDatasets();
-      renderAll();
-    }
-  );
-
-  renderDatasetGroup(
-    state.mbDatasets,
-    els.mbDatasetList,
-    els.mbDatasetEmpty,
-    (ds, checked) => {
-      ds.included = checked;
-      saveMbDatasets();
-      renderAll();
-    },
-    (ds) => {
-      state.mbDatasets = state.mbDatasets.filter((d) => d.id !== ds.id);
-      saveMbDatasets();
-      renderAll();
-    }
-  );
-}
-
-function renderZoneFilter() {
-  const rows = getAllMbRows();
-  els.zoneFilterSection.hidden = rows.length === 0;
-  els.zoneFilterList.innerHTML = "";
-  if (!rows.length) return;
-
-  const zoneMap = new Map();
-  rows.forEach((r) => {
-    const entry = zoneMap.get(r.zone) || { total: 0, fail: 0 };
-    entry.total++;
-    if (r.status === "fail") entry.fail++;
-    zoneMap.set(r.zone, entry);
-  });
-
-  const allBtn = document.createElement("button");
-  allBtn.className = "nav-sub-item" + (state.filter.zone ? "" : " active");
-  allBtn.innerHTML = `<span>Все точки</span><span class="count">${rows.length}</span>`;
-  allBtn.addEventListener("click", () => setZoneFilter(null));
-  els.zoneFilterList.appendChild(allBtn);
-
-  [...zoneMap.entries()]
-    .sort((a, b) => b[1].fail - a[1].fail || b[1].total - a[1].total)
-    .forEach(([zone, entry]) => {
-      const btn = document.createElement("button");
-      btn.className = "nav-sub-item" + (state.filter.zone === zone ? " active" : "");
-      btn.innerHTML = `<span>${escapeHtml(zone)}</span><span class="count">${entry.total}</span>`;
-      btn.addEventListener("click", () => setZoneFilter(zone));
-      els.zoneFilterList.appendChild(btn);
-    });
-
-  const filtered = getFilteredMbRows();
-  els.statPass.textContent = filtered.filter((r) => r.status === "pass").length;
-  els.statFail.textContent = filtered.filter((r) => r.status === "fail").length;
-  els.statUnknown.textContent = filtered.filter((r) => r.status === "unknown").length;
-}
-
-function setZoneFilter(zone) {
-  state.filter.zone = state.filter.zone === zone ? null : zone;
-  renderAll();
-}
-
-function openSidebar() {
-  els.dash.classList.add("sidebar-open");
-}
-function closeSidebar() {
-  els.dash.classList.remove("sidebar-open");
-}
-els.menuBtn.addEventListener("click", openSidebar);
-els.sidebarBackdrop.addEventListener("click", closeSidebar);
-els.sidebarClose.addEventListener("click", closeSidebar);
 
 // ---------------------------------------------------------------------------
 // SVG chart helpers (общие)
@@ -715,14 +521,207 @@ function hideTooltip(tip) {
 }
 
 // ---------------------------------------------------------------------------
+// Файл-чипы (список загруженных датасетов вместо боковой панели)
+// ---------------------------------------------------------------------------
+
+function renderFileChips(container, datasets, onToggle, onRemove) {
+  container.hidden = datasets.length === 0;
+  container.innerHTML = "";
+  datasets
+    .slice()
+    .reverse()
+    .forEach((ds) => {
+      const chip = document.createElement("span");
+      chip.className = "file-chip";
+      chip.innerHTML = `
+        <input type="checkbox" ${ds.included !== false ? "checked" : ""} />
+        <b>${escapeHtml(ds.filename)}</b>
+        <span>· ${ds.rows.length} строк</span>
+        <button type="button" class="file-chip-remove" title="Удалить">✕</button>
+      `;
+      chip.querySelector('input[type="checkbox"]').addEventListener("change", (e) => onToggle(ds, e.target.checked));
+      chip.querySelector(".file-chip-remove").addEventListener("click", () => {
+        if (confirm(`Удалить файл «${ds.filename}»?`)) onRemove(ds);
+      });
+      container.appendChild(chip);
+    });
+}
+
+// ---------------------------------------------------------------------------
+// Акт мойки: фильтр по неделе
+// ---------------------------------------------------------------------------
+
+function renderActControlsBar() {
+  const rows = getAllActRows();
+  wEls.actControlsBar.hidden = rows.length === 0;
+  if (!rows.length) return;
+
+  const weekMap = new Map();
+  rows.forEach((r) => {
+    const iw = getIsoWeek(r.date);
+    weekMap.set(`${iw.year}-${iw.week}`, iw);
+  });
+
+  const current = wState.actWeek ? `${wState.actWeek.year}-${wState.actWeek.week}` : "";
+  wEls.actWeekSelect.innerHTML = '<option value="">Весь период</option>';
+  [...weekMap.entries()]
+    .sort((a, b) => a[1].year - b[1].year || a[1].week - b[1].week)
+    .forEach(([key, iw]) => {
+      const { start, end } = isoWeekRange(iw.year, iw.week);
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = `${iw.week} неделя (${formatShortDate(start)}–${formatShortDate(end)})`;
+      if (key === current) opt.selected = true;
+      wEls.actWeekSelect.appendChild(opt);
+    });
+
+  wEls.actRangeBadge.textContent = wState.actWeek
+    ? `${wState.actWeek.week} неделя · ${formatShortDate(wState.actWeek.start)}–${formatShortDate(wState.actWeek.end)}`
+    : "Весь период";
+}
+
+wEls.actWeekSelect.addEventListener("change", () => {
+  const val = wEls.actWeekSelect.value;
+  if (!val) {
+    wState.actWeek = null;
+  } else {
+    const [year, week] = val.split("-").map(Number);
+    const { start, end } = isoWeekRange(year, week);
+    wState.actWeek = { year, week, start, end };
+  }
+  renderActSection();
+  renderActControlsBar();
+});
+
+wEls.actBtnApplyWeek.addEventListener("click", () => {
+  const weekNum = parseInt(wEls.actWeekInput.value, 10);
+  if (!weekNum || weekNum < 1 || weekNum > 53) return;
+  const dates = getAllActRows().map((r) => r.date);
+  const year = dates.length ? getIsoWeek(dates[0]).year : new Date().getFullYear();
+  const { start, end } = isoWeekRange(year, weekNum);
+  wState.actWeek = { year, week: weekNum, start, end };
+  renderActSection();
+  renderActControlsBar();
+});
+
+wEls.actBtnResetWeek.addEventListener("click", () => {
+  wState.actWeek = null;
+  wEls.actWeekInput.value = "";
+  renderActSection();
+  renderActControlsBar();
+});
+
+// ---------------------------------------------------------------------------
+// Смывы: фильтр по неделе + точкам контроля
+// ---------------------------------------------------------------------------
+
+function renderMbControlsBar() {
+  const rows = getAllMbRows().filter((r) => r.date);
+  wEls.mbControlsBar.hidden = rows.length === 0;
+  if (!rows.length) return;
+
+  const weekMap = new Map();
+  rows.forEach((r) => {
+    const iw = getIsoWeek(r.date);
+    weekMap.set(`${iw.year}-${iw.week}`, iw);
+  });
+
+  const current = wState.mbWeek ? `${wState.mbWeek.year}-${wState.mbWeek.week}` : "";
+  wEls.mbWeekSelect.innerHTML = '<option value="">Весь период</option>';
+  [...weekMap.entries()]
+    .sort((a, b) => a[1].year - b[1].year || a[1].week - b[1].week)
+    .forEach(([key, iw]) => {
+      const { start, end } = isoWeekRange(iw.year, iw.week);
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = `${iw.week} неделя (${formatShortDate(start)}–${formatShortDate(end)})`;
+      if (key === current) opt.selected = true;
+      wEls.mbWeekSelect.appendChild(opt);
+    });
+
+  wEls.mbRangeBadge.textContent = wState.mbWeek
+    ? `${wState.mbWeek.week} неделя · ${formatShortDate(wState.mbWeek.start)}–${formatShortDate(wState.mbWeek.end)}`
+    : "Весь период";
+}
+
+wEls.mbWeekSelect.addEventListener("change", () => {
+  const val = wEls.mbWeekSelect.value;
+  if (!val) {
+    wState.mbWeek = null;
+  } else {
+    const [year, week] = val.split("-").map(Number);
+    const { start, end } = isoWeekRange(year, week);
+    wState.mbWeek = { year, week, start, end };
+  }
+  renderMbSection();
+  renderMbControlsBar();
+});
+
+wEls.mbBtnApplyWeek.addEventListener("click", () => {
+  const weekNum = parseInt(wEls.mbWeekInput.value, 10);
+  if (!weekNum || weekNum < 1 || weekNum > 53) return;
+  const dates = getAllMbRows().filter((r) => r.date).map((r) => r.date);
+  const year = dates.length ? getIsoWeek(dates[0]).year : new Date().getFullYear();
+  const { start, end } = isoWeekRange(year, weekNum);
+  wState.mbWeek = { year, week: weekNum, start, end };
+  renderMbSection();
+  renderMbControlsBar();
+});
+
+wEls.mbBtnResetWeek.addEventListener("click", () => {
+  wState.mbWeek = null;
+  wState.zone = null;
+  wEls.mbWeekInput.value = "";
+  renderMbSection();
+  renderMbControlsBar();
+});
+
+function renderZoneChips() {
+  const rows = getAllMbRows();
+  wEls.zoneChipRow.hidden = rows.length === 0;
+  wEls.zoneChipRow.innerHTML = "";
+  if (!rows.length) return;
+
+  const zoneMap = new Map();
+  rows.forEach((r) => zoneMap.set(r.zone, (zoneMap.get(r.zone) || 0) + 1));
+
+  const allChip = document.createElement("button");
+  allChip.className = "zone-chip" + (wState.zone ? "" : " active");
+  allChip.textContent = `Все точки (${rows.length})`;
+  allChip.addEventListener("click", () => setZone(null));
+  wEls.zoneChipRow.appendChild(allChip);
+
+  [...zoneMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([zone, count]) => {
+      const chip = document.createElement("button");
+      chip.className = "zone-chip" + (wState.zone === zone ? " active" : "");
+      chip.innerHTML = `${escapeHtml(zone)} <span class="count">${count}</span>`;
+      chip.addEventListener("click", () => setZone(zone));
+      wEls.zoneChipRow.appendChild(chip);
+    });
+}
+
+function setZone(zone) {
+  wState.zone = wState.zone === zone ? null : zone;
+  renderZoneChips();
+  renderMbSection();
+}
+
+// ---------------------------------------------------------------------------
 // Акт мойки: рендер
 // ---------------------------------------------------------------------------
 
+function severityColor(sev) {
+  return sev === "critical" ? "var(--status-critical)" : sev === "warning" ? "var(--status-warning)" : "var(--status-good)";
+}
+
 function renderActSection() {
   const hasAct = getIncludedActDatasets().length > 0 && getAllActRows().length > 0;
-  els.actKpiRow.hidden = !hasAct;
-  els.actTrendCard.hidden = !hasAct;
-  els.actBottomGrid.hidden = !hasAct;
+  wEls.actEmptyState.hidden = hasAct;
+  wEls.actKpiRow.hidden = !hasAct;
+  wEls.actTrendCard.hidden = !hasAct;
+  wEls.actBottomGrid.hidden = !hasAct;
   if (!hasAct) return;
 
   const rows = getFilteredActRows();
@@ -733,23 +732,19 @@ function renderActSection() {
   const critical = rows.filter((r) => r.severity === "critical").length;
   const firstTryPct = checks ? Math.round((rows.filter((r) => r.firstTryOk).length / checks) * 100) : 0;
 
-  els.actKpiChecks.textContent = checks;
-  els.actKpiAvg.textContent = checks ? avg.toFixed(1) : "—";
-  els.actKpiViol.textContent = violations;
-  els.actKpiCritical.textContent = critical;
-  els.actKpiFirstTry.textContent = `${firstTryPct}%`;
+  wEls.actKpiChecks.textContent = checks;
+  wEls.actKpiAvg.textContent = checks ? avg.toFixed(1) : "—";
+  wEls.actKpiViol.textContent = violations;
+  wEls.actKpiCritical.textContent = critical;
+  wEls.actKpiFirstTry.textContent = `${firstTryPct}%`;
 
   renderActTrendChart(rows);
   renderActWeeklyChart(rows);
   renderActIncidents(rows);
 }
 
-function severityColor(sev) {
-  return sev === "critical" ? "var(--status-critical)" : sev === "warning" ? "var(--status-warning)" : "var(--status-good)";
-}
-
 function renderActTrendChart(rows) {
-  const container = els.chartActTrend;
+  const container = wEls.chartActTrend;
   container.innerHTML = "";
 
   if (!rows.length) {
@@ -774,7 +769,6 @@ function renderActTrendChart(rows) {
   const yFor = (score) => padT + (1 - (score - minScore) / (maxScore - minScore)) * plotH;
   const xFor = (i) => (rows.length === 1 ? padL + plotW / 2 : padL + (i / (rows.length - 1)) * plotW);
 
-  // цветные полосы-зоны по легенде баллов
   const zoneBands = [
     { from: 9, to: maxScore, color: "var(--status-good)", opacity: 0.06 },
     { from: 8, to: 9, color: "var(--status-warning)", opacity: 0.08 },
@@ -810,15 +804,14 @@ function renderActTrendChart(rows) {
         container,
         tip,
         e,
-        `<b>${formatDate(r.date)}</b><br/>Балл: ${r.score}${r.violation ? "" : " (без замечаний)"}${r.note && r.violation ? `<br/>${escapeHtml(r.note).slice(0, 140)}` : ""}`
+        `<b>${wFormatDate(r.date)}</b><br/>Балл: ${r.score}${r.violation ? "" : " (без замечаний)"}${r.note && r.violation ? `<br/>${escapeHtml(r.note).slice(0, 140)}` : ""}`
       )
     );
     dot.addEventListener("mousemove", (e) => showTooltip(container, tip, e, tip.innerHTML));
     dot.addEventListener("mouseleave", () => hideTooltip(tip));
     svg.appendChild(dot);
 
-    const showLabel = rows.length <= 40 || i === 0 || i === rows.length - 1;
-    if (showLabel && (i % Math.max(1, Math.ceil(rows.length / 12)) === 0 || i === rows.length - 1)) {
+    if (i % Math.max(1, Math.ceil(rows.length / 12)) === 0 || i === rows.length - 1) {
       const xl = svgEl("text", { x: cx, y: H - 6, class: "axis-label", "text-anchor": "middle" });
       xl.textContent = formatShortDate(r.date);
       svg.appendChild(xl);
@@ -830,7 +823,7 @@ function renderActTrendChart(rows) {
 }
 
 function renderActWeeklyChart(rows) {
-  const container = els.chartActWeekly;
+  const container = wEls.chartActWeekly;
   container.innerHTML = "";
 
   if (!rows.length) {
@@ -893,18 +886,18 @@ function renderActWeeklyChart(rows) {
 
 function renderActIncidents(rows) {
   const violations = rows.filter((r) => r.violation).sort((a, b) => b.date - a.date);
-  els.actViolCount.textContent = `${violations.length} из ${rows.length}`;
+  wEls.actViolCount.textContent = `${violations.length} из ${rows.length}`;
 
   if (!violations.length) {
-    els.actIncidentList.innerHTML = '<div class="chart-empty">Несоответствий не зафиксировано 🎉</div>';
+    wEls.actIncidentList.innerHTML = '<div class="chart-empty">Несоответствий не зафиксировано 🎉</div>';
     return;
   }
 
-  els.actIncidentList.innerHTML = violations
+  wEls.actIncidentList.innerHTML = violations
     .slice(0, 200)
     .map((r) => {
       const sevClass = r.severity === "critical" ? "" : r.severity === "warning" ? "severity-warning" : "severity-minor";
-      const correctionNote = r.correctionDone !== undefined ? (r.correctionDone ? "Коррекция проведена" : "Коррекция не проведена") : "";
+      const correctionNote = r.correctionDone ? "Коррекция проведена" : "Коррекция не проведена";
       const firstTryNote = r.firstTryOk ? "принято с первого раза" : "принято со второго раза";
       return `
         <div class="incident-item ${sevClass}">
@@ -914,7 +907,7 @@ function renderActIncidents(rows) {
           </div>
           <div>
             <div class="incident-text">${escapeHtml(r.note) || "—"}</div>
-            <div class="incident-meta">${escapeHtml(firstTryNote)}${correctionNote ? " · " + escapeHtml(correctionNote) : ""}</div>
+            <div class="incident-meta">${escapeHtml(firstTryNote)} · ${escapeHtml(correctionNote)}</div>
           </div>
         </div>
       `;
@@ -930,10 +923,10 @@ function renderMbSection() {
   const rows = getFilteredMbRows();
   const hasData = getIncludedMbDatasets().length > 0 && getAllMbRows().length > 0;
 
-  els.mbEmptyState.hidden = hasData;
-  els.kpiRow.hidden = !hasData;
-  els.chartsGrid.hidden = !hasData;
-  els.tableCard.hidden = !hasData;
+  wEls.mbEmptyState.hidden = hasData;
+  wEls.kpiRow.hidden = !hasData;
+  wEls.chartsGrid.hidden = !hasData;
+  wEls.tableCard.hidden = !hasData;
 
   if (!hasData) return;
 
@@ -951,16 +944,16 @@ function renderMbKpis(rows) {
   const passRate = known ? Math.round((pass / known) * 100) : 0;
   const zonesWithFail = new Set(rows.filter((r) => r.status === "fail").map((r) => r.zone)).size;
 
-  els.kpiTotal.textContent = rows.length;
-  els.kpiPassRate.textContent = `${passRate}%`;
-  els.kpiFail.textContent = fail;
-  els.kpiZones.textContent = zonesWithFail;
+  wEls.kpiTotal.textContent = rows.length;
+  wEls.kpiPassRate.textContent = `${passRate}%`;
+  wEls.kpiFail.textContent = fail;
+  wEls.kpiZones.textContent = zonesWithFail;
 }
 
 function renderTrendChart(rows) {
-  const container = els.chartTrend;
+  const container = wEls.chartTrend;
   container.innerHTML = "";
-  els.legendTrend.innerHTML = "";
+  wEls.legendTrend.innerHTML = "";
 
   const dated = rows.filter((r) => r.date && (r.status === "pass" || r.status === "fail"));
   if (!dated.length) {
@@ -1050,11 +1043,11 @@ function renderTrendChart(rows) {
   container.appendChild(svg);
   container.appendChild(tip);
 
-  els.legendTrend.innerHTML = `<div class="legend-item"><span class="legend-swatch" style="background:var(--series-1)"></span>% соответствия смывов по дате</div>`;
+  wEls.legendTrend.innerHTML = `<div class="legend-item"><span class="legend-swatch" style="background:var(--series-1)"></span>% соответствия смывов по дате</div>`;
 }
 
 function renderZonesChart(rows) {
-  const container = els.chartZones;
+  const container = wEls.chartZones;
   container.innerHTML = "";
 
   const zoneMap = new Map();
@@ -1113,7 +1106,7 @@ function renderZonesChart(rows) {
 }
 
 function renderDonutChart(rows) {
-  const container = els.chartDonut;
+  const container = wEls.chartDonut;
   container.innerHTML = "";
 
   const pass = rows.filter((r) => r.status === "pass").length;
@@ -1205,14 +1198,14 @@ function renderDonutChart(rows) {
 }
 
 function renderTable(rows) {
-  const q = state.search.trim().toLowerCase();
+  const q = wState.search.trim().toLowerCase();
   const filtered = q
     ? rows.filter((r) =>
         [r.dateRaw, r.zone, r.indicator, r.result, r.norm, r.status].join(" ").toLowerCase().includes(q)
       )
     : rows;
 
-  els.dataTableHead.innerHTML = `
+  wEls.dataTableHead.innerHTML = `
     <tr>
       <th>Дата</th>
       <th>Точка / зона</th>
@@ -1224,7 +1217,7 @@ function renderTable(rows) {
   `;
 
   const limited = filtered.slice(0, 300);
-  els.dataTableBody.innerHTML = limited
+  wEls.dataTableBody.innerHTML = limited
     .map((r) => {
       const statusLabel = { pass: "Соответствует", fail: "Не соответствует", unknown: "Не определено" }[r.status];
       return `
@@ -1240,31 +1233,19 @@ function renderTable(rows) {
     })
     .join("");
 
-  els.tableFooter.textContent =
+  wEls.tableFooter.textContent =
     filtered.length > limited.length
       ? `Показано ${limited.length} из ${filtered.length} записей`
       : `Всего записей: ${filtered.length}`;
 }
 
-els.tableSearch.addEventListener(
+wEls.tableSearch.addEventListener(
   "input",
-  debounce((e) => {
-    state.search = e.target.value;
+  wDebounce((e) => {
+    wState.search = e.target.value;
     renderTable(getFilteredMbRows());
   }, 200)
 );
-
-// ---------------------------------------------------------------------------
-// Общий рендер
-// ---------------------------------------------------------------------------
-
-function renderAll() {
-  renderControlsBar();
-  renderSidebarDatasets();
-  renderZoneFilter();
-  renderActSection();
-  renderMbSection();
-}
 
 // ---------------------------------------------------------------------------
 // Загрузка файла — Акт мойки
@@ -1276,8 +1257,8 @@ function setDzStatus(el, dz, text, isError) {
   dz.classList.toggle("loaded", !isError && !!text);
 }
 
-wireDropzone(els.dzAct, els.fieldActFile, handleActFile);
-wireDropzone(els.dzMb, els.fieldMbFile, handleMbFile);
+wireDropzone(wEls.dzAct, wEls.fieldActFile, handleActFile);
+wireDropzone(wEls.dzMb, wEls.fieldMbFile, handleMbFile);
 
 function wireDropzone(dz, input, handler) {
   dz.addEventListener("click", () => input.click());
@@ -1304,30 +1285,48 @@ function wireDropzone(dz, input, handler) {
 }
 
 function handleActFile(file) {
-  setDzStatus(els.actStatus, els.dzAct, "Обработка файла…", false);
+  setDzStatus(wEls.actStatus, wEls.dzAct, "Обработка файла…", false);
   const reader = new FileReader();
   reader.onload = () => {
     try {
       const wb = XLSX.read(reader.result, { type: "array", cellDates: true });
       const rows = parseActWorkbook(wb);
       const dataset = {
-        id: cryptoId("act"),
+        id: wCryptoId("act"),
         filename: file.name,
         uploadedAt: Date.now(),
         included: true,
         rows,
       };
-      state.actDatasets.push(dataset);
+      wState.actDatasets.push(dataset);
       saveActDatasets();
-      setDzStatus(els.actStatus, els.dzAct, `Загружено: ${rows.length} проверок`, false);
-      renderAll();
+      setDzStatus(wEls.actStatus, wEls.dzAct, `Загружено: ${rows.length} проверок`, false);
+      renderFileChips(wEls.actFileChips, wState.actDatasets, toggleActDataset, removeActDataset);
+      renderActControlsBar();
+      renderActSection();
     } catch (err) {
       console.error(err);
-      setDzStatus(els.actStatus, els.dzAct, err.message || "Не удалось разобрать файл", true);
+      setDzStatus(wEls.actStatus, wEls.dzAct, err.message || "Не удалось разобрать файл", true);
     }
   };
-  reader.onerror = () => setDzStatus(els.actStatus, els.dzAct, "Ошибка чтения файла", true);
+  reader.onerror = () => setDzStatus(wEls.actStatus, wEls.dzAct, "Ошибка чтения файла", true);
   reader.readAsArrayBuffer(file);
+}
+
+function toggleActDataset(ds, checked) {
+  ds.included = checked;
+  saveActDatasets();
+  renderFileChips(wEls.actFileChips, wState.actDatasets, toggleActDataset, removeActDataset);
+  renderActControlsBar();
+  renderActSection();
+}
+
+function removeActDataset(ds) {
+  wState.actDatasets = wState.actDatasets.filter((d) => d.id !== ds.id);
+  saveActDatasets();
+  renderFileChips(wEls.actFileChips, wState.actDatasets, toggleActDataset, removeActDataset);
+  renderActControlsBar();
+  renderActSection();
 }
 
 // ---------------------------------------------------------------------------
@@ -1335,7 +1334,7 @@ function handleActFile(file) {
 // ---------------------------------------------------------------------------
 
 function handleMbFile(file) {
-  setDzStatus(els.mbStatus, els.dzMb, "Обработка файла…", false);
+  setDzStatus(wEls.mbStatus, wEls.dzMb, "Обработка файла…", false);
   const isCsv = /\.csv$/i.test(file.name);
 
   if (isCsv) {
@@ -1343,13 +1342,13 @@ function handleMbFile(file) {
     reader.onload = () => {
       const { headers, rows } = parseCsv(String(reader.result));
       if (headers.length < 2 || rows.length === 0) {
-        setDzStatus(els.mbStatus, els.dzMb, "Не удалось прочитать CSV-файл", true);
+        setDzStatus(wEls.mbStatus, wEls.dzMb, "Не удалось прочитать CSV-файл", true);
         return;
       }
-      state.pendingMb = { filename: file.name, headers, rows };
+      wState.pendingMb = { filename: file.name, headers, rows };
       openMappingDialog();
     };
-    reader.onerror = () => setDzStatus(els.mbStatus, els.dzMb, "Ошибка чтения файла", true);
+    reader.onerror = () => setDzStatus(wEls.mbStatus, wEls.dzMb, "Ошибка чтения файла", true);
     reader.readAsText(file, "utf-8");
   } else {
     const reader = new FileReader();
@@ -1358,34 +1357,34 @@ function handleMbFile(file) {
         const wb = XLSX.read(reader.result, { type: "array", cellDates: true });
         const { headers, rows } = parseXlsxGeneric(wb);
         if (headers.length < 2 || rows.length === 0) {
-          setDzStatus(els.mbStatus, els.dzMb, "Не удалось найти таблицу с заголовками в файле", true);
+          setDzStatus(wEls.mbStatus, wEls.dzMb, "Не удалось найти таблицу с заголовками в файле", true);
           return;
         }
-        state.pendingMb = { filename: file.name, headers, rows };
+        wState.pendingMb = { filename: file.name, headers, rows };
         openMappingDialog();
       } catch (err) {
         console.error(err);
-        setDzStatus(els.mbStatus, els.dzMb, "Не удалось разобрать Excel-файл", true);
+        setDzStatus(wEls.mbStatus, wEls.dzMb, "Не удалось разобрать Excel-файл", true);
       }
     };
-    reader.onerror = () => setDzStatus(els.mbStatus, els.dzMb, "Ошибка чтения файла", true);
+    reader.onerror = () => setDzStatus(wEls.mbStatus, wEls.dzMb, "Ошибка чтения файла", true);
     reader.readAsArrayBuffer(file);
   }
 }
 
 function openMappingDialog() {
-  const { filename, headers, rows } = state.pendingMb;
+  const { filename, headers, rows } = wState.pendingMb;
   const guess = guessMbMapping(headers);
 
-  els.mappingFileInfo.textContent = `${filename} — ${rows.length} строк`;
+  wEls.mappingFileInfo.textContent = `${filename} — ${rows.length} строк`;
 
   const selects = {
-    date: els.mapDate,
-    zone: els.mapZone,
-    indicator: els.mapIndicator,
-    result: els.mapResult,
-    norm: els.mapNorm,
-    status: els.mapStatus,
+    date: wEls.mapDate,
+    zone: wEls.mapZone,
+    indicator: wEls.mapIndicator,
+    result: wEls.mapResult,
+    norm: wEls.mapNorm,
+    status: wEls.mapStatus,
   };
 
   Object.entries(selects).forEach(([field, select]) => {
@@ -1395,7 +1394,7 @@ function openMappingDialog() {
     select.value = guess[field] || "";
   });
 
-  els.mappingPreview.innerHTML = `
+  wEls.mappingPreview.innerHTML = `
     <table>
       <thead><tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("")}</tr></thead>
       <tbody>
@@ -1407,39 +1406,60 @@ function openMappingDialog() {
     </table>
   `;
 
-  els.uploadDialog.showModal();
+  wEls.uploadDialog.showModal();
 }
 
-els.cancelUploadBtn.addEventListener("click", () => {
-  state.pendingMb = null;
-  els.uploadDialog.close();
+wEls.cancelUploadBtn.addEventListener("click", () => {
+  wState.pendingMb = null;
+  wEls.uploadDialog.close();
 });
 
-els.buildChartsBtn.addEventListener("click", () => {
-  if (!state.pendingMb) return;
+wEls.buildChartsBtn.addEventListener("click", () => {
+  if (!wState.pendingMb) return;
   const dataset = {
-    id: cryptoId("mb"),
-    filename: state.pendingMb.filename,
+    id: wCryptoId("mb"),
+    filename: wState.pendingMb.filename,
     uploadedAt: Date.now(),
-    headers: state.pendingMb.headers,
-    rows: state.pendingMb.rows,
+    headers: wState.pendingMb.headers,
+    rows: wState.pendingMb.rows,
     included: true,
     mapping: {
-      date: els.mapDate.value,
-      zone: els.mapZone.value,
-      indicator: els.mapIndicator.value,
-      result: els.mapResult.value,
-      norm: els.mapNorm.value,
-      status: els.mapStatus.value,
+      date: wEls.mapDate.value,
+      zone: wEls.mapZone.value,
+      indicator: wEls.mapIndicator.value,
+      result: wEls.mapResult.value,
+      norm: wEls.mapNorm.value,
+      status: wEls.mapStatus.value,
     },
   };
-  state.mbDatasets.push(dataset);
+  wState.mbDatasets.push(dataset);
   saveMbDatasets();
-  setDzStatus(els.mbStatus, els.dzMb, `Загружено: ${dataset.rows.length} строк`, false);
-  els.uploadDialog.close();
-  state.pendingMb = null;
-  renderAll();
+  setDzStatus(wEls.mbStatus, wEls.dzMb, `Загружено: ${dataset.rows.length} строк`, false);
+  wEls.uploadDialog.close();
+  wState.pendingMb = null;
+  renderFileChips(wEls.mbFileChips, wState.mbDatasets, toggleMbDataset, removeMbDataset);
+  renderZoneChips();
+  renderMbControlsBar();
+  renderMbSection();
 });
+
+function toggleMbDataset(ds, checked) {
+  ds.included = checked;
+  saveMbDatasets();
+  renderFileChips(wEls.mbFileChips, wState.mbDatasets, toggleMbDataset, removeMbDataset);
+  renderZoneChips();
+  renderMbControlsBar();
+  renderMbSection();
+}
+
+function removeMbDataset(ds) {
+  wState.mbDatasets = wState.mbDatasets.filter((d) => d.id !== ds.id);
+  saveMbDatasets();
+  renderFileChips(wEls.mbFileChips, wState.mbDatasets, toggleMbDataset, removeMbDataset);
+  renderZoneChips();
+  renderMbControlsBar();
+  renderMbSection();
+}
 
 // ---------------------------------------------------------------------------
 // Utils
@@ -1451,7 +1471,7 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function debounce(fn, ms) {
+function wDebounce(fn, ms) {
   let t;
   return (...args) => {
     clearTimeout(t);
@@ -1463,4 +1483,10 @@ function debounce(fn, ms) {
 // Boot
 // ---------------------------------------------------------------------------
 
-renderAll();
+renderFileChips(wEls.actFileChips, wState.actDatasets, toggleActDataset, removeActDataset);
+renderFileChips(wEls.mbFileChips, wState.mbDatasets, toggleMbDataset, removeMbDataset);
+renderActControlsBar();
+renderMbControlsBar();
+renderZoneChips();
+renderActSection();
+renderMbSection();
