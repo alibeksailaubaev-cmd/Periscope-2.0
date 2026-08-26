@@ -628,6 +628,27 @@ function getIncludedMbDatasets() {
 function getAllMbRows() {
   const out = [];
   getIncludedMbDatasets().forEach((ds) => {
+    if (ds.kind === "stream") {
+      // Уже готовые строки из потокового парсера (js/mb-stream.js) —
+      // фильтры Предприятие/Подразделение/Группа материала применены при
+      // разборе, сопоставление колонок не требуется.
+      ds.rows.forEach((r, idx) => {
+        const date = new Date(r.dateISO);
+        out.push({
+          id: `${ds.id}_${idx}`,
+          datasetId: ds.id,
+          date,
+          dateRaw: wFormatDate(date),
+          zone: r.zone || "Без указания",
+          indicator: r.indicator || "",
+          result: r.result || "",
+          norm: "",
+          status: r.status || "unknown",
+        });
+      });
+      return;
+    }
+
     ds.rows.forEach((raw, idx) => {
       const m = ds.mapping;
       if (!rowMatchesBizFilter(raw, m)) return;
@@ -1516,25 +1537,63 @@ function handleMbFile(file) {
     reader.onerror = () => setDzStatus(wEls.mbStatus, wEls.dzMb, "Ошибка чтения файла", true);
     reader.readAsText(file, "utf-8");
   } else {
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const wb = XLSX.read(reader.result, { type: "array", cellDates: true });
-        const { headers, rows } = parseXlsxGeneric(wb);
-        if (headers.length < 2 || rows.length === 0) {
-          setDzStatus(wEls.mbStatus, wEls.dzMb, "Не удалось найти таблицу с заголовками в файле", true);
-          return;
-        }
-        wState.pendingMb = { filename: file.name, headers, rows };
-        openMappingDialog();
-      } catch (err) {
-        console.error(err);
-        setDzStatus(wEls.mbStatus, wEls.dzMb, "Не удалось разобрать Excel-файл", true);
-      }
-    };
-    reader.onerror = () => setDzStatus(wEls.mbStatus, wEls.dzMb, "Ошибка чтения файла", true);
-    reader.readAsArrayBuffer(file);
+    handleMbXlsxFile(file);
   }
+}
+
+// Для .xlsx сначала пробуем потоковый разбор «Свод рабочих журналов МБ»
+// (js/mb-stream.js, точная логика колонок из реального файла — без ручного
+// сопоставления, и не грузит весь файл целиком в память, что критично для
+// очень больших выгрузок). Если формат не распознан — откатываемся на
+// обычный разбор + ручное сопоставление колонок (для небольших файлов
+// произвольной структуры).
+async function handleMbXlsxFile(file) {
+  try {
+    const streamRows = await mbsParseFile(file);
+    const dataset = {
+      id: wCryptoId("mb"),
+      filename: file.name,
+      uploadedAt: Date.now(),
+      included: true,
+      kind: "stream",
+      rows: streamRows,
+    };
+    wState.mbDatasets.push(dataset);
+    saveMbDatasets();
+    setDzStatus(wEls.mbStatus, wEls.dzMb, `Загружено: ${dataset.rows.length} строк (автоматически, по своду МБ)`, false);
+    renderFileChips(wEls.mbFileChips, wState.mbDatasets, toggleMbDataset, removeMbDataset);
+    renderZoneChips();
+    renderMbControlsBar();
+    renderMbSection();
+    return;
+  } catch (streamErr) {
+    console.warn("Потоковый разбор свода МБ не подошёл, пробуем обычный разбор:", streamErr.message);
+    if (file.size > 20 * 1024 * 1024) {
+      // Файл большой — полный разбор в памяти рискует зависнуть браузер,
+      // показываем диагностику из потокового парсера как есть.
+      setDzStatus(wEls.mbStatus, wEls.dzMb, streamErr.message, true);
+      return;
+    }
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const wb = XLSX.read(reader.result, { type: "array", cellDates: true });
+      const { headers, rows } = parseXlsxGeneric(wb);
+      if (headers.length < 2 || rows.length === 0) {
+        setDzStatus(wEls.mbStatus, wEls.dzMb, "Не удалось найти таблицу с заголовками в файле", true);
+        return;
+      }
+      wState.pendingMb = { filename: file.name, headers, rows };
+      openMappingDialog();
+    } catch (err) {
+      console.error(err);
+      setDzStatus(wEls.mbStatus, wEls.dzMb, "Не удалось разобрать Excel-файл", true);
+    }
+  };
+  reader.onerror = () => setDzStatus(wEls.mbStatus, wEls.dzMb, "Ошибка чтения файла", true);
+  reader.readAsArrayBuffer(file);
 }
 
 function openMappingDialog() {
