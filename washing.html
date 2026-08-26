@@ -6,6 +6,7 @@
   <title>Мойка и смывы — aitas ukpf</title>
   <link rel="stylesheet" href="css/corporate.css" />
   <link rel="stylesheet" href="css/washing.css" />
+  <script src="js/vendor/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -32,20 +33,26 @@
     <!-- ===== Левая панель ===== -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-head">
-        <span class="sidebar-title">Данные</span>
+        <span class="sidebar-title">Загруженные файлы</span>
         <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
       </div>
 
-      <button class="btn-add" id="openUploadBtn">
-        <span class="plus">+</span> Загрузить файл
-      </button>
+      <div class="dataset-group">
+        <span class="dataset-group-title">🧼 Акт мойки</span>
+        <div class="dataset-list" id="actDatasetList">
+          <p class="dataset-empty" id="actDatasetEmpty">Файл не загружен</p>
+        </div>
+      </div>
 
-      <div class="dataset-list" id="datasetList">
-        <p class="dataset-empty" id="datasetEmpty">Пока нет загруженных файлов</p>
+      <div class="dataset-group">
+        <span class="dataset-group-title">🧫 Смывы / вода</span>
+        <div class="dataset-list" id="mbDatasetList">
+          <p class="dataset-empty" id="mbDatasetEmpty">Файлы не загружены</p>
+        </div>
       </div>
 
       <div class="sidebar-section" id="zoneFilterSection" hidden>
-        <span class="sidebar-title">Точки контроля</span>
+        <span class="sidebar-title">Точки контроля (смывы)</span>
         <div class="nav-sub" id="zoneFilterList"></div>
       </div>
 
@@ -63,24 +70,107 @@
       <header class="main-top">
         <button class="icon-btn menu-btn" id="menuBtn" title="Меню">☰</button>
         <h1>Качество мойки и смывы</h1>
-        <div class="main-top-actions">
-          <input type="search" id="tableSearch" class="table-search" placeholder="Поиск по таблице…" hidden />
-        </div>
       </header>
 
       <div class="content" id="content">
-        <!-- ===== Пустое состояние ===== -->
-        <div class="empty-state" id="emptyState">
-          <div class="empty-icon">🧪</div>
-          <h2>Нет данных для анализа</h2>
-          <p>
-            Загрузите CSV-файл с результатами смывов (экспорт из Excel в формате CSV) —
-            дашборд сам предложит сопоставить колонки и построит графики.
-          </p>
-          <button class="btn-primary" id="emptyUploadBtn">Загрузить файл</button>
+
+        <!-- ===== Загрузка файлов ===== -->
+        <section class="grid-upload">
+          <div class="dropzone" id="dzAct">
+            <input type="file" id="fieldActFile" accept=".xlsx,.xls" hidden />
+            <div class="dz-icon">🧼</div>
+            <h3>Акт приёма мойки</h3>
+            <p class="dz-hint">Excel (.xlsx) — лист с колонками «Дата», «Балл», «Несоответствие». Нажмите или перетащите файл сюда.</p>
+            <div class="dz-status" id="actStatus"></div>
+          </div>
+
+          <div class="dropzone" id="dzMb">
+            <input type="file" id="fieldMbFile" accept=".xlsx,.xls,.csv" hidden />
+            <div class="dz-icon">🧫</div>
+            <h3>Смывы / вода (МБ)</h3>
+            <p class="dz-hint">Excel (.xlsx) или CSV. Файл может быть большим — колонки нужно будет сопоставить вручную.</p>
+            <div class="dz-status" id="mbStatus"></div>
+          </div>
+        </section>
+
+        <!-- ===== Панель фильтра по неделям ===== -->
+        <section class="controls-bar" id="controlsBar" hidden>
+          <div class="ctrl-group">
+            <label for="weekSelect">🗓 Неделя проверки</label>
+            <select id="weekSelect" class="week-select">
+              <option value="">Весь период</option>
+            </select>
+          </div>
+          <div class="ctrl-group">
+            <label for="weekInput">или номер недели</label>
+            <div class="ctrl-inline">
+              <input type="number" id="weekInput" min="1" max="53" placeholder="напр. 32" />
+              <button class="btn-secondary btn-small" id="btnApplyWeek">Применить</button>
+              <button class="btn-secondary btn-small" id="btnResetWeek">Сбросить</button>
+            </div>
+          </div>
+          <span class="range-badge" id="rangeBadge">Весь период</span>
+        </section>
+
+        <!-- ===== АКТ МОЙКИ: KPI ===== -->
+        <section class="kpi-row" id="actKpiRow" hidden>
+          <div class="kpi-card">
+            <span class="kpi-label">Проверок</span>
+            <span class="kpi-value" id="actKpiChecks">0</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Средний балл</span>
+            <span class="kpi-value" id="actKpiAvg">0</span>
+          </div>
+          <div class="kpi-card kpi-critical">
+            <span class="kpi-label">Несоответствий</span>
+            <span class="kpi-value" id="actKpiViol">0</span>
+          </div>
+          <div class="kpi-card kpi-critical">
+            <span class="kpi-label">Критично (≤7)</span>
+            <span class="kpi-value" id="actKpiCritical">0</span>
+          </div>
+          <div class="kpi-card kpi-good">
+            <span class="kpi-label">С первого раза</span>
+            <span class="kpi-value" id="actKpiFirstTry">0%</span>
+          </div>
+        </section>
+
+        <!-- ===== АКТ МОЙКИ: график динамики баллов ===== -->
+        <section class="chart-card" id="actTrendCard" hidden>
+          <div class="chart-head">
+            <div>
+              <h3>Динамика качества мойки</h3>
+              <span class="chart-sub">Балл по дням · 🟢 9–10 норма · 🟡 8 удовлетворительно · 🔴 ≤7 критично</span>
+            </div>
+          </div>
+          <div class="chart-body" id="chartActTrend"></div>
+        </section>
+
+        <!-- ===== АКТ МОЙКИ: средний балл по неделям + журнал несоответствий ===== -->
+        <section class="charts-grid" id="actBottomGrid" hidden>
+          <div class="chart-card">
+            <div class="chart-head"><h3>Средний балл по неделям</h3></div>
+            <div class="chart-body" id="chartActWeekly"></div>
+          </div>
+
+          <div class="chart-card">
+            <div class="chart-head">
+              <h3>Журнал несоответствий</h3>
+              <span class="chart-sub" id="actViolCount"></span>
+            </div>
+            <div class="incident-list" id="actIncidentList"></div>
+          </div>
+        </section>
+
+        <!-- ===== СМЫВЫ: пустое состояние ===== -->
+        <div class="empty-state" id="mbEmptyState">
+          <div class="empty-icon">🧫</div>
+          <h2>Смывы / вода</h2>
+          <p>Загрузите файл выше — дашборд предложит сопоставить колонки и построит графики по результатам смывов.</p>
         </div>
 
-        <!-- ===== KPI ===== -->
+        <!-- ===== СМЫВЫ: KPI ===== -->
         <section class="kpi-row" id="kpiRow" hidden>
           <div class="kpi-card">
             <span class="kpi-label">Всего смывов</span>
@@ -100,7 +190,7 @@
           </div>
         </section>
 
-        <!-- ===== Графики ===== -->
+        <!-- ===== СМЫВЫ: графики ===== -->
         <section class="charts-grid" id="chartsGrid" hidden>
           <div class="chart-card chart-card-wide">
             <div class="chart-head">
@@ -125,8 +215,12 @@
           </div>
         </section>
 
-        <!-- ===== Таблица ===== -->
+        <!-- ===== СМЫВЫ: таблица ===== -->
         <section class="table-card" id="tableCard" hidden>
+          <div class="table-card-head">
+            <h3>Все записи</h3>
+            <input type="search" id="tableSearch" class="table-search" placeholder="Поиск по таблице…" />
+          </div>
           <div class="table-scroll">
             <table id="dataTable">
               <thead id="dataTableHead"></thead>
@@ -139,59 +233,44 @@
     </main>
   </div>
 
-  <!-- ===== Модалка загрузки + сопоставления колонок ===== -->
+  <!-- ===== Модалка сопоставления колонок (только для «Смывы») ===== -->
   <dialog id="uploadDialog" class="upload-dialog">
     <div class="upload-form">
-      <h2>Загрузка результатов смывов</h2>
+      <h2>Сопоставление колонок — смывы / вода</h2>
+      <p class="mapping-hint">Файл распознан: <b id="mappingFileInfo"></b>. Сопоставьте колонки:</p>
 
-      <div class="upload-step" id="stepFile">
-        <div class="dropzone" id="dropzone">
-          <div class="dropzone-hint" id="dropzoneHint">
-            <div class="dropzone-icon">📄</div>
-            <p>Нажмите или перетащите CSV-файл сюда</p>
-            <span class="dropzone-sub">Экспортируйте таблицу из Excel в формате CSV (разделитель «;» или «,»)</span>
-          </div>
-          <input type="file" id="fieldFile" accept=".csv,.txt" hidden />
-        </div>
-        <p class="upload-error" id="uploadError" hidden></p>
+      <div class="mapping-grid">
+        <label class="field">
+          <span>Дата</span>
+          <select id="mapDate"></select>
+        </label>
+        <label class="field">
+          <span>Точка / зона контроля</span>
+          <select id="mapZone"></select>
+        </label>
+        <label class="field">
+          <span>Показатель (необязательно)</span>
+          <select id="mapIndicator"></select>
+        </label>
+        <label class="field">
+          <span>Результат</span>
+          <select id="mapResult"></select>
+        </label>
+        <label class="field">
+          <span>Норматив (необязательно)</span>
+          <select id="mapNorm"></select>
+        </label>
+        <label class="field">
+          <span>Статус / заключение</span>
+          <select id="mapStatus"></select>
+        </label>
       </div>
 
-      <div class="upload-step" id="stepMapping" hidden>
-        <p class="mapping-hint">Файл распознан: <b id="mappingFileInfo"></b>. Сопоставьте колонки:</p>
-
-        <div class="mapping-grid">
-          <label class="field">
-            <span>Дата</span>
-            <select id="mapDate"></select>
-          </label>
-          <label class="field">
-            <span>Точка / зона контроля</span>
-            <select id="mapZone"></select>
-          </label>
-          <label class="field">
-            <span>Показатель (необязательно)</span>
-            <select id="mapIndicator"></select>
-          </label>
-          <label class="field">
-            <span>Результат</span>
-            <select id="mapResult"></select>
-          </label>
-          <label class="field">
-            <span>Норматив (необязательно)</span>
-            <select id="mapNorm"></select>
-          </label>
-          <label class="field">
-            <span>Статус / заключение</span>
-            <select id="mapStatus"></select>
-          </label>
-        </div>
-
-        <div class="mapping-preview" id="mappingPreview"></div>
-      </div>
+      <div class="mapping-preview" id="mappingPreview"></div>
 
       <div class="dialog-actions">
         <button type="button" class="btn-secondary" id="cancelUploadBtn">Отмена</button>
-        <button type="button" class="btn-primary" id="buildChartsBtn" hidden>Построить графики</button>
+        <button type="button" class="btn-primary" id="buildChartsBtn">Построить графики</button>
       </div>
     </div>
   </dialog>
