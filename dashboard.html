@@ -22,7 +22,6 @@
       </div>
     </div>
     <div class="topnav-spacer"></div>
-    <a href="index.html" class="topnav-live">Прямой эфир ↗</a>
   </header>
 
   <div class="app-shell">
@@ -260,7 +259,7 @@
               </div>
 
               <button class="btn-add" id="openAddBtn">
-                <span class="plus">+</span> Новое несоответствие
+                <span class="plus">+</span> 📷 Загрузить фото
               </button>
 
               <nav class="nav-groups" id="navGroups">
@@ -304,6 +303,10 @@
                 <button class="icon-btn menu-btn" id="menuBtn" title="Меню">☰</button>
                 <h1 id="viewTitle">Все несоответствия</h1>
                 <div class="main-top-actions">
+                  <div class="view-toggle" id="viewToggle">
+                    <button class="view-toggle-btn active" data-mode="cards" title="Карточки">🗂 Карточки</button>
+                    <button class="view-toggle-btn" data-mode="list" title="Список">☰ Список</button>
+                  </div>
                   <span class="progress-label" id="progressLabel"></span>
                 </div>
               </header>
@@ -318,6 +321,8 @@
                 <button class="nav-arrow nav-arrow-left" id="prevBtn" title="Предыдущее">‹</button>
                 <div class="card-stage" id="cardStage"></div>
                 <button class="nav-arrow nav-arrow-right" id="nextBtn" title="Следующее">›</button>
+
+                <div class="list-view" id="listView" hidden></div>
               </section>
 
               <div class="dots" id="dots"></div>
@@ -410,6 +415,34 @@
         <label class="field">
           <span>Статус / заключение</span>
           <select id="mapStatus"></select>
+        </label>
+      </div>
+
+      <p class="mapping-hint">Фильтр по предприятию/подразделению (необязательно, как в своде МБ):</p>
+      <div class="mapping-grid">
+        <label class="field">
+          <span>Колонка «Предприятие»</span>
+          <select id="mapEnterprise"></select>
+        </label>
+        <label class="field">
+          <span>Значение (напр. МПФ)</span>
+          <input type="text" id="mapEnterpriseFilter" placeholder="мпф" />
+        </label>
+        <label class="field">
+          <span>Колонка «Подразделение»</span>
+          <select id="mapDepartment"></select>
+        </label>
+        <label class="field">
+          <span>Содержит (напр. инкубац)</span>
+          <input type="text" id="mapDepartmentFilter" placeholder="инкубац" />
+        </label>
+        <label class="field">
+          <span>Колонка «Группа материала»</span>
+          <select id="mapMaterialGroup"></select>
+        </label>
+        <label class="field">
+          <span>Значения через запятую</span>
+          <input type="text" id="mapMaterialGroupFilter" placeholder="смывы, вода" />
         </label>
       </div>
 

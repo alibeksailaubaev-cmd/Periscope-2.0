@@ -53,6 +53,8 @@ const els = {
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
   dots: document.getElementById("dots"),
+  viewToggle: document.getElementById("viewToggle"),
+  listView: document.getElementById("listView"),
 
   openAddBtn: document.getElementById("openAddBtn"),
   addDialog: document.getElementById("addDialog"),
@@ -74,6 +76,7 @@ const state = {
   filter: { category: "all", location: null },
   index: 0,
   pendingPhoto: null,
+  viewMode: "cards", // "cards" | "list"
 };
 
 // ---------------------------------------------------------------------------
@@ -251,6 +254,7 @@ function renderView(direction = 0) {
   if (!list.length) {
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
+    els.listView.innerHTML = "";
     els.prevBtn.disabled = true;
     els.nextBtn.disabled = true;
     els.dots.innerHTML = "";
@@ -259,6 +263,21 @@ function renderView(direction = 0) {
   }
 
   els.emptyState.hidden = true;
+
+  if (state.viewMode === "list") {
+    els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = true));
+    els.cardStage.hidden = true;
+    els.listView.hidden = false;
+    els.dots.hidden = true;
+    els.progressLabel.textContent = `${list.length} шт.`;
+    renderListView(list);
+    return;
+  }
+
+  els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = false));
+  els.cardStage.hidden = false;
+  els.listView.hidden = true;
+
   if (state.index >= list.length) state.index = list.length - 1;
   if (state.index < 0) state.index = 0;
 
@@ -271,6 +290,54 @@ function renderView(direction = 0) {
 
   renderDots(list.length, state.index);
 }
+
+function renderListView(list) {
+  els.listView.innerHTML = list
+    .map((entry, idx) => {
+      const severity = entry.severity || "medium";
+      const status = entry.status || "new";
+      const severityColor =
+        severity === "critical" ? "var(--status-critical)" : severity === "low" ? "var(--status-good)" : "var(--status-warning)";
+      const statusColor = status === "new" ? "var(--status-critical)" : status === "progress" ? "var(--status-warning)" : "var(--status-good)";
+      return `
+        <button class="list-card" data-idx="${idx}">
+          <div class="list-card-photo">
+            ${entry.photo ? `<img src="${entry.photo}" alt="" />` : "📷"}
+          </div>
+          <div class="list-card-body">
+            <div class="list-card-location">${escapeHtml(entry.location)}</div>
+            <div class="list-card-text">${escapeHtml(entry.text) || "—"}</div>
+            <div class="list-card-meta">
+              <span class="list-card-badge" style="background:${severityColor}">${SEVERITY_LABEL[severity]}</span>
+              <span class="list-card-badge" style="background:${statusColor}">${STATUS_LABEL[status]}</span>
+              <span class="list-card-date">${formatShortDate(entry.date)}</span>
+            </div>
+          </div>
+        </button>
+      `;
+    })
+    .join("");
+
+  els.listView.querySelectorAll(".list-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      state.index = Number(card.dataset.idx);
+      setViewMode("cards");
+    });
+  });
+}
+
+function setViewMode(mode) {
+  state.viewMode = mode;
+  els.viewToggle.querySelectorAll(".view-toggle-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+  renderView();
+}
+
+els.viewToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".view-toggle-btn");
+  if (btn) setViewMode(btn.dataset.mode);
+});
 
 function renderCard(entry, direction) {
   const old = els.cardStage.querySelector(".card");
@@ -546,6 +613,10 @@ function formatDate(ts) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatShortDate(ts) {
+  return new Date(ts).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
 }
 
 function debounce(fn, ms) {

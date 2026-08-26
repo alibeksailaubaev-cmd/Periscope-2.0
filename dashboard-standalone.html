@@ -548,6 +548,134 @@ body {
   min-height: 0;
 }
 
+/* ---------- Переключатель Карточки / Список ---------- */
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.view-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-secondary);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.view-toggle-btn:hover {
+  background: rgba(23, 163, 152, 0.08);
+}
+
+.view-toggle-btn.active {
+  background: var(--teal);
+  color: #fff;
+}
+
+/* ---------- Список несоответствий ---------- */
+.list-view {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  padding: 4px 4px 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+
+.list-view[hidden] {
+  display: none;
+}
+
+.list-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+  animation: cardPop 0.25s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.list-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(32, 31, 26, 0.1);
+}
+
+.list-card-photo {
+  height: 130px;
+  background: radial-gradient(circle at 50% 30%, var(--surface-2), var(--cream));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  font-size: 26px;
+  overflow: hidden;
+}
+
+.list-card-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.list-card-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list-card-location {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--teal-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-card-text {
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.list-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.list-card-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+}
+
+.list-card-date {
+  font-size: 11px;
+  color: var(--ink-muted);
+  margin-left: auto;
+}
+
 .card-stage {
   position: relative;
   width: min(560px, 92%);
@@ -581,6 +709,10 @@ body {
   opacity: 0.3;
   cursor: default;
   pointer-events: none;
+}
+
+.nav-arrow[hidden] {
+  display: none;
 }
 
 /* ---------- Card ---------- */
@@ -815,6 +947,10 @@ body {
   flex-wrap: wrap;
   max-height: 40px;
   overflow: hidden;
+}
+
+.dots[hidden] {
+  display: none;
 }
 
 .dot-item {
@@ -1905,7 +2041,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       </div>
     </div>
     <div class="topnav-spacer"></div>
-    <a href="index.html" class="topnav-live">Прямой эфир ↗</a>
   </header>
 
   <div class="app-shell">
@@ -2143,7 +2278,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
               </div>
 
               <button class="btn-add" id="openAddBtn">
-                <span class="plus">+</span> Новое несоответствие
+                <span class="plus">+</span> 📷 Загрузить фото
               </button>
 
               <nav class="nav-groups" id="navGroups">
@@ -2187,6 +2322,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
                 <button class="icon-btn menu-btn" id="menuBtn" title="Меню">☰</button>
                 <h1 id="viewTitle">Все несоответствия</h1>
                 <div class="main-top-actions">
+                  <div class="view-toggle" id="viewToggle">
+                    <button class="view-toggle-btn active" data-mode="cards" title="Карточки">🗂 Карточки</button>
+                    <button class="view-toggle-btn" data-mode="list" title="Список">☰ Список</button>
+                  </div>
                   <span class="progress-label" id="progressLabel"></span>
                 </div>
               </header>
@@ -2201,6 +2340,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
                 <button class="nav-arrow nav-arrow-left" id="prevBtn" title="Предыдущее">‹</button>
                 <div class="card-stage" id="cardStage"></div>
                 <button class="nav-arrow nav-arrow-right" id="nextBtn" title="Следующее">›</button>
+
+                <div class="list-view" id="listView" hidden></div>
               </section>
 
               <div class="dots" id="dots"></div>
@@ -2296,6 +2437,34 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         </label>
       </div>
 
+      <p class="mapping-hint">Фильтр по предприятию/подразделению (необязательно, как в своде МБ):</p>
+      <div class="mapping-grid">
+        <label class="field">
+          <span>Колонка «Предприятие»</span>
+          <select id="mapEnterprise"></select>
+        </label>
+        <label class="field">
+          <span>Значение (напр. МПФ)</span>
+          <input type="text" id="mapEnterpriseFilter" placeholder="мпф" />
+        </label>
+        <label class="field">
+          <span>Колонка «Подразделение»</span>
+          <select id="mapDepartment"></select>
+        </label>
+        <label class="field">
+          <span>Содержит (напр. инкубац)</span>
+          <input type="text" id="mapDepartmentFilter" placeholder="инкубац" />
+        </label>
+        <label class="field">
+          <span>Колонка «Группа материала»</span>
+          <select id="mapMaterialGroup"></select>
+        </label>
+        <label class="field">
+          <span>Значения через запятую</span>
+          <input type="text" id="mapMaterialGroupFilter" placeholder="смывы, вода" />
+        </label>
+      </div>
+
       <div class="mapping-preview" id="mappingPreview"></div>
 
       <div class="dialog-actions">
@@ -2387,9 +2556,6 @@ initTopnavActive();
 const ACT_STORAGE_KEY = "aitas_act_datasets_v1";
 const MB_STORAGE_KEY = "aitas_washing_datasets_v1";
 
-const FAIL_WORDS = ["не соответств", "брак", "fail", "неудовлетвор", "превыш", "обнаруж"];
-const PASS_WORDS = ["соответств", "норма", "pass", "удовлетвор", "не обнаруж", "ок", "годно"];
-
 const MB_FIELD_PATTERNS = {
   date: ["дата", "date"],
   zone: ["точка", "зона", "участок", "место", "объект", "location", "zone", "цех", "площадк"],
@@ -2397,6 +2563,17 @@ const MB_FIELD_PATTERNS = {
   result: ["результат", "result", "значен", "value", "кое", "титр"],
   norm: ["норматив", "норма", "predel", "предел", "limit", "norm"],
   status: ["статус", "заключен", "status", "соответств", "вывод", "conclusion"],
+  enterprise: ["предприят", "enterprise"],
+  department: ["подразделен", "цех", "отдел", "department"],
+  materialGroup: ["групп материал", "группа материала", "материал"],
+};
+
+// Значения фильтров по умолчанию (как в своде рабочих журналов МБ):
+// Предприятие = МПФ · Подразделение содержит «инкубац» · Группа материала = Смывы/Вода
+const MB_DEFAULT_FILTERS = {
+  enterpriseFilter: "мпф",
+  departmentFilter: "инкубац",
+  materialGroupFilter: "смывы,вода",
 };
 
 const wEls = {
@@ -2467,6 +2644,12 @@ const wEls = {
   mapResult: document.getElementById("mapResult"),
   mapNorm: document.getElementById("mapNorm"),
   mapStatus: document.getElementById("mapStatus"),
+  mapEnterprise: document.getElementById("mapEnterprise"),
+  mapEnterpriseFilter: document.getElementById("mapEnterpriseFilter"),
+  mapDepartment: document.getElementById("mapDepartment"),
+  mapDepartmentFilter: document.getElementById("mapDepartmentFilter"),
+  mapMaterialGroup: document.getElementById("mapMaterialGroup"),
+  mapMaterialGroupFilter: document.getElementById("mapMaterialGroupFilter"),
 };
 
 const wState = {
@@ -2739,20 +2922,39 @@ function parseCsv(text) {
 // ---------------------------------------------------------------------------
 
 function parseXlsxGeneric(wb) {
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows2d = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" });
+  // Ищем лучший кандидат на "шапку таблицы" по всем листам книги (не только
+  // по первому) — реальные выгрузки часто кладут нужные данные не на
+  // Sheet1, а сама шапка может стоять не в первой строке (сверху бывает
+  // название отчёта, дата выгрузки, пустые строки и т.п.).
+  let best = null; // { sheetName, rows2d, headerIdx, score }
 
-  let headerIdx = -1;
-  for (let r = 0; r < Math.min(rows2d.length, 10); r++) {
-    const nonEmpty = (rows2d[r] || []).filter((c) => c !== null && c !== "").length;
-    if (nonEmpty >= 2) {
-      headerIdx = r;
-      break;
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const rows2d = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" });
+    if (!rows2d.length) continue;
+
+    for (let r = 0; r < Math.min(rows2d.length, 30); r++) {
+      const row = rows2d[r] || [];
+      const nonEmpty = row.filter((c) => c !== null && c !== "").length;
+      if (nonEmpty < 2) continue;
+
+      // Строка похожа на шапку, если под ней реально есть данные (иначе это
+      // просто заголовок отчёта или подпись) — считаем, сколько заполненных
+      // ячеек в следующей строке.
+      const nextRow = rows2d[r + 1] || [];
+      const nextNonEmpty = nextRow.filter((c) => c !== null && c !== "").length;
+      const score = nonEmpty + (nextNonEmpty > 0 ? 5 : 0);
+
+      if (!best || score > best.score) {
+        best = { sheetName, rows2d, headerIdx: r, score };
+      }
     }
   }
-  if (headerIdx === -1) return { headers: [], rows: [] };
 
-  const headers = rows2d[headerIdx].map((h) => cellToString(h).trim());
+  if (!best) return { headers: [], rows: [] };
+
+  const { rows2d, headerIdx } = best;
+  const headers = rows2d[headerIdx].map((h, i) => cellToString(h).trim() || `Колонка ${i + 1}`);
   const rows = rows2d
     .slice(headerIdx + 1)
     .filter((r) => r.some((c) => c !== null && c !== ""))
@@ -2779,6 +2981,12 @@ function guessMbMapping(headers) {
     });
     mapping[field] = match || "";
   }
+  // Подставляем стандартные значения фильтров только если нашли
+  // соответствующую колонку — иначе поле фильтра остаётся пустым.
+  Object.entries(MB_DEFAULT_FILTERS).forEach(([filterField, def]) => {
+    const colField = filterField.replace("Filter", "");
+    mapping[filterField] = mapping[colField] ? def : "";
+  });
   return mapping;
 }
 
@@ -2788,11 +2996,27 @@ function parseNumber(raw) {
   return m ? parseFloat(m[0]) : null;
 }
 
+// Определяем статус по тексту ("соответствует" / "не соответствует" /
+// "обнаружено" / "не обнаружено" / "OK" / "NOK" и т.п.). Порядок проверок
+// важен: сначала явные отрицательные формулировки ("не соответствует",
+// "не удовлетвор...") — иначе "соответств" как подстрока внутри "не
+// соответствует" даст неверный положительный результат.
+function classifyStatusText(raw) {
+  const v = (raw || "").toLowerCase().trim();
+  if (!v) return "unknown";
+  if (/\bnok\b/.test(v)) return "fail";
+  if (/\bok\b/.test(v)) return "pass";
+  if (/не\s*соответствует|не\s*удовлетвор|брак|\bfail\b|неудовлетвор|превыш/.test(v)) return "fail";
+  if (/не\s*обнаружен/.test(v)) return "pass";
+  if (/обнаружен/.test(v)) return "fail";
+  if (/соответствует|удовлетвор|\bнорма\b|\bpass\b|годно/.test(v)) return "pass";
+  return "unknown";
+}
+
 function resolveMbStatus(row, mapping) {
   if (mapping.status && row[mapping.status]) {
-    const v = row[mapping.status].toLowerCase();
-    if (FAIL_WORDS.some((w) => v.includes(w))) return "fail";
-    if (PASS_WORDS.some((w) => v.includes(w))) return "pass";
+    const status = classifyStatusText(row[mapping.status]);
+    if (status !== "unknown") return status;
   }
   if (mapping.result && mapping.norm) {
     const resultNum = parseNumber(row[mapping.result]);
@@ -2802,11 +3026,33 @@ function resolveMbStatus(row, mapping) {
     }
   }
   if (mapping.result && !mapping.status) {
-    const v = (row[mapping.result] || "").toLowerCase();
-    if (FAIL_WORDS.some((w) => v.includes(w))) return "fail";
-    if (PASS_WORDS.some((w) => v.includes(w))) return "pass";
+    const status = classifyStatusText(row[mapping.result]);
+    if (status !== "unknown") return status;
   }
   return "unknown";
+}
+
+// ---------------------------------------------------------------------------
+// Фильтр по предприятию / подразделению / группе материала
+// (как в своде рабочих журналов МБ: Предприятие = МПФ · Подразделение
+// содержит «инкубац»/«инкубатор» · Группа материала = «Смывы» или «Вода»)
+// ---------------------------------------------------------------------------
+
+function rowMatchesBizFilter(row, mapping) {
+  const check = (colField, filterField) => {
+    const col = mapping[colField];
+    const filterRaw = (mapping[filterField] || "").trim();
+    if (!col || !filterRaw) return true;
+    const cellVal = normalizeMbHeader(String(row[col] || ""));
+    const needles = filterRaw.split(",").map((s) => normalizeMbHeader(s.trim())).filter(Boolean);
+    if (!needles.length) return true;
+    return needles.some((n) => cellVal.includes(n));
+  };
+  return (
+    check("enterprise", "enterpriseFilter") &&
+    check("department", "departmentFilter") &&
+    check("materialGroup", "materialGroupFilter")
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -2842,6 +3088,7 @@ function getAllMbRows() {
   getIncludedMbDatasets().forEach((ds) => {
     ds.rows.forEach((raw, idx) => {
       const m = ds.mapping;
+      if (!rowMatchesBizFilter(raw, m)) return;
       out.push({
         id: `${ds.id}_${idx}`,
         datasetId: ds.id,
@@ -3761,6 +4008,9 @@ function openMappingDialog() {
     result: wEls.mapResult,
     norm: wEls.mapNorm,
     status: wEls.mapStatus,
+    enterprise: wEls.mapEnterprise,
+    department: wEls.mapDepartment,
+    materialGroup: wEls.mapMaterialGroup,
   };
 
   Object.entries(selects).forEach(([field, select]) => {
@@ -3769,6 +4019,10 @@ function openMappingDialog() {
       headers.map((h) => `<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`).join("");
     select.value = guess[field] || "";
   });
+
+  wEls.mapEnterpriseFilter.value = guess.enterpriseFilter || "";
+  wEls.mapDepartmentFilter.value = guess.departmentFilter || "";
+  wEls.mapMaterialGroupFilter.value = guess.materialGroupFilter || "";
 
   wEls.mappingPreview.innerHTML = `
     <table>
@@ -3806,6 +4060,12 @@ wEls.buildChartsBtn.addEventListener("click", () => {
       result: wEls.mapResult.value,
       norm: wEls.mapNorm.value,
       status: wEls.mapStatus.value,
+      enterprise: wEls.mapEnterprise.value,
+      enterpriseFilter: wEls.mapEnterpriseFilter.value,
+      department: wEls.mapDepartment.value,
+      departmentFilter: wEls.mapDepartmentFilter.value,
+      materialGroup: wEls.mapMaterialGroup.value,
+      materialGroupFilter: wEls.mapMaterialGroupFilter.value,
     },
   };
   wState.mbDatasets.push(dataset);
@@ -3924,6 +4184,8 @@ const els = {
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
   dots: document.getElementById("dots"),
+  viewToggle: document.getElementById("viewToggle"),
+  listView: document.getElementById("listView"),
 
   openAddBtn: document.getElementById("openAddBtn"),
   addDialog: document.getElementById("addDialog"),
@@ -3945,6 +4207,7 @@ const state = {
   filter: { category: "all", location: null },
   index: 0,
   pendingPhoto: null,
+  viewMode: "cards", // "cards" | "list"
 };
 
 // ---------------------------------------------------------------------------
@@ -4122,6 +4385,7 @@ function renderView(direction = 0) {
   if (!list.length) {
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
+    els.listView.innerHTML = "";
     els.prevBtn.disabled = true;
     els.nextBtn.disabled = true;
     els.dots.innerHTML = "";
@@ -4130,6 +4394,21 @@ function renderView(direction = 0) {
   }
 
   els.emptyState.hidden = true;
+
+  if (state.viewMode === "list") {
+    els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = true));
+    els.cardStage.hidden = true;
+    els.listView.hidden = false;
+    els.dots.hidden = true;
+    els.progressLabel.textContent = `${list.length} шт.`;
+    renderListView(list);
+    return;
+  }
+
+  els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = false));
+  els.cardStage.hidden = false;
+  els.listView.hidden = true;
+
   if (state.index >= list.length) state.index = list.length - 1;
   if (state.index < 0) state.index = 0;
 
@@ -4142,6 +4421,54 @@ function renderView(direction = 0) {
 
   renderDots(list.length, state.index);
 }
+
+function renderListView(list) {
+  els.listView.innerHTML = list
+    .map((entry, idx) => {
+      const severity = entry.severity || "medium";
+      const status = entry.status || "new";
+      const severityColor =
+        severity === "critical" ? "var(--status-critical)" : severity === "low" ? "var(--status-good)" : "var(--status-warning)";
+      const statusColor = status === "new" ? "var(--status-critical)" : status === "progress" ? "var(--status-warning)" : "var(--status-good)";
+      return `
+        <button class="list-card" data-idx="${idx}">
+          <div class="list-card-photo">
+            ${entry.photo ? `<img src="${entry.photo}" alt="" />` : "📷"}
+          </div>
+          <div class="list-card-body">
+            <div class="list-card-location">${escapeHtml(entry.location)}</div>
+            <div class="list-card-text">${escapeHtml(entry.text) || "—"}</div>
+            <div class="list-card-meta">
+              <span class="list-card-badge" style="background:${severityColor}">${SEVERITY_LABEL[severity]}</span>
+              <span class="list-card-badge" style="background:${statusColor}">${STATUS_LABEL[status]}</span>
+              <span class="list-card-date">${formatShortDate(entry.date)}</span>
+            </div>
+          </div>
+        </button>
+      `;
+    })
+    .join("");
+
+  els.listView.querySelectorAll(".list-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      state.index = Number(card.dataset.idx);
+      setViewMode("cards");
+    });
+  });
+}
+
+function setViewMode(mode) {
+  state.viewMode = mode;
+  els.viewToggle.querySelectorAll(".view-toggle-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+  renderView();
+}
+
+els.viewToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".view-toggle-btn");
+  if (btn) setViewMode(btn.dataset.mode);
+});
 
 function renderCard(entry, direction) {
   const old = els.cardStage.querySelector(".card");
@@ -4417,6 +4744,10 @@ function formatDate(ts) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function formatShortDate(ts) {
+  return new Date(ts).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
 }
 
 function debounce(fn, ms) {

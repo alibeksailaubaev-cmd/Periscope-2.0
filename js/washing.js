@@ -11,9 +11,6 @@
 const ACT_STORAGE_KEY = "aitas_act_datasets_v1";
 const MB_STORAGE_KEY = "aitas_washing_datasets_v1";
 
-const FAIL_WORDS = ["не соответств", "брак", "fail", "неудовлетвор", "превыш", "обнаруж"];
-const PASS_WORDS = ["соответств", "норма", "pass", "удовлетвор", "не обнаруж", "ок", "годно"];
-
 const MB_FIELD_PATTERNS = {
   date: ["дата", "date"],
   zone: ["точка", "зона", "участок", "место", "объект", "location", "zone", "цех", "площадк"],
@@ -21,6 +18,17 @@ const MB_FIELD_PATTERNS = {
   result: ["результат", "result", "значен", "value", "кое", "титр"],
   norm: ["норматив", "норма", "predel", "предел", "limit", "norm"],
   status: ["статус", "заключен", "status", "соответств", "вывод", "conclusion"],
+  enterprise: ["предприят", "enterprise"],
+  department: ["подразделен", "цех", "отдел", "department"],
+  materialGroup: ["групп материал", "группа материала", "материал"],
+};
+
+// Значения фильтров по умолчанию (как в своде рабочих журналов МБ):
+// Предприятие = МПФ · Подразделение содержит «инкубац» · Группа материала = Смывы/Вода
+const MB_DEFAULT_FILTERS = {
+  enterpriseFilter: "мпф",
+  departmentFilter: "инкубац",
+  materialGroupFilter: "смывы,вода",
 };
 
 const wEls = {
@@ -91,6 +99,12 @@ const wEls = {
   mapResult: document.getElementById("mapResult"),
   mapNorm: document.getElementById("mapNorm"),
   mapStatus: document.getElementById("mapStatus"),
+  mapEnterprise: document.getElementById("mapEnterprise"),
+  mapEnterpriseFilter: document.getElementById("mapEnterpriseFilter"),
+  mapDepartment: document.getElementById("mapDepartment"),
+  mapDepartmentFilter: document.getElementById("mapDepartmentFilter"),
+  mapMaterialGroup: document.getElementById("mapMaterialGroup"),
+  mapMaterialGroupFilter: document.getElementById("mapMaterialGroupFilter"),
 };
 
 const wState = {
@@ -363,20 +377,39 @@ function parseCsv(text) {
 // ---------------------------------------------------------------------------
 
 function parseXlsxGeneric(wb) {
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows2d = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" });
+  // Ищем лучший кандидат на "шапку таблицы" по всем листам книги (не только
+  // по первому) — реальные выгрузки часто кладут нужные данные не на
+  // Sheet1, а сама шапка может стоять не в первой строке (сверху бывает
+  // название отчёта, дата выгрузки, пустые строки и т.п.).
+  let best = null; // { sheetName, rows2d, headerIdx, score }
 
-  let headerIdx = -1;
-  for (let r = 0; r < Math.min(rows2d.length, 10); r++) {
-    const nonEmpty = (rows2d[r] || []).filter((c) => c !== null && c !== "").length;
-    if (nonEmpty >= 2) {
-      headerIdx = r;
-      break;
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const rows2d = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" });
+    if (!rows2d.length) continue;
+
+    for (let r = 0; r < Math.min(rows2d.length, 30); r++) {
+      const row = rows2d[r] || [];
+      const nonEmpty = row.filter((c) => c !== null && c !== "").length;
+      if (nonEmpty < 2) continue;
+
+      // Строка похожа на шапку, если под ней реально есть данные (иначе это
+      // просто заголовок отчёта или подпись) — считаем, сколько заполненных
+      // ячеек в следующей строке.
+      const nextRow = rows2d[r + 1] || [];
+      const nextNonEmpty = nextRow.filter((c) => c !== null && c !== "").length;
+      const score = nonEmpty + (nextNonEmpty > 0 ? 5 : 0);
+
+      if (!best || score > best.score) {
+        best = { sheetName, rows2d, headerIdx: r, score };
+      }
     }
   }
-  if (headerIdx === -1) return { headers: [], rows: [] };
 
-  const headers = rows2d[headerIdx].map((h) => cellToString(h).trim());
+  if (!best) return { headers: [], rows: [] };
+
+  const { rows2d, headerIdx } = best;
+  const headers = rows2d[headerIdx].map((h, i) => cellToString(h).trim() || `Колонка ${i + 1}`);
   const rows = rows2d
     .slice(headerIdx + 1)
     .filter((r) => r.some((c) => c !== null && c !== ""))
@@ -403,6 +436,12 @@ function guessMbMapping(headers) {
     });
     mapping[field] = match || "";
   }
+  // Подставляем стандартные значения фильтров только если нашли
+  // соответствующую колонку — иначе поле фильтра остаётся пустым.
+  Object.entries(MB_DEFAULT_FILTERS).forEach(([filterField, def]) => {
+    const colField = filterField.replace("Filter", "");
+    mapping[filterField] = mapping[colField] ? def : "";
+  });
   return mapping;
 }
 
@@ -412,11 +451,27 @@ function parseNumber(raw) {
   return m ? parseFloat(m[0]) : null;
 }
 
+// Определяем статус по тексту ("соответствует" / "не соответствует" /
+// "обнаружено" / "не обнаружено" / "OK" / "NOK" и т.п.). Порядок проверок
+// важен: сначала явные отрицательные формулировки ("не соответствует",
+// "не удовлетвор...") — иначе "соответств" как подстрока внутри "не
+// соответствует" даст неверный положительный результат.
+function classifyStatusText(raw) {
+  const v = (raw || "").toLowerCase().trim();
+  if (!v) return "unknown";
+  if (/\bnok\b/.test(v)) return "fail";
+  if (/\bok\b/.test(v)) return "pass";
+  if (/не\s*соответствует|не\s*удовлетвор|брак|\bfail\b|неудовлетвор|превыш/.test(v)) return "fail";
+  if (/не\s*обнаружен/.test(v)) return "pass";
+  if (/обнаружен/.test(v)) return "fail";
+  if (/соответствует|удовлетвор|\bнорма\b|\bpass\b|годно/.test(v)) return "pass";
+  return "unknown";
+}
+
 function resolveMbStatus(row, mapping) {
   if (mapping.status && row[mapping.status]) {
-    const v = row[mapping.status].toLowerCase();
-    if (FAIL_WORDS.some((w) => v.includes(w))) return "fail";
-    if (PASS_WORDS.some((w) => v.includes(w))) return "pass";
+    const status = classifyStatusText(row[mapping.status]);
+    if (status !== "unknown") return status;
   }
   if (mapping.result && mapping.norm) {
     const resultNum = parseNumber(row[mapping.result]);
@@ -426,11 +481,33 @@ function resolveMbStatus(row, mapping) {
     }
   }
   if (mapping.result && !mapping.status) {
-    const v = (row[mapping.result] || "").toLowerCase();
-    if (FAIL_WORDS.some((w) => v.includes(w))) return "fail";
-    if (PASS_WORDS.some((w) => v.includes(w))) return "pass";
+    const status = classifyStatusText(row[mapping.result]);
+    if (status !== "unknown") return status;
   }
   return "unknown";
+}
+
+// ---------------------------------------------------------------------------
+// Фильтр по предприятию / подразделению / группе материала
+// (как в своде рабочих журналов МБ: Предприятие = МПФ · Подразделение
+// содержит «инкубац»/«инкубатор» · Группа материала = «Смывы» или «Вода»)
+// ---------------------------------------------------------------------------
+
+function rowMatchesBizFilter(row, mapping) {
+  const check = (colField, filterField) => {
+    const col = mapping[colField];
+    const filterRaw = (mapping[filterField] || "").trim();
+    if (!col || !filterRaw) return true;
+    const cellVal = normalizeMbHeader(String(row[col] || ""));
+    const needles = filterRaw.split(",").map((s) => normalizeMbHeader(s.trim())).filter(Boolean);
+    if (!needles.length) return true;
+    return needles.some((n) => cellVal.includes(n));
+  };
+  return (
+    check("enterprise", "enterpriseFilter") &&
+    check("department", "departmentFilter") &&
+    check("materialGroup", "materialGroupFilter")
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -466,6 +543,7 @@ function getAllMbRows() {
   getIncludedMbDatasets().forEach((ds) => {
     ds.rows.forEach((raw, idx) => {
       const m = ds.mapping;
+      if (!rowMatchesBizFilter(raw, m)) return;
       out.push({
         id: `${ds.id}_${idx}`,
         datasetId: ds.id,
@@ -1385,6 +1463,9 @@ function openMappingDialog() {
     result: wEls.mapResult,
     norm: wEls.mapNorm,
     status: wEls.mapStatus,
+    enterprise: wEls.mapEnterprise,
+    department: wEls.mapDepartment,
+    materialGroup: wEls.mapMaterialGroup,
   };
 
   Object.entries(selects).forEach(([field, select]) => {
@@ -1393,6 +1474,10 @@ function openMappingDialog() {
       headers.map((h) => `<option value="${escapeHtml(h)}">${escapeHtml(h)}</option>`).join("");
     select.value = guess[field] || "";
   });
+
+  wEls.mapEnterpriseFilter.value = guess.enterpriseFilter || "";
+  wEls.mapDepartmentFilter.value = guess.departmentFilter || "";
+  wEls.mapMaterialGroupFilter.value = guess.materialGroupFilter || "";
 
   wEls.mappingPreview.innerHTML = `
     <table>
@@ -1430,6 +1515,12 @@ wEls.buildChartsBtn.addEventListener("click", () => {
       result: wEls.mapResult.value,
       norm: wEls.mapNorm.value,
       status: wEls.mapStatus.value,
+      enterprise: wEls.mapEnterprise.value,
+      enterpriseFilter: wEls.mapEnterpriseFilter.value,
+      department: wEls.mapDepartment.value,
+      departmentFilter: wEls.mapDepartmentFilter.value,
+      materialGroup: wEls.mapMaterialGroup.value,
+      materialGroupFilter: wEls.mapMaterialGroupFilter.value,
     },
   };
   wState.mbDatasets.push(dataset);
