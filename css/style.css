@@ -140,6 +140,7 @@ html, body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  text-decoration: none;
 }
 
 .icon-btn:hover {

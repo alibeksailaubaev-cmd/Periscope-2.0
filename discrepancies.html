@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Несоответствия — aitas ukpf</title>
+  <link rel="stylesheet" href="css/discrepancies.css" />
+</head>
+<body>
+
+  <div class="dash">
+
+    <!-- ===== Левая панель ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="brand-mark">🐔</span>
+        <div class="brand-text">
+          <strong>aitas ukpf</strong>
+          <span>несоответствия</span>
+        </div>
+        <a href="index.html" class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</a>
+      </div>
+
+      <button class="btn-add" id="openAddBtn">
+        <span class="plus">+</span> Новое несоответствие
+      </button>
+
+      <nav class="nav-groups" id="navGroups">
+        <button class="nav-all" id="filterAll" data-filter="all">
+          <span>Все несоответствия</span>
+          <span class="count" id="countAll">0</span>
+        </button>
+
+        <div class="nav-group" data-category="incubator">
+          <button class="nav-group-head" data-filter="incubator">
+            <span class="nav-icon">🥚</span>
+            <span class="nav-label">Инкубатор</span>
+            <span class="count" id="countIncubator">0</span>
+            <span class="chevron">▾</span>
+          </button>
+          <div class="nav-sub" id="subIncubator"></div>
+        </div>
+
+        <div class="nav-group" data-category="broiler">
+          <button class="nav-group-head" data-filter="broiler">
+            <span class="nav-icon">🏭</span>
+            <span class="nav-label">Бройлерные площадки</span>
+            <span class="count" id="countBroiler">0</span>
+            <span class="chevron">▾</span>
+          </button>
+          <div class="nav-sub" id="subBroiler"></div>
+        </div>
+      </nav>
+
+      <div class="sidebar-stats" id="sidebarStats">
+        <div class="stat"><span class="dot dot-new"></span>Новые <b id="statNew">0</b></div>
+        <div class="stat"><span class="dot dot-progress"></span>В работе <b id="statProgress">0</b></div>
+        <div class="stat"><span class="dot dot-done"></span>Устранено <b id="statDone">0</b></div>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- ===== Основная область ===== -->
+    <main class="main">
+      <header class="main-top">
+        <button class="icon-btn menu-btn" id="menuBtn" title="Меню">☰</button>
+        <h1 id="viewTitle">Все несоответствия</h1>
+        <div class="main-top-actions">
+          <span class="progress-label" id="progressLabel"></span>
+        </div>
+      </header>
+
+      <section class="viewer" id="viewer">
+        <div class="empty-state" id="emptyState" hidden>
+          <div class="empty-icon">📷</div>
+          <p>Пока нет несоответствий в этом разделе</p>
+          <button class="btn-primary" id="emptyAddBtn">Загрузить фото</button>
+        </div>
+
+        <button class="nav-arrow nav-arrow-left" id="prevBtn" title="Предыдущее">‹</button>
+
+        <div class="card-stage" id="cardStage"></div>
+
+        <button class="nav-arrow nav-arrow-right" id="nextBtn" title="Следующее">›</button>
+      </section>
+
+      <div class="dots" id="dots"></div>
+    </main>
+  </div>
+
+  <!-- ===== Модалка добавления ===== -->
+  <dialog id="addDialog" class="add-dialog">
+    <form method="dialog" id="addForm" class="add-form">
+      <h2>Новое несоответствие</h2>
+
+      <label class="field">
+        <span>Раздел</span>
+        <select id="fieldCategory" required>
+          <option value="incubator">Инкубатор</option>
+          <option value="broiler">Бройлерные площадки</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Место / участок</span>
+        <input id="fieldLocation" type="text" list="locationOptions" placeholder="напр. Зал №2, Площадка №5" required />
+        <datalist id="locationOptions"></datalist>
+      </label>
+
+      <label class="field">
+        <span>Серьёзность</span>
+        <select id="fieldSeverity">
+          <option value="critical">Критично</option>
+          <option value="medium" selected>Средне</option>
+          <option value="low">Незначительно</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Фото</span>
+        <div class="dropzone" id="dropzone">
+          <img id="dropPreview" hidden />
+          <div class="dropzone-hint" id="dropzoneHint">
+            <div class="dropzone-icon">📎</div>
+            <p>Нажмите или перетащите фото сюда</p>
+          </div>
+          <input type="file" id="fieldPhoto" accept="image/*" hidden />
+        </div>
+      </label>
+
+      <label class="field">
+        <span>Описание несоответствия</span>
+        <textarea id="fieldText" rows="3" placeholder="Опишите, что не так..." required></textarea>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" id="cancelAddBtn">Отмена</button>
+        <button type="submit" class="btn-primary" id="saveAddBtn">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/discrepancies.js"></script>
+</body>
+</html>
