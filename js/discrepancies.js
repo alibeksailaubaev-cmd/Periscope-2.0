@@ -1,12 +1,16 @@
 "use strict";
 
 /**
- * Дэшборд несоответствий (aitas ukpf).
+ * Фотоотчёт по несоответствиям (aitas ukpf).
  * Данные хранятся локально в localStorage — фото уходят внутрь как dataURL,
- * так что всё работает полностью офлайн, без бэкенда.
+ * так что всё работает полностью офлайн, без бэкенда. Статус намеренно не
+ * ведётся — только раздел, место, серьёзность, фото, описание и
+ * предлагаемое решение, чтобы в любой момент можно было просто посмотреть
+ * все несоответствия.
  */
 
-const STORAGE_KEY = "aitas_discrepancies_v1";
+const STORAGE_KEY = "aitas_discrepancies_v2";
+const OLD_STORAGE_KEY = "aitas_discrepancies_v1"; // формат с полем status — мигрируем один раз
 
 const CATEGORY_LABEL = {
   incubator: "Инкубатор",
@@ -17,12 +21,6 @@ const SEVERITY_LABEL = {
   critical: "Критично",
   medium: "Средне",
   low: "Незначительно",
-};
-
-const STATUS_LABEL = {
-  new: "Новое",
-  progress: "В работе",
-  done: "Устранено",
 };
 
 const els = {
@@ -40,9 +38,9 @@ const els = {
   subBroiler: document.getElementById("subBroiler"),
   navGroups: document.getElementById("navGroups"),
 
-  statNew: document.getElementById("statNew"),
-  statProgress: document.getElementById("statProgress"),
-  statDone: document.getElementById("statDone"),
+  statCritical: document.getElementById("statCritical"),
+  statMedium: document.getElementById("statMedium"),
+  statLow: document.getElementById("statLow"),
 
   viewTitle: document.getElementById("viewTitle"),
   progressLabel: document.getElementById("progressLabel"),
@@ -63,6 +61,7 @@ const els = {
 
   openAddBtn: document.getElementById("openAddBtn"),
   addDialog: document.getElementById("addDialog"),
+  addDialogTitle: document.getElementById("addDialogTitle"),
   addForm: document.getElementById("addForm"),
   cancelAddBtn: document.getElementById("cancelAddBtn"),
   fieldCategory: document.getElementById("fieldCategory"),
@@ -71,16 +70,18 @@ const els = {
   fieldSeverity: document.getElementById("fieldSeverity"),
   fieldPhoto: document.getElementById("fieldPhoto"),
   fieldText: document.getElementById("fieldText"),
+  fieldSolution: document.getElementById("fieldSolution"),
   dropzone: document.getElementById("dropzone"),
   dropPreview: document.getElementById("dropPreview"),
   dropzoneHint: document.getElementById("dropzoneHint"),
+  dropzoneNote: document.getElementById("dropzoneNote"),
 };
 
 const state = {
   entries: loadEntries(),
   filter: { category: "all", location: null },
   index: 0,
-  pendingPhoto: null,
+  pendingPhotos: [], // dataURL[]
   viewMode: "cards", // "cards" | "list"
 };
 
@@ -91,7 +92,26 @@ const state = {
 function loadEntries() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : seedDemo();
+    if (raw) return JSON.parse(raw);
+
+    // Миграция со старого формата (со статусом) — переносим один раз,
+    // просто отбрасывая поле status, остальное сохраняем как есть.
+    const old = localStorage.getItem(OLD_STORAGE_KEY);
+    if (old) {
+      const entries = JSON.parse(old).map((e) => ({
+        id: e.id,
+        category: e.category,
+        location: e.location,
+        severity: e.severity || "medium",
+        text: e.text || "",
+        solution: e.solution || "",
+        photo: e.photo || null,
+        date: e.date,
+      }));
+      return entries;
+    }
+
+    return seedDemo();
   } catch (err) {
     console.warn("Не удалось прочитать локальные данные", err);
     return [];
@@ -113,8 +133,8 @@ function seedDemo() {
       category: "incubator",
       location: "Инкубатор",
       severity: "medium",
-      status: "new",
       text: "Загрязнённый дренажный лоток, остатки скорлупы и пуха в отверстиях решётки.",
+      solution: "Провести внеплановую мойку решётки и дренажного лотка, усилить контроль после смены.",
       photo: null,
       date: Date.now(),
     },
@@ -123,8 +143,8 @@ function seedDemo() {
       category: "broiler",
       location: "Бройлерная площадка №1",
       severity: "low",
-      status: "new",
       text: "Следы коррозии на потолочном коробе, требуется зачистка и подкраска.",
+      solution: "Включить в план ремонта на этой неделе: зачистка, грунтовка, покраска короба.",
       photo: null,
       date: Date.now(),
     },
@@ -172,9 +192,9 @@ function renderSidebar() {
   renderSubList(els.subIncubator, locationsFor("incubator"), "incubator");
   renderSubList(els.subBroiler, locationsFor("broiler"), "broiler");
 
-  els.statNew.textContent = state.entries.filter((e) => e.status === "new").length;
-  els.statProgress.textContent = state.entries.filter((e) => e.status === "progress").length;
-  els.statDone.textContent = state.entries.filter((e) => e.status === "done").length;
+  els.statCritical.textContent = state.entries.filter((e) => e.severity === "critical").length;
+  els.statMedium.textContent = state.entries.filter((e) => e.severity === "medium").length;
+  els.statLow.textContent = state.entries.filter((e) => e.severity === "low").length;
 
   els.filterAll.classList.toggle("active", state.filter.category === "all");
 
@@ -296,14 +316,14 @@ function renderView(direction = 0) {
   renderDots(list.length, state.index);
 }
 
+function severityColorVar(severity) {
+  return severity === "critical" ? "var(--status-critical)" : severity === "low" ? "var(--status-good)" : "var(--status-warning)";
+}
+
 function renderListView(list) {
   els.listView.innerHTML = list
     .map((entry, idx) => {
       const severity = entry.severity || "medium";
-      const status = entry.status || "new";
-      const severityColor =
-        severity === "critical" ? "var(--status-critical)" : severity === "low" ? "var(--status-good)" : "var(--status-warning)";
-      const statusColor = status === "new" ? "var(--status-critical)" : status === "progress" ? "var(--status-warning)" : "var(--status-good)";
       return `
         <div class="list-card" data-idx="${idx}">
           <div class="list-card-photo" data-role="photo" title="${entry.photo ? "Открыть фото целиком" : "Нет фото"}">
@@ -313,9 +333,9 @@ function renderListView(list) {
           <div class="list-card-body" data-role="open">
             <div class="list-card-location">${escapeHtml(entry.location)}</div>
             <div class="list-card-text">${escapeHtml(entry.text) || "—"}</div>
+            ${entry.solution ? `<div class="list-card-solution">💡 ${escapeHtml(entry.solution)}</div>` : ""}
             <div class="list-card-meta">
-              <span class="list-card-badge" style="background:${severityColor}">${SEVERITY_LABEL[severity]}</span>
-              <span class="list-card-badge" style="background:${statusColor}">${STATUS_LABEL[status]}</span>
+              <span class="list-card-badge" style="background:${severityColorVar(severity)}">${SEVERITY_LABEL[severity]}</span>
               <span class="list-card-date">${formatShortDate(entry.date)}</span>
             </div>
           </div>
@@ -390,7 +410,6 @@ function renderCard(entry, direction) {
   card.style.setProperty("--card-dx", direction < 0 ? "-32px" : "32px");
 
   const severity = entry.severity || "medium";
-  const status = entry.status || "new";
 
   card.innerHTML = `
     <div class="card-photo" id="cardPhoto" title="${entry.photo ? "Нажмите, чтобы посмотреть фото целиком" : "Нажмите, чтобы загрузить фото"}">
@@ -401,23 +420,28 @@ function renderCard(entry, direction) {
       }
       <div class="badge-row">
         <span class="badge badge-category">${escapeHtml(CATEGORY_LABEL[entry.category] || entry.category)}</span>
-        <span class="badge badge-severity ${severity}">${SEVERITY_LABEL[severity]}</span>
         <button class="card-delete" id="cardDelete" title="Удалить">✕</button>
       </div>
       ${entry.photo ? `<button class="card-photo-replace" id="cardPhotoReplace" title="Заменить фото">🔄 Заменить</button>` : ""}
     </div>
     <div class="card-body">
-      <div class="card-location">${escapeHtml(entry.location)}</div>
+      <input class="card-location-input" id="cardLocationInput" value="${escapeHtml(entry.location)}" placeholder="Место / участок" />
       <div class="card-date">${formatDate(entry.date)}</div>
-      <textarea class="card-text" id="cardText" rows="4" placeholder="Опишите несоответствие...">${escapeHtml(entry.text || "")}</textarea>
-      <div class="status-row" id="statusRow">
-        ${["new", "progress", "done"]
+
+      <div class="status-row" id="severityRow">
+        ${["critical", "medium", "low"]
           .map(
             (s) =>
-              `<button type="button" class="status-btn ${s === status ? "active" : ""}" data-status="${s}">${STATUS_LABEL[s]}</button>`
+              `<button type="button" class="status-btn severity-btn-${s} ${s === severity ? "active" : ""}" data-severity="${s}">${SEVERITY_LABEL[s]}</button>`
           )
           .join("")}
       </div>
+
+      <label class="card-field-label">Описание несоответствия</label>
+      <textarea class="card-text" id="cardText" rows="3" placeholder="Опишите, что не так...">${escapeHtml(entry.text || "")}</textarea>
+
+      <label class="card-field-label">Предлагаемое решение</label>
+      <textarea class="card-text card-solution" id="cardSolution" rows="3" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>
     </div>
   `;
 
@@ -436,6 +460,16 @@ function renderCard(entry, direction) {
 
   card.querySelector("#cardDelete").addEventListener("click", () => deleteEntry(entry.id));
 
+  const locationInput = card.querySelector("#cardLocationInput");
+  locationInput.addEventListener(
+    "input",
+    debounce(() => {
+      entry.location = locationInput.value.trim() || CATEGORY_LABEL[entry.category];
+      saveEntries();
+      renderSidebar();
+    }, 300)
+  );
+
   const textarea = card.querySelector("#cardText");
   textarea.addEventListener(
     "input",
@@ -445,10 +479,19 @@ function renderCard(entry, direction) {
     }, 300)
   );
 
-  card.querySelector("#statusRow").addEventListener("click", (e) => {
+  const solutionArea = card.querySelector("#cardSolution");
+  solutionArea.addEventListener(
+    "input",
+    debounce(() => {
+      entry.solution = solutionArea.value;
+      saveEntries();
+    }, 300)
+  );
+
+  card.querySelector("#severityRow").addEventListener("click", (e) => {
     const btn = e.target.closest(".status-btn");
     if (!btn) return;
-    entry.status = btn.dataset.status;
+    entry.severity = btn.dataset.severity;
     saveEntries();
     renderSidebar();
     card.querySelectorAll(".status-btn").forEach((b) => b.classList.toggle("active", b === btn));
@@ -548,14 +591,16 @@ function promptReplacePhoto(entryId) {
 }
 
 // ---------------------------------------------------------------------------
-// Add dialog
+// Add dialog (в т.ч. массовая загрузка нескольких фото сразу)
 // ---------------------------------------------------------------------------
 
 function openAddDialog() {
   els.addForm.reset();
-  state.pendingPhoto = null;
+  state.pendingPhotos = [];
   els.dropPreview.hidden = true;
   els.dropzoneHint.hidden = false;
+  els.dropzoneNote.hidden = true;
+  updateAddDialogMode();
   if (state.filter.category !== "all") {
     els.fieldCategory.value = state.filter.category;
   }
@@ -565,6 +610,19 @@ function openAddDialog() {
   els.addDialog.showModal();
 }
 
+function updateAddDialogMode() {
+  const n = state.pendingPhotos.length;
+  const bulk = n > 1;
+  els.addDialogTitle.textContent = bulk ? `Новые несоответствия (${n} фото)` : "Новое несоответствие";
+  els.fieldLocation.placeholder = bulk ? "необязательно — можно уточнить в каждой карточке позже" : "напр. Зал №2, Площадка №5";
+  document.getElementById("fieldTextWrap").querySelector("span").textContent = bulk
+    ? "Описание (общее для всех, можно поправить позже в каждой карточке)"
+    : "Описание несоответствия";
+  document.getElementById("fieldSolutionWrap").querySelector("span").textContent = bulk
+    ? "Предлагаемое решение (общее для всех, можно поправить позже)"
+    : "Предлагаемое решение";
+}
+
 els.openAddBtn.addEventListener("click", openAddDialog);
 els.emptyAddBtn.addEventListener("click", openAddDialog);
 els.cancelAddBtn.addEventListener("click", () => els.addDialog.close());
@@ -572,8 +630,7 @@ els.cancelAddBtn.addEventListener("click", () => els.addDialog.close());
 els.dropzone.addEventListener("click", () => els.fieldPhoto.click());
 
 els.fieldPhoto.addEventListener("change", () => {
-  const file = els.fieldPhoto.files[0];
-  if (file) handlePickedPhoto(file);
+  if (els.fieldPhoto.files.length) handlePickedPhotos(els.fieldPhoto.files);
 });
 
 ["dragover", "dragenter"].forEach((evt) =>
@@ -589,17 +646,28 @@ els.fieldPhoto.addEventListener("change", () => {
   })
 );
 els.dropzone.addEventListener("drop", (e) => {
-  const file = e.dataTransfer.files && e.dataTransfer.files[0];
-  if (file) handlePickedPhoto(file);
+  const files = e.dataTransfer.files;
+  if (files && files.length) handlePickedPhotos(files);
 });
 
-function handlePickedPhoto(file) {
-  fileToDataUrl(file).then((dataUrl) => {
-    state.pendingPhoto = dataUrl;
-    els.dropPreview.src = dataUrl;
+async function handlePickedPhotos(fileList) {
+  const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+  if (!files.length) return;
+
+  state.pendingPhotos = await Promise.all(files.map(fileToDataUrl));
+  updateAddDialogMode();
+
+  if (state.pendingPhotos.length === 1) {
+    els.dropPreview.src = state.pendingPhotos[0];
     els.dropPreview.hidden = false;
     els.dropzoneHint.hidden = true;
-  });
+    els.dropzoneNote.hidden = true;
+  } else {
+    els.dropPreview.hidden = true;
+    els.dropzoneHint.hidden = true;
+    els.dropzoneNote.hidden = false;
+    els.dropzoneNote.textContent = `Выбрано фото: ${state.pendingPhotos.length}. Для каждого будет создана отдельная карточка.`;
+  }
 }
 
 function fileToDataUrl(file) {
@@ -614,28 +682,35 @@ function fileToDataUrl(file) {
 els.addForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const entry = {
-    id: cryptoId(),
-    category: els.fieldCategory.value,
-    location: els.fieldLocation.value.trim() || CATEGORY_LABEL[els.fieldCategory.value],
-    severity: els.fieldSeverity.value,
-    status: "new",
-    text: els.fieldText.value.trim(),
-    photo: state.pendingPhoto,
-    date: Date.now(),
-  };
+  const category = els.fieldCategory.value;
+  const severity = els.fieldSeverity.value;
+  const text = els.fieldText.value.trim();
+  const solution = els.fieldSolution.value.trim();
+  const locationInput = els.fieldLocation.value.trim();
+  const photos = state.pendingPhotos.length ? state.pendingPhotos : [null];
 
-  state.entries.unshift(entry);
+  const newEntries = photos.map((photo) => ({
+    id: cryptoId(),
+    category,
+    location: locationInput || CATEGORY_LABEL[category],
+    severity,
+    text,
+    solution,
+    photo,
+    date: Date.now(),
+  }));
+
+  state.entries.unshift(...newEntries);
   saveEntries();
 
   els.addDialog.close();
 
-  state.filter = { category: entry.category, location: entry.location };
+  state.filter = { category, location: locationInput || null };
   state.index = 0;
   renderSidebar();
   renderView();
 
-  const group = document.querySelector(`.nav-group[data-category="${entry.category}"]`);
+  const group = document.querySelector(`.nav-group[data-category="${category}"]`);
   if (group) group.classList.remove("collapsed");
 });
 
