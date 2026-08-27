@@ -22,11 +22,10 @@
     <div class="topnav-spacer"></div>
   </header>
 
-  <!-- Данные несоответствий и эталонных примеров встраиваются сюда при
-       экспорте копии для отправки — так получатель видит фото и описания
-       сразу, без зависимости от localStorage отправителя. -->
+  <!-- Данные несоответствий встраиваются сюда при экспорте копии для
+       отправки — так получатель видит фото и описания сразу, без
+       зависимости от localStorage отправителя. -->
   <script id="embeddedData" type="application/json">null</script>
-  <script id="embeddedReferenceData" type="application/json">null</script>
 
   <div class="dash">
 
@@ -35,11 +34,6 @@
       <div class="sidebar-head">
         <span class="sidebar-title">Бройлерная площадка</span>
         <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
-      </div>
-
-      <div class="section-toggle" id="sectionToggle">
-        <button class="section-toggle-btn active" data-section="discrepancies">⚠️ Несоответствия</button>
-        <button class="section-toggle-btn" data-section="reference">УКПФ Бройлер</button>
       </div>
 
       <button class="btn-add" id="openAddBtn">
