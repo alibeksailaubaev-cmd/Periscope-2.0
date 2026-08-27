@@ -2,9 +2,10 @@
 
 /**
  * Фотоотчёт — Инкубатор (aitas mpf). Два раздела: «Несоответствия»
- * (state.discrepancies) и «Эталон» (state.reference, правильные примеры
- * для сравнения) — переключаются через #sectionToggle, у каждого свой
- * ключ в localStorage. Данные хранятся локально — фото уходят внутрь как
+ * (state.discrepancies) и «УКПФ Инкубатор» (state.reference, эталонные
+ * фото правильной практики для сравнения) — переключаются через
+ * #sectionToggle, у каждого свой ключ в localStorage. Данные хранятся
+ * локально — фото уходят внутрь как
  * dataURL (уменьшенные и пережатые в JPEG, см. compressDataUrl), так что
  * всё работает полностью офлайн, без бэкенда.
  *
@@ -23,7 +24,7 @@ const REFERENCE_STORAGE_KEY = "aitas_reference_v1";
 const DEFAULT_LOCATION = "Инкубатор";
 
 // Тексты интерфейса, которые различаются между разделом "Несоответствия"
-// и разделом "Эталон" (правильные примеры для сравнения).
+// и разделом "УКПФ Инкубатор" (эталонные фото для сравнения).
 const SECTION_TEXT = {
   discrepancies: {
     sidebarTotal: "Всего несоответствий",
@@ -41,19 +42,19 @@ const SECTION_TEXT = {
     deleteConfirm: "Удалить это несоответствие?",
   },
   reference: {
-    sidebarTotal: "Всего эталонных примеров",
-    addHint: "Можно выбрать сразу несколько фото — все войдут в одну карточку эталона.",
-    viewTitle: "Эталон — как должно быть",
-    emptyState: "Пока нет эталонных примеров",
+    sidebarTotal: "Всего фото УКПФ Инкубатор",
+    addHint: "Можно выбрать сразу несколько фото — все войдут в одну карточку.",
+    viewTitle: "УКПФ Инкубатор",
+    emptyState: "Пока нет фото УКПФ Инкубатор",
     fieldLocationLabel: "Название / участок",
     fieldLocationPlaceholder: "напр. Мойка рук, Дезковрик на входе",
     fieldTextLabel: "Как должно быть правильно",
-    addDialogTitleOne: "Новый эталонный пример",
-    addDialogTitleMany: (n) => `Новый эталонный пример (${n} фото)`,
-    exportPrefix: "etalon",
+    addDialogTitleOne: "Новое фото — УКПФ Инкубатор",
+    addDialogTitleMany: (n) => `Новые фото — УКПФ Инкубатор (${n})`,
+    exportPrefix: "ukpf-inkubator",
     cardTextLabel: "Как должно быть правильно",
     cardTextPlaceholder: "Опишите, как выглядит правильное состояние...",
-    deleteConfirm: "Удалить этот эталонный пример?",
+    deleteConfirm: "Удалить эту запись?",
   },
 };
 
@@ -255,7 +256,7 @@ function exportShareableCopy() {
   const stamp = new Date().toISOString().slice(0, 10);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `nesootvetstviya-i-etalon-${stamp}.html`;
+  a.download = `nesootvetstviya-i-ukpf-inkubator-${stamp}.html`;
   document.body.appendChild(a);
   a.click();
   a.remove();
