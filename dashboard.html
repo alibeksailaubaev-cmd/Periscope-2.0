@@ -39,18 +39,15 @@
       <button class="btn-add" id="openAddBtn">
         <span class="plus">+</span> 📷 Загрузить фото
       </button>
-      <p class="btn-add-hint">Можно выбрать сразу несколько фото — для каждого создастся своя карточка.</p>
+      <p class="btn-add-hint">Можно выбрать сразу несколько фото — все войдут в одну карточку несоответствия.</p>
 
       <button class="btn-secondary btn-export" id="exportBtn">📤 Скачать копию для отправки</button>
       <p class="btn-add-hint">Фото хранятся только в этом браузере. Чтобы показать их другим — скачайте копию файла и отправьте её (мессенджер, почта, диск).</p>
 
-      <nav class="nav-groups" id="navGroups">
-        <button class="nav-all active" id="filterAll" data-filter="all">
-          <span>Все несоответствия</span>
-          <span class="count" id="countAll">0</span>
-        </button>
-        <div class="nav-sub" id="subLocations"></div>
-      </nav>
+      <div class="sidebar-total">
+        <span>Всего несоответствий</span>
+        <b id="countAll">0</b>
+      </div>
     </aside>
 
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
@@ -90,7 +87,9 @@
   <!-- ===== Полноэкранный просмотр фото ===== -->
   <div class="lightbox" id="lightbox" hidden>
     <button class="lightbox-close" id="lightboxClose" title="Закрыть">✕</button>
+    <button class="lightbox-nav lightbox-prev" id="lightboxPrev" title="Предыдущее фото">‹</button>
     <img id="lightboxImg" alt="Фото несоответствия" />
+    <button class="lightbox-nav lightbox-next" id="lightboxNext" title="Следующее фото">›</button>
     <div class="lightbox-caption" id="lightboxCaption"></div>
   </div>
 

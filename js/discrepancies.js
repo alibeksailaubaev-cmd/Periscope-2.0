@@ -26,10 +26,7 @@ const els = {
   sidebarClose: document.getElementById("sidebarClose"),
   menuBtn: document.getElementById("menuBtn"),
 
-  filterAll: document.getElementById("filterAll"),
   countAll: document.getElementById("countAll"),
-  subLocations: document.getElementById("subLocations"),
-  navGroups: document.getElementById("navGroups"),
 
   exportBtn: document.getElementById("exportBtn"),
 
@@ -49,6 +46,8 @@ const els = {
   lightboxImg: document.getElementById("lightboxImg"),
   lightboxCaption: document.getElementById("lightboxCaption"),
   lightboxClose: document.getElementById("lightboxClose"),
+  lightboxPrev: document.getElementById("lightboxPrev"),
+  lightboxNext: document.getElementById("lightboxNext"),
 
   openAddBtn: document.getElementById("openAddBtn"),
   addDialog: document.getElementById("addDialog"),
@@ -68,7 +67,6 @@ const els = {
 
 const state = {
   entries: loadEntries(),
-  filter: { location: null },
   index: 0,
   pendingPhotos: [], // dataURL[]
   viewMode: "cards", // "cards" | "list"
@@ -121,7 +119,7 @@ function normalizeEntries(raw) {
     location: e.location || DEFAULT_LOCATION,
     text: e.text || "",
     solution: e.solution || "",
-    photo: e.photo || null,
+    photos: Array.isArray(e.photos) ? e.photos : e.photo ? [e.photo] : [],
     date: e.date || Date.now(),
   }));
 }
@@ -141,7 +139,7 @@ function seedDemo() {
       location: "Зал вывода — моечная",
       text: "Загрязнённый дренажный лоток, остатки скорлупы и пуха в отверстиях решётки.",
       solution: "Провести внеплановую мойку решётки и дренажного лотка, усилить контроль после смены.",
-      photo: null,
+      photos: [],
       date: Date.now(),
     },
     {
@@ -149,7 +147,7 @@ function seedDemo() {
       location: "Зал сортировки",
       text: "Скопление картонных коробок на путях перемещения персонала.",
       solution: "Обеспечить своевременный вывоз тары, организовать постоянный контроль за местами хранения.",
-      photo: null,
+      photos: [],
       date: Date.now(),
     },
   ];
@@ -196,14 +194,7 @@ els.exportBtn.addEventListener("click", exportShareableCopy);
 // ---------------------------------------------------------------------------
 
 function getFiltered() {
-  if (!state.filter.location) return state.entries;
-  return state.entries.filter((e) => e.location === state.filter.location);
-}
-
-function locationCounts() {
-  const map = new Map();
-  state.entries.forEach((e) => map.set(e.location, (map.get(e.location) || 0) + 1));
-  return map;
+  return state.entries;
 }
 
 // ---------------------------------------------------------------------------
@@ -212,42 +203,6 @@ function locationCounts() {
 
 function renderSidebar() {
   els.countAll.textContent = state.entries.length;
-  els.filterAll.classList.toggle("active", !state.filter.location);
-
-  const map = locationCounts();
-  els.subLocations.innerHTML = "";
-
-  // Если всего одно место и оно совпадает с общим значением по умолчанию —
-  // отдельный список не добавляет информации, прячем его.
-  const entries = [...map.entries()];
-  const showList = !(entries.length === 1 && entries[0][0] === DEFAULT_LOCATION);
-
-  if (showList) {
-    entries
-      .sort((a, b) => b[1] - a[1])
-      .forEach(([location, count]) => {
-        const row = document.createElement("div");
-        row.className = "nav-sub-row";
-
-        const btn = document.createElement("button");
-        btn.className = "nav-sub-item" + (state.filter.location === location ? " active" : "");
-        btn.innerHTML = `<span>${escapeHtml(location)}</span><span class="count">${count}</span>`;
-        btn.addEventListener("click", () => setFilter(location));
-
-        const del = document.createElement("button");
-        del.className = "nav-sub-delete";
-        del.title = `Удалить все записи «${location}»`;
-        del.textContent = "✕";
-        del.addEventListener("click", (e) => {
-          e.stopPropagation();
-          deleteLocation(location);
-        });
-
-        row.appendChild(btn);
-        row.appendChild(del);
-        els.subLocations.appendChild(row);
-      });
-  }
 
   // Обновляем подсказки для поля "место" в форме добавления
   const allLocations = new Set(state.entries.map((e) => e.location));
@@ -255,15 +210,6 @@ function renderSidebar() {
     .map((loc) => `<option value="${escapeHtml(loc)}"></option>`)
     .join("");
 }
-
-function setFilter(location) {
-  state.filter = { location };
-  state.index = 0;
-  renderSidebar();
-  renderView();
-}
-
-els.filterAll.addEventListener("click", () => setFilter(null));
 
 // Мобильное меню
 function openSidebar() {
@@ -286,7 +232,7 @@ els.sidebarClose.addEventListener("click", (e) => {
 function renderView(direction = 0) {
   const list = getFiltered();
 
-  els.viewTitle.textContent = state.filter.location || "Все несоответствия";
+  els.viewTitle.textContent = "Все несоответствия";
 
   if (!list.length) {
     els.emptyState.hidden = false;
@@ -333,9 +279,10 @@ function renderListView(list) {
     .map(
       (entry, idx) => `
         <div class="list-card" data-idx="${idx}">
-          <div class="list-card-photo" data-role="photo" title="${entry.photo ? "Открыть фото целиком" : "Нет фото"}">
-            ${entry.photo ? `<img src="${entry.photo}" alt="" />` : "📷"}
-            ${entry.photo ? '<span class="zoom-hint">⤢</span>' : ""}
+          <div class="list-card-photo" data-role="photo" title="${entry.photos.length ? "Открыть фото целиком" : "Нет фото"}">
+            ${entry.photos.length ? `<img src="${entry.photos[0]}" alt="" />` : "📷"}
+            ${entry.photos.length > 1 ? `<span class="photo-count-badge">+${entry.photos.length - 1}</span>` : ""}
+            ${entry.photos.length ? '<span class="zoom-hint">⤢</span>' : ""}
           </div>
           <div class="list-card-body" data-role="open">
             <div class="list-card-location">${escapeHtml(entry.location)}</div>
@@ -354,7 +301,7 @@ function renderListView(list) {
     const idx = Number(card.dataset.idx);
     const entry = list[idx];
     card.querySelector('[data-role="photo"]').addEventListener("click", () => {
-      if (entry.photo) openLightbox(entry.photo, entry.location);
+      if (entry.photos.length) openLightbox(entry.photos, 0, entry.location);
       else {
         state.index = idx;
         setViewMode("cards");
@@ -371,10 +318,23 @@ function renderListView(list) {
 // Полноэкранный просмотр фото
 // ---------------------------------------------------------------------------
 
-function openLightbox(src, caption) {
-  els.lightboxImg.src = src;
-  els.lightboxCaption.textContent = caption || "";
+const lightboxState = { photos: [], index: 0, caption: "" };
+
+function openLightbox(photos, index, caption) {
+  lightboxState.photos = photos;
+  lightboxState.index = index;
+  lightboxState.caption = caption || "";
+  renderLightbox();
   els.lightbox.hidden = false;
+}
+
+function renderLightbox() {
+  const { photos, index, caption } = lightboxState;
+  els.lightboxImg.src = photos[index];
+  const multi = photos.length > 1;
+  els.lightboxCaption.textContent = multi ? `${caption} · фото ${index + 1} из ${photos.length}` : caption;
+  els.lightboxPrev.hidden = !multi;
+  els.lightboxNext.hidden = !multi;
 }
 
 function closeLightbox() {
@@ -382,12 +342,35 @@ function closeLightbox() {
   els.lightboxImg.src = "";
 }
 
+function lightboxPrev() {
+  if (!lightboxState.photos.length) return;
+  lightboxState.index = (lightboxState.index - 1 + lightboxState.photos.length) % lightboxState.photos.length;
+  renderLightbox();
+}
+
+function lightboxNext() {
+  if (!lightboxState.photos.length) return;
+  lightboxState.index = (lightboxState.index + 1) % lightboxState.photos.length;
+  renderLightbox();
+}
+
 els.lightboxClose.addEventListener("click", closeLightbox);
+els.lightboxPrev.addEventListener("click", (e) => {
+  e.stopPropagation();
+  lightboxPrev();
+});
+els.lightboxNext.addEventListener("click", (e) => {
+  e.stopPropagation();
+  lightboxNext();
+});
 els.lightbox.addEventListener("click", (e) => {
   if (e.target === els.lightbox) closeLightbox();
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !els.lightbox.hidden) closeLightbox();
+  if (els.lightbox.hidden) return;
+  if (e.key === "Escape") closeLightbox();
+  if (e.key === "ArrowLeft") lightboxPrev();
+  if (e.key === "ArrowRight") lightboxNext();
 });
 
 function setViewMode(mode) {
@@ -422,16 +405,18 @@ function renderCard(entry, direction) {
   card.className = "card";
   card.style.setProperty("--card-dx", direction < 0 ? "-32px" : "32px");
 
+  const hasPhotos = entry.photos.length > 0;
+
   card.innerHTML = `
-    <div class="card-photo" id="cardPhoto" title="${entry.photo ? "Нажмите, чтобы посмотреть фото целиком" : "Нажмите, чтобы загрузить фото"}">
+    <div class="card-photo" id="cardPhoto" title="${hasPhotos ? "Нажмите, чтобы посмотреть фото целиком" : "Нажмите, чтобы загрузить фото"}">
       ${
-        entry.photo
-          ? `<img src="${entry.photo}" alt="Фото несоответствия" />`
+        hasPhotos
+          ? `<img src="${entry.photos[0]}" alt="Фото несоответствия" />`
           : `<div class="card-photo-placeholder"><div class="icon">📷</div><p>Нажмите, чтобы загрузить фото</p></div>`
       }
       <button class="card-delete" id="cardDelete" title="Удалить">✕</button>
-      ${entry.photo ? `<button class="card-photo-replace" id="cardPhotoReplace" title="Заменить фото">🔄 Заменить</button>` : ""}
     </div>
+    <div class="card-photo-strip" id="cardPhotoStrip"></div>
     <div class="card-body">
       <input class="card-location-input" id="cardLocationInput" value="${escapeHtml(entry.location)}" placeholder="Место / участок" />
       <div class="card-date">${formatDate(entry.date)}</div>
@@ -447,20 +432,17 @@ function renderCard(entry, direction) {
   els.cardStage.appendChild(card);
 
   card.querySelector("#cardPhoto").addEventListener("click", (e) => {
-    if (e.target.closest("#cardDelete") || e.target.closest("#cardPhotoReplace")) return;
-    if (entry.photo) openLightbox(entry.photo, entry.location);
-    else promptReplacePhoto(entry.id);
-  });
-
-  card.querySelector("#cardPhotoReplace")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    promptReplacePhoto(entry.id);
+    if (e.target.closest("#cardDelete")) return;
+    if (entry.photos.length) openLightbox(entry.photos, 0, entry.location);
+    else promptAddPhotos(entry.id);
   });
 
   card.querySelector("#cardDelete").addEventListener("click", (e) => {
     e.stopPropagation();
     deleteEntry(entry.id);
   });
+
+  renderPhotoStrip(card, entry);
 
   const locationInput = card.querySelector("#cardLocationInput");
   locationInput.addEventListener(
@@ -569,32 +551,64 @@ function deleteEntry(id) {
   renderView();
 }
 
-function deleteLocation(location) {
-  const count = state.entries.filter((e) => e.location === location).length;
-  if (!confirm(`Удалить все записи «${location}» (${count} шт.)?`)) return;
-  state.entries = state.entries.filter((e) => e.location !== location);
-  if (state.filter.location === location) state.filter = { location: null };
-  saveEntries();
-  renderSidebar();
-  renderView();
+// Полоска миниатюр под фото карточки — позволяет прикрепить к одному
+// несоответствию сразу несколько фотографий, открыть любую из них целиком
+// или удалить отдельное фото.
+function renderPhotoStrip(card, entry) {
+  const strip = card.querySelector("#cardPhotoStrip");
+  strip.innerHTML = "";
+
+  entry.photos.forEach((photo, idx) => {
+    const thumb = document.createElement("button");
+    thumb.className = "photo-thumb";
+    thumb.type = "button";
+    thumb.title = "Открыть фото целиком";
+    thumb.innerHTML = `<img src="${photo}" alt="" /><span class="photo-thumb-delete" title="Удалить это фото">✕</span>`;
+    thumb.addEventListener("click", (e) => {
+      if (e.target.closest(".photo-thumb-delete")) {
+        e.stopPropagation();
+        deletePhotoFromEntry(entry.id, idx);
+        return;
+      }
+      openLightbox(entry.photos, idx, entry.location);
+    });
+    strip.appendChild(thumb);
+  });
+
+  const addThumb = document.createElement("button");
+  addThumb.className = "photo-thumb photo-thumb-add";
+  addThumb.type = "button";
+  addThumb.title = "Добавить ещё фото";
+  addThumb.textContent = "+";
+  addThumb.addEventListener("click", () => promptAddPhotos(entry.id));
+  strip.appendChild(addThumb);
 }
 
-function promptReplacePhoto(entryId) {
+function promptAddPhotos(entryId) {
   const input = document.createElement("input");
   input.type = "file";
   input.accept = "image/*";
+  input.multiple = true;
   input.addEventListener("change", () => {
-    const file = input.files[0];
-    if (!file) return;
-    fileToDataUrl(file).then((dataUrl) => {
+    const files = Array.from(input.files).filter((f) => f.type.startsWith("image/"));
+    if (!files.length) return;
+    Promise.all(files.map(fileToDataUrl)).then((dataUrls) => {
       const entry = state.entries.find((e) => e.id === entryId);
       if (!entry) return;
-      entry.photo = dataUrl;
+      entry.photos.push(...dataUrls);
       saveEntries();
       renderView();
     });
   });
   input.click();
+}
+
+function deletePhotoFromEntry(entryId, photoIndex) {
+  const entry = state.entries.find((e) => e.id === entryId);
+  if (!entry) return;
+  entry.photos.splice(photoIndex, 1);
+  saveEntries();
+  renderView();
 }
 
 // ---------------------------------------------------------------------------
@@ -608,23 +622,12 @@ function openAddDialog() {
   els.dropzoneHint.hidden = false;
   els.dropzoneNote.hidden = true;
   updateAddDialogMode();
-  if (state.filter.location) {
-    els.fieldLocation.value = state.filter.location;
-  }
   els.addDialog.showModal();
 }
 
 function updateAddDialogMode() {
   const n = state.pendingPhotos.length;
-  const bulk = n > 1;
-  els.addDialogTitle.textContent = bulk ? `Новые несоответствия (${n} фото)` : "Новое несоответствие";
-  els.fieldLocation.placeholder = bulk ? "необязательно — можно уточнить в каждой карточке позже" : "напр. Зал вывода, Зал сортировки";
-  document.getElementById("fieldTextWrap").querySelector("span").textContent = bulk
-    ? "Описание (общее для всех, можно поправить позже в каждой карточке)"
-    : "Описание несоответствия";
-  document.getElementById("fieldSolutionWrap").querySelector("span").textContent = bulk
-    ? "Предлагаемое решение (общее для всех, можно поправить позже)"
-    : "Предлагаемое решение";
+  els.addDialogTitle.textContent = n > 1 ? `Новое несоответствие (${n} фото)` : "Новое несоответствие";
 }
 
 els.openAddBtn.addEventListener("click", openAddDialog);
@@ -670,7 +673,7 @@ async function handlePickedPhotos(fileList) {
     els.dropPreview.hidden = true;
     els.dropzoneHint.hidden = true;
     els.dropzoneNote.hidden = false;
-    els.dropzoneNote.textContent = `Выбрано фото: ${state.pendingPhotos.length}. Для каждого будет создана отдельная карточка.`;
+    els.dropzoneNote.textContent = `Выбрано фото: ${state.pendingPhotos.length}. Все войдут в одну карточку — можно добавить ещё фото позже.`;
   }
 }
 
@@ -689,23 +692,21 @@ els.addForm.addEventListener("submit", (e) => {
   const text = els.fieldText.value.trim();
   const solution = els.fieldSolution.value.trim();
   const locationInput = els.fieldLocation.value.trim();
-  const photos = state.pendingPhotos.length ? state.pendingPhotos : [null];
 
-  const newEntries = photos.map((photo) => ({
+  const newEntry = {
     id: cryptoId(),
     location: locationInput || DEFAULT_LOCATION,
     text,
     solution,
-    photo,
+    photos: [...state.pendingPhotos],
     date: Date.now(),
-  }));
+  };
 
-  state.entries.unshift(...newEntries);
+  state.entries.unshift(newEntry);
   saveEntries();
 
   els.addDialog.close();
 
-  state.filter = { location: locationInput || null };
   state.index = 0;
   renderSidebar();
   renderView();
