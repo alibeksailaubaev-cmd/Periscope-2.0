@@ -16,18 +16,23 @@
       <span class="mark"><svg viewBox="0 0 26 26"><path d="M4 14c2-4 6-6 10-5 3 .7 5 3 6 6-1.5.6-3 .6-4.5 0" /><circle cx="17" cy="8" r="1" /></svg></span>
       <div class="word">
         <strong>aitas ukpf</strong>
-        <span>усть-каменогорская птицефабрика</span>
+        <span>усть-каменогорская птицефабрика · Инкубатор</span>
       </div>
     </div>
     <div class="topnav-spacer"></div>
   </header>
+
+  <!-- Данные несоответствий встраиваются сюда при экспорте копии для
+       отправки — так получатель видит фото и описания сразу, без
+       зависимости от localStorage отправителя. -->
+  <script id="embeddedData" type="application/json">null</script>
 
   <div class="dash">
 
     <!-- ===== Левая панель ===== -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-head">
-        <span class="sidebar-title">Разделы</span>
+        <span class="sidebar-title">Инкубатор</span>
         <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
       </div>
 
@@ -36,38 +41,16 @@
       </button>
       <p class="btn-add-hint">Можно выбрать сразу несколько фото — для каждого создастся своя карточка.</p>
 
+      <button class="btn-secondary btn-export" id="exportBtn">📤 Скачать копию для отправки</button>
+      <p class="btn-add-hint">Фото хранятся только в этом браузере. Чтобы показать их другим — скачайте копию файла и отправьте её (мессенджер, почта, диск).</p>
+
       <nav class="nav-groups" id="navGroups">
-        <button class="nav-all" id="filterAll" data-filter="all">
+        <button class="nav-all active" id="filterAll" data-filter="all">
           <span>Все несоответствия</span>
           <span class="count" id="countAll">0</span>
         </button>
-
-        <div class="nav-group" data-category="incubator">
-          <button class="nav-group-head" data-filter="incubator">
-            <span class="nav-icon">🥚</span>
-            <span class="nav-label">Инкубатор</span>
-            <span class="count" id="countIncubator">0</span>
-            <span class="chevron">▾</span>
-          </button>
-          <div class="nav-sub" id="subIncubator"></div>
-        </div>
-
-        <div class="nav-group" data-category="broiler">
-          <button class="nav-group-head" data-filter="broiler">
-            <span class="nav-icon">🏭</span>
-            <span class="nav-label">Бройлерные площадки</span>
-            <span class="count" id="countBroiler">0</span>
-            <span class="chevron">▾</span>
-          </button>
-          <div class="nav-sub" id="subBroiler"></div>
-        </div>
+        <div class="nav-sub" id="subLocations"></div>
       </nav>
-
-      <div class="sidebar-stats" id="sidebarStats">
-        <div class="stat"><span class="dot dot-new"></span>Критично <b id="statCritical">0</b></div>
-        <div class="stat"><span class="dot dot-progress"></span>Средне <b id="statMedium">0</b></div>
-        <div class="stat"><span class="dot dot-done"></span>Незначительно <b id="statLow">0</b></div>
-      </div>
     </aside>
 
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
@@ -117,26 +100,9 @@
       <h2 id="addDialogTitle">Новое несоответствие</h2>
 
       <label class="field">
-        <span>Раздел</span>
-        <select id="fieldCategory" required>
-          <option value="incubator">Инкубатор</option>
-          <option value="broiler">Бройлерные площадки</option>
-        </select>
-      </label>
-
-      <label class="field">
         <span>Место / участок</span>
-        <input id="fieldLocation" type="text" list="locationOptions" placeholder="напр. Зал №2, Площадка №5" />
+        <input id="fieldLocation" type="text" list="locationOptions" placeholder="напр. Зал вывода, Зал сортировки" />
         <datalist id="locationOptions"></datalist>
-      </label>
-
-      <label class="field">
-        <span>Серьёзность</span>
-        <select id="fieldSeverity">
-          <option value="critical">Критично</option>
-          <option value="medium" selected>Средне</option>
-          <option value="low">Незначительно</option>
-        </select>
       </label>
 
       <label class="field">

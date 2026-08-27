@@ -1,27 +1,23 @@
 "use strict";
 
 /**
- * Фотоотчёт по несоответствиям (aitas ukpf).
+ * Фотоотчёт по несоответствиям — Инкубатор (aitas ukpf).
  * Данные хранятся локально в localStorage — фото уходят внутрь как dataURL,
- * так что всё работает полностью офлайн, без бэкенда. Статус намеренно не
- * ведётся — только раздел, место, серьёзность, фото, описание и
- * предлагаемое решение, чтобы в любой момент можно было просто посмотреть
- * все несоответствия.
+ * так что всё работает полностью офлайн, без бэкенда. Ни статус, ни
+ * серьёзность, ни раздел не ведутся — только место, фото, описание и
+ * предлагаемое решение.
+ *
+ * Важно: localStorage привязан к конкретному браузеру на конкретном
+ * устройстве — если просто переслать этот файл другому человеку, у него
+ * фото видно не будет. Поэтому есть кнопка «Скачать копию для отправки»,
+ * которая сохраняет отдельный .html-файл с уже вшитыми данными (см.
+ * #embeddedData и exportShareableCopy ниже) — именно этот файл и нужно
+ * пересылать, чтобы получатель сразу всё увидел.
  */
 
-const STORAGE_KEY = "aitas_discrepancies_v2";
-const OLD_STORAGE_KEY = "aitas_discrepancies_v1"; // формат с полем status — мигрируем один раз
-
-const CATEGORY_LABEL = {
-  incubator: "Инкубатор",
-  broiler: "Бройлерные площадки",
-};
-
-const SEVERITY_LABEL = {
-  critical: "Критично",
-  medium: "Средне",
-  low: "Незначительно",
-};
+const STORAGE_KEY = "aitas_discrepancies_v3";
+const OLD_STORAGE_KEYS = ["aitas_discrepancies_v2", "aitas_discrepancies_v1"]; // мигрируем один раз, отбрасывая status/severity/раздел
+const DEFAULT_LOCATION = "Инкубатор";
 
 const els = {
   dash: document.querySelector(".dash"),
@@ -32,15 +28,10 @@ const els = {
 
   filterAll: document.getElementById("filterAll"),
   countAll: document.getElementById("countAll"),
-  countIncubator: document.getElementById("countIncubator"),
-  countBroiler: document.getElementById("countBroiler"),
-  subIncubator: document.getElementById("subIncubator"),
-  subBroiler: document.getElementById("subBroiler"),
+  subLocations: document.getElementById("subLocations"),
   navGroups: document.getElementById("navGroups"),
 
-  statCritical: document.getElementById("statCritical"),
-  statMedium: document.getElementById("statMedium"),
-  statLow: document.getElementById("statLow"),
+  exportBtn: document.getElementById("exportBtn"),
 
   viewTitle: document.getElementById("viewTitle"),
   progressLabel: document.getElementById("progressLabel"),
@@ -64,10 +55,8 @@ const els = {
   addDialogTitle: document.getElementById("addDialogTitle"),
   addForm: document.getElementById("addForm"),
   cancelAddBtn: document.getElementById("cancelAddBtn"),
-  fieldCategory: document.getElementById("fieldCategory"),
   fieldLocation: document.getElementById("fieldLocation"),
   locationOptions: document.getElementById("locationOptions"),
-  fieldSeverity: document.getElementById("fieldSeverity"),
   fieldPhoto: document.getElementById("fieldPhoto"),
   fieldText: document.getElementById("fieldText"),
   fieldSolution: document.getElementById("fieldSolution"),
@@ -79,7 +68,7 @@ const els = {
 
 const state = {
   entries: loadEntries(),
-  filter: { category: "all", location: null },
+  filter: { location: null },
   index: 0,
   pendingPhotos: [], // dataURL[]
   viewMode: "cards", // "cards" | "list"
@@ -89,26 +78,34 @@ const state = {
 // Storage
 // ---------------------------------------------------------------------------
 
+function readEmbeddedData() {
+  try {
+    const tag = document.getElementById("embeddedData");
+    if (!tag) return null;
+    const data = JSON.parse(tag.textContent.trim());
+    return Array.isArray(data) && data.length ? data : null;
+  } catch (err) {
+    return null;
+  }
+}
+
 function loadEntries() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
 
-    // Миграция со старого формата (со статусом) — переносим один раз,
-    // просто отбрасывая поле status, остальное сохраняем как есть.
-    const old = localStorage.getItem(OLD_STORAGE_KEY);
-    if (old) {
-      const entries = JSON.parse(old).map((e) => ({
-        id: e.id,
-        category: e.category,
-        location: e.location,
-        severity: e.severity || "medium",
-        text: e.text || "",
-        solution: e.solution || "",
-        photo: e.photo || null,
-        date: e.date,
-      }));
-      return entries;
+    // Открыт файл-копия, полученный от кого-то другого через «Скачать
+    // копию для отправки» — в нём уже вшиты данные, localStorage у
+    // получателя ещё пуст. Подхватываем встроенные данные как стартовые.
+    const embedded = readEmbeddedData();
+    if (embedded) return normalizeEntries(embedded);
+
+    // Миграция со старых форматов (со статусом/серьёзностью/разделом) —
+    // переносим один раз, отбрасывая лишние поля.
+    for (const oldKey of OLD_STORAGE_KEYS) {
+      const old = localStorage.getItem(oldKey);
+      if (!old) continue;
+      return normalizeEntries(JSON.parse(old));
     }
 
     return seedDemo();
@@ -116,6 +113,17 @@ function loadEntries() {
     console.warn("Не удалось прочитать локальные данные", err);
     return [];
   }
+}
+
+function normalizeEntries(raw) {
+  return raw.map((e) => ({
+    id: e.id || cryptoId(),
+    location: e.location || DEFAULT_LOCATION,
+    text: e.text || "",
+    solution: e.solution || "",
+    photo: e.photo || null,
+    date: e.date || Date.now(),
+  }));
 }
 
 function saveEntries() {
@@ -130,9 +138,7 @@ function seedDemo() {
   return [
     {
       id: cryptoId(),
-      category: "incubator",
-      location: "Инкубатор",
-      severity: "medium",
+      location: "Зал вывода — моечная",
       text: "Загрязнённый дренажный лоток, остатки скорлупы и пуха в отверстиях решётки.",
       solution: "Провести внеплановую мойку решётки и дренажного лотка, усилить контроль после смены.",
       photo: null,
@@ -140,11 +146,9 @@ function seedDemo() {
     },
     {
       id: cryptoId(),
-      category: "broiler",
-      location: "Бройлерная площадка №1",
-      severity: "low",
-      text: "Следы коррозии на потолочном коробе, требуется зачистка и подкраска.",
-      solution: "Включить в план ремонта на этой неделе: зачистка, грунтовка, покраска короба.",
+      location: "Зал сортировки",
+      text: "Скопление картонных коробок на путях перемещения персонала.",
+      solution: "Обеспечить своевременный вывоз тары, организовать постоянный контроль за местами хранения.",
       photo: null,
       date: Date.now(),
     },
@@ -156,23 +160,49 @@ function cryptoId() {
 }
 
 // ---------------------------------------------------------------------------
+// Экспорт копии файла с вшитыми данными — для отправки другим
+// ---------------------------------------------------------------------------
+
+function exportShareableCopy() {
+  const doc = document.documentElement.cloneNode(true);
+
+  const dataScript = doc.querySelector("#embeddedData");
+  if (dataScript) dataScript.textContent = JSON.stringify(state.entries);
+
+  // Диалоги/лайтбокс/дропзона могли остаться в промежуточном визуальном
+  // состоянии (открыт, есть класс dragover и т.п.) — сбрасываем в копии.
+  doc.querySelectorAll("dialog[open]").forEach((d) => d.removeAttribute("open"));
+  const lb = doc.querySelector("#lightbox");
+  if (lb) lb.setAttribute("hidden", "");
+
+  const html = "<!DOCTYPE html>\n" + doc.outerHTML;
+  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `nesootvetstviya-${stamp}.html`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+els.exportBtn.addEventListener("click", exportShareableCopy);
+
+// ---------------------------------------------------------------------------
 // Derived data
 // ---------------------------------------------------------------------------
 
 function getFiltered() {
-  return state.entries.filter((e) => {
-    if (state.filter.category === "all") return true;
-    if (e.category !== state.filter.category) return false;
-    if (state.filter.location && e.location !== state.filter.location) return false;
-    return true;
-  });
+  if (!state.filter.location) return state.entries;
+  return state.entries.filter((e) => e.location === state.filter.location);
 }
 
-function locationsFor(category) {
+function locationCounts() {
   const map = new Map();
-  state.entries
-    .filter((e) => e.category === category)
-    .forEach((e) => map.set(e.location, (map.get(e.location) || 0) + 1));
+  state.entries.forEach((e) => map.set(e.location, (map.get(e.location) || 0) + 1));
   return map;
 }
 
@@ -181,30 +211,28 @@ function locationsFor(category) {
 // ---------------------------------------------------------------------------
 
 function renderSidebar() {
-  const total = state.entries.length;
-  const incubatorEntries = state.entries.filter((e) => e.category === "incubator");
-  const broilerEntries = state.entries.filter((e) => e.category === "broiler");
+  els.countAll.textContent = state.entries.length;
+  els.filterAll.classList.toggle("active", !state.filter.location);
 
-  els.countAll.textContent = total;
-  els.countIncubator.textContent = incubatorEntries.length;
-  els.countBroiler.textContent = broilerEntries.length;
+  const map = locationCounts();
+  els.subLocations.innerHTML = "";
 
-  renderSubList(els.subIncubator, locationsFor("incubator"), "incubator");
-  renderSubList(els.subBroiler, locationsFor("broiler"), "broiler");
+  // Если всего одно место и оно совпадает с общим значением по умолчанию —
+  // отдельный список не добавляет информации, прячем его.
+  const entries = [...map.entries()];
+  const showList = !(entries.length === 1 && entries[0][0] === DEFAULT_LOCATION);
 
-  els.statCritical.textContent = state.entries.filter((e) => e.severity === "critical").length;
-  els.statMedium.textContent = state.entries.filter((e) => e.severity === "medium").length;
-  els.statLow.textContent = state.entries.filter((e) => e.severity === "low").length;
-
-  els.filterAll.classList.toggle("active", state.filter.category === "all");
-
-  document.querySelectorAll(".nav-group-head").forEach((btn) => {
-    const cat = btn.closest(".nav-group").dataset.category;
-    btn.classList.toggle(
-      "active",
-      state.filter.category === cat && !state.filter.location
-    );
-  });
+  if (showList) {
+    entries
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([location, count]) => {
+        const btn = document.createElement("button");
+        btn.className = "nav-sub-item" + (state.filter.location === location ? " active" : "");
+        btn.innerHTML = `<span>${escapeHtml(location)}</span><span class="count">${count}</span>`;
+        btn.addEventListener("click", () => setFilter(location));
+        els.subLocations.appendChild(btn);
+      });
+  }
 
   // Обновляем подсказки для поля "место" в форме добавления
   const allLocations = new Set(state.entries.map((e) => e.location));
@@ -213,42 +241,14 @@ function renderSidebar() {
     .join("");
 }
 
-function renderSubList(container, map, category) {
-  container.innerHTML = "";
-  [...map.entries()].forEach(([location, count]) => {
-    const btn = document.createElement("button");
-    btn.className = "nav-sub-item";
-    if (state.filter.category === category && state.filter.location === location) {
-      btn.classList.add("active");
-    }
-    btn.innerHTML = `<span>${escapeHtml(location)}</span><span class="count">${count}</span>`;
-    btn.addEventListener("click", () => setFilter(category, location));
-    container.appendChild(btn);
-  });
-}
-
-function setFilter(category, location = null) {
-  state.filter = { category, location };
+function setFilter(location) {
+  state.filter = { location };
   state.index = 0;
   renderSidebar();
   renderView();
 }
 
-els.filterAll.addEventListener("click", () => setFilter("all"));
-
-document.querySelectorAll(".nav-group-head").forEach((btn) => {
-  btn.addEventListener("click", (e) => {
-    const group = btn.closest(".nav-group");
-    const category = group.dataset.category;
-    // Клик по заголовку — фильтр по всей категории; повторный клик сворачивает список
-    if (state.filter.category === category && !state.filter.location) {
-      group.classList.toggle("collapsed");
-    } else {
-      group.classList.remove("collapsed");
-    }
-    setFilter(category);
-  });
-});
+els.filterAll.addEventListener("click", () => setFilter(null));
 
 // Мобильное меню
 function openSidebar() {
@@ -271,10 +271,7 @@ els.sidebarClose.addEventListener("click", (e) => {
 function renderView(direction = 0) {
   const list = getFiltered();
 
-  els.viewTitle.textContent =
-    state.filter.category === "all"
-      ? "Все несоответствия"
-      : (state.filter.location || CATEGORY_LABEL[state.filter.category]);
+  els.viewTitle.textContent = state.filter.location || "Все несоответствия";
 
   if (!list.length) {
     els.emptyState.hidden = false;
@@ -316,15 +313,10 @@ function renderView(direction = 0) {
   renderDots(list.length, state.index);
 }
 
-function severityColorVar(severity) {
-  return severity === "critical" ? "var(--status-critical)" : severity === "low" ? "var(--status-good)" : "var(--status-warning)";
-}
-
 function renderListView(list) {
   els.listView.innerHTML = list
-    .map((entry, idx) => {
-      const severity = entry.severity || "medium";
-      return `
+    .map(
+      (entry, idx) => `
         <div class="list-card" data-idx="${idx}">
           <div class="list-card-photo" data-role="photo" title="${entry.photo ? "Открыть фото целиком" : "Нет фото"}">
             ${entry.photo ? `<img src="${entry.photo}" alt="" />` : "📷"}
@@ -335,13 +327,12 @@ function renderListView(list) {
             <div class="list-card-text">${escapeHtml(entry.text) || "—"}</div>
             ${entry.solution ? `<div class="list-card-solution">💡 ${escapeHtml(entry.solution)}</div>` : ""}
             <div class="list-card-meta">
-              <span class="list-card-badge" style="background:${severityColorVar(severity)}">${SEVERITY_LABEL[severity]}</span>
               <span class="list-card-date">${formatShortDate(entry.date)}</span>
             </div>
           </div>
         </div>
-      `;
-    })
+      `
+    )
     .join("");
 
   els.listView.querySelectorAll(".list-card").forEach((card) => {
@@ -397,6 +388,13 @@ els.viewToggle.addEventListener("click", (e) => {
   if (btn) setViewMode(btn.dataset.mode);
 });
 
+// Растягиваем textarea по содержимому — без внутренней прокрутки, весь
+// текст виден сразу.
+function autoGrow(textarea) {
+  textarea.style.height = "auto";
+  textarea.style.height = `${textarea.scrollHeight}px`;
+}
+
 function renderCard(entry, direction) {
   const old = els.cardStage.querySelector(".card");
   if (old) {
@@ -409,8 +407,6 @@ function renderCard(entry, direction) {
   card.className = "card";
   card.style.setProperty("--card-dx", direction < 0 ? "-32px" : "32px");
 
-  const severity = entry.severity || "medium";
-
   card.innerHTML = `
     <div class="card-photo" id="cardPhoto" title="${entry.photo ? "Нажмите, чтобы посмотреть фото целиком" : "Нажмите, чтобы загрузить фото"}">
       ${
@@ -418,30 +414,18 @@ function renderCard(entry, direction) {
           ? `<img src="${entry.photo}" alt="Фото несоответствия" />`
           : `<div class="card-photo-placeholder"><div class="icon">📷</div><p>Нажмите, чтобы загрузить фото</p></div>`
       }
-      <div class="badge-row">
-        <span class="badge badge-category">${escapeHtml(CATEGORY_LABEL[entry.category] || entry.category)}</span>
-        <button class="card-delete" id="cardDelete" title="Удалить">✕</button>
-      </div>
+      <button class="card-delete" id="cardDelete" title="Удалить">✕</button>
       ${entry.photo ? `<button class="card-photo-replace" id="cardPhotoReplace" title="Заменить фото">🔄 Заменить</button>` : ""}
     </div>
     <div class="card-body">
       <input class="card-location-input" id="cardLocationInput" value="${escapeHtml(entry.location)}" placeholder="Место / участок" />
       <div class="card-date">${formatDate(entry.date)}</div>
 
-      <div class="status-row" id="severityRow">
-        ${["critical", "medium", "low"]
-          .map(
-            (s) =>
-              `<button type="button" class="status-btn severity-btn-${s} ${s === severity ? "active" : ""}" data-severity="${s}">${SEVERITY_LABEL[s]}</button>`
-          )
-          .join("")}
-      </div>
-
       <label class="card-field-label">Описание несоответствия</label>
-      <textarea class="card-text" id="cardText" rows="3" placeholder="Опишите, что не так...">${escapeHtml(entry.text || "")}</textarea>
+      <textarea class="card-text" id="cardText" rows="2" placeholder="Опишите, что не так...">${escapeHtml(entry.text || "")}</textarea>
 
-      <label class="card-field-label">Предлагаемое решение</label>
-      <textarea class="card-text card-solution" id="cardSolution" rows="3" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>
+      <label class="card-field-label card-field-label-solution">💡 Предлагаемое решение</label>
+      <textarea class="card-text card-solution" id="cardSolution" rows="2" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>
     </div>
   `;
 
@@ -458,43 +442,41 @@ function renderCard(entry, direction) {
     promptReplacePhoto(entry.id);
   });
 
-  card.querySelector("#cardDelete").addEventListener("click", () => deleteEntry(entry.id));
+  card.querySelector("#cardDelete").addEventListener("click", (e) => {
+    e.stopPropagation();
+    deleteEntry(entry.id);
+  });
 
   const locationInput = card.querySelector("#cardLocationInput");
   locationInput.addEventListener(
     "input",
     debounce(() => {
-      entry.location = locationInput.value.trim() || CATEGORY_LABEL[entry.category];
+      entry.location = locationInput.value.trim() || DEFAULT_LOCATION;
       saveEntries();
       renderSidebar();
     }, 300)
   );
 
   const textarea = card.querySelector("#cardText");
-  textarea.addEventListener(
-    "input",
-    debounce(() => {
-      entry.text = textarea.value;
-      saveEntries();
-    }, 300)
-  );
+  autoGrow(textarea);
+  const saveText = debounce(() => {
+    entry.text = textarea.value;
+    saveEntries();
+  }, 300);
+  textarea.addEventListener("input", () => {
+    autoGrow(textarea);
+    saveText();
+  });
 
   const solutionArea = card.querySelector("#cardSolution");
-  solutionArea.addEventListener(
-    "input",
-    debounce(() => {
-      entry.solution = solutionArea.value;
-      saveEntries();
-    }, 300)
-  );
-
-  card.querySelector("#severityRow").addEventListener("click", (e) => {
-    const btn = e.target.closest(".status-btn");
-    if (!btn) return;
-    entry.severity = btn.dataset.severity;
+  autoGrow(solutionArea);
+  const saveSolution = debounce(() => {
+    entry.solution = solutionArea.value;
     saveEntries();
-    renderSidebar();
-    card.querySelectorAll(".status-btn").forEach((b) => b.classList.toggle("active", b === btn));
+  }, 300);
+  solutionArea.addEventListener("input", () => {
+    autoGrow(solutionArea);
+    saveSolution();
   });
 }
 
@@ -601,9 +583,6 @@ function openAddDialog() {
   els.dropzoneHint.hidden = false;
   els.dropzoneNote.hidden = true;
   updateAddDialogMode();
-  if (state.filter.category !== "all") {
-    els.fieldCategory.value = state.filter.category;
-  }
   if (state.filter.location) {
     els.fieldLocation.value = state.filter.location;
   }
@@ -614,7 +593,7 @@ function updateAddDialogMode() {
   const n = state.pendingPhotos.length;
   const bulk = n > 1;
   els.addDialogTitle.textContent = bulk ? `Новые несоответствия (${n} фото)` : "Новое несоответствие";
-  els.fieldLocation.placeholder = bulk ? "необязательно — можно уточнить в каждой карточке позже" : "напр. Зал №2, Площадка №5";
+  els.fieldLocation.placeholder = bulk ? "необязательно — можно уточнить в каждой карточке позже" : "напр. Зал вывода, Зал сортировки";
   document.getElementById("fieldTextWrap").querySelector("span").textContent = bulk
     ? "Описание (общее для всех, можно поправить позже в каждой карточке)"
     : "Описание несоответствия";
@@ -682,8 +661,6 @@ function fileToDataUrl(file) {
 els.addForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
-  const category = els.fieldCategory.value;
-  const severity = els.fieldSeverity.value;
   const text = els.fieldText.value.trim();
   const solution = els.fieldSolution.value.trim();
   const locationInput = els.fieldLocation.value.trim();
@@ -691,9 +668,7 @@ els.addForm.addEventListener("submit", (e) => {
 
   const newEntries = photos.map((photo) => ({
     id: cryptoId(),
-    category,
-    location: locationInput || CATEGORY_LABEL[category],
-    severity,
+    location: locationInput || DEFAULT_LOCATION,
     text,
     solution,
     photo,
@@ -705,13 +680,10 @@ els.addForm.addEventListener("submit", (e) => {
 
   els.addDialog.close();
 
-  state.filter = { category, location: locationInput || null };
+  state.filter = { location: locationInput || null };
   state.index = 0;
   renderSidebar();
   renderView();
-
-  const group = document.querySelector(`.nav-group[data-category="${category}"]`);
-  if (group) group.classList.remove("collapsed");
 });
 
 // ---------------------------------------------------------------------------
