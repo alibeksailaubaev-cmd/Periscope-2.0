@@ -50,6 +50,9 @@
       <button class="btn-secondary btn-export" id="exportBtn">📤 Скачать копию для отправки</button>
       <p class="btn-add-hint">Фото хранятся только в этом браузере. Чтобы показать их другим — скачайте копию файла и отправьте её (мессенджер, почта, диск).</p>
 
+      <button class="btn-secondary btn-export" id="exportPptxBtn">🖼️ Скачать как PowerPoint</button>
+      <p class="btn-add-hint">Один слайд на карточку — фото, место, описание. Удобно для печати/презентации.</p>
+
       <div class="sidebar-total">
         <span id="sidebarTotalLabel">Всего несоответствий</span>
         <b id="countAll">0</b>
@@ -121,6 +124,10 @@
           <input type="file" id="fieldPhoto" accept="image/*" multiple hidden />
         </div>
         <p class="dropzone-note" id="dropzoneNote" hidden></p>
+        <label class="split-toggle" id="splitToggle" hidden>
+          <input type="checkbox" id="fieldSplitCards" checked />
+          <span>Каждое фото — отдельная карточка (можно снять, если это несколько фото одного случая)</span>
+        </label>
       </label>
 
       <label class="field" id="fieldTextWrap">
@@ -140,6 +147,7 @@
     </form>
   </dialog>
 
+  <script src="js/vendor/pptxgen.bundle.js"></script>
   <script src="js/corporate.js"></script>
   <script src="js/discrepancies.js"></script>
 </body>
