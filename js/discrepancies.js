@@ -226,11 +226,26 @@ function renderSidebar() {
     entries
       .sort((a, b) => b[1] - a[1])
       .forEach(([location, count]) => {
+        const row = document.createElement("div");
+        row.className = "nav-sub-row";
+
         const btn = document.createElement("button");
         btn.className = "nav-sub-item" + (state.filter.location === location ? " active" : "");
         btn.innerHTML = `<span>${escapeHtml(location)}</span><span class="count">${count}</span>`;
         btn.addEventListener("click", () => setFilter(location));
-        els.subLocations.appendChild(btn);
+
+        const del = document.createElement("button");
+        del.className = "nav-sub-delete";
+        del.title = `Удалить все записи «${location}»`;
+        del.textContent = "✕";
+        del.addEventListener("click", (e) => {
+          e.stopPropagation();
+          deleteLocation(location);
+        });
+
+        row.appendChild(btn);
+        row.appendChild(del);
+        els.subLocations.appendChild(row);
       });
   }
 
@@ -549,6 +564,16 @@ els.viewer.addEventListener(
 function deleteEntry(id) {
   if (!confirm("Удалить это несоответствие?")) return;
   state.entries = state.entries.filter((e) => e.id !== id);
+  saveEntries();
+  renderSidebar();
+  renderView();
+}
+
+function deleteLocation(location) {
+  const count = state.entries.filter((e) => e.location === location).length;
+  if (!confirm(`Удалить все записи «${location}» (${count} шт.)?`)) return;
+  state.entries = state.entries.filter((e) => e.location !== location);
+  if (state.filter.location === location) state.filter = { location: null };
   saveEntries();
   renderSidebar();
   renderView();

@@ -183,7 +183,19 @@ body {
   padding-bottom: 0;
 }
 
+.nav-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav-sub-row:hover .nav-sub-delete {
+  opacity: 1;
+}
+
 .nav-sub-item {
+  flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   color: var(--ink-secondary);
@@ -195,6 +207,26 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.nav-sub-delete {
+  background: transparent;
+  border: none;
+  color: var(--ink-muted);
+  font-size: 11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0.35;
+  transition: opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.nav-sub-delete:hover {
+  background: rgba(208, 59, 59, 0.12);
+  color: var(--status-critical);
+  opacity: 1;
 }
 
 .nav-sub-item:hover {
