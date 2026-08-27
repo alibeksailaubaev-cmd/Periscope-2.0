@@ -22,10 +22,11 @@
     <div class="topnav-spacer"></div>
   </header>
 
-  <!-- Данные несоответствий встраиваются сюда при экспорте копии для
-       отправки — так получатель видит фото и описания сразу, без
-       зависимости от localStorage отправителя. -->
+  <!-- Данные несоответствий и эталонных примеров встраиваются сюда при
+       экспорте копии для отправки — так получатель видит фото и описания
+       сразу, без зависимости от localStorage отправителя. -->
   <script id="embeddedData" type="application/json">null</script>
+  <script id="embeddedReferenceData" type="application/json">null</script>
 
   <div class="dash">
 
@@ -36,16 +37,21 @@
         <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
       </div>
 
+      <div class="section-toggle" id="sectionToggle">
+        <button class="section-toggle-btn active" data-section="discrepancies">⚠️ Несоответствия</button>
+        <button class="section-toggle-btn" data-section="reference">✅ Эталон</button>
+      </div>
+
       <button class="btn-add" id="openAddBtn">
         <span class="plus">+</span> 📷 Загрузить фото
       </button>
-      <p class="btn-add-hint">Можно выбрать сразу несколько фото — все войдут в одну карточку несоответствия.</p>
+      <p class="btn-add-hint" id="addHint">Можно выбрать сразу несколько фото — все войдут в одну карточку несоответствия.</p>
 
       <button class="btn-secondary btn-export" id="exportBtn">📤 Скачать копию для отправки</button>
       <p class="btn-add-hint">Фото хранятся только в этом браузере. Чтобы показать их другим — скачайте копию файла и отправьте её (мессенджер, почта, диск).</p>
 
       <div class="sidebar-total">
-        <span>Всего несоответствий</span>
+        <span id="sidebarTotalLabel">Всего несоответствий</span>
         <b id="countAll">0</b>
       </div>
     </aside>
@@ -69,7 +75,7 @@
       <section class="viewer" id="viewer">
         <div class="empty-state" id="emptyState" hidden>
           <div class="empty-icon">📷</div>
-          <p>Пока нет несоответствий в этом разделе</p>
+          <p id="emptyStateText">Пока нет несоответствий в этом разделе</p>
           <button class="btn-primary" id="emptyAddBtn">Загрузить фото</button>
         </div>
 
@@ -99,7 +105,7 @@
       <h2 id="addDialogTitle">Новое несоответствие</h2>
 
       <label class="field">
-        <span>Место / участок</span>
+        <span id="fieldLocationLabel">Место / участок</span>
         <input id="fieldLocation" type="text" list="locationOptions" placeholder="напр. Зал вывода, Зал сортировки" />
         <datalist id="locationOptions"></datalist>
       </label>
@@ -118,7 +124,7 @@
       </label>
 
       <label class="field" id="fieldTextWrap">
-        <span>Описание несоответствия</span>
+        <span id="fieldTextLabel">Описание несоответствия</span>
         <textarea id="fieldText" rows="3" placeholder="Опишите, что не так..."></textarea>
       </label>
 

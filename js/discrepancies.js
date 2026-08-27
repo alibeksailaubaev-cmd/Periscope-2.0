@@ -1,23 +1,61 @@
 "use strict";
 
 /**
- * Фотоотчёт по несоответствиям — Инкубатор (aitas ukpf).
- * Данные хранятся локально в localStorage — фото уходят внутрь как dataURL,
- * так что всё работает полностью офлайн, без бэкенда. Ни статус, ни
- * серьёзность, ни раздел не ведутся — только место, фото, описание и
- * предлагаемое решение.
+ * Фотоотчёт — Инкубатор (aitas mpf). Два раздела: «Несоответствия»
+ * (state.discrepancies) и «Эталон» (state.reference, правильные примеры
+ * для сравнения) — переключаются через #sectionToggle, у каждого свой
+ * ключ в localStorage. Данные хранятся локально — фото уходят внутрь как
+ * dataURL (уменьшенные и пережатые в JPEG, см. compressDataUrl), так что
+ * всё работает полностью офлайн, без бэкенда.
  *
  * Важно: localStorage привязан к конкретному браузеру на конкретном
  * устройстве — если просто переслать этот файл другому человеку, у него
  * фото видно не будет. Поэтому есть кнопка «Скачать копию для отправки»,
- * которая сохраняет отдельный .html-файл с уже вшитыми данными (см.
- * #embeddedData и exportShareableCopy ниже) — именно этот файл и нужно
- * пересылать, чтобы получатель сразу всё увидел.
+ * которая сохраняет отдельный .html-файл с уже вшитыми данными обоих
+ * разделов (см. #embeddedData/#embeddedReferenceData и
+ * exportShareableCopy ниже) — именно этот файл и нужно пересылать, чтобы
+ * получатель сразу всё увидел.
  */
 
 const STORAGE_KEY = "aitas_discrepancies_v3";
 const OLD_STORAGE_KEYS = ["aitas_discrepancies_v2", "aitas_discrepancies_v1"]; // мигрируем один раз, отбрасывая status/severity/раздел
+const REFERENCE_STORAGE_KEY = "aitas_reference_v1";
 const DEFAULT_LOCATION = "Инкубатор";
+
+// Тексты интерфейса, которые различаются между разделом "Несоответствия"
+// и разделом "Эталон" (правильные примеры для сравнения).
+const SECTION_TEXT = {
+  discrepancies: {
+    sidebarTotal: "Всего несоответствий",
+    addHint: "Можно выбрать сразу несколько фото — все войдут в одну карточку несоответствия.",
+    viewTitle: "Все несоответствия",
+    emptyState: "Пока нет несоответствий в этом разделе",
+    fieldLocationLabel: "Место / участок",
+    fieldLocationPlaceholder: "напр. Зал вывода, Зал сортировки",
+    fieldTextLabel: "Описание несоответствия",
+    addDialogTitleOne: "Новое несоответствие",
+    addDialogTitleMany: (n) => `Новое несоответствие (${n} фото)`,
+    exportPrefix: "nesootvetstviya",
+    cardTextLabel: "Описание несоответствия",
+    cardTextPlaceholder: "Опишите, что не так...",
+    deleteConfirm: "Удалить это несоответствие?",
+  },
+  reference: {
+    sidebarTotal: "Всего эталонных примеров",
+    addHint: "Можно выбрать сразу несколько фото — все войдут в одну карточку эталона.",
+    viewTitle: "Эталон — как должно быть",
+    emptyState: "Пока нет эталонных примеров",
+    fieldLocationLabel: "Название / участок",
+    fieldLocationPlaceholder: "напр. Мойка рук, Дезковрик на входе",
+    fieldTextLabel: "Как должно быть правильно",
+    addDialogTitleOne: "Новый эталонный пример",
+    addDialogTitleMany: (n) => `Новый эталонный пример (${n} фото)`,
+    exportPrefix: "etalon",
+    cardTextLabel: "Как должно быть правильно",
+    cardTextPlaceholder: "Опишите, как выглядит правильное состояние...",
+    deleteConfirm: "Удалить этот эталонный пример?",
+  },
+};
 
 const els = {
   dash: document.querySelector(".dash"),
@@ -27,6 +65,9 @@ const els = {
   menuBtn: document.getElementById("menuBtn"),
 
   countAll: document.getElementById("countAll"),
+  sidebarTotalLabel: document.getElementById("sidebarTotalLabel"),
+  addHint: document.getElementById("addHint"),
+  sectionToggle: document.getElementById("sectionToggle"),
 
   exportBtn: document.getElementById("exportBtn"),
 
@@ -34,6 +75,7 @@ const els = {
   progressLabel: document.getElementById("progressLabel"),
   viewer: document.getElementById("viewer"),
   emptyState: document.getElementById("emptyState"),
+  emptyStateText: document.getElementById("emptyStateText"),
   emptyAddBtn: document.getElementById("emptyAddBtn"),
   cardStage: document.getElementById("cardStage"),
   prevBtn: document.getElementById("prevBtn"),
@@ -55,10 +97,13 @@ const els = {
   addForm: document.getElementById("addForm"),
   cancelAddBtn: document.getElementById("cancelAddBtn"),
   fieldLocation: document.getElementById("fieldLocation"),
+  fieldLocationLabel: document.getElementById("fieldLocationLabel"),
   locationOptions: document.getElementById("locationOptions"),
   fieldPhoto: document.getElementById("fieldPhoto"),
   fieldText: document.getElementById("fieldText"),
+  fieldTextLabel: document.getElementById("fieldTextLabel"),
   fieldSolution: document.getElementById("fieldSolution"),
+  fieldSolutionWrap: document.getElementById("fieldSolutionWrap"),
   dropzone: document.getElementById("dropzone"),
   dropPreview: document.getElementById("dropPreview"),
   dropzoneHint: document.getElementById("dropzoneHint"),
@@ -66,25 +111,33 @@ const els = {
 };
 
 const state = {
-  entries: loadEntries(),
+  section: "discrepancies", // "discrepancies" | "reference"
+  discrepancies: loadEntries(),
+  reference: loadReferenceEntries(),
+  entries: null, // алиас на discrepancies или reference — см. setSection ниже
   index: 0,
   pendingPhotos: [], // dataURL[]
   viewMode: "cards", // "cards" | "list"
 };
+state.entries = state.discrepancies;
 
 // ---------------------------------------------------------------------------
 // Storage
 // ---------------------------------------------------------------------------
 
-function readEmbeddedData() {
+function readEmbeddedJson(tagId) {
   try {
-    const tag = document.getElementById("embeddedData");
+    const tag = document.getElementById(tagId);
     if (!tag) return null;
     const data = JSON.parse(tag.textContent.trim());
     return Array.isArray(data) && data.length ? data : null;
   } catch (err) {
     return null;
   }
+}
+
+function readEmbeddedData() {
+  return readEmbeddedJson("embeddedData");
 }
 
 function loadEntries() {
@@ -113,6 +166,21 @@ function loadEntries() {
   }
 }
 
+function loadReferenceEntries() {
+  try {
+    const raw = localStorage.getItem(REFERENCE_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+
+    const embedded = readEmbeddedJson("embeddedReferenceData");
+    if (embedded) return normalizeEntries(embedded);
+
+    return [];
+  } catch (err) {
+    console.warn("Не удалось прочитать локальные эталонные данные", err);
+    return [];
+  }
+}
+
 function normalizeEntries(raw) {
   return raw.map((e) => ({
     id: e.id || cryptoId(),
@@ -126,9 +194,11 @@ function normalizeEntries(raw) {
 
 function saveEntries() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.entries));
+    const key = state.section === "reference" ? REFERENCE_STORAGE_KEY : STORAGE_KEY;
+    localStorage.setItem(key, JSON.stringify(state.entries));
   } catch (err) {
-    console.warn("Не удалось сохранить данные локально", err);
+    console.warn("Не удалось сохранить данные локально — возможно, переполнено хранилище браузера (слишком много/тяжёлых фото)", err);
+    alert("Не удалось сохранить — в браузере закончилось место для хранения. Попробуйте удалить старые фото или часть записей.");
   }
 }
 
@@ -164,8 +234,13 @@ function cryptoId() {
 function exportShareableCopy() {
   const doc = document.documentElement.cloneNode(true);
 
+  // Вшиваем оба раздела — и несоответствия, и эталонные примеры — чтобы
+  // получатель видел всё независимо от того, какой раздел был открыт при
+  // экспорте.
   const dataScript = doc.querySelector("#embeddedData");
-  if (dataScript) dataScript.textContent = JSON.stringify(state.entries);
+  if (dataScript) dataScript.textContent = JSON.stringify(state.discrepancies);
+  const refDataScript = doc.querySelector("#embeddedReferenceData");
+  if (refDataScript) refDataScript.textContent = JSON.stringify(state.reference);
 
   // Диалоги/лайтбокс/дропзона могли остаться в промежуточном визуальном
   // состоянии (открыт, есть класс dragover и т.п.) — сбрасываем в копии.
@@ -180,7 +255,7 @@ function exportShareableCopy() {
   const stamp = new Date().toISOString().slice(0, 10);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `nesootvetstviya-${stamp}.html`;
+  a.download = `nesootvetstviya-i-etalon-${stamp}.html`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -202,7 +277,10 @@ function getFiltered() {
 // ---------------------------------------------------------------------------
 
 function renderSidebar() {
+  const t = SECTION_TEXT[state.section];
   els.countAll.textContent = state.entries.length;
+  els.sidebarTotalLabel.textContent = t.sidebarTotal;
+  els.addHint.textContent = t.addHint;
 
   // Обновляем подсказки для поля "место" в форме добавления
   const allLocations = new Set(state.entries.map((e) => e.location));
@@ -210,6 +288,25 @@ function renderSidebar() {
     .map((loc) => `<option value="${escapeHtml(loc)}"></option>`)
     .join("");
 }
+
+function setSection(section) {
+  if (state.section === section) return;
+  state.section = section;
+  state.entries = section === "reference" ? state.reference : state.discrepancies;
+  state.index = 0;
+
+  els.sectionToggle.querySelectorAll(".section-toggle-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.section === section);
+  });
+
+  renderSidebar();
+  renderView();
+}
+
+els.sectionToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".section-toggle-btn");
+  if (btn) setSection(btn.dataset.section);
+});
 
 // Мобильное меню
 function openSidebar() {
@@ -231,10 +328,12 @@ els.sidebarClose.addEventListener("click", (e) => {
 
 function renderView(direction = 0) {
   const list = getFiltered();
+  const t = SECTION_TEXT[state.section];
 
-  els.viewTitle.textContent = "Все несоответствия";
+  els.viewTitle.textContent = t.viewTitle;
 
   if (!list.length) {
+    els.emptyStateText.textContent = t.emptyState;
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
     els.listView.innerHTML = "";
@@ -406,26 +505,32 @@ function renderCard(entry, direction) {
   card.style.setProperty("--card-dx", direction < 0 ? "-32px" : "32px");
 
   const hasPhotos = entry.photos.length > 0;
+  const t = SECTION_TEXT[state.section];
+  const isReference = state.section === "reference";
 
   card.innerHTML = `
     <div class="card-photo" id="cardPhoto" title="${hasPhotos ? "Нажмите, чтобы посмотреть фото целиком" : "Нажмите, чтобы загрузить фото"}">
       ${
         hasPhotos
-          ? `<img src="${entry.photos[0]}" alt="Фото несоответствия" />`
+          ? `<img src="${entry.photos[0]}" alt="Фото" />`
           : `<div class="card-photo-placeholder"><div class="icon">📷</div><p>Нажмите, чтобы загрузить фото</p></div>`
       }
       <button class="card-delete" id="cardDelete" title="Удалить">✕</button>
     </div>
     <div class="card-photo-strip" id="cardPhotoStrip"></div>
     <div class="card-body">
-      <input class="card-location-input" id="cardLocationInput" value="${escapeHtml(entry.location)}" placeholder="Место / участок" />
+      <input class="card-location-input" id="cardLocationInput" value="${escapeHtml(entry.location)}" placeholder="${t.fieldLocationLabel}" />
       <div class="card-date">${formatDate(entry.date)}</div>
 
-      <label class="card-field-label">Описание несоответствия</label>
-      <textarea class="card-text" id="cardText" rows="2" placeholder="Опишите, что не так...">${escapeHtml(entry.text || "")}</textarea>
+      <label class="card-field-label">${t.cardTextLabel}</label>
+      <textarea class="card-text" id="cardText" rows="2" placeholder="${t.cardTextPlaceholder}">${escapeHtml(entry.text || "")}</textarea>
 
-      <label class="card-field-label card-field-label-solution">💡 Предлагаемое решение</label>
-      <textarea class="card-text card-solution" id="cardSolution" rows="2" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>
+      ${
+        isReference
+          ? ""
+          : `<label class="card-field-label card-field-label-solution">💡 Предлагаемое решение</label>
+      <textarea class="card-text card-solution" id="cardSolution" rows="2" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>`
+      }
     </div>
   `;
 
@@ -466,15 +571,17 @@ function renderCard(entry, direction) {
   });
 
   const solutionArea = card.querySelector("#cardSolution");
-  autoGrow(solutionArea);
-  const saveSolution = debounce(() => {
-    entry.solution = solutionArea.value;
-    saveEntries();
-  }, 300);
-  solutionArea.addEventListener("input", () => {
+  if (solutionArea) {
     autoGrow(solutionArea);
-    saveSolution();
-  });
+    const saveSolution = debounce(() => {
+      entry.solution = solutionArea.value;
+      saveEntries();
+    }, 300);
+    solutionArea.addEventListener("input", () => {
+      autoGrow(solutionArea);
+      saveSolution();
+    });
+  }
 }
 
 function renderDots(count, active) {
@@ -543,9 +650,19 @@ els.viewer.addEventListener(
   { passive: true }
 );
 
+// state.entries — это алиас на state.discrepancies или state.reference
+// (см. setSection). Присваивание нового массива (например, через filter)
+// разрывает эту связь, поэтому такие места обновляют оба поля разом.
+function setEntries(newEntries) {
+  state.entries = newEntries;
+  if (state.section === "reference") state.reference = newEntries;
+  else state.discrepancies = newEntries;
+}
+
 function deleteEntry(id) {
-  if (!confirm("Удалить это несоответствие?")) return;
-  state.entries = state.entries.filter((e) => e.id !== id);
+  const t = SECTION_TEXT[state.section];
+  if (!confirm(t.deleteConfirm)) return;
+  setEntries(state.entries.filter((e) => e.id !== id));
   saveEntries();
   renderSidebar();
   renderView();
@@ -616,18 +733,28 @@ function deletePhotoFromEntry(entryId, photoIndex) {
 // ---------------------------------------------------------------------------
 
 function openAddDialog() {
+  const t = SECTION_TEXT[state.section];
+  const isReference = state.section === "reference";
+
   els.addForm.reset();
   state.pendingPhotos = [];
   els.dropPreview.hidden = true;
   els.dropzoneHint.hidden = false;
   els.dropzoneNote.hidden = true;
+
+  els.fieldLocationLabel.textContent = t.fieldLocationLabel;
+  els.fieldLocation.placeholder = t.fieldLocationPlaceholder;
+  els.fieldTextLabel.textContent = t.fieldTextLabel;
+  els.fieldSolutionWrap.hidden = isReference;
+
   updateAddDialogMode();
   els.addDialog.showModal();
 }
 
 function updateAddDialogMode() {
+  const t = SECTION_TEXT[state.section];
   const n = state.pendingPhotos.length;
-  els.addDialogTitle.textContent = n > 1 ? `Новое несоответствие (${n} фото)` : "Новое несоответствие";
+  els.addDialogTitle.textContent = n > 1 ? t.addDialogTitleMany(n) : t.addDialogTitleOne;
 }
 
 els.openAddBtn.addEventListener("click", openAddDialog);
@@ -677,12 +804,42 @@ async function handlePickedPhotos(fileList) {
   }
 }
 
+// Фото с телефонов часто весят по 3-8 МБ каждое — при десятках/сотнях
+// фото это быстро упирается в лимит localStorage (~5-10 МБ на домен) и
+// делает экспортированный .html неудобным для пересылки. Поэтому перед
+// сохранением уменьшаем длинную сторону и пережимаем в JPEG — почти без
+// потери в читаемости, но в разы меньше по размеру.
+const MAX_PHOTO_DIMENSION = 1600;
+const PHOTO_JPEG_QUALITY = 0.82;
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = reject;
     reader.readAsDataURL(file);
+  }).then(compressDataUrl);
+}
+
+function compressDataUrl(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX_PHOTO_DIMENSION / Math.max(img.width, img.height));
+      // Изображение уже маленькое (скриншот, значок и т.п.) — не трогаем.
+      if (scale >= 1) {
+        resolve(dataUrl);
+        return;
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", PHOTO_JPEG_QUALITY));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
   });
 }
 
@@ -690,7 +847,7 @@ els.addForm.addEventListener("submit", (e) => {
   e.preventDefault();
 
   const text = els.fieldText.value.trim();
-  const solution = els.fieldSolution.value.trim();
+  const solution = state.section === "reference" ? "" : els.fieldSolution.value.trim();
   const locationInput = els.fieldLocation.value.trim();
 
   const newEntry = {
