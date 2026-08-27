@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Несоответствия — Бройлерная площадка — aitas mpf</title>
+  <link rel="stylesheet" href="css/corporate.css" />
+  <link rel="stylesheet" href="css/discrepancies.css" />
+</head>
+<body>
+
+  <div class="brand-strip" id="brandStrip"></div>
+
+  <header class="topnav">
+    <div class="topnav-brand">
+      <span class="mark"><svg viewBox="0 0 26 26"><path d="M4 14c2-4 6-6 10-5 3 .7 5 3 6 6-1.5.6-3 .6-4.5 0" /><circle cx="17" cy="8" r="1" /></svg></span>
+      <div class="word">
+        <strong>aitas mpf</strong>
+        <span>Макинская птицефабрика · Бройлерная площадка</span>
+      </div>
+    </div>
+    <div class="topnav-spacer"></div>
+  </header>
+
+  <!-- Данные несоответствий и эталонных примеров встраиваются сюда при
+       экспорте копии для отправки — так получатель видит фото и описания
+       сразу, без зависимости от localStorage отправителя. -->
+  <script id="embeddedData" type="application/json">null</script>
+  <script id="embeddedReferenceData" type="application/json">null</script>
+
+  <div class="dash">
+
+    <!-- ===== Левая панель ===== -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <span class="sidebar-title">Бройлерная площадка</span>
+        <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
+      </div>
+
+      <div class="section-toggle" id="sectionToggle">
+        <button class="section-toggle-btn active" data-section="discrepancies">⚠️ Несоответствия</button>
+        <button class="section-toggle-btn" data-section="reference">УКПФ Бройлер</button>
+      </div>
+
+      <button class="btn-add" id="openAddBtn">
+        <span class="plus">+</span> 📷 Загрузить фото
+      </button>
+      <p class="btn-add-hint" id="addHint">Можно выбрать сразу много фото (100+) — по умолчанию каждое станет отдельной карточкой.</p>
+
+      <button class="btn-secondary btn-export" id="exportBtn">📤 Скачать копию для отправки</button>
+      <p class="btn-add-hint">Фото хранятся только в этом браузере. Чтобы показать их другим — скачайте копию файла и отправьте её (мессенджер, почта, диск).</p>
+
+      <button class="btn-secondary btn-export" id="exportPptxBtn">🖼️ Скачать как PowerPoint</button>
+      <p class="btn-add-hint">Один слайд на карточку — фото, место, описание. Удобно для печати/презентации.</p>
+
+      <div class="sidebar-total">
+        <span id="sidebarTotalLabel">Всего несоответствий</span>
+        <b id="countAll">0</b>
+      </div>
+    </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <!-- ===== Основная область ===== -->
+    <main class="main">
+      <header class="main-top">
+        <button class="icon-btn menu-btn" id="menuBtn" title="Меню">☰</button>
+        <h1 id="viewTitle">Все несоответствия</h1>
+        <div class="main-top-actions">
+          <div class="view-toggle" id="viewToggle">
+            <button class="view-toggle-btn active" data-mode="cards" title="Карточки">🗂 Карточки</button>
+            <button class="view-toggle-btn" data-mode="list" title="Список">☰ Список</button>
+          </div>
+          <span class="progress-label" id="progressLabel"></span>
+        </div>
+      </header>
+
+      <section class="viewer" id="viewer">
+        <div class="empty-state" id="emptyState" hidden>
+          <div class="empty-icon">📷</div>
+          <p id="emptyStateText">Пока нет несоответствий в этом разделе</p>
+          <button class="btn-primary" id="emptyAddBtn">Загрузить фото</button>
+        </div>
+
+        <button class="nav-arrow nav-arrow-left" id="prevBtn" title="Предыдущее">‹</button>
+        <div class="card-stage" id="cardStage"></div>
+        <button class="nav-arrow nav-arrow-right" id="nextBtn" title="Следующее">›</button>
+
+        <div class="list-view" id="listView" hidden></div>
+      </section>
+
+      <div class="dots" id="dots"></div>
+    </main>
+  </div>
+
+  <!-- ===== Полноэкранный просмотр фото ===== -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox-close" id="lightboxClose" title="Закрыть">✕</button>
+    <button class="lightbox-nav lightbox-prev" id="lightboxPrev" title="Предыдущее фото">‹</button>
+    <img id="lightboxImg" alt="Фото несоответствия" />
+    <button class="lightbox-nav lightbox-next" id="lightboxNext" title="Следующее фото">›</button>
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+
+  <!-- ===== Модалка: новое несоответствие (фото) ===== -->
+  <dialog id="addDialog" class="add-dialog">
+    <form method="dialog" id="addForm" class="add-form">
+      <h2 id="addDialogTitle">Новое несоответствие</h2>
+
+      <label class="field">
+        <span id="fieldLocationLabel">Место / участок</span>
+        <input id="fieldLocation" type="text" list="locationOptions" placeholder="напр. Птичник №3, Кормоцех" />
+        <datalist id="locationOptions"></datalist>
+      </label>
+
+      <label class="field">
+        <span>Фото (можно выбрать несколько сразу)</span>
+        <div class="dropzone" id="dropzone">
+          <img id="dropPreview" hidden />
+          <div class="dropzone-hint" id="dropzoneHint">
+            <div class="dropzone-icon">📎</div>
+            <p>Нажмите или перетащите фото сюда</p>
+          </div>
+          <input type="file" id="fieldPhoto" accept="image/*" multiple hidden />
+        </div>
+        <p class="dropzone-note" id="dropzoneNote" hidden></p>
+        <label class="split-toggle" id="splitToggle" hidden>
+          <input type="checkbox" id="fieldSplitCards" checked />
+          <span>Каждое фото — отдельная карточка (можно снять, если это несколько фото одного случая)</span>
+        </label>
+      </label>
+
+      <label class="field" id="fieldTextWrap">
+        <span id="fieldTextLabel">Описание несоответствия</span>
+        <textarea id="fieldText" rows="3" placeholder="Опишите, что не так..."></textarea>
+      </label>
+
+      <label class="field" id="fieldSolutionWrap">
+        <span>Предлагаемое решение</span>
+        <textarea id="fieldSolution" rows="3" placeholder="Что нужно сделать, чтобы устранить..."></textarea>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn-secondary" id="cancelAddBtn">Отмена</button>
+        <button type="submit" class="btn-primary" id="saveAddBtn">Сохранить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/vendor/pptxgen.bundle.js"></script>
+  <script src="js/corporate.js"></script>
+  <script src="js/broiler.js"></script>
+</body>
+</html>
