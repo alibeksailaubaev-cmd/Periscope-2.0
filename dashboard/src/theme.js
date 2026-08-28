@@ -522,6 +522,32 @@
   pushRange();
   setInterval(pushRange, 1200);
 
+  /* --- сводка по КПИ уезжает в шапку оболочки (для «панели руководителя») -
+     ничего не меняем в панели — просто читаем уже посчитанные ею числа
+     (те же плитки, что видны в самой панели) из DOM. --------------------- */
+  function readInt(sel){
+    var el = doc.getElementById(sel);
+    if(!el) return null;
+    var m = (el.textContent || '').replace(/[  ]/g,'').match(/-?\d+/);
+    return m ? parseInt(m[0], 10) : null;
+  }
+  var lastKpiSig = null;
+  function pushKpi(){
+    var count = readInt('statMbCount');
+    if(count === null) return;                    // данные ещё не загружены — сводке нечего показать
+    var nok = readInt('statMbNok');
+    var ok = readInt('statMbOk');
+    var violTotal = readInt('statViolTotal');       // есть только в ЗПП/бройлере
+    var violRewash = readInt('statViolRewash');
+    var actAvgEl = doc.querySelector('#actChart .indicatorlayer .numbers .number-number');
+    var sig = count + '|' + nok + '|' + ok + '|' + violTotal + '|' + violRewash;
+    if(sig === lastKpiSig) return;
+    lastKpiSig = sig;
+    post({ type:'aitas-kpi', count:count, nok:nok, ok:ok, violTotal:violTotal, violRewash:violRewash });
+  }
+  pushKpi();
+  setInterval(pushKpi, 1200);
+
   post({ type:'aitas-ready' });
   notifySections();
   setInterval(notifySections, 2000);

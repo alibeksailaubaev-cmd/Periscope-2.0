@@ -332,6 +332,109 @@
   }
   .section-title::after{ content:""; flex:1; height:1px; background:linear-gradient(90deg, var(--line), transparent); }
 
+  /* ==========================================================
+     СВОДКА ПО ВСЕМ ЦЕХАМ — «панель руководителя»: цифры трёх
+     подразделений видны сразу, без переключения вкладок
+     ========================================================== */
+  .exec-summary{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr) minmax(200px, 1fr);
+    gap:14px;
+    margin-bottom:22px;
+  }
+  @media (max-width:1180px){ .exec-summary{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:680px){ .exec-summary{ grid-template-columns:1fr; } }
+
+  .exec-card{
+    position:relative;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px 18px;
+    box-shadow:var(--shadow-1);
+    cursor:pointer;
+    overflow:hidden;
+    transition:transform .2s var(--ease), box-shadow .22s var(--ease), border-color .22s var(--ease);
+  }
+  .exec-card::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width:5px;
+    background:var(--line);
+    transition:background .3s var(--ease);
+  }
+  .exec-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-2); border-color:var(--sand-deep); }
+  .exec-card.is-active{ border-color:var(--teal); box-shadow:0 0 0 3px rgba(14,154,146,.18), var(--shadow-1); }
+  .exec-card.tone-ok::before{ background:linear-gradient(180deg, var(--green), #6cc38f); }
+  .exec-card.tone-warn::before{ background:linear-gradient(180deg, var(--amber), #e2b25f); }
+  .exec-card.tone-bad::before{ background:linear-gradient(180deg, var(--red), #e88b82); }
+  .exec-card.tone-empty::before{ background:var(--line); }
+
+  .exec-card .exec-head{
+    display:flex; align-items:center; gap:11px;
+    margin-bottom:12px;
+  }
+  .exec-card .exec-thumb{
+    width:38px; height:38px; flex:none;
+    border-radius:11px;
+    overflow:hidden;
+    background:var(--teal-wash);
+    border:1px solid rgba(14,154,146,.25);
+  }
+  .exec-card .exec-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .exec-card .exec-title{ font-size:14px; font-weight:750; letter-spacing:-.01em; line-height:1.25; }
+  .exec-card .exec-status{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:10.5px; font-weight:700; color:var(--clay);
+    margin-top:2px;
+  }
+  .exec-card .exec-status .dot{ width:7px; height:7px; border-radius:50%; background:var(--line); flex:none; }
+  .exec-card.tone-ok .exec-status .dot{ background:var(--green); }
+  .exec-card.tone-warn .exec-status .dot{ background:var(--amber); }
+  .exec-card.tone-bad .exec-status .dot{ background:var(--red); animation:blink 1.4s ease-in-out infinite; }
+
+  .exec-card .exec-nums{
+    display:flex; align-items:baseline; gap:16px;
+    flex-wrap:wrap;
+  }
+  .exec-card .exec-num{ display:flex; flex-direction:column; gap:1px; }
+  .exec-card .exec-num b{
+    font-size:22px; font-weight:800; letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;
+    color:var(--ink);
+  }
+  .exec-card.tone-bad .exec-num.nok b{ color:var(--red); }
+  .exec-card .exec-num span{ font-size:9.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--clay); }
+  .exec-card .exec-bar{
+    margin-top:12px;
+    height:7px;
+    border-radius:6px;
+    background:var(--sand-soft);
+    overflow:hidden;
+  }
+  .exec-card .exec-bar i{
+    display:block; height:100%; width:0%;
+    background:linear-gradient(90deg, var(--green), #6cc38f);
+    transition:width .6s var(--ease-out), background .3s var(--ease);
+  }
+  .exec-card.tone-warn .exec-bar i{ background:linear-gradient(90deg, var(--amber), #e2b25f); }
+  .exec-card.tone-bad .exec-bar i{ background:linear-gradient(90deg, var(--red), #e88b82); }
+
+  .exec-total{
+    background:linear-gradient(150deg, #0a6f69 0%, #0e9a92 65%, #17b3a9 100%);
+    border-radius:18px;
+    padding:16px 18px;
+    color:#fff;
+    box-shadow:0 10px 26px -12px rgba(10,111,105,.6);
+    display:flex; flex-direction:column; justify-content:center;
+    gap:8px;
+  }
+  .exec-total .exec-total-lab{ font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; opacity:.85; }
+  .exec-total .exec-total-row{ display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; }
+  .exec-total .exec-total-num{ font-size:27px; font-weight:800; letter-spacing:-.02em; }
+  .exec-total .exec-total-num small{ font-size:11px; font-weight:700; display:block; opacity:.85; letter-spacing:.04em; text-transform:uppercase; margin-top:1px; }
+  .exec-total .exec-total-note{ font-size:11px; opacity:.85; line-height:1.5; }
+
+  /* ---------- зона загрузки ---------- */
   /* ---------- зона загрузки ---------- */
   .intake{
     display:grid;
@@ -746,6 +849,63 @@
 
 <div class="shell-body">
 
+  <h2 class="section-title">Сводка по всем подразделениям</h2>
+  <div class="exec-summary" id="execSummary">
+    <div class="exec-card tone-empty" data-tab="incubation">
+      <div class="exec-head">
+        <span class="exec-thumb"><img src="__ILLU_INCUBATION__" alt=""></span>
+        <div>
+          <div class="exec-title">Цех инкубации</div>
+          <div class="exec-status"><span class="dot"></span><span class="txt">нет данных</span></div>
+        </div>
+      </div>
+      <div class="exec-nums">
+        <div class="exec-num"><b class="v-count">–</b><span>проб</span></div>
+        <div class="exec-num nok"><b class="v-nok">–</b><span>NOK</span></div>
+        <div class="exec-num"><b class="v-pct">–</b><span>% в норме</span></div>
+      </div>
+      <div class="exec-bar"><i></i></div>
+    </div>
+    <div class="exec-card tone-empty" data-tab="zpp">
+      <div class="exec-head">
+        <span class="exec-thumb"><img src="__ILLU_ZPP__" alt=""></span>
+        <div>
+          <div class="exec-title">ЗПП</div>
+          <div class="exec-status"><span class="dot"></span><span class="txt">нет данных</span></div>
+        </div>
+      </div>
+      <div class="exec-nums">
+        <div class="exec-num"><b class="v-count">–</b><span>проб</span></div>
+        <div class="exec-num nok"><b class="v-nok">–</b><span>NOK</span></div>
+        <div class="exec-num"><b class="v-pct">–</b><span>% в норме</span></div>
+      </div>
+      <div class="exec-bar"><i></i></div>
+    </div>
+    <div class="exec-card tone-empty" data-tab="broiler">
+      <div class="exec-head">
+        <span class="exec-thumb"><img src="__ILLU_BROILER__" alt=""></span>
+        <div>
+          <div class="exec-title">Бройлерное производство</div>
+          <div class="exec-status"><span class="dot"></span><span class="txt">нет данных</span></div>
+        </div>
+      </div>
+      <div class="exec-nums">
+        <div class="exec-num"><b class="v-count">–</b><span>проб</span></div>
+        <div class="exec-num nok"><b class="v-nok">–</b><span>NOK</span></div>
+        <div class="exec-num"><b class="v-pct">–</b><span>% в норме</span></div>
+      </div>
+      <div class="exec-bar"><i></i></div>
+    </div>
+    <div class="exec-total">
+      <div class="exec-total-lab">По фабрике итого</div>
+      <div class="exec-total-row">
+        <div class="exec-total-num" id="execTotalCount">–<small>проб</small></div>
+        <div class="exec-total-num" id="execTotalNok">–<small>NOK</small></div>
+      </div>
+      <div class="exec-total-note" id="execTotalNote">Загрузите файлы, чтобы увидеть общую картину</div>
+    </div>
+  </div>
+
   <h2 class="section-title">Исходные данные</h2>
   <div class="intake">
     <div class="shared-upload" id="sharedDz" tabindex="0" role="button" aria-label="Загрузить общий файл «Свод рабочих журналов МБ»">
@@ -836,6 +996,7 @@ const frames = {};
 const frameReady = {};
 const sections = { incubation:[], zpp:[], broiler:[] };
 const ranges = { incubation:'', zpp:'', broiler:'' };
+const kpis = { incubation:null, zpp:null, broiler:null };   // данные для «Сводки по всем подразделениям»
 let sharedMbFile = null;
 let activeKey = 'incubation';
 
@@ -917,6 +1078,7 @@ function switchTab(key, scroll){
 
   renderSectionRail();
   renderRangeChip();
+  document.querySelectorAll('.exec-card').forEach(c => c.classList.toggle('is-active', c.dataset.tab === key));
   resizeFrame(key);
 
   // графики в скрытой вкладке рисуются в нулевую ширину — просим пересчитать
@@ -994,6 +1156,75 @@ function renderRangeChip(){
   chip.hidden = empty;
   if(!empty) document.getElementById('rangeChipText').textContent = txt;
 }
+
+/* ---------- «Сводка по всем подразделениям» — панель руководителя ---------- */
+function toneFor(pctNok){
+  if(pctNok === null || pctNok === undefined) return 'empty';
+  if(pctNok <= 2) return 'ok';
+  if(pctNok <= 8) return 'warn';
+  return 'bad';
+}
+
+function renderExecSummary(){
+  let totalCount = 0, totalNok = 0, anyData = false, worst = null;
+
+  KEYS.forEach(key => {
+    const card = document.querySelector('.exec-card[data-tab="' + key + '"]');
+    if(!card) return;
+    const kpi = kpis[key];
+    const countEl = card.querySelector('.v-count');
+    const nokEl = card.querySelector('.v-nok');
+    const pctEl = card.querySelector('.v-pct');
+    const statusTxt = card.querySelector('.exec-status .txt');
+    const bar = card.querySelector('.exec-bar i');
+
+    if(!kpi || kpi.count === null){
+      card.className = 'exec-card tone-empty';
+      countEl.textContent = '–'; nokEl.textContent = '–'; pctEl.textContent = '–';
+      statusTxt.textContent = 'нет данных';
+      bar.style.width = '0%';
+      return;
+    }
+
+    anyData = true;
+    const count = kpi.count || 0;
+    const nok = kpi.nok || 0;
+    const pctOk = count > 0 ? Math.round((count - nok) / count * 100) : 100;
+    const pctNok = count > 0 ? Math.round(nok / count * 100) : 0;
+    const tone = toneFor(pctNok);
+
+    card.className = 'exec-card tone-' + tone;
+    countEl.textContent = count;
+    nokEl.textContent = nok;
+    pctEl.textContent = pctOk + '%';
+    // ширина полосы = доля NOK, а не «в норме»: короткая полоска — мало проблем,
+    // длинная — много (иначе высокий % «в норме», перекрашенный в тревожный
+    // красный при плохом тоне, читался бы наоборот — как будто «85% плохо»)
+    bar.style.width = Math.max(pctNok, count > 0 && nok > 0 ? 3 : 0) + '%';
+    statusTxt.textContent = tone === 'ok' ? 'в норме'
+      : tone === 'warn' ? 'есть отклонения'
+      : 'требует внимания';
+
+    totalCount += count;
+    totalNok += nok;
+    if(!worst || pctNok > worst.pctNok) worst = { key, pctNok };
+  });
+
+  document.getElementById('execTotalCount').innerHTML = (anyData ? totalCount : '–') + '<small>проб</small>';
+  document.getElementById('execTotalNok').innerHTML = (anyData ? totalNok : '–') + '<small>NOK</small>';
+  const note = document.getElementById('execTotalNote');
+  if(!anyData){
+    note.textContent = 'Загрузите файлы, чтобы увидеть общую картину';
+  }else if(totalNok === 0){
+    note.textContent = 'Отклонений не обнаружено ни в одном подразделении';
+  }else{
+    note.textContent = 'Больше всего отклонений — «' + TAB_LABELS[worst.key] + '» (' + worst.pctNok + '% проб NOK)';
+  }
+}
+
+document.querySelectorAll('.exec-card').forEach(card => {
+  card.addEventListener('click', () => switchTab(card.dataset.tab, true));
+});
 
 /* ---------- статусы приёма файла ---------- */
 function updateTabMbStatus(key, state, detail){
@@ -1114,6 +1345,11 @@ window.addEventListener('message', (e) => {
     if(d.key === activeKey) renderRangeChip();
   }
 
+  if(d.type === 'aitas-kpi'){
+    kpis[d.key] = { count:d.count, nok:d.nok, ok:d.ok, violTotal:d.violTotal, violRewash:d.violRewash };
+    renderExecSummary();
+  }
+
   if(d.type === 'aitas-scroll-request'){
     const wrap = document.getElementById('panel-' + d.key);
     if(!wrap) return;
@@ -1206,6 +1442,8 @@ KEYS.forEach(initFrame);
 setInterval(() => KEYS.forEach(key => { if(frameReady[key]) resizeFrame(key); }), 900);
 renderSectionRail();
 renderRangeChip();
+renderExecSummary();
+document.querySelector('.exec-card[data-tab="' + activeKey + '"]').classList.add('is-active');
 </script>
 
 </body>
