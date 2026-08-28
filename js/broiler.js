@@ -48,6 +48,7 @@ const els = {
   sidebarBackdrop: document.getElementById("sidebarBackdrop"),
   sidebarClose: document.getElementById("sidebarClose"),
   menuBtn: document.getElementById("menuBtn"),
+  sidebarToggleBtn: document.getElementById("sidebarToggleBtn"),
 
   countAll: document.getElementById("countAll"),
   sidebarTotalLabel: document.getElementById("sidebarTotalLabel"),
@@ -448,6 +449,32 @@ els.sidebarClose.addEventListener("click", (e) => {
   e.preventDefault();
   closeSidebar();
 });
+
+// Сворачивание панели на десктопе (кнопкой ◀/▶) — освобождает место под
+// карточку, см. .dash.sidebar-collapsed в CSS. Состояние запоминается в
+// localStorage (это просто флажок, а не фото — квота не при чём).
+const SIDEBAR_COLLAPSED_KEY = "aitas_broiler_sidebar_collapsed";
+
+function setSidebarCollapsed(collapsed) {
+  els.dash.classList.toggle("sidebar-collapsed", collapsed);
+  els.sidebarToggleBtn.textContent = collapsed ? "▶" : "◀";
+  els.sidebarToggleBtn.title = collapsed ? "Показать панель" : "Скрыть панель";
+  try {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
+  } catch (err) {
+    // некритично — просто не запомнится между сессиями
+  }
+}
+
+els.sidebarToggleBtn.addEventListener("click", () => {
+  setSidebarCollapsed(!els.dash.classList.contains("sidebar-collapsed"));
+});
+
+try {
+  if (localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1") setSidebarCollapsed(true);
+} catch (err) {
+  // некритично
+}
 
 // ---------------------------------------------------------------------------
 // Main viewer

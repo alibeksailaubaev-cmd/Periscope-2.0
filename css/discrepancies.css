@@ -26,6 +26,32 @@ body {
   padding: 18px 14px;
   gap: 14px;
   z-index: 20;
+  overflow: hidden;
+  transition: width 0.22s ease, padding 0.22s ease, border-color 0.22s ease;
+}
+
+.sidebar-toggle-btn {
+  font-size: 13px;
+}
+
+/* Скрытая (свёрнутая) левая панель — только на десктопе, кнопкой ◀/▶ в
+   шапке. Ширина уходит в 0, а .main (flex:1) занимает освободившееся
+   место — карточка становится крупнее, см. .card-stage ниже. На мобильных
+   у панели своя логика (выезжающий поверх контента drawer), поэтому
+   схлопывание в 0 там не применяем. */
+@media (min-width: 821px) {
+  .dash.sidebar-collapsed .sidebar {
+    width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-right-color: transparent;
+  }
+}
+
+@media (max-width: 820px) {
+  .sidebar-toggle-btn {
+    display: none;
+  }
 }
 
 .sidebar-head {
@@ -510,6 +536,11 @@ body {
   width: min(680px, 94%);
   height: 100%;
   max-height: 800px;
+  transition: width 0.22s ease;
+}
+
+.dash.sidebar-collapsed .card-stage {
+  width: min(920px, 94%);
 }
 
 .nav-arrow {
