@@ -1105,6 +1105,51 @@ body {
   font-weight: 500;
 }
 
+/* ---------- Примечание руководителя (свёрнуто, если пусто) ---------- */
+.card-note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.card-note-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  list-style: none;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.card-note-summary::-webkit-details-marker {
+  display: none;
+}
+
+.card-note-summary::before {
+  content: "▸";
+  font-size: 10px;
+  transition: transform 0.18s ease;
+}
+
+.card-note[open] .card-note-summary::before {
+  transform: rotate(90deg);
+}
+
+.card-note-summary:hover {
+  color: var(--ink-secondary);
+}
+
+.card-note-text {
+  margin-top: 8px;
+  background: var(--surface-2);
+  border-style: dashed;
+  font-size: 13px;
+}
+
 /* ---------- Empty state ---------- */
 .empty-state {
   display: flex;
@@ -1941,6 +1986,7 @@ function normalizeEntries(raw) {
     location: e.location || DEFAULT_LOCATION,
     text: e.text || "",
     solution: e.solution || "",
+    note: e.note || "",
     photos: Array.isArray(e.photos) ? e.photos : e.photo ? [e.photo] : [],
     date: e.date || Date.now(),
   }));
@@ -2395,6 +2441,11 @@ function renderCard(entry, direction) {
           : `<label class="card-field-label card-field-label-solution">💡 Предлагаемое решение</label>
       <textarea class="card-text card-solution" id="cardSolution" rows="2" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>`
       }
+
+      <details class="card-note" id="cardNoteDetails" ${entry.note ? "open" : ""}>
+        <summary class="card-note-summary">📝 Примечание руководителя</summary>
+        <textarea class="card-text card-note-text" id="cardNote" rows="2" placeholder="Ссылки на нормативные документы, распоряжения, комментарии...">${escapeHtml(entry.note || "")}</textarea>
+      </details>
     </div>
   `;
 
@@ -2446,6 +2497,21 @@ function renderCard(entry, direction) {
       saveSolution();
     });
   }
+
+  const noteArea = card.querySelector("#cardNote");
+  const noteDetails = card.querySelector("#cardNoteDetails");
+  if (entry.note) autoGrow(noteArea);
+  noteDetails.addEventListener("toggle", () => {
+    if (noteDetails.open) autoGrow(noteArea);
+  });
+  const saveNote = debounce(() => {
+    entry.note = noteArea.value;
+    saveEntries();
+  }, 300);
+  noteArea.addEventListener("input", () => {
+    autoGrow(noteArea);
+    saveNote();
+  });
 }
 
 function renderDots(count, active) {
@@ -2731,6 +2797,7 @@ els.addForm.addEventListener("submit", (e) => {
         location,
         text,
         solution,
+        note: "",
         photos: [photo],
         date: Date.now(),
       }))
@@ -2740,6 +2807,7 @@ els.addForm.addEventListener("submit", (e) => {
           location,
           text,
           solution,
+          note: "",
           photos: [...state.pendingPhotos],
           date: Date.now(),
         },

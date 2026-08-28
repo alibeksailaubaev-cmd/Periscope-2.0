@@ -278,6 +278,7 @@ function normalizeEntries(raw) {
     location: e.location || DEFAULT_LOCATION,
     text: e.text || "",
     solution: e.solution || "",
+    note: e.note || "",
     photos: Array.isArray(e.photos) ? e.photos : e.photo ? [e.photo] : [],
     date: e.date || Date.now(),
   }));
@@ -732,6 +733,11 @@ function renderCard(entry, direction) {
           : `<label class="card-field-label card-field-label-solution">💡 Предлагаемое решение</label>
       <textarea class="card-text card-solution" id="cardSolution" rows="2" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>`
       }
+
+      <details class="card-note" id="cardNoteDetails" ${entry.note ? "open" : ""}>
+        <summary class="card-note-summary">📝 Примечание руководителя</summary>
+        <textarea class="card-text card-note-text" id="cardNote" rows="2" placeholder="Ссылки на нормативные документы, распоряжения, комментарии...">${escapeHtml(entry.note || "")}</textarea>
+      </details>
     </div>
   `;
 
@@ -783,6 +789,21 @@ function renderCard(entry, direction) {
       saveSolution();
     });
   }
+
+  const noteArea = card.querySelector("#cardNote");
+  const noteDetails = card.querySelector("#cardNoteDetails");
+  if (entry.note) autoGrow(noteArea);
+  noteDetails.addEventListener("toggle", () => {
+    if (noteDetails.open) autoGrow(noteArea);
+  });
+  const saveNote = debounce(() => {
+    entry.note = noteArea.value;
+    saveEntries();
+  }, 300);
+  noteArea.addEventListener("input", () => {
+    autoGrow(noteArea);
+    saveNote();
+  });
 }
 
 function renderDots(count, active) {
@@ -1068,6 +1089,7 @@ els.addForm.addEventListener("submit", (e) => {
         location,
         text,
         solution,
+        note: "",
         photos: [photo],
         date: Date.now(),
       }))
@@ -1077,6 +1099,7 @@ els.addForm.addEventListener("submit", (e) => {
           location,
           text,
           solution,
+          note: "",
           photos: [...state.pendingPhotos],
           date: Date.now(),
         },

@@ -837,6 +837,51 @@ body {
   font-weight: 500;
 }
 
+/* ---------- Примечание руководителя (свёрнуто, если пусто) ---------- */
+.card-note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.card-note-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  list-style: none;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.card-note-summary::-webkit-details-marker {
+  display: none;
+}
+
+.card-note-summary::before {
+  content: "▸";
+  font-size: 10px;
+  transition: transform 0.18s ease;
+}
+
+.card-note[open] .card-note-summary::before {
+  transform: rotate(90deg);
+}
+
+.card-note-summary:hover {
+  color: var(--ink-secondary);
+}
+
+.card-note-text {
+  margin-top: 8px;
+  background: var(--surface-2);
+  border-style: dashed;
+  font-size: 13px;
+}
+
 /* ---------- Empty state ---------- */
 .empty-state {
   display: flex;
