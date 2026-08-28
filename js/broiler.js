@@ -62,6 +62,8 @@ const els = {
   emptyState: document.getElementById("emptyState"),
   emptyStateText: document.getElementById("emptyStateText"),
   emptyAddBtn: document.getElementById("emptyAddBtn"),
+  cardNotePanel: document.getElementById("cardNotePanel"),
+  cardNote: document.getElementById("cardNote"),
   cardStage: document.getElementById("cardStage"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
@@ -462,6 +464,7 @@ function renderView(direction = 0) {
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
     els.listView.innerHTML = "";
+    els.cardNotePanel.hidden = true;
     els.prevBtn.disabled = true;
     els.nextBtn.disabled = true;
     els.dots.innerHTML = "";
@@ -474,6 +477,7 @@ function renderView(direction = 0) {
   if (state.viewMode === "list") {
     els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = true));
     els.cardStage.hidden = true;
+    els.cardNotePanel.hidden = true;
     els.listView.hidden = false;
     els.dots.hidden = true;
     els.progressLabel.textContent = `${list.length} шт.`;
@@ -483,6 +487,7 @@ function renderView(direction = 0) {
 
   els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = false));
   els.cardStage.hidden = false;
+  els.cardNotePanel.hidden = false;
   els.listView.hidden = true;
 
   if (state.index >= list.length) state.index = list.length - 1;
@@ -617,6 +622,17 @@ function autoGrow(textarea) {
   textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
+// Панель примечания руководителя — постоянный элемент слева от карточки
+// (не пересоздаётся при каждой навигации, в отличие от самой карточки),
+// поэтому значение и обработчик привязаны отдельно, а не внутри renderCard.
+let currentNoteEntry = null;
+const saveCurrentNote = debounce(() => {
+  if (!currentNoteEntry) return;
+  currentNoteEntry.note = els.cardNote.value;
+  saveEntries();
+}, 300);
+els.cardNote.addEventListener("input", saveCurrentNote);
+
 function renderCard(entry, direction) {
   const old = els.cardStage.querySelector(".card");
   if (old) {
@@ -651,11 +667,6 @@ function renderCard(entry, direction) {
 
       <label class="card-field-label card-field-label-solution">💡 Предлагаемое решение</label>
       <textarea class="card-text card-solution" id="cardSolution" rows="2" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>
-
-      <details class="card-note" id="cardNoteDetails" ${entry.note ? "open" : ""}>
-        <summary class="card-note-summary">📝 Примечание руководителя</summary>
-        <textarea class="card-text card-note-text" id="cardNote" rows="2" placeholder="Ссылки на нормативные документы, распоряжения, комментарии...">${escapeHtml(entry.note || "")}</textarea>
-      </details>
     </div>
   `;
 
@@ -708,20 +719,8 @@ function renderCard(entry, direction) {
     });
   }
 
-  const noteArea = card.querySelector("#cardNote");
-  const noteDetails = card.querySelector("#cardNoteDetails");
-  if (entry.note) autoGrow(noteArea);
-  noteDetails.addEventListener("toggle", () => {
-    if (noteDetails.open) autoGrow(noteArea);
-  });
-  const saveNote = debounce(() => {
-    entry.note = noteArea.value;
-    saveEntries();
-  }, 300);
-  noteArea.addEventListener("input", () => {
-    autoGrow(noteArea);
-    saveNote();
-  });
+  currentNoteEntry = entry;
+  els.cardNote.value = entry.note || "";
 }
 
 function renderDots(count, active) {

@@ -500,6 +500,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 14px;
   min-height: 0;
 }
 
@@ -1105,49 +1106,47 @@ body {
   font-weight: 500;
 }
 
-/* ---------- Примечание руководителя (свёрнуто, если пусто) ---------- */
-.card-note {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--border);
+/* ---------- Примечание руководителя — постоянная панель слева от карточки ---------- */
+.card-note-panel {
+  width: 230px;
+  height: 100%;
+  max-height: 560px;
+  flex-shrink: 0;
 }
 
-.card-note-summary {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--ink-muted);
-  list-style: none;
-  user-select: none;
-  transition: color 0.15s ease;
-}
-
-.card-note-summary::-webkit-details-marker {
+.card-note-panel[hidden] {
   display: none;
 }
 
-.card-note-summary::before {
-  content: "▸";
-  font-size: 10px;
-  transition: transform 0.18s ease;
+.card-note-panel textarea {
+  width: 100%;
+  height: 100%;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  transition: border-color 0.15s ease;
 }
 
-.card-note[open] .card-note-summary::before {
-  transform: rotate(90deg);
+.card-note-panel textarea::placeholder {
+  color: var(--ink-muted);
 }
 
-.card-note-summary:hover {
-  color: var(--ink-secondary);
+.card-note-panel textarea:focus {
+  border-color: var(--teal);
+  border-style: solid;
 }
 
-.card-note-text {
-  margin-top: 8px;
-  background: var(--surface-2);
-  border-style: dashed;
-  font-size: 13px;
+@media (max-width: 1180px) {
+  .card-note-panel {
+    display: none;
+  }
 }
 
 /* ---------- Empty state ---------- */
@@ -1467,6 +1466,9 @@ body {
           <button class="btn-primary" id="emptyAddBtn">Загрузить фото</button>
         </div>
 
+        <div class="card-note-panel" id="cardNotePanel">
+          <textarea id="cardNote" placeholder="Примечание — ссылки на документы, нормы, распоряжения..."></textarea>
+        </div>
         <button class="nav-arrow nav-arrow-left" id="prevBtn" title="Предыдущее">‹</button>
         <div class="card-stage" id="cardStage"></div>
         <button class="nav-arrow nav-arrow-right" id="nextBtn" title="Следующее">›</button>
@@ -1764,6 +1766,8 @@ const els = {
   emptyState: document.getElementById("emptyState"),
   emptyStateText: document.getElementById("emptyStateText"),
   emptyAddBtn: document.getElementById("emptyAddBtn"),
+  cardNotePanel: document.getElementById("cardNotePanel"),
+  cardNote: document.getElementById("cardNote"),
   cardStage: document.getElementById("cardStage"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
@@ -2164,6 +2168,7 @@ function renderView(direction = 0) {
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
     els.listView.innerHTML = "";
+    els.cardNotePanel.hidden = true;
     els.prevBtn.disabled = true;
     els.nextBtn.disabled = true;
     els.dots.innerHTML = "";
@@ -2176,6 +2181,7 @@ function renderView(direction = 0) {
   if (state.viewMode === "list") {
     els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = true));
     els.cardStage.hidden = true;
+    els.cardNotePanel.hidden = true;
     els.listView.hidden = false;
     els.dots.hidden = true;
     els.progressLabel.textContent = `${list.length} шт.`;
@@ -2185,6 +2191,7 @@ function renderView(direction = 0) {
 
   els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = false));
   els.cardStage.hidden = false;
+  els.cardNotePanel.hidden = false;
   els.listView.hidden = true;
 
   if (state.index >= list.length) state.index = list.length - 1;
@@ -2319,6 +2326,17 @@ function autoGrow(textarea) {
   textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
+// Панель примечания руководителя — постоянный элемент слева от карточки
+// (не пересоздаётся при каждой навигации, в отличие от самой карточки),
+// поэтому значение и обработчик привязаны отдельно, а не внутри renderCard.
+let currentNoteEntry = null;
+const saveCurrentNote = debounce(() => {
+  if (!currentNoteEntry) return;
+  currentNoteEntry.note = els.cardNote.value;
+  saveEntries();
+}, 300);
+els.cardNote.addEventListener("input", saveCurrentNote);
+
 function renderCard(entry, direction) {
   const old = els.cardStage.querySelector(".card");
   if (old) {
@@ -2353,11 +2371,6 @@ function renderCard(entry, direction) {
 
       <label class="card-field-label card-field-label-solution">💡 Предлагаемое решение</label>
       <textarea class="card-text card-solution" id="cardSolution" rows="2" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>
-
-      <details class="card-note" id="cardNoteDetails" ${entry.note ? "open" : ""}>
-        <summary class="card-note-summary">📝 Примечание руководителя</summary>
-        <textarea class="card-text card-note-text" id="cardNote" rows="2" placeholder="Ссылки на нормативные документы, распоряжения, комментарии...">${escapeHtml(entry.note || "")}</textarea>
-      </details>
     </div>
   `;
 
@@ -2410,20 +2423,8 @@ function renderCard(entry, direction) {
     });
   }
 
-  const noteArea = card.querySelector("#cardNote");
-  const noteDetails = card.querySelector("#cardNoteDetails");
-  if (entry.note) autoGrow(noteArea);
-  noteDetails.addEventListener("toggle", () => {
-    if (noteDetails.open) autoGrow(noteArea);
-  });
-  const saveNote = debounce(() => {
-    entry.note = noteArea.value;
-    saveEntries();
-  }, 300);
-  noteArea.addEventListener("input", () => {
-    autoGrow(noteArea);
-    saveNote();
-  });
+  currentNoteEntry = entry;
+  els.cardNote.value = entry.note || "";
 }
 
 function renderDots(count, active) {
