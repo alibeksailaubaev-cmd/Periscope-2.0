@@ -494,7 +494,7 @@
       <div>
         <h2>КПИ + Смывы МБ</h2>
         <div class="sub">Только пробы по ЗПП · общие цифры, динамика по дням и детали по NOK</div>
-        <div class="sub" style="margin-top:2px;">🔎 Автоматически отфильтровано: «Департамент» содержит «переработ»/«ЗПП» И «Предприятие» содержит «Усть» (только УКПФ — МПФ и др. исключены) · тест «КМАФАнМ в ГП (тушки птицы и их части)» исключён (в Готовой продукции остаются только Сальмонеллы/Listeria, КМАФАнМ учитывается только как смыв) · любые пробы с тушки/продукта исключены (контроль сырья на линии убоя — не смыв с оборудования)</div>
+        <div class="sub" style="margin-top:2px;">🔎 Автоматически отфильтровано: «Департамент» содержит «переработ»/«ЗПП» И «Предприятие» содержит «Усть» (только УКПФ — МПФ и др. исключены) · «Группа материала» = Смывы, Вода или Готовая продукция (Биоматериал/Корма и др. исключены) · тест «КМАФАнМ в ГП (тушки птицы и их части)» исключён (в Готовой продукции остаются только Сальмонеллы/Listeria) · любые пробы с тушки/продукта исключены (контроль сырья на линии убоя — не смыв с оборудования)</div>
       </div>
       <button class="btn btn-download" id="btnPngKpi" disabled>🖼 Скачать слайд «Динамика КПИ» (PNG)</button>
     </div>
@@ -1105,11 +1105,21 @@ async function parseMbFile(file){
     return String(v).toUpperCase().includes('УСТЬ');
   }
 
+  // Учитываем только смывы/воду (как в Цехе инкубации и Бройлерном производстве) и готовую
+  // продукцию (для неё ниже отдельно исключён тест КМАФАнМ — оставляем Сальмонеллу/Listeria).
+  // Всё остальное (Биоматериал — медосмотр персонала, Корма и т.п.) в дэшборд «Качество мойки»
+  // попадать не должно, даже если формально относится к ЗПП/УКПФ — по решению от 2026-08-28.
+  function isRelevantZppGroup(v){
+    if(v === null || v === undefined) return false;
+    const g = String(v).trim().toLowerCase().replace(/_/g, ' ');
+    return g === 'смывы' || g === 'вода' || g === 'готовая продукция';
+  }
+
   let headerResolved = false;
   let sawAnyRow = false;
   let colDateLetter = null, colPointLetter = null, colResultLetter = null, colOkLetter = null;
   let colDeptLetter = null, colZoneLetter = null, colTestNameLetter = null, colUnitLetter = null;
-  let colEnterpriseLetter = null;
+  let colEnterpriseLetter = null, colMatGroupLetter = null;
   let targetLetters = null;
 
   const result = [];
@@ -1135,6 +1145,7 @@ async function parseMbFile(file){
         if(n === 'Наименование исследования') colTestNameLetter = c.col; // напр. «БГКП смывы», «КМАФАнМ Смывы»
         if(n === 'Единица измерения') colUnitLetter = c.col;             // напр. «КОЕ на 100 см2»
         if(n === 'Предприятие') colEnterpriseLetter = c.col;             // напр. «АО_Усть_Каменогорская_Птицефабрика», «ТОО_Макинская_птицефабрика»
+        if(n === 'Группа материала') colMatGroupLetter = c.col;             // напр. «Смывы», «Вода», «Готовая_продукция», «Биоматериал», «Корма»
       });
       if(!colDateLetter || !colPointLetter || !colResultLetter || !colOkLetter){
         headerError = 'На листе «Sheet1» не найдены все необходимые столбцы: «Дата отбора пробы», «Точка отбора пробы», «Результат», «Результат в допустимых пределах ОК или NOK».';
@@ -1146,13 +1157,14 @@ async function parseMbFile(file){
       if(colTestNameLetter) targetLetters.add(colTestNameLetter);
       if(colUnitLetter) targetLetters.add(colUnitLetter);
       if(colEnterpriseLetter) targetLetters.add(colEnterpriseLetter);
+      if(colMatGroupLetter) targetLetters.add(colMatGroupLetter);
       headerResolved = true;
       return;
     }
 
     // --- Обычная строка данных: извлекаем ТОЛЬКО нужные столбцы ---
     let dRaw = null, pointRaw = null, resultRaw = null, okRaw = null, deptRaw = null, zoneRaw = null;
-    let testNameRaw = null, unitRaw = null, enterpriseRaw = null;
+    let testNameRaw = null, unitRaw = null, enterpriseRaw = null, matGroupRaw = null;
     for(let i = 0; i < cells.length; i++){
       const c = cells[i];
       if(!targetLetters.has(c.col)) continue;
@@ -1166,6 +1178,7 @@ async function parseMbFile(file){
       else if(colTestNameLetter && c.col === colTestNameLetter) testNameRaw = val;
       else if(colUnitLetter && c.col === colUnitLetter) unitRaw = val;
       else if(colEnterpriseLetter && c.col === colEnterpriseLetter) enterpriseRaw = val;
+      else if(colMatGroupLetter && c.col === colMatGroupLetter) matGroupRaw = val;
     }
 
     if(dRaw === null || dRaw === '') return;
@@ -1181,6 +1194,10 @@ async function parseMbFile(file){
     if(colDeptLetter && !isZppDept(deptRaw)) return;
     // Фильтр «только предприятие УКПФ» (исключаем МПФ, Meal Pro и др.)
     if(colEnterpriseLetter && !isUkpfEnterprise(enterpriseRaw)) return;
+    // Фильтр «только смывы/вода/готовая продукция» — отсекает пробы, не относящиеся
+    // к качеству мойки (медосмотр персонала, корма и т.п.), даже если они попали
+    // в ЗПП/УКПФ по остальным столбцам.
+    if(colMatGroupLetter && !isRelevantZppGroup(matGroupRaw)) return;
     // Исключаем тест самого продукта «КМАФАнМ в ГП (тушки птицы и их части)» — по решению
     // от 2026-08-05: в группе «Готовая_продукция» оставляем только Сальмонеллы/Listeria,
     // а КМАФАнМ учитывается только как смыв (тесты «КМАФАнМ в смывах...» относятся к группе «Смывы» и не задеты этим фильтром).
