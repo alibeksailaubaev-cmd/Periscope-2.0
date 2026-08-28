@@ -2195,8 +2195,8 @@ function CaseModal({ T, onClose }) {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   7.5 ИНТРО: биобезопасность — 26 направлений, которые делятся на два контура.
-   Клик по сцене разводит общий круг на внешний и внутренний контур.
+   7.5 ИНТРО-НАВИГАТОР для показа: биобезопасность → контур → направление →
+   подсписок. Четыре уровня с анимированными переходами между ними.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const IVB = { w: 960, h: 406 };
@@ -2206,9 +2206,26 @@ const IINT = { x: 714, y: 186 };
 
 const SHIELD = "M 0 -50 L 21 -42 L 21 -25 Q 21 -8 0 -1 Q -21 -8 -21 -25 L -21 -42 Z";
 
-function BiosecurityIntro({ T, onPick }) {
-  const [split, setSplit] = useState(false);
+const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
+/* подсписок направления собирается из его же карточки: состав работ,
+   периодичность и тип задачи — ничего придуманного сверх данных службы */
+function subItemsOf(t) {
+  const parts = t.note.split(":");
+  const body = parts.length > 1 ? parts.slice(1).join(":") : parts[0];
+  const list = body
+    .split(/[,;]\s*/)
+    .map((x) => cap(x.trim()))
+    .filter((x) => x.length > 2);
+  return [
+    ...list,
+    `Периодичность — ${t.freq}`,
+    `Тип задачи — ${GROUPS[t.group].title.toLowerCase()}`,
+  ];
+}
+
+/* ── уровни 0–1: общий круг и его деление на два контура ──────────────────── */
+function IntroOrbit({ T, split, onContour }) {
   const ext = TASKS.filter((t) => t.contour === "external");
   const int = TASKS.filter((t) => t.contour === "internal");
 
@@ -2221,12 +2238,9 @@ function BiosecurityIntro({ T, onPick }) {
     const c = isExt ? IEXT : IINT;
     const rr = isExt ? 108 : 114;
     return {
-      id: t.id,
-      i,
-      mx: ICC.x + 160 * Math.cos(am),
-      my: ICC.y + 160 * Math.sin(am),
-      sx: c.x + rr * Math.cos(as),
-      sy: c.y + rr * Math.sin(as),
+      id: t.id, i,
+      mx: ICC.x + 160 * Math.cos(am), my: ICC.y + 160 * Math.sin(am),
+      sx: c.x + rr * Math.cos(as), sy: c.y + rr * Math.sin(as),
       color: isExt ? T.violet : T.cyan,
     };
   });
@@ -2234,181 +2248,384 @@ function BiosecurityIntro({ T, onPick }) {
   const spring = { type: "spring", stiffness: 90, damping: 18, mass: 0.9 };
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={() => setSplit((v) => !v)}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSplit((v) => !v); }}
-      className="relative cursor-pointer select-none overflow-hidden rounded-2xl outline-none"
-      style={{ background: T.panel, border: `1px solid ${T.border}` }}
-    >
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: `radial-gradient(60% 70% at 22% 40%, ${T.glowA}, transparent 70%), radial-gradient(55% 65% at 78% 60%, ${T.glowB}, transparent 70%)`,
-        }}
-      />
+    <svg viewBox={`0 0 ${IVB.w} ${IVB.h}`} className="relative block w-full">
+      <defs>
+        <radialGradient id="intro-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={T.surface} stopOpacity={T.key === "dark" ? 0.45 : 0.95} />
+          <stop offset="100%" stopColor={T.surface} stopOpacity="0" />
+        </radialGradient>
+      </defs>
 
-      <svg viewBox={`0 0 ${IVB.w} ${IVB.h}`} className="relative block w-full">
-        <defs>
-          <radialGradient id="intro-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={T.surface} stopOpacity={T.key === "dark" ? 0.45 : 0.95} />
-            <stop offset="100%" stopColor={T.surface} stopOpacity="0" />
-          </radialGradient>
-        </defs>
+      <motion.circle cx={ICC.x} cy={ICC.y} r={210} fill="url(#intro-glow)"
+                     animate={{ opacity: split ? 0 : 1 }} transition={{ duration: 0.6 }} />
+      <motion.circle cx={IEXT.x} cy={IEXT.y} r={150} fill="url(#intro-glow)"
+                     animate={{ opacity: split ? 1 : 0 }} transition={{ duration: 0.6 }} />
+      <motion.circle cx={IINT.x} cy={IINT.y} r={150} fill="url(#intro-glow)"
+                     animate={{ opacity: split ? 1 : 0 }} transition={{ duration: 0.6 }} />
 
-        {/* сияние под сценой */}
-        <motion.circle
-          cx={ICC.x} cy={ICC.y} r={210} fill="url(#intro-glow)"
-          animate={{ opacity: split ? 0 : 1 }} transition={{ duration: 0.6 }}
-        />
-        <motion.circle
-          cx={IEXT.x} cy={IEXT.y} r={150} fill="url(#intro-glow)"
-          animate={{ opacity: split ? 1 : 0 }} transition={{ duration: 0.6 }}
-        />
-        <motion.circle
-          cx={IINT.x} cy={IINT.y} r={150} fill="url(#intro-glow)"
-          animate={{ opacity: split ? 1 : 0 }} transition={{ duration: 0.6 }}
-        />
-
-        {/* 26 направлений */}
-        {dots.map((d) => (
-          <g key={d.id}>
-            <motion.line
-              stroke={split ? d.color : T.teal} strokeWidth={0.8} strokeDasharray="2 7"
-              initial={false}
-              animate={{
-                x1: split ? d.sx : d.mx, y1: split ? d.sy : d.my,
-                x2: split ? (d.color === T.violet ? IEXT.x : IINT.x) : ICC.x,
-                y2: ICC.y,
-                opacity: 0.3,
-              }}
-              transition={spring}
-            />
-            <motion.circle
-              r={7} initial={false}
-              animate={{
-                cx: split ? d.sx : d.mx,
-                cy: split ? d.sy : d.my,
-                fill: split ? d.color : T.teal,
-              }}
-              transition={spring}
-              style={{ filter: T.key === "dark" ? `drop-shadow(0 0 5px ${d.color})` : "none" }}
-            />
-            <motion.circle
-              r={14} initial={false}
-              animate={{
-                cx: split ? d.sx : d.mx,
-                cy: split ? d.sy : d.my,
-                fill: split ? d.color : T.teal,
-                opacity: [0.08, 0.2, 0.08],
-              }}
-              transition={{
-                ...spring,
-                opacity: { duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: d.i * 0.11 },
-              }}
-            />
-          </g>
-        ))}
-
-        {/* общий круг «Биобезопасность» */}
-        <motion.g
-          animate={{ opacity: split ? 0 : 1, scale: split ? 0.72 : 1 }}
-          transition={{ duration: 0.5, ease: EASE }}
-          style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
-        >
-          {[0, 1].map((k) => (
-            <motion.circle
-              key={k} cx={ICC.x} cy={ICC.y} r={114} fill="none" stroke={T.teal} strokeWidth={1.2}
-              initial={{ scale: 1, opacity: 0.35 }}
-              animate={{ scale: [1, 1.22], opacity: [0.35, 0] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut", delay: k * 1.6 }}
-              style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
-            />
-          ))}
-          <circle cx={ICC.x} cy={ICC.y} r={114} fill={T.solid} stroke={T.borderHi} strokeWidth={1.4} />
+      {dots.map((d) => (
+        <g key={d.id}>
+          <motion.line
+            stroke={split ? d.color : T.teal} strokeWidth={0.8} strokeDasharray="2 7"
+            initial={false}
+            animate={{
+              x1: split ? d.sx : d.mx, y1: split ? d.sy : d.my,
+              x2: split ? (d.color === T.violet ? IEXT.x : IINT.x) : ICC.x,
+              y2: ICC.y, opacity: 0.3,
+            }}
+            transition={spring}
+          />
           <motion.circle
-            cx={ICC.x} cy={ICC.y} r={126} fill="none" stroke={T.teal}
-            strokeWidth={1.3} strokeDasharray="9 8" opacity={0.75}
-            animate={{ rotate: 360 }}
-            transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+            r={7} initial={false}
+            animate={{ cx: split ? d.sx : d.mx, cy: split ? d.sy : d.my, fill: split ? d.color : T.teal }}
+            transition={spring}
+            style={{ filter: T.key === "dark" ? `drop-shadow(0 0 5px ${d.color})` : "none" }}
+          />
+          <motion.circle
+            r={14} initial={false}
+            animate={{
+              cx: split ? d.sx : d.mx, cy: split ? d.sy : d.my,
+              fill: split ? d.color : T.teal, opacity: [0.08, 0.2, 0.08],
+            }}
+            transition={{ ...spring, opacity: { duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: d.i * 0.11 } }}
+          />
+        </g>
+      ))}
+
+      {/* общий круг «Биобезопасность» */}
+      <motion.g
+        animate={{ opacity: split ? 0 : 1, scale: split ? 0.72 : 1 }}
+        transition={{ duration: 0.5, ease: EASE }}
+        style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+      >
+        {[0, 1].map((k) => (
+          <motion.circle
+            key={k} cx={ICC.x} cy={ICC.y} r={114} fill="none" stroke={T.teal} strokeWidth={1.2}
+            initial={{ scale: 1, opacity: 0.35 }}
+            animate={{ scale: [1, 1.22], opacity: [0.35, 0] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut", delay: k * 1.6 }}
             style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
           />
-          <g transform={`translate(${ICC.x}, ${ICC.y - 6})`}>
-            <path d={SHIELD} fill={T.teal} opacity={0.14} />
-            <path d={SHIELD} fill="none" stroke={T.teal} strokeWidth={2} strokeLinejoin="round" />
-            <path d="M -9 -28 L -3 -21 L 10 -35" fill="none" stroke={T.teal} strokeWidth={2.6}
-                  strokeLinecap="round" strokeLinejoin="round" />
-            <text x={0} y={24} textAnchor="middle" fontSize="15" fontWeight="700"
-                  letterSpacing="0.5" fill={T.text}>
-              БИОБЕЗОПАСНОСТЬ
-            </text>
-            <text x={0} y={50} textAnchor="middle" fontSize="15" fill={T.muted}>
-              26 направлений
-            </text>
-          </g>
-        </motion.g>
-
-        {/* два контура */}
-        {[
-          { c: IEXT, color: T.violet, l1: "ВНЕШНИЙ", l2: "КОНТУР", d: -1, id: "external" },
-          { c: IINT, color: T.cyan, l1: "ВНУТРЕННИЙ", l2: "КОНТУР", d: 1, id: "internal" },
-        ].map((k) => (
-          <motion.g
-            key={k.l1}
-            initial={false}
-            onClick={(e) => { if (split) { e.stopPropagation(); onPick(k.id); } }}
-            animate={{
-              opacity: split ? 1 : 0,
-              x: split ? k.c.x - ICC.x : 0,
-              scale: split ? 1 : 1.5,
-            }}
-            transition={{ opacity: { duration: 0.45, delay: split ? 0.2 : 0 }, ...spring }}
-            style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px`, cursor: split ? "pointer" : "default" }}
-            pointerEvents={split ? "auto" : "none"}
-          >
-            <circle cx={ICC.x} cy={ICC.y} r={80} fill={T.solid} stroke={`${k.color}88`} strokeWidth={1.6} />
-            <circle cx={ICC.x} cy={ICC.y} r={80} fill={k.color} opacity={0.07} />
-            <motion.circle
-              cx={ICC.x} cy={ICC.y} r={91} fill="none" stroke={k.color}
-              strokeWidth={1.3} strokeDasharray="7 7" opacity={0.8}
-              animate={{ rotate: 360 * k.d }}
-              transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
-              style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
-            />
-            <text x={ICC.x} y={ICC.y - 4} textAnchor="middle" fontSize="14" fontWeight="700"
-                  letterSpacing="0.5" fill={k.color}>
-              {k.l1}
-            </text>
-            <text x={ICC.x} y={ICC.y + 18} textAnchor="middle" fontSize="14" fontWeight="700"
-                  letterSpacing="0.5" fill={k.color}>
-              {k.l2}
-            </text>
-            <motion.text
-              x={ICC.x} y={ICC.y + 46} textAnchor="middle" fontSize="12" fill={k.color}
-              animate={{ opacity: [0.45, 0.9, 0.45] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-            >
-              открыть список →
-            </motion.text>
-          </motion.g>
         ))}
+        <circle cx={ICC.x} cy={ICC.y} r={114} fill={T.solid} stroke={T.borderHi} strokeWidth={1.4} />
+        <motion.circle
+          cx={ICC.x} cy={ICC.y} r={126} fill="none" stroke={T.teal}
+          strokeWidth={1.3} strokeDasharray="9 8" opacity={0.75}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
+          style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+        />
+        <g transform={`translate(${ICC.x}, ${ICC.y - 6})`}>
+          <path d={SHIELD} fill={T.teal} opacity={0.14} />
+          <path d={SHIELD} fill="none" stroke={T.teal} strokeWidth={2} strokeLinejoin="round" />
+          <path d="M -9 -28 L -3 -21 L 10 -35" fill="none" stroke={T.teal} strokeWidth={2.6}
+                strokeLinecap="round" strokeLinejoin="round" />
+          <text x={0} y={24} textAnchor="middle" fontSize="15" fontWeight="700" letterSpacing="0.5" fill={T.text}>
+            БИОБЕЗОПАСНОСТЬ
+          </text>
+          <text x={0} y={50} textAnchor="middle" fontSize="15" fill={T.muted}>
+            26 направлений
+          </text>
+        </g>
+      </motion.g>
 
-        <AnimatePresence mode="wait">
+      {/* два контура */}
+      {[
+        { c: IEXT, color: T.violet, l1: "ВНЕШНИЙ", l2: "КОНТУР", d: -1, id: "external" },
+        { c: IINT, color: T.cyan, l1: "ВНУТРЕННИЙ", l2: "КОНТУР", d: 1, id: "internal" },
+      ].map((k) => (
+        <motion.g
+          key={k.l1}
+          initial={false}
+          onClick={(e) => { if (split) { e.stopPropagation(); onContour(k.id); } }}
+          animate={{ opacity: split ? 1 : 0, x: split ? k.c.x - ICC.x : 0, scale: split ? 1 : 1.5 }}
+          transition={{ opacity: { duration: 0.45, delay: split ? 0.2 : 0 }, ...spring }}
+          style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px`, cursor: split ? "pointer" : "default" }}
+          pointerEvents={split ? "auto" : "none"}
+        >
+          <circle cx={ICC.x} cy={ICC.y} r={80} fill={T.solid} stroke={`${k.color}88`} strokeWidth={1.6} />
+          <circle cx={ICC.x} cy={ICC.y} r={80} fill={k.color} opacity={0.07} />
+          <motion.circle
+            cx={ICC.x} cy={ICC.y} r={91} fill="none" stroke={k.color}
+            strokeWidth={1.3} strokeDasharray="7 7" opacity={0.8}
+            animate={{ rotate: 360 * k.d }}
+            transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+            style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
+          />
+          <text x={ICC.x} y={ICC.y - 4} textAnchor="middle" fontSize="14" fontWeight="700" letterSpacing="0.5" fill={k.color}>
+            {k.l1}
+          </text>
+          <text x={ICC.x} y={ICC.y + 18} textAnchor="middle" fontSize="14" fontWeight="700" letterSpacing="0.5" fill={k.color}>
+            {k.l2}
+          </text>
           <motion.text
-            key={split ? "b" : "a"}
-            x={ICC.x} y={IVB.h - 22} textAnchor="middle" fontSize="14" fill={T.faint}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.35 }}
+            x={ICC.x} y={ICC.y + 46} textAnchor="middle" fontSize="12" fill={k.color}
+            animate={{ opacity: [0.45, 0.9, 0.45] }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
           >
-            {split
-              ? "нажмите на контур, чтобы открыть его список направлений"
-              : "нажмите, чтобы увидеть деление на два контура"}
+            раскрыть →
           </motion.text>
+        </motion.g>
+      ))}
+
+      <AnimatePresence mode="wait">
+        <motion.text
+          key={split ? "b" : "a"}
+          x={ICC.x} y={IVB.h - 22} textAnchor="middle" fontSize="14" fill={T.faint}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          {split
+            ? "нажмите на контур, чтобы раскрыть его направления"
+            : "нажмите, чтобы увидеть деление на два контура"}
+        </motion.text>
+      </AnimatePresence>
+    </svg>
+  );
+}
+
+/* ── уровни 2–3: ветвление от узла к его списку ───────────────────────────── */
+function MindMap({ T, accent, hubTitle, hubSub, items, onItem }) {
+  const n = items.length;
+  const rows = Math.ceil(n / 2);
+  const PW = 292, PH = 64, GAP = 15, PAD = 34;
+  const H = Math.max(330, PAD * 2 + rows * (PH + GAP) - GAP) + 34;
+  const CX = 480, CY = H / 2;
+  const HUB_R = 78;
+
+  const place = (i) => {
+    const left = i % 2 === 0;
+    const row = Math.floor(i / 2);
+    const y = PAD + row * (PH + GAP);
+    const x = left ? CX - 100 - PW : CX + 100;
+    return { x, y, left, cy: y + PH / 2 };
+  };
+
+  return (
+    <svg viewBox={`0 0 960 ${H}`} className="relative block w-full">
+      <defs>
+        <radialGradient id="mm-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={T.surface} stopOpacity={T.key === "dark" ? 0.45 : 0.95} />
+          <stop offset="100%" stopColor={T.surface} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <circle cx={CX} cy={CY} r={168} fill="url(#mm-glow)" />
+
+      {/* связи */}
+      {items.map((it, i) => {
+        const p = place(i);
+        const sx = CX + (p.left ? -HUB_R : HUB_R);
+        const ex = p.left ? p.x + PW : p.x;
+        const mx = (sx + ex) / 2;
+        return (
+          <motion.path
+            key={`c-${it.key}`}
+            d={`M ${sx} ${CY} C ${mx} ${CY}, ${mx} ${p.cy}, ${ex} ${p.cy}`}
+            fill="none" stroke={accent} strokeWidth={1.4}
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 0.4 }}
+            transition={{ duration: 0.55, delay: 0.18 + i * 0.045, ease: EASE }}
+          />
+        );
+      })}
+
+      {/* карточки */}
+      {items.map((it, i) => {
+        const p = place(i);
+        return (
+          <motion.g
+            key={it.key}
+            initial={{ opacity: 0, x: p.left ? 26 : -26, scale: 0.94 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.45, delay: 0.22 + i * 0.045, ease: EASE }}
+            whileHover={onItem ? { scale: 1.025 } : undefined}
+            onClick={() => onItem && onItem(it)}
+            style={{ cursor: onItem ? "pointer" : "default", originX: `${p.x + PW / 2}px`, originY: `${p.cy}px` }}
+          >
+            <rect x={p.x} y={p.y} width={PW} height={PH} rx={14}
+                  fill={T.solid} stroke={`${accent}66`} strokeWidth={1.2} />
+            <rect x={p.left ? p.x + PW - 4 : p.x} y={p.y + 12} width={4} height={PH - 24} rx={2} fill={accent} />
+            <foreignObject x={p.x + 16} y={p.y + 6} width={PW - 40} height={PH - 12}>
+              <div
+                xmlns="http://www.w3.org/1999/xhtml"
+                style={{
+                  display: "flex", alignItems: "center", height: "100%",
+                  fontFamily: "inherit", fontSize: 14.5, lineHeight: 1.25,
+                  color: T.text, fontWeight: 600,
+                  textAlign: p.left ? "right" : "left",
+                  justifyContent: p.left ? "flex-end" : "flex-start",
+                  paddingRight: p.left ? 28 : 0,
+                  paddingLeft: p.left ? 0 : 28,
+                }}
+              >
+                <span>{it.label}</span>
+              </div>
+            </foreignObject>
+            {onItem && (
+              <g opacity={0.8}>
+                <circle cx={p.left ? p.x + PW - 26 : p.x + 26} cy={p.cy} r={9} fill={accent} opacity={0.12} />
+                <path
+                  d={p.left
+                    ? `M ${p.x + PW - 29} ${p.cy - 4} L ${p.x + PW - 23} ${p.cy} L ${p.x + PW - 29} ${p.cy + 4}`
+                    : `M ${p.x + 23} ${p.cy - 4} L ${p.x + 29} ${p.cy} L ${p.x + 23} ${p.cy + 4}`}
+                  fill="none" stroke={accent} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+                />
+              </g>
+            )}
+          </motion.g>
+        );
+      })}
+
+      <text x={CX} y={H - 16} textAnchor="middle" fontSize="14" fill={T.faint}>
+        {onItem
+          ? "нажмите на направление, чтобы раскрыть его состав"
+          : "состав работ по направлению"}
+      </text>
+
+      {/* центральный узел */}
+      <motion.g
+        initial={{ scale: 0.6, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 140, damping: 16 }}
+        style={{ originX: `${CX}px`, originY: `${CY}px` }}
+      >
+        <motion.circle
+          cx={CX} cy={CY} r={HUB_R} fill="none" stroke={accent} strokeWidth={1.2}
+          initial={{ scale: 1, opacity: 0.35 }}
+          animate={{ scale: [1, 1.2], opacity: [0.35, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeOut" }}
+          style={{ originX: `${CX}px`, originY: `${CY}px` }}
+        />
+        <circle cx={CX} cy={CY} r={HUB_R} fill={T.solid} stroke={accent} strokeWidth={1.8} />
+        <circle cx={CX} cy={CY} r={HUB_R} fill={accent} opacity={0.08} />
+        <foreignObject x={CX - HUB_R + 10} y={CY - HUB_R + 12} width={HUB_R * 2 - 20} height={HUB_R * 2 - 24}>
+          <div
+            xmlns="http://www.w3.org/1999/xhtml"
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "center",
+              justifyContent: "center", height: "100%", textAlign: "center",
+              fontFamily: "inherit",
+            }}
+          >
+            <div style={{ fontSize: 13.5, fontWeight: 700, lineHeight: 1.2, color: accent }}>{hubTitle}</div>
+            {hubSub ? <div style={{ marginTop: 5, fontSize: 12, color: T.faint }}>{hubSub}</div> : null}
+          </div>
+        </foreignObject>
+      </motion.g>
+    </svg>
+  );
+}
+
+function BiosecurityIntro({ T, onPick }) {
+  const [level, setLevel] = useState(0);      // 0 — ядро, 1 — два контура, 2 — направления, 3 — подсписок
+  const [contour, setContour] = useState(null);
+  const [task, setTask] = useState(null);
+
+  const accent = contour === "internal" ? T.cyan : T.violet;
+  const crumbs = [
+    { label: "Биобезопасность", onClick: () => { setLevel(0); setContour(null); setTask(null); } },
+    ...(level >= 1 ? [{ label: "Два контура", onClick: () => { setLevel(1); setContour(null); setTask(null); } }] : []),
+    ...(level >= 2 && contour ? [{ label: CONTOURS[contour].title, onClick: () => { setLevel(2); setTask(null); } }] : []),
+    ...(level >= 3 && task ? [{ label: task.name, onClick: null }] : []),
+  ];
+
+  const back = () => {
+    if (level === 3) { setLevel(2); setTask(null); }
+    else if (level === 2) { setLevel(1); setContour(null); }
+    else if (level === 1) setLevel(0);
+  };
+
+  return (
+    <div>
+      {/* навигация по уровням */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button
+          onClick={back}
+          disabled={level === 0}
+          className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13.5px] transition-opacity disabled:opacity-35"
+          style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}
+        >
+          <ChevronDown size={14} style={{ transform: "rotate(90deg)" }} />
+          назад
+        </button>
+        <div className="flex flex-wrap items-center gap-1.5 text-[13.5px]">
+          {crumbs.map((c, i) => (
+            <span key={c.label} className="flex items-center gap-1.5">
+              {i > 0 && <span style={{ color: T.faint }}>›</span>}
+              <button
+                onClick={c.onClick || undefined}
+                className="rounded-lg px-2 py-1"
+                style={{
+                  color: i === crumbs.length - 1 ? T.text : T.muted,
+                  fontWeight: i === crumbs.length - 1 ? 600 : 400,
+                  background: i === crumbs.length - 1 ? T.panelHi : "transparent",
+                  cursor: c.onClick ? "pointer" : "default",
+                }}
+              >
+                {c.label}
+              </button>
+            </span>
+          ))}
+        </div>
+        {level >= 2 && contour && (
+          <button
+            onClick={() => onPick(contour)}
+            className="ml-auto flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13.5px]"
+            style={{ background: T.panelHi, border: `1px solid ${T.border}`, color: accent }}
+          >
+            полный список ниже
+            <ArrowRight size={13} />
+          </button>
+        )}
+      </div>
+
+      <motion.div
+        layout
+        transition={{ duration: 0.45, ease: EASE }}
+        onClick={() => { if (level <= 1) setLevel(level === 0 ? 1 : 0); }}
+        className={`relative overflow-hidden rounded-2xl outline-none ${level <= 1 ? "cursor-pointer select-none" : ""}`}
+        style={{ background: T.panel, border: `1px solid ${T.border}` }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: `radial-gradient(60% 70% at 22% 40%, ${T.glowA}, transparent 70%), radial-gradient(55% 65% at 78% 60%, ${T.glowB}, transparent 70%)`,
+          }}
+        />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={level >= 2 ? `${level}-${contour}-${task ? task.id : ""}` : "orbit"}
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.03 }}
+            transition={{ duration: 0.35, ease: EASE }}
+          >
+            {level <= 1 ? (
+              <IntroOrbit
+                T={T}
+                split={level === 1}
+                onContour={(c) => { setContour(c); setLevel(2); }}
+              />
+            ) : level === 2 ? (
+              <MindMap
+                T={T}
+                accent={accent}
+                hubTitle={CONTOURS[contour].title}
+                hubSub={`${CONTOURS[contour].items.length} направлений`}
+                items={CONTOURS[contour].items.map((t) => ({ key: t.id, label: t.name, task: t }))}
+                onItem={(it) => { setTask(it.task); setLevel(3); }}
+              />
+            ) : (
+              <MindMap
+                T={T}
+                accent={accent}
+                hubTitle={task.name}
+                items={subItemsOf(task).map((x, i) => ({ key: `${task.id}-${i}`, label: x }))}
+              />
+            )}
+          </motion.div>
         </AnimatePresence>
-      </svg>
+      </motion.div>
     </div>
   );
 }
