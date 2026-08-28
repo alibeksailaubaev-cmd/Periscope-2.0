@@ -285,7 +285,7 @@ body {
 
 /* ================= Sidebar ================= */
 .sidebar {
-  width: 280px;
+  width: 224px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--cream-line);
@@ -500,7 +500,105 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 14px;
   min-height: 0;
+}
+
+/* ---------- Плёнка карточек слева от текущей ---------- */
+.filmstrip {
+  width: 112px;
+  height: 100%;
+  max-height: 100%;
+  flex-shrink: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 6px 4px 2px;
+  scroll-behavior: smooth;
+}
+
+.filmstrip[hidden] {
+  display: none;
+}
+
+.filmstrip-item {
+  position: relative;
+  flex-shrink: 0;
+  width: 100%;
+  height: 78px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: var(--surface);
+  cursor: pointer;
+  overflow: hidden;
+  padding: 0;
+  opacity: 0;
+  animation: filmstripIn 0.3s ease forwards;
+  transition: border-color 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
+}
+
+@keyframes filmstripIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.filmstrip-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.filmstrip-noimg {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 30%, var(--surface-2), var(--cream));
+  font-size: 20px;
+  color: var(--ink-muted);
+}
+
+.filmstrip-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 3px 6px 4px;
+  background: linear-gradient(to top, rgba(32, 31, 26, 0.75), transparent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filmstrip-item:hover {
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(32, 31, 26, 0.12);
+}
+
+.filmstrip-item.active {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px var(--teal-soft);
+  transform: scale(1.03);
+}
+
+@media (max-width: 1080px) {
+  .filmstrip {
+    display: none;
+  }
 }
 
 /* ---------- Переключатель Карточки / Список ---------- */
@@ -1428,6 +1526,7 @@ body {
           <button class="btn-primary" id="emptyAddBtn">Загрузить фото</button>
         </div>
 
+        <div class="filmstrip" id="filmstrip"></div>
         <button class="nav-arrow nav-arrow-left" id="prevBtn" title="Предыдущее">‹</button>
         <div class="card-stage" id="cardStage"></div>
         <button class="nav-arrow nav-arrow-right" id="nextBtn" title="Следующее">›</button>
@@ -1749,6 +1848,7 @@ const els = {
   emptyState: document.getElementById("emptyState"),
   emptyStateText: document.getElementById("emptyStateText"),
   emptyAddBtn: document.getElementById("emptyAddBtn"),
+  filmstrip: document.getElementById("filmstrip"),
   cardStage: document.getElementById("cardStage"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
@@ -2201,6 +2301,7 @@ function renderView(direction = 0) {
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
     els.listView.innerHTML = "";
+    els.filmstrip.hidden = true;
     els.prevBtn.disabled = true;
     els.nextBtn.disabled = true;
     els.dots.innerHTML = "";
@@ -2213,6 +2314,7 @@ function renderView(direction = 0) {
   if (state.viewMode === "list") {
     els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = true));
     els.cardStage.hidden = true;
+    els.filmstrip.hidden = true;
     els.listView.hidden = false;
     els.dots.hidden = true;
     els.progressLabel.textContent = `${list.length} шт.`;
@@ -2222,6 +2324,7 @@ function renderView(direction = 0) {
 
   els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = false));
   els.cardStage.hidden = false;
+  els.filmstrip.hidden = false;
   els.listView.hidden = true;
 
   if (state.index >= list.length) state.index = list.length - 1;
@@ -2229,12 +2332,57 @@ function renderView(direction = 0) {
 
   const entry = list[state.index];
   renderCard(entry, direction);
+  renderFilmstrip(list);
 
   els.prevBtn.disabled = state.index === 0;
   els.nextBtn.disabled = state.index === list.length - 1;
   els.progressLabel.textContent = `${state.index + 1} / ${list.length}`;
 
   renderDots(list.length, state.index);
+}
+
+// Плёнка миниатюр слева от карточки — быстрый переход к любой записи без
+// пролистывания по одной. Полная пересборка DOM только когда список
+// записей действительно изменился (добавили/удалили запись), иначе —
+// просто переключаем подсветку активного элемента.
+let filmstripListRef = null;
+let filmstripLength = -1;
+
+function renderFilmstrip(list) {
+  const needsRebuild = filmstripListRef !== list || filmstripLength !== list.length;
+
+  if (needsRebuild) {
+    filmstripListRef = list;
+    filmstripLength = list.length;
+
+    els.filmstrip.innerHTML = list
+      .map(
+        (entry, idx) => `
+          <button class="filmstrip-item" type="button" data-idx="${idx}" title="${escapeHtml(entry.location)}">
+            ${entry.photos.length ? `<img src="${entry.photos[0]}" alt="" loading="lazy" />` : '<span class="filmstrip-noimg">📷</span>'}
+            <span class="filmstrip-label">${escapeHtml(entry.location)}</span>
+          </button>
+        `
+      )
+      .join("");
+
+    els.filmstrip.querySelectorAll(".filmstrip-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.dataset.idx);
+        if (idx === state.index) return;
+        const dir = idx > state.index ? 1 : -1;
+        state.index = idx;
+        renderView(dir);
+      });
+    });
+  }
+
+  els.filmstrip.querySelectorAll(".filmstrip-item").forEach((btn) => {
+    const idx = Number(btn.dataset.idx);
+    const active = idx === state.index;
+    btn.classList.toggle("active", active);
+    if (active) btn.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
 }
 
 function renderListView(list) {
@@ -2420,6 +2568,8 @@ function renderCard(entry, direction) {
       entry.location = locationInput.value.trim() || DEFAULT_LOCATION;
       saveEntries();
       renderSidebar();
+      filmstripLength = -1; // название сменилось — обновим подпись на миниатюре
+      renderFilmstrip(getFiltered());
     }, 300)
   );
 
@@ -2578,6 +2728,7 @@ function promptAddPhotos(entryId) {
       if (!entry) return;
       entry.photos.push(...dataUrls);
       saveEntries();
+      filmstripLength = -1; // могла смениться первая фотография на миниатюре
       renderView();
     });
   });
@@ -2589,6 +2740,7 @@ function deletePhotoFromEntry(entryId, photoIndex) {
   if (!entry) return;
   entry.photos.splice(photoIndex, 1);
   saveEntries();
+  filmstripLength = -1;
   renderView();
 }
 

@@ -86,6 +86,7 @@ const els = {
   emptyState: document.getElementById("emptyState"),
   emptyStateText: document.getElementById("emptyStateText"),
   emptyAddBtn: document.getElementById("emptyAddBtn"),
+  filmstrip: document.getElementById("filmstrip"),
   cardStage: document.getElementById("cardStage"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
@@ -538,6 +539,7 @@ function renderView(direction = 0) {
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
     els.listView.innerHTML = "";
+    els.filmstrip.hidden = true;
     els.prevBtn.disabled = true;
     els.nextBtn.disabled = true;
     els.dots.innerHTML = "";
@@ -550,6 +552,7 @@ function renderView(direction = 0) {
   if (state.viewMode === "list") {
     els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = true));
     els.cardStage.hidden = true;
+    els.filmstrip.hidden = true;
     els.listView.hidden = false;
     els.dots.hidden = true;
     els.progressLabel.textContent = `${list.length} шт.`;
@@ -559,6 +562,7 @@ function renderView(direction = 0) {
 
   els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = false));
   els.cardStage.hidden = false;
+  els.filmstrip.hidden = false;
   els.listView.hidden = true;
 
   if (state.index >= list.length) state.index = list.length - 1;
@@ -566,12 +570,57 @@ function renderView(direction = 0) {
 
   const entry = list[state.index];
   renderCard(entry, direction);
+  renderFilmstrip(list);
 
   els.prevBtn.disabled = state.index === 0;
   els.nextBtn.disabled = state.index === list.length - 1;
   els.progressLabel.textContent = `${state.index + 1} / ${list.length}`;
 
   renderDots(list.length, state.index);
+}
+
+// Плёнка миниатюр слева от карточки — быстрый переход к любой записи без
+// пролистывания по одной. Полная пересборка DOM только когда список
+// записей действительно изменился (добавили/удалили запись), иначе —
+// просто переключаем подсветку активного элемента.
+let filmstripListRef = null;
+let filmstripLength = -1;
+
+function renderFilmstrip(list) {
+  const needsRebuild = filmstripListRef !== list || filmstripLength !== list.length;
+
+  if (needsRebuild) {
+    filmstripListRef = list;
+    filmstripLength = list.length;
+
+    els.filmstrip.innerHTML = list
+      .map(
+        (entry, idx) => `
+          <button class="filmstrip-item" type="button" data-idx="${idx}" title="${escapeHtml(entry.location)}">
+            ${entry.photos.length ? `<img src="${entry.photos[0]}" alt="" loading="lazy" />` : '<span class="filmstrip-noimg">📷</span>'}
+            <span class="filmstrip-label">${escapeHtml(entry.location)}</span>
+          </button>
+        `
+      )
+      .join("");
+
+    els.filmstrip.querySelectorAll(".filmstrip-item").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.dataset.idx);
+        if (idx === state.index) return;
+        const dir = idx > state.index ? 1 : -1;
+        state.index = idx;
+        renderView(dir);
+      });
+    });
+  }
+
+  els.filmstrip.querySelectorAll(".filmstrip-item").forEach((btn) => {
+    const idx = Number(btn.dataset.idx);
+    const active = idx === state.index;
+    btn.classList.toggle("active", active);
+    if (active) btn.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  });
 }
 
 function renderListView(list) {
@@ -757,6 +806,8 @@ function renderCard(entry, direction) {
       entry.location = locationInput.value.trim() || DEFAULT_LOCATION;
       saveEntries();
       renderSidebar();
+      filmstripLength = -1; // название сменилось — обновим подпись на миниатюре
+      renderFilmstrip(getFiltered());
     }, 300)
   );
 
@@ -915,6 +966,7 @@ function promptAddPhotos(entryId) {
       if (!entry) return;
       entry.photos.push(...dataUrls);
       saveEntries();
+      filmstripLength = -1; // могла смениться первая фотография на миниатюре
       renderView();
     });
   });
@@ -926,6 +978,7 @@ function deletePhotoFromEntry(entryId, photoIndex) {
   if (!entry) return;
   entry.photos.splice(photoIndex, 1);
   saveEntries();
+  filmstripLength = -1;
   renderView();
 }
 
