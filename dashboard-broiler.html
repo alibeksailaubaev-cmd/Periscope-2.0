@@ -37,9 +37,9 @@
       </div>
 
       <button class="btn-add" id="openAddBtn">
-        <span class="plus">+</span> 📷 Загрузить фото
+        <span class="plus">+</span> 📷 Загрузить фото/видео
       </button>
-      <p class="btn-add-hint" id="addHint">Можно выбрать сразу много фото (100+) — по умолчанию каждое станет отдельной карточкой.</p>
+      <p class="btn-add-hint" id="addHint">Можно выбрать сразу много файлов (100+) — по умолчанию каждый станет отдельной карточкой. Видео весит намного больше фото — предпочтительны короткие ролики.</p>
 
       <button class="btn-secondary btn-export" id="exportBtn">📤 Скачать копию для отправки</button>
       <p class="btn-add-hint">Фото хранятся только в этом браузере. Чтобы показать их другим — скачайте копию файла и отправьте её (мессенджер, почта, диск).</p>
@@ -74,7 +74,7 @@
         <div class="empty-state" id="emptyState" hidden>
           <div class="empty-icon">📷</div>
           <p id="emptyStateText">Пока нет несоответствий в этом разделе</p>
-          <button class="btn-primary" id="emptyAddBtn">Загрузить фото</button>
+          <button class="btn-primary" id="emptyAddBtn">Загрузить фото/видео</button>
         </div>
 
         <div class="card-note-panel" id="cardNotePanel">
@@ -96,6 +96,7 @@
     <button class="lightbox-close" id="lightboxClose" title="Закрыть">✕</button>
     <button class="lightbox-nav lightbox-prev" id="lightboxPrev" title="Предыдущее фото">‹</button>
     <img id="lightboxImg" alt="Фото несоответствия" />
+    <video id="lightboxVideo" controls hidden></video>
     <button class="lightbox-nav lightbox-next" id="lightboxNext" title="Следующее фото">›</button>
     <div class="lightbox-caption" id="lightboxCaption"></div>
   </div>
@@ -112,19 +113,19 @@
       </label>
 
       <label class="field">
-        <span>Фото (можно выбрать несколько сразу)</span>
+        <span>Фото и видео (можно выбрать несколько сразу)</span>
         <div class="dropzone" id="dropzone">
           <img id="dropPreview" hidden />
           <div class="dropzone-hint" id="dropzoneHint">
             <div class="dropzone-icon">📎</div>
-            <p>Нажмите или перетащите фото сюда</p>
+            <p>Нажмите или перетащите фото/видео сюда</p>
           </div>
-          <input type="file" id="fieldPhoto" accept="image/*" multiple hidden />
+          <input type="file" id="fieldPhoto" accept="image/*,video/*" multiple hidden />
         </div>
         <p class="dropzone-note" id="dropzoneNote" hidden></p>
         <label class="split-toggle" id="splitToggle" hidden>
           <input type="checkbox" id="fieldSplitCards" checked />
-          <span>Каждое фото — отдельная карточка (можно снять, если это несколько фото одного случая)</span>
+          <span>Каждый файл — отдельная карточка (можно снять, если это несколько файлов одного случая)</span>
         </label>
       </label>
 

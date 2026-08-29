@@ -28,14 +28,14 @@ const DEFAULT_LOCATION = "Бройлерная площадка";
 
 const TEXT = {
   sidebarTotal: "Всего несоответствий",
-  addHint: "Можно выбрать сразу много фото (100+) — по умолчанию каждое станет отдельной карточкой.",
+  addHint: "Можно выбрать сразу много файлов (100+) — по умолчанию каждый станет отдельной карточкой. Видео весит намного больше фото — предпочтительны короткие ролики.",
   viewTitle: "Все несоответствия",
   emptyState: "Пока нет несоответствий в этом разделе",
   fieldLocationLabel: "Место / участок",
   fieldLocationPlaceholder: "напр. Птичник №3, Кормоцех",
   fieldTextLabel: "Описание несоответствия",
   addDialogTitleOne: "Новое несоответствие",
-  addDialogTitleMany: (n) => `Новое несоответствие (${n} фото)`,
+  addDialogTitleMany: (n) => `Новое несоответствие (${n} файлов)`,
   exportPrefix: "nesootvetstviya-broiler",
   cardTextLabel: "Описание несоответствия",
   cardTextPlaceholder: "Опишите, что не так...",
@@ -74,6 +74,7 @@ const els = {
 
   lightbox: document.getElementById("lightbox"),
   lightboxImg: document.getElementById("lightboxImg"),
+  lightboxVideo: document.getElementById("lightboxVideo"),
   lightboxCaption: document.getElementById("lightboxCaption"),
   lightboxClose: document.getElementById("lightboxClose"),
   lightboxPrev: document.getElementById("lightboxPrev"),
@@ -103,7 +104,7 @@ const els = {
 const state = {
   entries: [],
   index: 0,
-  pendingPhotos: [], // dataURL[]
+  pendingMedia: [], // {type: "photo"|"video", src: dataURL}[]
   viewMode: "cards", // "cards" | "list"
 };
 
@@ -229,7 +230,13 @@ function normalizeEntries(raw) {
     text: e.text || "",
     solution: e.solution || "",
     note: e.note || "",
-    photos: Array.isArray(e.photos) ? e.photos : e.photo ? [e.photo] : [],
+    media: Array.isArray(e.media)
+      ? e.media
+      : Array.isArray(e.photos)
+      ? e.photos.map((src) => ({ type: "photo", src }))
+      : e.photo
+      ? [{ type: "photo", src: e.photo }]
+      : [],
     date: e.date || Date.now(),
   }));
 }
@@ -250,7 +257,7 @@ function seedDemo() {
       location: "Птичник №1 — кормовая линия",
       text: "Остатки корма в кормушках, признаки плесени у стенки бункера.",
       solution: "Провести внеплановую очистку кормушек и бункера, скорректировать график раздачи корма.",
-      photos: [],
+      media: [],
       date: Date.now(),
     },
     {
@@ -258,7 +265,7 @@ function seedDemo() {
       location: "Поилки",
       text: "Подтекание в системе поения, влажная подстилка вокруг ниппелей.",
       solution: "Проверить герметичность соединений, заменить повреждённые ниппели, просушить подстилку.",
-      photos: [],
+      media: [],
       date: Date.now(),
     },
   ];
@@ -319,6 +326,23 @@ const PPTX_COLORS = {
   surface: "FCFBF5",
 };
 
+// Видео в PPTX не встраиваем (ненадёжно воспроизводится без предпросмотра
+// и сильно раздувает файл) — вместо этого показываем подписанный плейсхолдер,
+// сам ролик остаётся в дашборде. Для фото — обычная вставка изображения.
+function addPptxMediaBox(pptx, slide, item, box) {
+  if (item && item.type === "photo") {
+    slide.addImage({ data: item.src, x: box.x, y: box.y, w: box.w, h: box.h, sizing: { type: "contain", w: box.w, h: box.h } });
+    return;
+  }
+  slide.addShape(pptx.ShapeType.rect, {
+    x: box.x, y: box.y, w: box.w, h: box.h, fill: { color: PPTX_COLORS.cream }, line: { color: PPTX_COLORS.creamLine },
+  });
+  const label = item && item.type === "video" ? "🎥 Видео — смотрите в дашборде" : "Нет фото";
+  slide.addText(label, {
+    x: box.x, y: box.y + box.h / 2 - 0.3, w: box.w, h: 0.6, align: "center", fontSize: 16, color: PPTX_COLORS.inkMuted,
+  });
+}
+
 async function exportToPowerPoint() {
   if (typeof PptxGenJS === "undefined") {
     alert("Не удалось загрузить модуль PowerPoint. Проверьте, что файл js/vendor/pptxgen.bundle.js доступен рядом с дашбордом.");
@@ -363,15 +387,9 @@ async function exportToPowerPoint() {
         x: 0.5, y: 0.85, w: 6, h: 0.35, fontSize: 11, color: PPTX_COLORS.inkMuted,
       });
 
-      const photo = entry.photos && entry.photos[0];
-      if (photo) {
-        slide.addImage({ data: photo, x: 0.5, y: 1.3, w: 6.5, h: 5.7, sizing: { type: "contain", w: 6.5, h: 5.7 } });
-      } else {
-        slide.addShape(pptx.ShapeType.rect, {
-          x: 0.5, y: 1.3, w: 6.5, h: 5.7, fill: { color: PPTX_COLORS.cream }, line: { color: PPTX_COLORS.creamLine },
-        });
-        slide.addText("Нет фото", { x: 0.5, y: 3.8, w: 6.5, h: 0.5, align: "center", fontSize: 16, color: PPTX_COLORS.inkMuted });
-      }
+      const media = entry.media || [];
+      const first = media[0];
+      addPptxMediaBox(pptx, slide, first, { x: 0.5, y: 1.3, w: 6.5, h: 5.7 });
 
       slide.addText(t.cardTextLabel, { x: 7.3, y: 1.3, w: 5.5, h: 0.4, fontSize: 13, bold: true, color: PPTX_COLORS.inkSecondary });
       slide.addText(entry.text || "—", { x: 7.3, y: 1.7, w: 5.5, h: 2, fontSize: 14, color: PPTX_COLORS.ink, valign: "top" });
@@ -383,16 +401,16 @@ async function exportToPowerPoint() {
         });
       }
 
-      if (entry.photos && entry.photos.length > 1) {
-        slide.addText(`Ещё фото: ${entry.photos.length - 1} (см. следующие слайды)`, {
+      if (media.length > 1) {
+        slide.addText(`Ещё файлов: ${media.length - 1} (см. следующие слайды)`, {
           x: 7.3, y: 6.7, w: 5.5, h: 0.4, fontSize: 11, italic: true, color: PPTX_COLORS.inkMuted,
         });
-        entry.photos.slice(1).forEach((extraPhoto, i) => {
+        media.slice(1).forEach((item, i) => {
           const extraSlide = pptx.addSlide();
-          extraSlide.addText(`${entry.location || ""} — фото ${i + 2} из ${entry.photos.length}`, {
+          extraSlide.addText(`${entry.location || ""} — файл ${i + 2} из ${media.length}`, {
             x: 0.5, y: 0.3, w: 12.3, h: 0.5, fontSize: 16, bold: true, color: PPTX_COLORS.ink,
           });
-          extraSlide.addImage({ data: extraPhoto, x: 1.5, y: 1, w: 10.3, h: 6.1, sizing: { type: "contain", w: 10.3, h: 6.1 } });
+          addPptxMediaBox(pptx, extraSlide, item, { x: 1.5, y: 1, w: 10.3, h: 6.1 });
         });
       }
     });
@@ -530,15 +548,25 @@ function renderView(direction = 0) {
   renderDots(list.length, state.index);
 }
 
+// Разметка миниатюры одного элемента (фото или видео) — переиспользуется
+// в списке и в полоске миниатюр карточки.
+function mediaThumbMarkup(item) {
+  if (!item) return "";
+  if (item.type === "video") {
+    return `<video src="${item.src}" muted preload="metadata"></video><span class="media-video-badge">▶</span>`;
+  }
+  return `<img src="${item.src}" alt="" />`;
+}
+
 function renderListView(list) {
   els.listView.innerHTML = list
     .map(
       (entry, idx) => `
         <div class="list-card" data-idx="${idx}">
-          <div class="list-card-photo" data-role="photo" title="${entry.photos.length ? "Открыть фото целиком" : "Нет фото"}">
-            ${entry.photos.length ? `<img src="${entry.photos[0]}" alt="" />` : "📷"}
-            ${entry.photos.length > 1 ? `<span class="photo-count-badge">+${entry.photos.length - 1}</span>` : ""}
-            ${entry.photos.length ? '<span class="zoom-hint">⤢</span>' : ""}
+          <div class="list-card-photo" data-role="photo" title="${entry.media.length ? "Открыть целиком" : "Нет фото/видео"}">
+            ${entry.media.length ? mediaThumbMarkup(entry.media[0]) : "📷"}
+            ${entry.media.length > 1 ? `<span class="photo-count-badge">+${entry.media.length - 1}</span>` : ""}
+            ${entry.media.length ? '<span class="zoom-hint">⤢</span>' : ""}
           </div>
           <div class="list-card-body" data-role="open">
             <div class="list-card-location">${escapeHtml(entry.location)}</div>
@@ -557,7 +585,7 @@ function renderListView(list) {
     const idx = Number(card.dataset.idx);
     const entry = list[idx];
     card.querySelector('[data-role="photo"]').addEventListener("click", () => {
-      if (entry.photos.length) openLightbox(entry.photos, 0, entry.location);
+      if (entry.media.length) openLightbox(entry.media, 0, entry.location);
       else {
         state.index = idx;
         setViewMode("cards");
@@ -574,10 +602,10 @@ function renderListView(list) {
 // Полноэкранный просмотр фото
 // ---------------------------------------------------------------------------
 
-const lightboxState = { photos: [], index: 0, caption: "" };
+const lightboxState = { items: [], index: 0, caption: "" };
 
-function openLightbox(photos, index, caption) {
-  lightboxState.photos = photos;
+function openLightbox(items, index, caption) {
+  lightboxState.items = items;
   lightboxState.index = index;
   lightboxState.caption = caption || "";
   renderLightbox();
@@ -585,10 +613,25 @@ function openLightbox(photos, index, caption) {
 }
 
 function renderLightbox() {
-  const { photos, index, caption } = lightboxState;
-  els.lightboxImg.src = photos[index];
-  const multi = photos.length > 1;
-  els.lightboxCaption.textContent = multi ? `${caption} · фото ${index + 1} из ${photos.length}` : caption;
+  const { items, index, caption } = lightboxState;
+  const item = items[index];
+  const isVideo = item && item.type === "video";
+
+  els.lightboxVideo.pause();
+  if (isVideo) {
+    els.lightboxImg.hidden = true;
+    els.lightboxImg.src = "";
+    els.lightboxVideo.hidden = false;
+    els.lightboxVideo.src = item.src;
+  } else {
+    els.lightboxVideo.hidden = true;
+    els.lightboxVideo.src = "";
+    els.lightboxImg.hidden = false;
+    els.lightboxImg.src = item ? item.src : "";
+  }
+
+  const multi = items.length > 1;
+  els.lightboxCaption.textContent = multi ? `${caption} · ${index + 1} из ${items.length}` : caption;
   els.lightboxPrev.hidden = !multi;
   els.lightboxNext.hidden = !multi;
 }
@@ -596,17 +639,19 @@ function renderLightbox() {
 function closeLightbox() {
   els.lightbox.hidden = true;
   els.lightboxImg.src = "";
+  els.lightboxVideo.pause();
+  els.lightboxVideo.src = "";
 }
 
 function lightboxPrev() {
-  if (!lightboxState.photos.length) return;
-  lightboxState.index = (lightboxState.index - 1 + lightboxState.photos.length) % lightboxState.photos.length;
+  if (!lightboxState.items.length) return;
+  lightboxState.index = (lightboxState.index - 1 + lightboxState.items.length) % lightboxState.items.length;
   renderLightbox();
 }
 
 function lightboxNext() {
-  if (!lightboxState.photos.length) return;
-  lightboxState.index = (lightboxState.index + 1) % lightboxState.photos.length;
+  if (!lightboxState.items.length) return;
+  lightboxState.index = (lightboxState.index + 1) % lightboxState.items.length;
   renderLightbox();
 }
 
@@ -672,15 +717,19 @@ function renderCard(entry, direction) {
   card.className = "card";
   card.style.setProperty("--card-dx", direction < 0 ? "-32px" : "32px");
 
-  const hasPhotos = entry.photos.length > 0;
+  const hasMedia = entry.media.length > 0;
+  const firstItem = entry.media[0];
+  const isFirstVideo = firstItem && firstItem.type === "video";
   const t = TEXT;
 
   card.innerHTML = `
-    <div class="card-photo" id="cardPhoto" title="${hasPhotos ? "Нажмите, чтобы посмотреть фото целиком" : "Нажмите, чтобы загрузить фото"}">
+    <div class="card-photo" id="cardPhoto" title="${hasMedia ? "" : "Нажмите, чтобы загрузить фото/видео"}">
       ${
-        hasPhotos
-          ? `<img src="${entry.photos[0]}" alt="Фото" />`
-          : `<div class="card-photo-placeholder"><div class="icon">📷</div><p>Нажмите, чтобы загрузить фото</p></div>`
+        hasMedia
+          ? isFirstVideo
+            ? `<video src="${firstItem.src}" controls preload="metadata"></video>`
+            : `<img src="${firstItem.src}" alt="Фото" />`
+          : `<div class="card-photo-placeholder"><div class="icon">📷</div><p>Нажмите, чтобы загрузить фото/видео</p></div>`
       }
       <button class="card-delete" id="cardDelete" title="Удалить">✕</button>
     </div>
@@ -701,8 +750,9 @@ function renderCard(entry, direction) {
 
   card.querySelector("#cardPhoto").addEventListener("click", (e) => {
     if (e.target.closest("#cardDelete")) return;
-    if (entry.photos.length) openLightbox(entry.photos, 0, entry.location);
-    else promptAddPhotos(entry.id);
+    if (e.target.tagName === "VIDEO") return; // не мешаем нативным элементам управления видео
+    if (entry.media.length) openLightbox(entry.media, 0, entry.location);
+    else promptAddMedia(entry.id);
   });
 
   card.querySelector("#cardDelete").addEventListener("click", (e) => {
@@ -710,7 +760,7 @@ function renderCard(entry, direction) {
     deleteEntry(entry.id);
   });
 
-  renderPhotoStrip(card, entry);
+  renderMediaStrip(card, entry);
 
   const locationInput = card.querySelector("#cardLocationInput");
   locationInput.addEventListener(
@@ -828,23 +878,23 @@ function deleteEntry(id) {
 // Полоска миниатюр под фото карточки — позволяет прикрепить к одному
 // несоответствию сразу несколько фотографий, открыть любую из них целиком
 // или удалить отдельное фото.
-function renderPhotoStrip(card, entry) {
+function renderMediaStrip(card, entry) {
   const strip = card.querySelector("#cardPhotoStrip");
   strip.innerHTML = "";
 
-  entry.photos.forEach((photo, idx) => {
+  entry.media.forEach((item, idx) => {
     const thumb = document.createElement("button");
     thumb.className = "photo-thumb";
     thumb.type = "button";
-    thumb.title = "Открыть фото целиком";
-    thumb.innerHTML = `<img src="${photo}" alt="" /><span class="photo-thumb-delete" title="Удалить это фото">✕</span>`;
+    thumb.title = "Открыть целиком";
+    thumb.innerHTML = `${mediaThumbMarkup(item)}<span class="photo-thumb-delete" title="Удалить">✕</span>`;
     thumb.addEventListener("click", (e) => {
       if (e.target.closest(".photo-thumb-delete")) {
         e.stopPropagation();
-        deletePhotoFromEntry(entry.id, idx);
+        deleteMediaFromEntry(entry.id, idx);
         return;
       }
-      openLightbox(entry.photos, idx, entry.location);
+      openLightbox(entry.media, idx, entry.location);
     });
     strip.appendChild(thumb);
   });
@@ -852,24 +902,24 @@ function renderPhotoStrip(card, entry) {
   const addThumb = document.createElement("button");
   addThumb.className = "photo-thumb photo-thumb-add";
   addThumb.type = "button";
-  addThumb.title = "Добавить ещё фото";
+  addThumb.title = "Добавить ещё фото/видео";
   addThumb.textContent = "+";
-  addThumb.addEventListener("click", () => promptAddPhotos(entry.id));
+  addThumb.addEventListener("click", () => promptAddMedia(entry.id));
   strip.appendChild(addThumb);
 }
 
-function promptAddPhotos(entryId) {
+function promptAddMedia(entryId) {
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = "image/*";
+  input.accept = "image/*,video/*";
   input.multiple = true;
   input.addEventListener("change", () => {
-    const files = Array.from(input.files).filter((f) => f.type.startsWith("image/"));
+    const files = Array.from(input.files).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
     if (!files.length) return;
-    Promise.all(files.map(fileToDataUrl)).then((dataUrls) => {
+    Promise.all(files.map(fileToMediaItem)).then((items) => {
       const entry = state.entries.find((e) => e.id === entryId);
       if (!entry) return;
-      entry.photos.push(...dataUrls);
+      entry.media.push(...items.filter(Boolean));
       saveEntries();
       renderView();
     });
@@ -877,10 +927,10 @@ function promptAddPhotos(entryId) {
   input.click();
 }
 
-function deletePhotoFromEntry(entryId, photoIndex) {
+function deleteMediaFromEntry(entryId, mediaIndex) {
   const entry = state.entries.find((e) => e.id === entryId);
   if (!entry) return;
-  entry.photos.splice(photoIndex, 1);
+  entry.media.splice(mediaIndex, 1);
   saveEntries();
   renderView();
 }
@@ -893,7 +943,7 @@ function openAddDialog() {
   const t = TEXT;
 
   els.addForm.reset();
-  state.pendingPhotos = [];
+  state.pendingMedia = [];
   els.dropPreview.hidden = true;
   els.dropzoneHint.hidden = false;
   els.dropzoneNote.hidden = true;
@@ -910,7 +960,7 @@ function openAddDialog() {
 
 function updateAddDialogMode() {
   const t = TEXT;
-  const n = state.pendingPhotos.length;
+  const n = state.pendingMedia.length;
   els.addDialogTitle.textContent = n > 1 ? t.addDialogTitleMany(n) : t.addDialogTitleOne;
 }
 
@@ -921,7 +971,7 @@ els.cancelAddBtn.addEventListener("click", () => els.addDialog.close());
 els.dropzone.addEventListener("click", () => els.fieldPhoto.click());
 
 els.fieldPhoto.addEventListener("change", () => {
-  if (els.fieldPhoto.files.length) handlePickedPhotos(els.fieldPhoto.files);
+  if (els.fieldPhoto.files.length) handlePickedFiles(els.fieldPhoto.files);
 });
 
 ["dragover", "dragenter"].forEach((evt) =>
@@ -938,27 +988,40 @@ els.fieldPhoto.addEventListener("change", () => {
 );
 els.dropzone.addEventListener("drop", (e) => {
   const files = e.dataTransfer.files;
-  if (files && files.length) handlePickedPhotos(files);
+  if (files && files.length) handlePickedFiles(files);
 });
 
-async function handlePickedPhotos(fileList) {
-  const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
+async function handlePickedFiles(fileList) {
+  const files = Array.from(fileList).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
   if (!files.length) return;
 
-  state.pendingPhotos = await Promise.all(files.map(fileToDataUrl));
+  state.pendingMedia = (await Promise.all(files.map(fileToMediaItem))).filter(Boolean);
+  if (!state.pendingMedia.length) return;
   updateAddDialogMode();
 
-  if (state.pendingPhotos.length === 1) {
-    els.dropPreview.src = state.pendingPhotos[0];
+  const photoCount = state.pendingMedia.filter((m) => m.type === "photo").length;
+  const videoCount = state.pendingMedia.filter((m) => m.type === "video").length;
+
+  if (state.pendingMedia.length === 1 && state.pendingMedia[0].type === "photo") {
+    els.dropPreview.src = state.pendingMedia[0].src;
     els.dropPreview.hidden = false;
     els.dropzoneHint.hidden = true;
     els.dropzoneNote.hidden = true;
+    els.splitToggle.hidden = true;
+  } else if (state.pendingMedia.length === 1 && state.pendingMedia[0].type === "video") {
+    els.dropPreview.hidden = true;
+    els.dropzoneHint.hidden = true;
+    els.dropzoneNote.hidden = false;
+    els.dropzoneNote.textContent = "🎥 Выбрано видео.";
     els.splitToggle.hidden = true;
   } else {
     els.dropPreview.hidden = true;
     els.dropzoneHint.hidden = true;
     els.dropzoneNote.hidden = false;
-    els.dropzoneNote.textContent = `Выбрано фото: ${state.pendingPhotos.length}.`;
+    const parts = [];
+    if (photoCount) parts.push(`фото: ${photoCount}`);
+    if (videoCount) parts.push(`видео: ${videoCount}`);
+    els.dropzoneNote.textContent = `Выбрано — ${parts.join(", ")}.`;
     els.splitToggle.hidden = false;
   }
 }
@@ -971,13 +1034,39 @@ async function handlePickedPhotos(fileList) {
 const MAX_PHOTO_DIMENSION = 1600;
 const PHOTO_JPEG_QUALITY = 0.82;
 
-function fileToDataUrl(file) {
+function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = reject;
     reader.readAsDataURL(file);
-  }).then(compressDataUrl);
+  });
+}
+
+function fileToDataUrl(file) {
+  return readFileAsDataUrl(file).then(compressDataUrl);
+}
+
+// Видео (в отличие от фото) на клиенте не пережимается — нет простого
+// надёжного способа перекодировать видео в браузере без тяжёлых
+// библиотек. Поэтому для очень больших файлов просим короткий ролик
+// вместо длинного, чтобы не забить хранилище браузера одним файлом.
+const MAX_VIDEO_BYTES = 120 * 1024 * 1024; // ~120 МБ
+
+async function fileToMediaItem(file) {
+  if (file.type.startsWith("video/")) {
+    if (file.size > MAX_VIDEO_BYTES) {
+      alert(
+        `Видео «${file.name}» слишком большое (${(file.size / 1024 / 1024).toFixed(0)} МБ). ` +
+          "Такое лучше не грузить целиком — снимите более короткий ролик или сожмите его перед загрузкой."
+      );
+      return null;
+    }
+    const src = await readFileAsDataUrl(file);
+    return { type: "video", src };
+  }
+  const src = await fileToDataUrl(file);
+  return { type: "photo", src };
 }
 
 function compressDataUrl(dataUrl) {
@@ -1010,20 +1099,20 @@ els.addForm.addEventListener("submit", (e) => {
   const locationInput = els.fieldLocation.value.trim();
   const location = locationInput || DEFAULT_LOCATION;
 
-  // При массовой загрузке (100+ фото) по умолчанию каждое фото — своя
+  // При массовой загрузке (100+ файлов) по умолчанию каждый файл — своя
   // карточка, чтобы к каждой можно было дописать своё описание. Флажок
-  // можно снять, если это несколько ракурсов одного случая — тогда все
-  // фото уходят в одну карточку.
-  const splitIntoCards = state.pendingPhotos.length > 1 && els.fieldSplitCards.checked;
+  // можно снять, если это несколько файлов одного случая — тогда все
+  // уходят в одну карточку.
+  const splitIntoCards = state.pendingMedia.length > 1 && els.fieldSplitCards.checked;
 
   const newEntries = splitIntoCards
-    ? state.pendingPhotos.map((photo) => ({
+    ? state.pendingMedia.map((item) => ({
         id: cryptoId(),
         location,
         text,
         solution,
         note: "",
-        photos: [photo],
+        media: [item],
         date: Date.now(),
       }))
     : [
@@ -1033,7 +1122,7 @@ els.addForm.addEventListener("submit", (e) => {
           text,
           solution,
           note: "",
-          photos: [...state.pendingPhotos],
+          media: [...state.pendingMedia],
           date: Date.now(),
         },
       ];
