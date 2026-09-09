@@ -581,7 +581,12 @@ function renderView(direction = 0) {
     els.listView.hidden = false;
     els.dots.hidden = true;
     els.progressLabel.textContent = `${list.length} шт.`;
-    renderListView(list);
+    try {
+      renderListView(list);
+    } catch (err) {
+      console.error("Не удалось показать список", err);
+      els.listView.innerHTML = `<div class="list-view-warning">⚠️ Не удалось показать список — ошибка в данных. Переключитесь на «Карточки», данные не потеряны.</div>`;
+    }
     return;
   }
 
@@ -603,10 +608,15 @@ function renderView(direction = 0) {
 }
 
 function renderListView(list) {
+  let brokenCount = 0;
   els.listView.innerHTML = list
     .map((entry, idx) => {
-      const photos = entry.photos || [];
-      return `
+      // Одна повреждённая запись не должна ронять показ всего списка —
+      // пропускаем её и предупреждаем в консоли, а не оставляем список
+      // пустым.
+      try {
+        const photos = entry.photos || [];
+        return `
         <div class="list-card" data-idx="${idx}">
           <div class="list-card-photo" data-role="photo" title="${photos.length ? "Открыть фото целиком" : "Нет фото"}">
             ${photos.length ? `<img src="${photos[0]}" alt="" />` : "📷"}
@@ -623,8 +633,20 @@ function renderListView(list) {
           </div>
         </div>
       `;
+      } catch (err) {
+        console.warn("Пропущена повреждённая запись в списке:", entry, err);
+        brokenCount++;
+        return "";
+      }
     })
     .join("");
+
+  if (brokenCount) {
+    els.listView.insertAdjacentHTML(
+      "afterbegin",
+      `<div class="list-view-warning">⚠️ Не удалось показать ${brokenCount} запис${brokenCount === 1 ? "ь" : "и"} — повреждённые данные. Остальные показаны ниже.</div>`
+    );
+  }
 
   els.listView.querySelectorAll(".list-card").forEach((card) => {
     const idx = Number(card.dataset.idx);

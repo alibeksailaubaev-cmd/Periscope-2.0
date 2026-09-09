@@ -328,6 +328,17 @@ body {
   display: none;
 }
 
+.list-view-warning {
+  grid-column: 1 / -1;
+  background: rgba(212, 121, 42, 0.12);
+  border: 1px solid rgba(212, 121, 42, 0.4);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
 .list-card {
   /* сброс UA-стилей кнопки — иначе браузер может подмешать свои шрифт/паддинги */
   appearance: none;
