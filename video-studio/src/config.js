@@ -59,14 +59,20 @@ export const OPENAI_IMAGE_QUALITY = process.env.OPENAI_IMAGE_QUALITY || 'medium'
 // so it is opt-in per job rather than a default.
 export const OPENAI_VIDEO_MODEL = process.env.OPENAI_VIDEO_MODEL || 'sora-2';
 
-// Persists the key so it survives a restart, and applies it immediately
-// so the running pipeline picks it up without one.
-export function saveOpenAIKey(key) {
-  process.env.OPENAI_API_KEY = key;
+// Google's Veo, reached through the Gemini API, as an alternative video
+// model to Sora. Separate account, separate key, billed per second of
+// footage the same way.
+export const geminiApiKey = () => process.env.GEMINI_API_KEY || null;
+export const VEO_MODEL = process.env.VEO_MODEL || 'veo-3.0-fast-generate-001';
+
+// Persists a key so it survives a restart, and applies it immediately so
+// the running pipeline picks it up without one.
+export function saveEnvKey(name, value) {
+  process.env[name] = value;
   const others = fs.existsSync(ENV_FILE)
-    ? readTextFile(ENV_FILE).split('\n').filter((line) => !line.trim().startsWith('OPENAI_API_KEY='))
+    ? readTextFile(ENV_FILE).split('\n').filter((line) => !line.trim().startsWith(`${name}=`))
     : [];
-  const content = [...others.map((l) => l.trimEnd()), `OPENAI_API_KEY=${key}`]
+  const content = [...others.map((l) => l.trimEnd()), `${name}=${value}`]
     .filter((line, i, all) => line !== '' || i < all.length - 1)
     .join('\n');
   fs.writeFileSync(ENV_FILE, content + '\n', 'utf8');

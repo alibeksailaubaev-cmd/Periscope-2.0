@@ -58,6 +58,7 @@ export function createJob(input) {
         : 'realism',
       animation: ['none', 'first', 'all'].includes(input.animation) ? input.animation : 'none',
       continuousMotion: Boolean(input.continuousMotion),
+      videoProvider: input.videoProvider === 'veo' ? 'veo' : 'openai',
     },
     title: null,
     characterSheet: String(input.characterSheet || '').trim(),

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import sharp from 'sharp';
 import { generateVideoOpenAI, openaiConfigured } from './openai.js';
+import { generateVideoVeo, veoConfigured } from './veo.js';
 import { probeDurationSeconds, fitClipToAudio } from '../ffmpegTools.js';
 
 // The video API only accepts these exact clip lengths. Narration rarely
@@ -14,10 +15,20 @@ function nearestAllowedSeconds(seconds) {
   );
 }
 
-export async function animateScene({ imagePath, audioPath, prompt, outPath, width, height, continueFrom }, logger) {
-  if (!openaiConfigured()) throw new Error('анимация требует ключ OpenAI');
+export async function animateScene(
+  { imagePath, audioPath, prompt, outPath, width, height, continueFrom, provider = 'openai' },
+  logger,
+) {
+  const useVeo = provider === 'veo';
+  if (useVeo && !veoConfigured()) throw new Error('анимация через Veo требует ключ Google');
+  if (!useVeo && !openaiConfigured()) throw new Error('анимация требует ключ OpenAI');
 
-  const seconds = nearestAllowedSeconds(await probeDurationSeconds(audioPath));
+  // Sora takes fixed clip lengths; Veo renders whatever is asked within
+  // its own range, so it can match the narration more closely.
+  const narrationSeconds = await probeDurationSeconds(audioPath);
+  const seconds = useVeo
+    ? Math.min(8, Math.max(4, Math.round(narrationSeconds)))
+    : nearestAllowedSeconds(narrationSeconds);
 
   // Starting from the previous clip's closing frame makes the sequence read
   // as one continuous shot; otherwise the scene's own still is the anchor.
@@ -30,7 +41,8 @@ export async function animateScene({ imagePath, audioPath, prompt, outPath, widt
 
   const rawPath = `${outPath}.raw.mp4`;
   try {
-    const video = await generateVideoOpenAI(
+    const generate = useVeo ? generateVideoVeo : generateVideoOpenAI;
+    const video = await generate(
       { prompt, seconds, width, height, imagePath: referencePath },
       (message) => logger.line(message),
     );

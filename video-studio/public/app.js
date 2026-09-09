@@ -16,6 +16,8 @@ const healthEl = document.getElementById('health');
 const createForm = document.getElementById('create-form');
 const keyForm = document.getElementById('key-form');
 const keyStatusEl = document.getElementById('key-status');
+const veoForm = document.getElementById('veo-form');
+const veoStatusEl = document.getElementById('veo-status');
 const scenesEl = document.getElementById('scenes');
 const characterBox = document.getElementById('character-box');
 const characterInput = document.getElementById('character-input');
@@ -236,6 +238,13 @@ function renderKeyStatus(health) {
     keyStatusEl.textContent = 'Ключ не задан — работают бесплатные API';
     keyStatusEl.className = 'key-status off';
   }
+  if (health.veoConfigured) {
+    veoStatusEl.textContent = `Ключ подключён: ${health.veoKeyPreview}`;
+    veoStatusEl.className = 'key-status on';
+  } else {
+    veoStatusEl.textContent = 'Ключ не задан — Veo недоступен';
+    veoStatusEl.className = 'key-status off';
+  }
 }
 
 async function refreshHealth() {
@@ -283,6 +292,7 @@ createForm.addEventListener('submit', async (e) => {
       format: data.get('format'),
       visualStyle: data.get('visualStyle'),
       animation: data.get('animation'),
+      videoProvider: data.get('videoProvider'),
       continuousMotion: data.get('continuousMotion') === 'on',
       historicalAccuracy: data.get('historicalAccuracy') === 'on',
       materialsProfile: data.get('materialsProfile') === 'on',
@@ -312,6 +322,22 @@ document.getElementById('character-save').addEventListener('click', async () => 
       body: JSON.stringify({ characterSheet: characterInput.value }),
     });
     alert('Персонаж сохранён. Нажмите «Перерисовать кадр» на сценах, которые нужно обновить.');
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+veoForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = veoForm.querySelector('input[name="key"]');
+  try {
+    await api('/api/settings/gemini-key', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key: input.value.trim() }),
+    });
+    input.value = '';
+    await refreshHealth();
   } catch (err) {
     alert(err.message);
   }

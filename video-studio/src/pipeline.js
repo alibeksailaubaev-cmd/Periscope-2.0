@@ -111,6 +111,7 @@ export async function runJob(jobId) {
               width: preset.width,
               height: preset.height,
               continueFrom,
+              provider: job.options.videoProvider,
             }, logger);
           } catch (err) {
             logger.line(`Анимация не удалась (${err.message}) — собираю сцену обычным кадром`);

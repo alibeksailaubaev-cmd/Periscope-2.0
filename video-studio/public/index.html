@@ -22,6 +22,14 @@
         <p class="key-hint">Без ключа студия работает на бесплатных API — качество заметно ниже.</p>
       </form>
 
+      <h2 class="section-gap">Ключ Google (Veo)</h2>
+      <form id="veo-form" class="key-form">
+        <div id="veo-status" class="key-status">проверяю...</div>
+        <input type="password" name="key" placeholder="AIza..." autocomplete="off" />
+        <button type="submit">Сохранить ключ</button>
+        <p class="key-hint">Нужен только для анимации через Veo. Берётся на aistudio.google.com.</p>
+      </form>
+
       <h2 class="section-gap">Новое задание</h2>
       <form id="create-form">
         <label>Тема
@@ -49,6 +57,12 @@
             <option value="cartoon2d">Мультфильм 2D</option>
             <option value="cartoon3d">3D-анимация</option>
             <option value="anime">Аниме</option>
+          </select>
+        </label>
+        <label>Модель анимации
+          <select name="videoProvider">
+            <option value="openai">Sora (OpenAI)</option>
+            <option value="veo">Veo (Google)</option>
           </select>
         </label>
         <label>Анимация

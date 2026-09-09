@@ -2,10 +2,11 @@ import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { PORT, OFFLINE_MODE, saveOpenAIKey, openaiApiKey } from './src/config.js';
+import { PORT, OFFLINE_MODE, saveEnvKey, openaiApiKey, geminiApiKey } from './src/config.js';
 import { createJob, listJobs, getJob, deleteJob, getLogger, jobPath, saveJob } from './src/store.js';
 import { enqueue, pauseJob, resumeJob, status as queueStatus } from './src/queue.js';
 import { openaiConfigured } from './src/providers/openai.js';
+import { veoConfigured } from './src/providers/veo.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -41,10 +42,9 @@ function jobSummary(job) {
   };
 }
 
-// Never sends the key itself back to the browser, only enough of it to
+// Never sends a key itself back to the browser, only enough of it to
 // recognise which one is stored.
-function maskedKey() {
-  const key = openaiApiKey();
+function mask(key) {
   if (!key) return null;
   return key.length <= 12 ? '••••' : `${key.slice(0, 7)}…${key.slice(-4)}`;
 }
@@ -54,7 +54,9 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     offlineMode: OFFLINE_MODE,
     openaiConfigured: openaiConfigured(),
-    openaiKeyPreview: maskedKey(),
+    openaiKeyPreview: mask(openaiApiKey()),
+    veoConfigured: veoConfigured(),
+    veoKeyPreview: mask(geminiApiKey()),
     ...queueStatus(),
   });
 });
@@ -64,8 +66,15 @@ app.post('/api/settings/openai-key', (req, res) => {
   if (!key.startsWith('sk-') || key.length < 20) {
     return res.status(400).json({ error: 'Ключ должен начинаться с "sk-" и быть полным' });
   }
-  saveOpenAIKey(key);
-  res.json({ openaiConfigured: true, openaiKeyPreview: maskedKey() });
+  saveEnvKey('OPENAI_API_KEY', key);
+  res.json({ openaiConfigured: true, openaiKeyPreview: mask(key) });
+});
+
+app.post('/api/settings/gemini-key', (req, res) => {
+  const key = String(req.body?.key || '').trim();
+  if (key.length < 20) return res.status(400).json({ error: 'Ключ Google выглядит неполным' });
+  saveEnvKey('GEMINI_API_KEY', key);
+  res.json({ veoConfigured: true, veoKeyPreview: mask(key) });
 });
 
 app.get('/api/jobs', (req, res) => {
