@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Video Studio</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>🎬 Video Studio</h1>
+    <div id="health" class="health">подключение...</div>
+  </header>
+
+  <main class="layout">
+    <section class="panel create-panel">
+      <h2>Новое задание</h2>
+      <form id="create-form">
+        <label>Тема
+          <textarea name="topic" rows="2" placeholder="Например: Викинги — походы и грабежи" required></textarea>
+        </label>
+        <label>Подача
+          <input type="text" name="delivery" placeholder="Историко-документальная" />
+        </label>
+        <label>Формат
+          <select name="format">
+            <option value="long">Long (документалка)</option>
+            <option value="short">Short (вертикальное)</option>
+          </select>
+        </label>
+        <label>Визуальный стиль
+          <select name="visualStyle">
+            <option value="realism">Реализм</option>
+            <option value="illustration">Иллюстрация</option>
+            <option value="cinematic">Кинематографично</option>
+          </select>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="historicalAccuracy" checked />
+          Историческая точность
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="materialsProfile" checked />
+          Профиль материалов
+        </label>
+        <button type="submit">Создать и запустить</button>
+      </form>
+    </section>
+
+    <section class="panel jobs-panel">
+      <h2>Задания</h2>
+      <ul id="job-list" class="job-list"></ul>
+    </section>
+
+    <section class="panel overview-panel">
+      <h2>Обзор</h2>
+      <div id="overview" class="overview">
+        <p class="muted">Выберите задание слева.</p>
+      </div>
+      <div class="log-box">
+        <div class="log-header">Журнал</div>
+        <pre id="log" class="log"></pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

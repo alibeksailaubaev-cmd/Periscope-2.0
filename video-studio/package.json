@@ -1,0 +1,21 @@
+{
+  "name": "video-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Free prompt-to-video generator: script + voice + AI images assembled into an mp4 by a local job pipeline.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "edge-tts": "^1.0.1",
+    "express": "^4.19.2",
+    "ffmpeg-static": "^5.2.0",
+    "ffprobe-static": "^3.1.0",
+    "sharp": "^0.35.4"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
+  }
+}
