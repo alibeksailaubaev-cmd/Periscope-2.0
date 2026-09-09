@@ -67,7 +67,8 @@ export async function generateImage({ prompt, width, height, sceneIndex = 0 }, l
   }
   if (openaiConfigured()) {
     try {
-      return await generateImageOpenAI(prompt, width, height);
+      const onRateLimit = (seconds) => logger.line(`Лимит OpenAI на картинки — жду ${seconds} с и повторяю`);
+      return await generateImageOpenAI(prompt, width, height, onRateLimit);
     } catch (err) {
       logger.line(`OpenAI images недоступен (${err.message}) — пробую бесплатный API`);
     }

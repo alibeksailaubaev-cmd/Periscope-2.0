@@ -105,7 +105,8 @@ export async function synthesizeSpeech({ text, outPath, voice = DEFAULT_VOICE },
   }
   if (openaiConfigured()) {
     try {
-      fs.writeFileSync(outPath, await synthesizeSpeechOpenAI(text));
+      const onRateLimit = (seconds) => logger.line(`Лимит OpenAI на озвучку — жду ${seconds} с и повторяю`);
+      fs.writeFileSync(outPath, await synthesizeSpeechOpenAI(text, onRateLimit));
       return;
     } catch (err) {
       logger.line(`OpenAI TTS недоступен (${err.message}) — пробую бесплатный Edge TTS`);
