@@ -415,6 +415,24 @@ body {
   color: var(--status-critical);
 }
 
+/* Вертикальный список вкладок (Бройлерное производство — 3 раздела,
+   удобнее списком, чем в тесный ряд). */
+.section-toggle-vertical {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-toggle-vertical .section-toggle-btn {
+  flex: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  text-align: left;
+  font-size: 13.5px;
+}
+
 .btn-add:active {
   transform: scale(0.98);
 }
@@ -618,11 +636,28 @@ body {
   cursor: zoom-in;
 }
 
-.list-card-photo img {
+.list-card-photo img,
+.list-card-photo video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.media-video-badge {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  background: rgba(32, 31, 26, 0.65);
+  color: #fff;
+  font-size: 11px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .list-card-photo .zoom-hint {
@@ -719,13 +754,19 @@ body {
   display: none;
 }
 
-.lightbox img {
+.lightbox img,
+.lightbox video {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   border-radius: 8px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   animation: lightboxImgIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lightbox video[hidden],
+.lightbox img[hidden] {
+  display: none;
 }
 
 @keyframes lightboxImgIn {
@@ -801,14 +842,14 @@ body {
 
 .card-stage {
   position: relative;
-  width: min(680px, 94%);
+  width: min(880px, 95%);
   height: 100%;
-  max-height: 800px;
+  max-height: 1040px;
   transition: width 0.22s ease;
 }
 
 .dash.sidebar-collapsed .card-stage {
-  width: min(920px, 94%);
+  width: min(1200px, 96%);
 }
 
 .nav-arrow {
@@ -881,17 +922,18 @@ body {
 
 .card-photo {
   position: relative;
-  height: 42%;
-  background: radial-gradient(circle at 50% 30%, var(--surface-2), var(--cream));
+  height: 66%;
+  background: #14211f;
   flex-shrink: 0;
   cursor: pointer;
   overflow: hidden;
 }
 
-.card-photo img {
+.card-photo img,
+.card-photo video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 
@@ -934,11 +976,20 @@ body {
   background: var(--surface-2);
 }
 
-.photo-thumb img {
+.photo-thumb img,
+.photo-thumb video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.photo-thumb .media-video-badge {
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+  left: 3px;
+  top: 3px;
 }
 
 .photo-thumb-delete {
@@ -1139,9 +1190,9 @@ body {
 
 /* ---------- Примечание руководителя — постоянная панель слева от карточки ---------- */
 .card-note-panel {
-  width: 230px;
+  width: 260px;
   height: 100%;
-  max-height: 560px;
+  max-height: 920px;
   flex-shrink: 0;
 }
 
@@ -2613,6 +2664,8 @@ els.nextBtn.addEventListener("click", goNext);
 
 document.addEventListener("keydown", (e) => {
   if (els.addDialog.open) return;
+  const t = e.target;
+  if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
   if (e.key === "ArrowLeft") goPrev();
   if (e.key === "ArrowRight") goNext();
 });

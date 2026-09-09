@@ -979,6 +979,8 @@ els.nextBtn.addEventListener("click", goNext);
 
 document.addEventListener("keydown", (e) => {
   if (els.addDialog.open) return;
+  const t = e.target;
+  if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
   if (e.key === "ArrowLeft") goPrev();
   if (e.key === "ArrowRight") goNext();
 });
