@@ -1,26 +1,40 @@
-import { FORMAT_PRESETS, VISUAL_STYLES, OFFLINE_MODE } from '../config.js';
+import { FORMAT_PRESETS, VISUAL_STYLES, DRAWN_STYLES, OFFLINE_MODE } from '../config.js';
 import { generateScriptOpenAI, openaiConfigured } from './openai.js';
 
 const POLLINATIONS_TEXT_URL = 'https://text.pollinations.ai/openai';
 const REQUEST_TIMEOUT_MS = 45_000;
 
 function buildSystemPrompt(options) {
+  const drawn = DRAWN_STYLES.has(options.visualStyle);
   const rules = [
     'Ты сценарист коротких видеороликов. Отвечай СТРОГО валидным JSON без markdown-обрамления.',
-    'Формат ответа: {"title": string, "coverPrompt": string, "scenes": [{"narration": string, "imagePrompt": string}, ...]}.',
+    'Формат ответа: {"title": string, "coverPrompt": string, "characterSheet": string, ' +
+      '"scenes": [{"narration": string, "imagePrompt": string}, ...]}.',
     '"narration" — текст закадрового голоса для одной сцены на русском языке, без ремарок и таймкодов.',
     '"imagePrompt" и "coverPrompt" — короткие описания кадра на английском языке для генератора изображений, без текста и надписей на картинке.',
+    // The same description is pasted into every scene prompt, which is what
+    // keeps one character looking like one character across the whole video.
+    '"characterSheet" — одно английское предложение с неизменной внешностью главного героя ' +
+      '(возраст, телосложение, причёска, цвет и детали одежды), чтобы во всех сценах он выглядел одинаково. ' +
+      'Если постоянного героя нет — пустая строка.',
   ];
+  if (drawn) {
+    rules.push(
+      'Это рисованный ролик: описывай героя и его действия в кадре, мимику и движение, ' +
+      'а не только фоны. В "imagePrompt" не повторяй внешность героя — она уже в "characterSheet".',
+    );
+  }
   if (options.historicalAccuracy) {
     rules.push('Придерживайся исторически подтверждённых фактов, избегай вымышленных деталей и спекуляций.');
   }
   if (options.materialsProfile) {
     rules.push('Опирайся на общеизвестные, хорошо задокументированные источники и избегай непроверяемых утверждений.');
   }
-  if (options.animation && options.animation !== 'none') {
+  if (options.animation && options.animation !== 'none' && !drawn) {
     // Video models refuse to depict recognisable real people, so a scene
     // built around someone's face gets blocked and silently degrades to a
     // still. Composing around places and objects keeps scenes animatable.
+    // Drawn styles are exempt: an invented character is not a real person.
     rules.push(
       'Кадры пойдут в видеогенератор, который отказывается показывать узнаваемых реальных людей. ' +
       'Поэтому в "imagePrompt" не описывай лица и фигуры конкретных исторических личностей: ' +
@@ -56,6 +70,7 @@ function normalizeScript(raw, preset) {
   if (scenes.length === 0) throw new Error('Сценарий без сцен');
   return {
     title: String(raw.title || '').trim() || 'Без названия',
+    characterSheet: String(raw.characterSheet || '').trim(),
     coverPrompt: String(raw.coverPrompt || raw.scenes?.[0]?.imagePrompt || '').trim() || 'documentary cover art',
     scenes: scenes.slice(0, preset.scenes * 2).map((scene) => ({
       narration: String(scene.narration || '').trim(),
@@ -104,6 +119,7 @@ function buildOfflineScript(topic, delivery, preset) {
   });
   return {
     title: topic || 'Без названия',
+    characterSheet: '',
     coverPrompt: `${topic}, cover art, documentary`,
     scenes,
   };

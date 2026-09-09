@@ -91,4 +91,12 @@ export const VISUAL_STYLES = {
   realism: 'photorealistic, cinematic lighting, highly detailed',
   illustration: 'digital painting, illustrated, rich color palette',
   cinematic: 'cinematic still, dramatic lighting, film grain, wide shot',
+  cartoon2d: '2D cartoon animation still, bold clean outlines, flat vivid colors, expressive characters',
+  cartoon3d: '3D animated movie still, stylised characters, soft global illumination, glossy render',
+  anime: 'anime animation still, cel shading, expressive eyes, detailed background art',
 };
+
+// Styles that draw invented characters rather than real people: the video
+// model's ban on recognisable real faces doesn't apply to them, so scenes
+// can be built around characters instead of avoiding them.
+export const DRAWN_STYLES = new Set(['cartoon2d', 'cartoon3d', 'anime', 'illustration']);

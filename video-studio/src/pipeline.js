@@ -56,6 +56,10 @@ export async function runJob(jobId) {
     const clipsDir = jobPath(jobId, 'clips');
     const outputDir = jobPath(jobId, 'output');
     const styleText = styleSuffix(job.options.visualStyle);
+    // Repeating one fixed description in every prompt is what keeps a
+    // recurring character recognisable from scene to scene.
+    const character = job.script.characterSheet ? `${job.script.characterSheet}, ` : '';
+    const scenePrompt = (i) => `${scenes[i].imagePrompt}, ${character}${styleText}`;
 
     for (let i = 0; i < scenes.length; i++) {
       checkPause(job);
@@ -73,7 +77,7 @@ export async function runJob(jobId) {
       const outPath = path.join(imagesDir, `scene_${i}.jpg`);
       if (!fs.existsSync(outPath)) {
         logger.line(`Генерирую кадр ${i + 1}/${scenes.length}`);
-        const prompt = `${scenes[i].imagePrompt}, ${styleText}`;
+        const prompt = scenePrompt(i);
         const buffer = await generateImage({ prompt, width: preset.width, height: preset.height, sceneIndex: i }, logger);
         fs.writeFileSync(outPath, buffer);
       }
@@ -94,7 +98,7 @@ export async function runJob(jobId) {
             await animateScene({
               imagePath,
               audioPath,
-              prompt: `${scenes[i].imagePrompt}, ${styleText}`,
+              prompt: scenePrompt(i),
               outPath: clipPaths[i],
               width: preset.width,
               height: preset.height,
@@ -132,7 +136,7 @@ export async function runJob(jobId) {
     if (!fs.existsSync(coverPath)) {
       logger.line('Генерирую обложку...');
       const coverBuffer = await generateImage(
-        { prompt: `${job.script.coverPrompt}, ${styleText}`, width: preset.width, height: preset.height, sceneIndex: 0 },
+        { prompt: `${job.script.coverPrompt}, ${character}${styleText}`, width: preset.width, height: preset.height, sceneIndex: 0 },
         logger,
       );
       fs.writeFileSync(coverPath, coverBuffer);

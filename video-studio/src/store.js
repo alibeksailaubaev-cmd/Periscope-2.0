@@ -53,7 +53,7 @@ export function createJob(input) {
     options: {
       historicalAccuracy: Boolean(input.historicalAccuracy),
       materialsProfile: Boolean(input.materialsProfile),
-      visualStyle: ['realism', 'illustration', 'cinematic'].includes(input.visualStyle)
+      visualStyle: ['realism', 'illustration', 'cinematic', 'cartoon2d', 'cartoon3d', 'anime'].includes(input.visualStyle)
         ? input.visualStyle
         : 'realism',
       animation: ['none', 'first', 'all'].includes(input.animation) ? input.animation : 'none',
