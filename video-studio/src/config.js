@@ -50,7 +50,11 @@ export const openaiApiKey = () => process.env.OPENAI_API_KEY || null;
 export const OPENAI_CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-4o-mini';
 export const OPENAI_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'tts-1';
 export const OPENAI_TTS_VOICE = process.env.OPENAI_TTS_VOICE || 'alloy';
-export const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'dall-e-3';
+export const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
+// gpt-image-1 bills per image by quality: 'low' is the cheapest, 'high'
+// costs several times more. 'medium' keeps a documentary looking decent
+// without burning a small balance in one video.
+export const OPENAI_IMAGE_QUALITY = process.env.OPENAI_IMAGE_QUALITY || 'medium';
 
 // Persists the key so it survives a restart, and applies it immediately
 // so the running pipeline picks it up without one.

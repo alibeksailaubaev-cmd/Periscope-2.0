@@ -1,5 +1,6 @@
 import {
-  openaiApiKey, OPENAI_CHAT_MODEL, OPENAI_TTS_MODEL, OPENAI_TTS_VOICE, OPENAI_IMAGE_MODEL,
+  openaiApiKey, OPENAI_CHAT_MODEL, OPENAI_TTS_MODEL, OPENAI_TTS_VOICE,
+  OPENAI_IMAGE_MODEL, OPENAI_IMAGE_QUALITY,
 } from '../config.js';
 
 const REQUEST_TIMEOUT_MS = 120_000;
@@ -24,6 +25,7 @@ async function plainFetch(url, options) {
 // New accounts get a low images-per-minute allowance, and a documentary
 // fires a dozen requests back to back, so waiting out a 429 is normal
 // operation here rather than an error worth falling back over.
+// `notify` takes a ready-to-show line for the job log.
 async function withTimeoutFetch(url, options, notify) {
   for (let attempt = 0; ; attempt++) {
     const response = await plainFetch(url, options);
@@ -32,7 +34,7 @@ async function withTimeoutFetch(url, options, notify) {
     const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
       ? retryAfter * 1000
       : Math.min(60_000, 5_000 * 2 ** attempt);
-    notify?.(Math.round(waitMs / 1000));
+    notify?.(`Лимит OpenAI — жду ${Math.round(waitMs / 1000)} с и повторяю`);
     await sleep(waitMs);
   }
 }
@@ -76,9 +78,24 @@ export async function synthesizeSpeechOpenAI(text, notify) {
   return Buffer.from(await response.arrayBuffer());
 }
 
-function closestDalleSize(width, height) {
-  if (width === height) return '1024x1024';
-  return width > height ? '1792x1024' : '1024x1792';
+// OpenAI retires image models (dall-e-3 is already gone) and each
+// generation takes a different parameter set, so try known models newest
+// first and remember whichever one the account can actually use.
+const IMAGE_MODEL_CANDIDATES = ['gpt-image-1', 'dall-e-3', 'dall-e-2'];
+const MODEL_UNAVAILABLE = /does not exist|do not have access|unknown model|invalid model|must be verified|verification/i;
+let knownGoodImageModel = null;
+
+function imageBodyFor(model, prompt, width, height) {
+  const orientation = width === height ? 'square' : (width > height ? 'landscape' : 'portrait');
+  if (model.startsWith('gpt-image')) {
+    const size = { square: '1024x1024', landscape: '1536x1024', portrait: '1024x1536' }[orientation];
+    return { model, prompt, size, quality: OPENAI_IMAGE_QUALITY, n: 1 };
+  }
+  if (model === 'dall-e-3') {
+    const size = { square: '1024x1024', landscape: '1792x1024', portrait: '1024x1792' }[orientation];
+    return { model, prompt, size, quality: 'standard', n: 1 };
+  }
+  return { model, prompt, size: '1024x1024', n: 1 };
 }
 
 function requestImage(body, notify) {
@@ -89,17 +106,16 @@ function requestImage(body, notify) {
   }, notify);
 }
 
-export async function generateImageOpenAI(prompt, width, height, notify) {
-  const body = { model: OPENAI_IMAGE_MODEL, prompt, size: closestDalleSize(width, height), n: 1 };
-  let response = await requestImage(body, notify);
+async function generateWithModel(model, prompt, width, height, notify) {
+  let response = await requestImage(imageBodyFor(model, prompt, width, height), notify);
   if (response.status === 400) {
-    // The images endpoint keeps dropping optional parameters between model
-    // generations; retry bare rather than failing over to a worse provider.
+    // Parameters shift between model generations; retry bare before
+    // giving up on a model that may otherwise work fine.
     const message = await readErrorMessage(response);
     if (!/unknown parameter|unsupported|invalid value/i.test(message)) {
       throw new Error(`OpenAI images: ${message}`);
     }
-    response = await requestImage({ model: OPENAI_IMAGE_MODEL, prompt }, notify);
+    response = await requestImage({ model, prompt }, notify);
   }
   if (!response.ok) throw new Error(`OpenAI images: ${await readErrorMessage(response)}`);
 
@@ -111,6 +127,28 @@ export async function generateImageOpenAI(prompt, width, height, notify) {
     return Buffer.from(await file.arrayBuffer());
   }
   throw new Error('OpenAI images: пустой ответ');
+}
+
+export async function generateImageOpenAI(prompt, width, height, notify) {
+  const candidates = knownGoodImageModel
+    ? [knownGoodImageModel]
+    : [OPENAI_IMAGE_MODEL, ...IMAGE_MODEL_CANDIDATES.filter((m) => m !== OPENAI_IMAGE_MODEL)];
+
+  let lastError;
+  for (const model of candidates) {
+    try {
+      const image = await generateWithModel(model, prompt, width, height, notify);
+      if (knownGoodImageModel !== model) {
+        knownGoodImageModel = model;
+        notify?.(`Модель картинок: ${model}`);
+      }
+      return image;
+    } catch (err) {
+      lastError = err;
+      if (!MODEL_UNAVAILABLE.test(err.message)) throw err;
+    }
+  }
+  throw lastError;
 }
 
 export const openaiConfigured = () => Boolean(openaiApiKey());
