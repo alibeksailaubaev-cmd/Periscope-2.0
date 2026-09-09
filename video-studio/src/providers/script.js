@@ -1,4 +1,5 @@
 import { FORMAT_PRESETS, VISUAL_STYLES, OFFLINE_MODE } from '../config.js';
+import { generateScriptOpenAI, openaiConfigured } from './openai.js';
 
 const POLLINATIONS_TEXT_URL = 'https://text.pollinations.ai/openai';
 const REQUEST_TIMEOUT_MS = 45_000;
@@ -102,6 +103,15 @@ export async function generateScript({ topic, delivery, format, options }, logge
   if (OFFLINE_MODE) {
     logger.line('OFFLINE_MODE включён — сценарий строится локально без обращения к API');
     return buildOfflineScript(topic, delivery, preset);
+  }
+  if (openaiConfigured) {
+    try {
+      logger.line('Запрашиваю сценарий у OpenAI');
+      const content = await generateScriptOpenAI(buildSystemPrompt(preset.options), buildUserPrompt(topic, delivery, preset));
+      return normalizeScript(extractJson(content), preset);
+    } catch (err) {
+      logger.line(`OpenAI недоступен (${err.message}) — пробую бесплатный текстовый API`);
+    }
   }
   try {
     logger.line('Запрашиваю сценарий у бесплатного текстового API (Pollinations)');

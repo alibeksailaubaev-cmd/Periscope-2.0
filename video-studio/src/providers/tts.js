@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { WebSocket } from 'ws';
 import { OFFLINE_MODE } from '../config.js';
 import { makeSilentAudio } from '../ffmpegTools.js';
+import { synthesizeSpeechOpenAI, openaiConfigured } from './openai.js';
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const DEFAULT_VOICE = 'ru-RU-SvetlanaNeural';
@@ -101,6 +102,14 @@ export async function synthesizeSpeech({ text, outPath, voice = DEFAULT_VOICE },
   if (OFFLINE_MODE) {
     await makeSilentAudio(estimateSilenceDuration(text), outPath);
     return;
+  }
+  if (openaiConfigured) {
+    try {
+      fs.writeFileSync(outPath, await synthesizeSpeechOpenAI(text));
+      return;
+    } catch (err) {
+      logger.line(`OpenAI TTS недоступен (${err.message}) — пробую бесплатный Edge TTS`);
+    }
   }
   try {
     const audio = await synthesizeWithEdge(text, voice);

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { PORT, OFFLINE_MODE } from './src/config.js';
 import { createJob, listJobs, getJob, deleteJob, getLogger, jobPath } from './src/store.js';
 import { enqueue, pauseJob, resumeJob, status as queueStatus } from './src/queue.js';
+import { openaiConfigured } from './src/providers/openai.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -34,7 +35,7 @@ function jobSummary(job) {
 }
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', offlineMode: OFFLINE_MODE, ...queueStatus() });
+  res.json({ status: 'ok', offlineMode: OFFLINE_MODE, openaiConfigured, ...queueStatus() });
 });
 
 app.get('/api/jobs', (req, res) => {

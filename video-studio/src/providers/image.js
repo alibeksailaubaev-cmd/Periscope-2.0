@@ -1,5 +1,6 @@
 import sharp from 'sharp';
 import { OFFLINE_MODE } from '../config.js';
+import { generateImageOpenAI, openaiConfigured } from './openai.js';
 
 const REQUEST_TIMEOUT_MS = 60_000;
 
@@ -63,6 +64,13 @@ async function buildPlaceholderImage(prompt, width, height, sceneIndex) {
 export async function generateImage({ prompt, width, height, sceneIndex = 0 }, logger) {
   if (OFFLINE_MODE) {
     return buildPlaceholderImage(prompt, width, height, sceneIndex);
+  }
+  if (openaiConfigured) {
+    try {
+      return await generateImageOpenAI(prompt, width, height);
+    } catch (err) {
+      logger.line(`OpenAI images недоступен (${err.message}) — пробую бесплатный API`);
+    }
   }
   try {
     return await requestPollinationsImage(prompt, width, height);

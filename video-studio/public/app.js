@@ -140,9 +140,11 @@ async function refreshJobList() {
 async function refreshHealth() {
   try {
     const health = await api('/api/health');
-    healthEl.textContent = health.activeJobId
+    const mode = health.openaiConfigured ? 'OpenAI (платно)' : 'бесплатные API';
+    const pipeline = health.activeJobId
       ? `конвейер занят · в очереди: ${health.queued.length}`
       : 'конвейер свободен';
+    healthEl.textContent = `${pipeline} · ${mode}`;
     healthEl.className = 'health ' + (health.activeJobId ? 'busy' : 'idle');
   } catch {
     healthEl.textContent = 'нет соединения с сервером';
