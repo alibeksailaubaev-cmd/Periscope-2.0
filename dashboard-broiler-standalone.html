@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Несоответствия — Бройлерная площадка — aitas mpf</title>
+  <title>Несоответствия — Бройлерное производство — aitas mpf</title>
   <style>
 /* ==========================================================================
    aitas ukpf — общий корпоративный стиль для дашбордов
@@ -824,14 +824,14 @@ body {
 
 .card-stage {
   position: relative;
-  width: min(680px, 94%);
+  width: min(880px, 95%);
   height: 100%;
-  max-height: 800px;
+  max-height: 920px;
   transition: width 0.22s ease;
 }
 
 .dash.sidebar-collapsed .card-stage {
-  width: min(920px, 94%);
+  width: min(1200px, 96%);
 }
 
 .nav-arrow {
@@ -1172,9 +1172,9 @@ body {
 
 /* ---------- Примечание руководителя — постоянная панель слева от карточки ---------- */
 .card-note-panel {
-  width: 230px;
+  width: 260px;
   height: 100%;
-  max-height: 560px;
+  max-height: 920px;
   flex-shrink: 0;
 }
 
@@ -1470,7 +1470,7 @@ body {
       <span class="mark"><svg viewBox="0 0 26 26"><path d="M4 14c2-4 6-6 10-5 3 .7 5 3 6 6-1.5.6-3 .6-4.5 0" /><circle cx="17" cy="8" r="1" /></svg></span>
       <div class="word">
         <strong>aitas mpf</strong>
-        <span>Макинская птицефабрика · Бройлерная площадка</span>
+        <span>Макинская птицефабрика · Бройлерное производство</span>
       </div>
     </div>
     <div class="topnav-spacer"></div>
@@ -1486,8 +1486,14 @@ body {
     <!-- ===== Левая панель ===== -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-head">
-        <span class="sidebar-title">Бройлерная площадка</span>
+        <span class="sidebar-title">Бройлерное производство</span>
         <button class="icon-btn sidebar-close" id="sidebarClose" title="Закрыть меню">✕</button>
+      </div>
+
+      <div class="section-toggle" id="sectionToggle">
+        <button class="section-toggle-btn active" data-section="sites">🐔 Площадки</button>
+        <button class="section-toggle-btn" data-section="atc">🚛 АТЦ</button>
+        <button class="section-toggle-btn" data-section="washing">🧼 Мойка</button>
       </div>
 
       <button class="btn-add" id="openAddBtn">
@@ -1771,12 +1777,16 @@ initTopnavActive();
 "use strict";
 
 /**
- * Фотоотчёт — Бройлерная площадка (aitas mpf). Только один раздел —
- * «Несоответствия»; в отличие от дашборда Инкубатора здесь нет раздела
- * сравнения с эталоном. Данные хранятся
- * локально в IndexedDB — фото уходят внутрь как dataURL (уменьшенные и
- * пережатые в JPEG, см. compressDataUrl), так что всё работает
- * полностью офлайн, без бэкенда.
+ * Фотоотчёт — Бройлерное производство (aitas mpf). Три независимых
+ * раздела — «Бройлерные площадки», «АТЦ», «Мойка» (см. SECTIONS) —
+ * переключаются сегментированным контролом в сайдбаре; у каждого свой
+ * список записей и свой ключ в IndexedDB (см. state.bySection). В
+ * отличие от дашборда Инкубатора здесь нет раздела сравнения с
+ * эталоном — все три раздела однотипные (несоответствия). Данные
+ * хранятся локально в IndexedDB — фото уходят внутрь как dataURL
+ * (уменьшенные и пережатые в JPEG, см. compressDataUrl), видео — как
+ * есть (см. fileToMediaItem), так что всё работает полностью офлайн,
+ * без бэкенда.
  *
  * Это отдельная копия дашборда Инкубатора (js/discrepancies.js) для
  * другого цеха — своя база IndexedDB (IDB_NAME) и свои ключи
@@ -1785,32 +1795,61 @@ initTopnavActive();
  *
  * Важно: браузерное хранилище привязано к конкретному браузеру на
  * конкретном устройстве — если просто переслать этот файл другому
- * человеку, у него фото видно не будет. Поэтому есть кнопка «Скачать
- * копию для отправки», которая сохраняет отдельный .html-файл с уже
- * вшитыми данными (см. #embeddedData и exportShareableCopy ниже) —
- * именно этот файл и нужно пересылать, чтобы получатель сразу всё
- * увидел.
+ * человеку, у него фото/видео видно не будет. Поэтому есть кнопка
+ * «Скачать копию для отправки», которая сохраняет отдельный .html-файл
+ * со всеми тремя разделами, уже вшитыми внутрь (см. #embeddedData и
+ * exportShareableCopy ниже) — именно этот файл и нужно пересылать,
+ * чтобы получатель сразу всё увидел. При большом количестве видео файл
+ * может получиться очень тяжёлым — exportShareableCopy предупреждает
+ * об этом перед скачиванием.
  */
 
-const STORAGE_KEY = "aitas_broiler_discrepancies_v1";
-const OLD_STORAGE_KEYS = []; // отдельный дашборд, мигрировать не с чего
-const DEFAULT_LOCATION = "Бройлерная площадка";
+const STORAGE_KEY = "aitas_broiler_discrepancies_v1"; // старый localStorage до многораздельности — миграция только в раздел "sites"
+const OLD_STORAGE_KEYS = [];
 
-const TEXT = {
-  sidebarTotal: "Всего несоответствий",
+// Три раздела дашборда. key — используется как ключ в IndexedDB и как
+// data-section в разметке переключателя; defaultLocation подставляется,
+// если поле "место" оставили пустым.
+const SECTIONS = [
+  {
+    key: "sites",
+    label: "Бройлерные площадки",
+    defaultLocation: "Бройлерная площадка",
+    fieldLocationPlaceholder: "напр. Птичник №3, Кормоцех",
+    exportPrefix: "broiler-sites",
+  },
+  {
+    key: "atc",
+    label: "АТЦ",
+    defaultLocation: "АТЦ",
+    fieldLocationPlaceholder: "напр. Бокс №2, Мойка колёс",
+    exportPrefix: "atc",
+  },
+  {
+    key: "washing",
+    label: "Мойка",
+    defaultLocation: "Мойка",
+    fieldLocationPlaceholder: "напр. Моечная зона №1",
+    exportPrefix: "washing",
+  },
+];
+
+// Тексты интерфейса, одинаковые для всех трёх разделов.
+const COMMON_TEXT = {
+  sidebarTotal: "Всего записей",
   addHint: "Можно выбрать сразу много файлов (100+) — по умолчанию каждый станет отдельной карточкой. Видео весит намного больше фото — предпочтительны короткие ролики.",
-  viewTitle: "Все несоответствия",
-  emptyState: "Пока нет несоответствий в этом разделе",
   fieldLocationLabel: "Место / участок",
-  fieldLocationPlaceholder: "напр. Птичник №3, Кормоцех",
   fieldTextLabel: "Описание несоответствия",
-  addDialogTitleOne: "Новое несоответствие",
-  addDialogTitleMany: (n) => `Новое несоответствие (${n} файлов)`,
-  exportPrefix: "nesootvetstviya-broiler",
+  addDialogTitleOne: "Новая запись",
+  addDialogTitleMany: (n) => `Новые записи (${n} файлов)`,
   cardTextLabel: "Описание несоответствия",
   cardTextPlaceholder: "Опишите, что не так...",
-  deleteConfirm: "Удалить это несоответствие?",
+  deleteConfirm: "Удалить эту запись?",
 };
+
+function currentSection() {
+  return SECTIONS.find((s) => s.key === state.section);
+}
 
 const els = {
   dash: document.querySelector(".dash"),
@@ -1823,6 +1862,7 @@ const els = {
   countAll: document.getElementById("countAll"),
   sidebarTotalLabel: document.getElementById("sidebarTotalLabel"),
   addHint: document.getElementById("addHint"),
+  sectionToggle: document.getElementById("sectionToggle"),
 
   exportBtn: document.getElementById("exportBtn"),
   exportPptxBtn: document.getElementById("exportPptxBtn"),
@@ -1872,11 +1912,21 @@ const els = {
 };
 
 const state = {
-  entries: [],
+  section: SECTIONS[0].key,
+  bySection: {}, // key -> entries[], заполняется в boot()
+  entries: [], // алиас на bySection[state.section] — см. setSection/setEntries
   index: 0,
   pendingMedia: [], // {type: "photo"|"video", src: dataURL}[]
   viewMode: "cards", // "cards" | "list"
 };
+
+// state.entries — это алиас на state.bySection[state.section].
+// Присваивание нового массива (например, через filter) разрывает эту
+// связь, поэтому такие места обновляют оба поля разом.
+function setEntries(newEntries) {
+  state.entries = newEntries;
+  state.bySection[state.section] = newEntries;
+}
 
 // ---------------------------------------------------------------------------
 // Storage (IndexedDB, с миграцией из старого localStorage)
@@ -1884,7 +1934,7 @@ const state = {
 
 const IDB_NAME = "aitas_broiler_dashboard";
 const IDB_VERSION = 1;
-const IDB_STORE = "sections"; // одна запись: {key: "discrepancies", data: [...]}
+const IDB_STORE = "sections"; // по записи на раздел: {key: "sites"|"atc"|"washing", data: [...]}
 
 let dbPromise = null;
 function getDb() {
@@ -1938,65 +1988,87 @@ function idbSet(key, data) {
   );
 }
 
-function readEmbeddedJson(tagId) {
+// #embeddedData хранит объект вида {sites: [...], atc: [...], washing: [...]}
+// (см. exportShareableCopy). Файлы, экспортированные до появления
+// разделов, несли туда просто массив — читаем оба формата, старый массив
+// трактуем как данные первого раздела ("sites").
+let embeddedAllCache;
+function getEmbeddedAll() {
+  if (embeddedAllCache !== undefined) return embeddedAllCache;
   try {
-    const tag = document.getElementById(tagId);
-    if (!tag) return null;
-    const data = JSON.parse(tag.textContent.trim());
-    return Array.isArray(data) && data.length ? data : null;
+    const tag = document.getElementById("embeddedData");
+    embeddedAllCache = null;
+    if (tag) {
+      const data = JSON.parse(tag.textContent.trim());
+      if (Array.isArray(data)) {
+        embeddedAllCache = data.length ? { [SECTIONS[0].key]: data } : null;
+      } else if (data && typeof data === "object") {
+        embeddedAllCache = data;
+      }
+    }
   } catch (err) {
-    return null;
+    embeddedAllCache = null;
   }
+  return embeddedAllCache;
 }
 
-function readEmbeddedData() {
-  return readEmbeddedJson("embeddedData");
-}
-
-async function loadEntries() {
+async function loadSectionEntries(sectionKey) {
   try {
-    const stored = await idbGet("discrepancies");
+    const stored = await idbGet(sectionKey);
     if (stored !== null) return stored;
 
     // Открыт файл-копия, полученный от кого-то другого через «Скачать
     // копию для отправки» — в нём уже вшиты данные. Подхватываем
     // встроенные данные как стартовые.
-    const embedded = readEmbeddedData();
-    if (embedded) {
-      const normalized = normalizeEntries(embedded);
-      await idbSet("discrepancies", normalized).catch(() => {});
+    const embeddedAll = getEmbeddedAll();
+    if (embeddedAll && embeddedAll[sectionKey] && embeddedAll[sectionKey].length) {
+      const normalized = normalizeEntries(embeddedAll[sectionKey], sectionKey);
+      await idbSet(sectionKey, normalized).catch(() => {});
       return normalized;
     }
 
-    // Миграция со старого localStorage (v1-v3, ограничен ~5-10 МБ) —
-    // переносим один раз в IndexedDB, отбрасывая лишние поля.
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const normalized = normalizeEntries(JSON.parse(raw));
-      await idbSet("discrepancies", normalized).catch(() => {});
-      return normalized;
-    }
-    for (const oldKey of OLD_STORAGE_KEYS) {
-      const old = localStorage.getItem(oldKey);
-      if (!old) continue;
-      const normalized = normalizeEntries(JSON.parse(old));
-      await idbSet("discrepancies", normalized).catch(() => {});
-      return normalized;
+    // Миграция из состояния "до разделов" — единственный раздел тогда
+    // хранился под ключом IndexedDB "discrepancies" (а до этого — в
+    // localStorage). Переносим его в самый первый раздел ("sites"),
+    // чтобы не потерять уже накопленные записи.
+    if (sectionKey === SECTIONS[0].key) {
+      const oldIdb = await idbGet("discrepancies");
+      if (oldIdb !== null) {
+        await idbSet(sectionKey, oldIdb).catch(() => {});
+        return oldIdb;
+      }
+
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const normalized = normalizeEntries(JSON.parse(raw), sectionKey);
+        await idbSet(sectionKey, normalized).catch(() => {});
+        return normalized;
+      }
+      for (const oldKey of OLD_STORAGE_KEYS) {
+        const old = localStorage.getItem(oldKey);
+        if (!old) continue;
+        const normalized = normalizeEntries(JSON.parse(old), sectionKey);
+        await idbSet(sectionKey, normalized).catch(() => {});
+        return normalized;
+      }
+
+      const demo = seedDemo();
+      await idbSet(sectionKey, demo).catch(() => {});
+      return demo;
     }
 
-    const demo = seedDemo();
-    await idbSet("discrepancies", demo).catch(() => {});
-    return demo;
+    return [];
   } catch (err) {
     console.warn("Не удалось прочитать локальные данные", err);
     return [];
   }
 }
 
-function normalizeEntries(raw) {
+function normalizeEntries(raw, sectionKey) {
+  const defaultLocation = (SECTIONS.find((s) => s.key === sectionKey) || SECTIONS[0]).defaultLocation;
   return raw.map((e) => ({
     id: e.id || cryptoId(),
-    location: e.location || DEFAULT_LOCATION,
+    location: e.location || defaultLocation,
     text: e.text || "",
     solution: e.solution || "",
     note: e.note || "",
@@ -2014,7 +2086,7 @@ function normalizeEntries(raw) {
 // Пишет в IndexedDB асинхронно в фоне — вызывающий код не ждёт (как и
 // раньше с localStorage.setItem), но здесь лимит на порядки больше.
 function saveEntries() {
-  idbSet("discrepancies", state.entries).catch((err) => {
+  idbSet(state.section, state.entries).catch((err) => {
     console.warn("Не удалось сохранить данные локально", err);
     alert("Не удалось сохранить изменения в хранилище браузера. Попробуйте перезагрузить страницу или освободить место на диске.");
   });
@@ -2049,26 +2121,83 @@ function cryptoId() {
 // Экспорт копии файла с вшитыми данными — для отправки другим
 // ---------------------------------------------------------------------------
 
+// Быстрая оценка суммарного объёма фото+видео во всех разделах — просто
+// складывает длины уже существующих строк (.src.length), без единой
+// новой аллокации. dataURL — это base64 поверх ASCII, так что длина в
+// символах практически равна размеру в байтах.
+function estimateTotalMediaBytes() {
+  let total = 0;
+  SECTIONS.forEach((s) => {
+    (state.bySection[s.key] || []).forEach((entry) => {
+      (entry.media || []).forEach((item) => {
+        if (item && item.src) total += item.src.length;
+      });
+    });
+  });
+  return total;
+}
+
 function exportShareableCopy() {
-  const doc = document.documentElement.cloneNode(true);
+  if (els.addDialog.open) els.addDialog.close();
+  if (!els.lightbox.hidden) closeLightbox();
 
-  const dataScript = doc.querySelector("#embeddedData");
-  if (dataScript) dataScript.textContent = JSON.stringify(state.entries);
+  // Предупреждаем ДО попытки собрать файл, а не после: само формирование
+  // (JSON.stringify + Blob) на практике надёжно роняет вкладку при
+  // суммарном объёме видео в несколько сотен МБ — проверять итоговый
+  // размер по факту тут уже поздно.
+  const estimatedMb = estimateTotalMediaBytes() / 1024 / 1024;
+  if (estimatedMb > 150) {
+    const proceed = confirm(
+      `Общий объём фото и видео во всех разделах — ≈ ${estimatedMb.toFixed(0)} МБ.\n\n` +
+        "При таком объёме (особенно если там тяжёлые видео) формирование файла-копии может надолго " +
+        "зависнуть или уронить вкладку браузера — почта и мессенджеры такой файл тоже могут не принять.\n\n" +
+        "Надёжнее: удалить/вынести самые тяжёлые ролики перед экспортом, передать их отдельно " +
+        "(облако, флешка, сам мессенджер напрямую), а в копии оставить фото и короткие видео.\n\n" +
+        "Всё равно попробовать сформировать файл целиком?"
+    );
+    if (!proceed) return;
+  }
 
-  // Диалоги/лайтбокс/дропзона могли остаться в промежуточном визуальном
-  // состоянии (открыт, есть класс dragover и т.п.) — сбрасываем в копии.
-  doc.querySelectorAll("dialog[open]").forEach((d) => d.removeAttribute("open"));
-  const lb = doc.querySelector("#lightbox");
-  if (lb) lb.setAttribute("hidden", "");
+  // С тяжёлыми видео тут легко перевалить за сотни МБ — поэтому дальше
+  // ни разу не склеиваем всё это в одну гигантскую JS-строку (лишний
+  // расход памяти на пустом месте увеличивает риск уронить вкладку).
+  // document.documentElement.cloneNode(true) дублировал бы весь живой DOM
+  // (там уже есть dataURL в src текущей карточки) — вместо этого берём
+  // outerHTML один раз как строку, режем её на части вокруг #embeddedData
+  // и кормим Blob уже кусками, каждый раздел сериализуем в JSON отдельно.
+  const html = document.documentElement.outerHTML;
+  const openTag = html.match(/<script id="embeddedData"[^>]*>/);
+  const parts = ["<!DOCTYPE html>\n"];
 
-  const html = "<!DOCTYPE html>\n" + doc.outerHTML;
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+  if (openTag) {
+    const openIdx = openTag.index;
+    const openEnd = openIdx + openTag[0].length;
+    // Строка разбита на части, чтобы не содержать литерал "</scr"+"ipt>" —
+    // иначе при сборке standalone-версии (JS вставляется прямо внутрь
+    // <script> в HTML) браузер закрыл бы тег раньше времени прямо на этой
+    // строке кода.
+    const closeIdx = html.indexOf("</scr" + "ipt>", openEnd);
+    parts.push(html.slice(0, openEnd));
+    parts.push("{");
+    SECTIONS.forEach((s, i) => {
+      if (i > 0) parts.push(",");
+      parts.push(JSON.stringify(s.key) + ":" + JSON.stringify(state.bySection[s.key] || []));
+    });
+    parts.push("}");
+    parts.push(html.slice(closeIdx));
+  } else {
+    // На всякий случай — тег не нашёлся, экспортируем страницу как есть.
+    parts.push(html);
+  }
+
+  const blob = new Blob(parts, { type: "text/html;charset=utf-8" });
+
   const url = URL.createObjectURL(blob);
 
   const stamp = new Date().toISOString().slice(0, 10);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `nesootvetstviya-broiler-${stamp}.html`;
+  a.download = `broiler-vse-razdely-${stamp}.html`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -2118,7 +2247,7 @@ async function exportToPowerPoint() {
     alert("Не удалось загрузить модуль PowerPoint. Проверьте, что файл js/vendor/pptxgen.bundle.js доступен рядом с дашбордом.");
     return;
   }
-  const t = TEXT;
+  const sec = currentSection();
   const entries = state.entries;
   if (!entries.length) {
     alert("В этом разделе пока нет записей для экспорта.");
@@ -2136,10 +2265,10 @@ async function exportToPowerPoint() {
 
     const title = pptx.addSlide();
     title.background = { color: PPTX_COLORS.surface };
-    title.addText("aitas mpf — Макинская птицефабрика · Бройлерная площадка", {
+    title.addText("aitas mpf — Макинская птицефабрика · Бройлерное производство", {
       x: 0.6, y: 2.7, w: 12, h: 0.6, fontSize: 18, bold: true, color: PPTX_COLORS.inkSecondary,
     });
-    title.addText(t.viewTitle, {
+    title.addText(sec.label, {
       x: 0.6, y: 3.3, w: 12, h: 1, fontSize: 32, bold: true, color: PPTX_COLORS.teal,
     });
     title.addText(`Всего записей: ${entries.length} · ${new Date().toLocaleDateString("ru-RU")}`, {
@@ -2161,7 +2290,7 @@ async function exportToPowerPoint() {
       const first = media[0];
       addPptxMediaBox(pptx, slide, first, { x: 0.5, y: 1.3, w: 6.5, h: 5.7 });
 
-      slide.addText(t.cardTextLabel, { x: 7.3, y: 1.3, w: 5.5, h: 0.4, fontSize: 13, bold: true, color: PPTX_COLORS.inkSecondary });
+      slide.addText(COMMON_TEXT.cardTextLabel, { x: 7.3, y: 1.3, w: 5.5, h: 0.4, fontSize: 13, bold: true, color: PPTX_COLORS.inkSecondary });
       slide.addText(entry.text || "—", { x: 7.3, y: 1.7, w: 5.5, h: 2, fontSize: 14, color: PPTX_COLORS.ink, valign: "top" });
 
       if (entry.solution) {
@@ -2186,7 +2315,7 @@ async function exportToPowerPoint() {
     });
 
     const stamp = new Date().toISOString().slice(0, 10);
-    await pptx.writeFile({ fileName: `${t.exportPrefix}-${stamp}.pptx` });
+    await pptx.writeFile({ fileName: `${sec.exportPrefix}-${stamp}.pptx` });
   } catch (err) {
     console.warn("Не удалось создать PowerPoint-файл", err);
     alert("Не удалось создать PowerPoint-файл: " + (err && err.message ? err.message : err));
@@ -2211,10 +2340,9 @@ function getFiltered() {
 // ---------------------------------------------------------------------------
 
 function renderSidebar() {
-  const t = TEXT;
   els.countAll.textContent = state.entries.length;
-  els.sidebarTotalLabel.textContent = t.sidebarTotal;
-  els.addHint.textContent = t.addHint;
+  els.sidebarTotalLabel.textContent = COMMON_TEXT.sidebarTotal;
+  els.addHint.textContent = COMMON_TEXT.addHint;
 
   // Обновляем подсказки для поля "место" в форме добавления
   const allLocations = new Set(state.entries.map((e) => e.location));
@@ -2222,6 +2350,25 @@ function renderSidebar() {
     .map((loc) => `<option value="${escapeHtml(loc)}"></option>`)
     .join("");
 }
+
+function setSection(key) {
+  if (state.section === key) return;
+  state.section = key;
+  state.entries = state.bySection[key];
+  state.index = 0;
+
+  els.sectionToggle.querySelectorAll(".section-toggle-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.section === key);
+  });
+
+  renderSidebar();
+  renderView();
+}
+
+els.sectionToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".section-toggle-btn");
+  if (btn) setSection(btn.dataset.section);
+});
 
 
 // Мобильное меню
@@ -2270,12 +2417,12 @@ try {
 
 function renderView(direction = 0) {
   const list = getFiltered();
-  const t = TEXT;
+  const sec = currentSection();
 
-  els.viewTitle.textContent = t.viewTitle;
+  els.viewTitle.textContent = sec.label;
 
   if (!list.length) {
-    els.emptyStateText.textContent = t.emptyState;
+    els.emptyStateText.textContent = `Пока нет записей в разделе «${sec.label}»`;
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
     els.listView.innerHTML = "";
@@ -2490,7 +2637,6 @@ function renderCard(entry, direction) {
   const hasMedia = entry.media.length > 0;
   const firstItem = entry.media[0];
   const isFirstVideo = firstItem && firstItem.type === "video";
-  const t = TEXT;
 
   card.innerHTML = `
     <div class="card-photo" id="cardPhoto" title="${hasMedia ? "" : "Нажмите, чтобы загрузить фото/видео"}">
@@ -2505,11 +2651,11 @@ function renderCard(entry, direction) {
     </div>
     <div class="card-photo-strip" id="cardPhotoStrip"></div>
     <div class="card-body">
-      <input class="card-location-input" id="cardLocationInput" value="${escapeHtml(entry.location)}" placeholder="${t.fieldLocationLabel}" />
+      <input class="card-location-input" id="cardLocationInput" value="${escapeHtml(entry.location)}" placeholder="${COMMON_TEXT.fieldLocationLabel}" />
       <div class="card-date">${formatDate(entry.date)}</div>
 
-      <label class="card-field-label">${t.cardTextLabel}</label>
-      <textarea class="card-text" id="cardText" rows="2" placeholder="${t.cardTextPlaceholder}">${escapeHtml(entry.text || "")}</textarea>
+      <label class="card-field-label">${COMMON_TEXT.cardTextLabel}</label>
+      <textarea class="card-text" id="cardText" rows="2" placeholder="${COMMON_TEXT.cardTextPlaceholder}">${escapeHtml(entry.text || "")}</textarea>
 
       <label class="card-field-label card-field-label-solution">💡 Предлагаемое решение</label>
       <textarea class="card-text card-solution" id="cardSolution" rows="2" placeholder="Что нужно сделать, чтобы устранить...">${escapeHtml(entry.solution || "")}</textarea>
@@ -2536,7 +2682,7 @@ function renderCard(entry, direction) {
   locationInput.addEventListener(
     "input",
     debounce(() => {
-      entry.location = locationInput.value.trim() || DEFAULT_LOCATION;
+      entry.location = locationInput.value.trim() || currentSection().defaultLocation;
       saveEntries();
       renderSidebar();
     }, 300)
@@ -2637,9 +2783,8 @@ els.viewer.addEventListener(
 );
 
 function deleteEntry(id) {
-  const t = TEXT;
-  if (!confirm(t.deleteConfirm)) return;
-  state.entries = state.entries.filter((e) => e.id !== id);
+  if (!confirm(COMMON_TEXT.deleteConfirm)) return;
+  setEntries(state.entries.filter((e) => e.id !== id));
   saveEntries();
   renderSidebar();
   renderView();
@@ -2710,8 +2855,6 @@ function deleteMediaFromEntry(entryId, mediaIndex) {
 // ---------------------------------------------------------------------------
 
 function openAddDialog() {
-  const t = TEXT;
-
   els.addForm.reset();
   state.pendingMedia = [];
   els.dropPreview.hidden = true;
@@ -2720,18 +2863,17 @@ function openAddDialog() {
   els.splitToggle.hidden = true;
   els.fieldSplitCards.checked = true;
 
-  els.fieldLocationLabel.textContent = t.fieldLocationLabel;
-  els.fieldLocation.placeholder = t.fieldLocationPlaceholder;
-  els.fieldTextLabel.textContent = t.fieldTextLabel;
+  els.fieldLocationLabel.textContent = COMMON_TEXT.fieldLocationLabel;
+  els.fieldLocation.placeholder = currentSection().fieldLocationPlaceholder;
+  els.fieldTextLabel.textContent = COMMON_TEXT.fieldTextLabel;
 
   updateAddDialogMode();
   els.addDialog.showModal();
 }
 
 function updateAddDialogMode() {
-  const t = TEXT;
   const n = state.pendingMedia.length;
-  els.addDialogTitle.textContent = n > 1 ? t.addDialogTitleMany(n) : t.addDialogTitleOne;
+  els.addDialogTitle.textContent = n > 1 ? COMMON_TEXT.addDialogTitleMany(n) : COMMON_TEXT.addDialogTitleOne;
 }
 
 els.openAddBtn.addEventListener("click", openAddDialog);
@@ -2819,18 +2961,19 @@ function fileToDataUrl(file) {
 
 // Видео (в отличие от фото) на клиенте не пережимается — нет простого
 // надёжного способа перекодировать видео в браузере без тяжёлых
-// библиотек. Лимит нужен только чтобы не уронить вкладку совсем
-// огромным файлом (при чтении в память уходит примерно в 1.3 раза
-// больше исходного размера) — сама загрузка при этом может занять
-// заметное время.
-const MAX_VIDEO_BYTES = 500 * 1024 * 1024; // ~500 МБ
+// библиотек. Проверено на практике: один файл, приближающийся к 500 МБ,
+// надёжно роняет вкладку при формировании копии для отправки (там всё
+// содержимое собирается в одну JSON-строку) — поэтому лимит здесь
+// заметно строже верхней границы, которую теоретически можно прочитать
+// в память.
+const MAX_VIDEO_BYTES = 250 * 1024 * 1024; // ~250 МБ
 
 async function fileToMediaItem(file) {
   if (file.type.startsWith("video/")) {
     if (file.size > MAX_VIDEO_BYTES) {
       alert(
-        `Видео «${file.name}» слишком большое (${(file.size / 1024 / 1024).toFixed(0)} МБ, лимит ~500 МБ). ` +
-          "Снимите более короткий ролик или сожмите его перед загрузкой."
+        `Видео «${file.name}» слишком большое (${(file.size / 1024 / 1024).toFixed(0)} МБ, лимит ~250 МБ). ` +
+          "Более тяжёлые ролики надёжно роняют вкладку при формировании копии для отправки — сожмите видео или снимите более короткий ролик."
       );
       return null;
     }
@@ -2869,7 +3012,7 @@ els.addForm.addEventListener("submit", (e) => {
   const text = els.fieldText.value.trim();
   const solution = els.fieldSolution.value.trim();
   const locationInput = els.fieldLocation.value.trim();
-  const location = locationInput || DEFAULT_LOCATION;
+  const location = locationInput || currentSection().defaultLocation;
 
   // При массовой загрузке (100+ файлов) по умолчанию каждый файл — своя
   // карточка, чтобы к каждой можно было дописать своё описание. Флажок
@@ -2947,7 +3090,12 @@ function debounce(fn, ms) {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  state.entries = await loadEntries();
+  const results = await Promise.all(SECTIONS.map((sec) => loadSectionEntries(sec.key)));
+  state.bySection = {};
+  SECTIONS.forEach((sec, i) => {
+    state.bySection[sec.key] = results[i];
+  });
+  state.entries = state.bySection[state.section];
   renderSidebar();
   renderView();
 }
