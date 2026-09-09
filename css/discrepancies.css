@@ -147,6 +147,24 @@ body {
   color: var(--status-critical);
 }
 
+/* Вертикальный список вкладок (Бройлерное производство — 3 раздела,
+   удобнее списком, чем в тесный ряд). */
+.section-toggle-vertical {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-toggle-vertical .section-toggle-btn {
+  flex: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  text-align: left;
+  font-size: 13.5px;
+}
+
 .btn-add:active {
   transform: scale(0.98);
 }
