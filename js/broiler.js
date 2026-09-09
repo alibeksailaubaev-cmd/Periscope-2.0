@@ -97,8 +97,6 @@ const els = {
   emptyState: document.getElementById("emptyState"),
   emptyStateText: document.getElementById("emptyStateText"),
   emptyAddBtn: document.getElementById("emptyAddBtn"),
-  cardNotePanel: document.getElementById("cardNotePanel"),
-  cardNote: document.getElementById("cardNote"),
   cardStage: document.getElementById("cardStage"),
   prevBtn: document.getElementById("prevBtn"),
   nextBtn: document.getElementById("nextBtn"),
@@ -650,7 +648,6 @@ function renderView(direction = 0) {
     els.emptyState.hidden = false;
     els.cardStage.innerHTML = "";
     els.listView.innerHTML = "";
-    els.cardNotePanel.hidden = true;
     els.prevBtn.disabled = true;
     els.nextBtn.disabled = true;
     els.dots.innerHTML = "";
@@ -663,7 +660,6 @@ function renderView(direction = 0) {
   if (state.viewMode === "list") {
     els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = true));
     els.cardStage.hidden = true;
-    els.cardNotePanel.hidden = true;
     els.listView.hidden = false;
     els.dots.hidden = true;
     els.progressLabel.textContent = `${list.length} шт.`;
@@ -673,7 +669,6 @@ function renderView(direction = 0) {
 
   els.cardStage.parentElement.querySelectorAll(".nav-arrow").forEach((b) => (b.hidden = false));
   els.cardStage.hidden = false;
-  els.cardNotePanel.hidden = false;
   els.listView.hidden = true;
 
   if (state.index >= list.length) state.index = list.length - 1;
@@ -835,17 +830,6 @@ function autoGrow(textarea) {
   textarea.style.height = `${textarea.scrollHeight}px`;
 }
 
-// Панель примечания руководителя — постоянный элемент слева от карточки
-// (не пересоздаётся при каждой навигации, в отличие от самой карточки),
-// поэтому значение и обработчик привязаны отдельно, а не внутри renderCard.
-let currentNoteEntry = null;
-const saveCurrentNote = debounce(() => {
-  if (!currentNoteEntry) return;
-  currentNoteEntry.note = els.cardNote.value;
-  saveEntries();
-}, 300);
-els.cardNote.addEventListener("input", saveCurrentNote);
-
 function renderCard(entry, direction) {
   const old = els.cardStage.querySelector(".card");
   if (old) {
@@ -936,8 +920,6 @@ function renderCard(entry, direction) {
     });
   }
 
-  currentNoteEntry = entry;
-  els.cardNote.value = entry.note || "";
 }
 
 function renderDots(count, active) {
