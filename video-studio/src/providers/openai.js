@@ -62,24 +62,36 @@ function closestDalleSize(width, height) {
   return width > height ? '1792x1024' : '1024x1792';
 }
 
-export async function generateImageOpenAI(prompt, width, height) {
-  const response = await withTimeoutFetch('https://api.openai.com/v1/images/generations', {
+function requestImage(body) {
+  return withTimeoutFetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({
-      model: OPENAI_IMAGE_MODEL,
-      prompt,
-      size: closestDalleSize(width, height),
-      quality: 'standard',
-      response_format: 'b64_json',
-      n: 1,
-    }),
+    body: JSON.stringify(body),
   });
+}
+
+export async function generateImageOpenAI(prompt, width, height) {
+  const body = { model: OPENAI_IMAGE_MODEL, prompt, size: closestDalleSize(width, height), n: 1 };
+  let response = await requestImage(body);
+  if (response.status === 400) {
+    // The images endpoint keeps dropping optional parameters between model
+    // generations; retry bare rather than failing over to a worse provider.
+    const message = await readErrorMessage(response);
+    if (!/unknown parameter|unsupported|invalid value/i.test(message)) {
+      throw new Error(`OpenAI images: ${message}`);
+    }
+    response = await requestImage({ model: OPENAI_IMAGE_MODEL, prompt });
+  }
   if (!response.ok) throw new Error(`OpenAI images: ${await readErrorMessage(response)}`);
-  const data = await response.json();
-  const b64 = data?.data?.[0]?.b64_json;
-  if (!b64) throw new Error('OpenAI images: пустой ответ');
-  return Buffer.from(b64, 'base64');
+
+  const image = (await response.json())?.data?.[0];
+  if (image?.b64_json) return Buffer.from(image.b64_json, 'base64');
+  if (image?.url) {
+    const file = await withTimeoutFetch(image.url, {});
+    if (!file.ok) throw new Error(`OpenAI images: картинка не скачалась (HTTP ${file.status})`);
+    return Buffer.from(await file.arrayBuffer());
+  }
+  throw new Error('OpenAI images: пустой ответ');
 }
 
 export const openaiConfigured = () => Boolean(openaiApiKey());

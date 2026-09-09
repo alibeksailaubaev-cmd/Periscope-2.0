@@ -47,11 +47,14 @@ export function makeSilentAudio(durationSeconds, outPath) {
 export async function buildSceneClip({ imagePath, audioPath, outPath, width, height, fps = 30 }) {
   const duration = await probeDurationSeconds(audioPath);
   const frames = Math.max(1, Math.round(duration * fps));
+  // Scale to cover and centre-crop, so an image of any aspect ratio fills
+  // the frame instead of being stretched into it.
+  const fill = `scale=${width * 2}:${height * 2}:force_original_aspect_ratio=increase,crop=${width * 2}:${height * 2}`;
   const zoompan = `zoompan=z='min(zoom+0.0008,1.15)':d=${frames}:s=${width}x${height}:fps=${fps}`;
   await runFfmpeg([
     '-loop', '1', '-i', imagePath,
     '-i', audioPath,
-    '-filter_complex', `[0:v]scale=${width * 2}:-2,${zoompan},format=yuv420p[v]`,
+    '-filter_complex', `[0:v]${fill},${zoompan},format=yuv420p[v]`,
     '-map', '[v]', '-map', '1:a',
     '-c:v', 'libx264', '-c:a', 'aac', '-pix_fmt', 'yuv420p',
     '-shortest', '-t', String(duration),
