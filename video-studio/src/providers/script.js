@@ -17,6 +17,17 @@ function buildSystemPrompt(options) {
   if (options.materialsProfile) {
     rules.push('Опирайся на общеизвестные, хорошо задокументированные источники и избегай непроверяемых утверждений.');
   }
+  if (options.animation && options.animation !== 'none') {
+    // Video models refuse to depict recognisable real people, so a scene
+    // built around someone's face gets blocked and silently degrades to a
+    // still. Composing around places and objects keeps scenes animatable.
+    rules.push(
+      'Кадры пойдут в видеогенератор, который отказывается показывать узнаваемых реальных людей. ' +
+      'Поэтому в "imagePrompt" не описывай лица и фигуры конкретных исторических личностей: ' +
+      'вместо них — места, интерьеры, предметы, документы, руки за работой, силуэты со спины, ' +
+      'толпа издалека, пейзажи и техника той эпохи.',
+    );
+  }
   return rules.join(' ');
 }
 
