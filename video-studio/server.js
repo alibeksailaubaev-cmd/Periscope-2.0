@@ -275,7 +275,7 @@ app.get('/api/jobs/:id/stream', (req, res) => {
 app.listen(PORT, '127.0.0.1', () => {
   console.log(`Video Studio запущена: http://localhost:${PORT}`);
   console.log(openaiConfigured()
-    ? `Ключ OpenAI найден (${maskedKey()}) — генерация пойдёт через OpenAI`
+    ? `Ключ OpenAI найден (${mask(openaiApiKey())}) — генерация пойдёт через OpenAI`
     : 'Ключ OpenAI не задан — работают бесплатные API. Вставить ключ можно в интерфейсе студии.');
   if (OFFLINE_MODE) console.log('OFFLINE_MODE=1 — все шаги используют локальные заглушки без сети');
 });
