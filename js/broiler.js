@@ -237,7 +237,7 @@ function getEmbeddedAll() {
 async function loadSectionEntries(sectionKey) {
   try {
     const stored = await idbGet(sectionKey);
-    if (stored !== null) return stored;
+    if (stored !== null) return normalizeEntries(stored, sectionKey);
 
     // Открыт файл-копия, полученный от кого-то другого через «Скачать
     // копию для отправки» — в нём уже вшиты данные. Подхватываем
@@ -697,12 +697,14 @@ function mediaThumbMarkup(item) {
 function renderListView(list) {
   els.listView.innerHTML = list
     .map(
-      (entry, idx) => `
+      (entry, idx) => {
+        const media = entry.media || [];
+        return `
         <div class="list-card" data-idx="${idx}">
-          <div class="list-card-photo" data-role="photo" title="${entry.media.length ? "Открыть целиком" : "Нет фото/видео"}">
-            ${entry.media.length ? mediaThumbMarkup(entry.media[0]) : "📷"}
-            ${entry.media.length > 1 ? `<span class="photo-count-badge">+${entry.media.length - 1}</span>` : ""}
-            ${entry.media.length ? '<span class="zoom-hint">⤢</span>' : ""}
+          <div class="list-card-photo" data-role="photo" title="${media.length ? "Открыть целиком" : "Нет фото/видео"}">
+            ${media.length ? mediaThumbMarkup(media[0]) : "📷"}
+            ${media.length > 1 ? `<span class="photo-count-badge">+${media.length - 1}</span>` : ""}
+            ${media.length ? '<span class="zoom-hint">⤢</span>' : ""}
           </div>
           <div class="list-card-body" data-role="open">
             <div class="list-card-location">${escapeHtml(entry.location)}</div>
@@ -713,15 +715,17 @@ function renderListView(list) {
             </div>
           </div>
         </div>
-      `
+      `;
+      }
     )
     .join("");
 
   els.listView.querySelectorAll(".list-card").forEach((card) => {
     const idx = Number(card.dataset.idx);
     const entry = list[idx];
+    const media = entry.media || [];
     card.querySelector('[data-role="photo"]').addEventListener("click", () => {
-      if (entry.media.length) openLightbox(entry.media, 0, entry.location);
+      if (media.length) openLightbox(media, 0, entry.location);
       else {
         state.index = idx;
         setViewMode("cards");
@@ -842,8 +846,9 @@ function renderCard(entry, direction) {
   card.className = "card";
   card.style.setProperty("--card-dx", direction < 0 ? "-32px" : "32px");
 
-  const hasMedia = entry.media.length > 0;
-  const firstItem = entry.media[0];
+  const entryMedia = entry.media || [];
+  const hasMedia = entryMedia.length > 0;
+  const firstItem = entryMedia[0];
   const isFirstVideo = firstItem && firstItem.type === "video";
 
   card.innerHTML = `
@@ -875,7 +880,7 @@ function renderCard(entry, direction) {
   card.querySelector("#cardPhoto").addEventListener("click", (e) => {
     if (e.target.closest("#cardDelete")) return;
     if (e.target.tagName === "VIDEO") return; // не мешаем нативным элементам управления видео
-    if (entry.media.length) openLightbox(entry.media, 0, entry.location);
+    if (entryMedia.length) openLightbox(entryMedia, 0, entry.location);
     else promptAddMedia(entry.id);
   });
 

@@ -1958,7 +1958,7 @@ function readEmbeddedData() {
 async function loadEntries() {
   try {
     const stored = await idbGet("discrepancies");
-    if (stored !== null) return stored;
+    if (stored !== null) return normalizeEntries(stored);
 
     // Открыт файл-копия, полученный от кого-то другого через «Скачать
     // копию для отправки» — в нём уже вшиты данные. Подхватываем
@@ -1998,7 +1998,7 @@ async function loadEntries() {
 async function loadReferenceEntries() {
   try {
     const stored = await idbGet("reference");
-    if (stored !== null) return stored;
+    if (stored !== null) return normalizeEntries(stored);
 
     const embedded = readEmbeddedJson("embeddedReferenceData");
     if (embedded) {
@@ -2352,13 +2352,14 @@ function renderView(direction = 0) {
 
 function renderListView(list) {
   els.listView.innerHTML = list
-    .map(
-      (entry, idx) => `
+    .map((entry, idx) => {
+      const photos = entry.photos || [];
+      return `
         <div class="list-card" data-idx="${idx}">
-          <div class="list-card-photo" data-role="photo" title="${entry.photos.length ? "Открыть фото целиком" : "Нет фото"}">
-            ${entry.photos.length ? `<img src="${entry.photos[0]}" alt="" />` : "📷"}
-            ${entry.photos.length > 1 ? `<span class="photo-count-badge">+${entry.photos.length - 1}</span>` : ""}
-            ${entry.photos.length ? '<span class="zoom-hint">⤢</span>' : ""}
+          <div class="list-card-photo" data-role="photo" title="${photos.length ? "Открыть фото целиком" : "Нет фото"}">
+            ${photos.length ? `<img src="${photos[0]}" alt="" />` : "📷"}
+            ${photos.length > 1 ? `<span class="photo-count-badge">+${photos.length - 1}</span>` : ""}
+            ${photos.length ? '<span class="zoom-hint">⤢</span>' : ""}
           </div>
           <div class="list-card-body" data-role="open">
             <div class="list-card-location">${escapeHtml(entry.location)}</div>
@@ -2369,15 +2370,16 @@ function renderListView(list) {
             </div>
           </div>
         </div>
-      `
-    )
+      `;
+    })
     .join("");
 
   els.listView.querySelectorAll(".list-card").forEach((card) => {
     const idx = Number(card.dataset.idx);
     const entry = list[idx];
+    const photos = entry.photos || [];
     card.querySelector('[data-role="photo"]').addEventListener("click", () => {
-      if (entry.photos.length) openLightbox(entry.photos, 0, entry.location);
+      if (photos.length) openLightbox(photos, 0, entry.location);
       else {
         state.index = idx;
         setViewMode("cards");
@@ -2481,7 +2483,8 @@ function renderCard(entry, direction) {
   card.className = "card";
   card.style.setProperty("--card-dx", direction < 0 ? "-32px" : "32px");
 
-  const hasPhotos = entry.photos.length > 0;
+  const entryPhotos = entry.photos || [];
+  const hasPhotos = entryPhotos.length > 0;
   const t = SECTION_TEXT[state.section];
   const isReference = state.section === "reference";
 
@@ -2489,7 +2492,7 @@ function renderCard(entry, direction) {
     <div class="card-photo" id="cardPhoto" title="${hasPhotos ? "Нажмите, чтобы посмотреть фото целиком" : "Нажмите, чтобы загрузить фото"}">
       ${
         hasPhotos
-          ? `<img src="${entry.photos[0]}" alt="Фото" />`
+          ? `<img src="${entryPhotos[0]}" alt="Фото" />`
           : `<div class="card-photo-placeholder"><div class="icon">📷</div><p>Нажмите, чтобы загрузить фото</p></div>`
       }
       <button class="card-delete" id="cardDelete" title="Удалить">✕</button>
@@ -2515,7 +2518,7 @@ function renderCard(entry, direction) {
 
   card.querySelector("#cardPhoto").addEventListener("click", (e) => {
     if (e.target.closest("#cardDelete")) return;
-    if (entry.photos.length) openLightbox(entry.photos, 0, entry.location);
+    if (entryPhotos.length) openLightbox(entryPhotos, 0, entry.location);
     else promptAddPhotos(entry.id);
   });
 
