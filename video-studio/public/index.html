@@ -14,7 +14,15 @@
 
   <main class="layout">
     <section class="panel create-panel">
-      <h2>Новое задание</h2>
+      <h2>Ключ OpenAI</h2>
+      <form id="key-form" class="key-form">
+        <div id="key-status" class="key-status">проверяю...</div>
+        <input type="password" name="key" placeholder="sk-..." autocomplete="off" />
+        <button type="submit">Сохранить ключ</button>
+        <p class="key-hint">Без ключа студия работает на бесплатных API — качество заметно ниже.</p>
+      </form>
+
+      <h2 class="section-gap">Новое задание</h2>
       <form id="create-form">
         <label>Тема
           <textarea name="topic" rows="2" placeholder="Например: Викинги — походы и грабежи" required></textarea>

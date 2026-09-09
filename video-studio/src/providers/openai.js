@@ -1,11 +1,11 @@
 import {
-  OPENAI_API_KEY, OPENAI_CHAT_MODEL, OPENAI_TTS_MODEL, OPENAI_TTS_VOICE, OPENAI_IMAGE_MODEL,
+  openaiApiKey, OPENAI_CHAT_MODEL, OPENAI_TTS_MODEL, OPENAI_TTS_VOICE, OPENAI_IMAGE_MODEL,
 } from '../config.js';
 
 const REQUEST_TIMEOUT_MS = 60_000;
 
 function authHeaders() {
-  return { authorization: `Bearer ${OPENAI_API_KEY}`, 'content-type': 'application/json' };
+  return { authorization: `Bearer ${openaiApiKey()}`, 'content-type': 'application/json' };
 }
 
 async function withTimeoutFetch(url, options) {
@@ -82,4 +82,4 @@ export async function generateImageOpenAI(prompt, width, height) {
   return Buffer.from(b64, 'base64');
 }
 
-export const openaiConfigured = Boolean(OPENAI_API_KEY);
+export const openaiConfigured = () => Boolean(openaiApiKey());

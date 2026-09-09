@@ -14,6 +14,8 @@ const overviewEl = document.getElementById('overview');
 const logEl = document.getElementById('log');
 const healthEl = document.getElementById('health');
 const createForm = document.getElementById('create-form');
+const keyForm = document.getElementById('key-form');
+const keyStatusEl = document.getElementById('key-status');
 
 async function api(url, options) {
   const res = await fetch(url, options);
@@ -137,6 +139,16 @@ async function refreshJobList() {
   renderJobList(jobs);
 }
 
+function renderKeyStatus(health) {
+  if (health.openaiConfigured) {
+    keyStatusEl.textContent = `Ключ подключён: ${health.openaiKeyPreview}`;
+    keyStatusEl.className = 'key-status on';
+  } else {
+    keyStatusEl.textContent = 'Ключ не задан — работают бесплатные API';
+    keyStatusEl.className = 'key-status off';
+  }
+}
+
 async function refreshHealth() {
   try {
     const health = await api('/api/health');
@@ -146,11 +158,28 @@ async function refreshHealth() {
       : 'конвейер свободен';
     healthEl.textContent = `${pipeline} · ${mode}`;
     healthEl.className = 'health ' + (health.activeJobId ? 'busy' : 'idle');
+    renderKeyStatus(health);
   } catch {
     healthEl.textContent = 'нет соединения с сервером';
     healthEl.className = 'health';
   }
 }
+
+keyForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = keyForm.querySelector('input[name="key"]');
+  try {
+    await api('/api/settings/openai-key', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ key: input.value.trim() }),
+    });
+    input.value = '';
+    await refreshHealth();
+  } catch (err) {
+    alert(err.message);
+  }
+});
 
 createForm.addEventListener('submit', async (e) => {
   e.preventDefault();

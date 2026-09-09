@@ -103,7 +103,7 @@ export async function synthesizeSpeech({ text, outPath, voice = DEFAULT_VOICE },
     await makeSilentAudio(estimateSilenceDuration(text), outPath);
     return;
   }
-  if (openaiConfigured) {
+  if (openaiConfigured()) {
     try {
       fs.writeFileSync(outPath, await synthesizeSpeechOpenAI(text));
       return;

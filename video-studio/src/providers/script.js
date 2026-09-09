@@ -104,7 +104,7 @@ export async function generateScript({ topic, delivery, format, options }, logge
     logger.line('OFFLINE_MODE включён — сценарий строится локально без обращения к API');
     return buildOfflineScript(topic, delivery, preset);
   }
-  if (openaiConfigured) {
+  if (openaiConfigured()) {
     try {
       logger.line('Запрашиваю сценарий у OpenAI');
       const content = await generateScriptOpenAI(buildSystemPrompt(preset.options), buildUserPrompt(topic, delivery, preset));

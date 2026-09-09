@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { PORT, OFFLINE_MODE } from './src/config.js';
+import { PORT, OFFLINE_MODE, saveOpenAIKey, openaiApiKey } from './src/config.js';
 import { createJob, listJobs, getJob, deleteJob, getLogger, jobPath } from './src/store.js';
 import { enqueue, pauseJob, resumeJob, status as queueStatus } from './src/queue.js';
 import { openaiConfigured } from './src/providers/openai.js';
@@ -34,8 +34,31 @@ function jobSummary(job) {
   };
 }
 
+// Never sends the key itself back to the browser, only enough of it to
+// recognise which one is stored.
+function maskedKey() {
+  const key = openaiApiKey();
+  if (!key) return null;
+  return key.length <= 12 ? '••••' : `${key.slice(0, 7)}…${key.slice(-4)}`;
+}
+
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', offlineMode: OFFLINE_MODE, openaiConfigured, ...queueStatus() });
+  res.json({
+    status: 'ok',
+    offlineMode: OFFLINE_MODE,
+    openaiConfigured: openaiConfigured(),
+    openaiKeyPreview: maskedKey(),
+    ...queueStatus(),
+  });
+});
+
+app.post('/api/settings/openai-key', (req, res) => {
+  const key = String(req.body?.key || '').trim();
+  if (!key.startsWith('sk-') || key.length < 20) {
+    return res.status(400).json({ error: 'Ключ должен начинаться с "sk-" и быть полным' });
+  }
+  saveOpenAIKey(key);
+  res.json({ openaiConfigured: true, openaiKeyPreview: maskedKey() });
 });
 
 app.get('/api/jobs', (req, res) => {
@@ -125,7 +148,12 @@ app.get('/api/jobs/:id/stream', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+// Binds to loopback only: the dashboard can read and write the API key,
+// so it must not be reachable from other machines on the network.
+app.listen(PORT, '127.0.0.1', () => {
   console.log(`Video Studio запущена: http://localhost:${PORT}`);
+  console.log(openaiConfigured()
+    ? `Ключ OpenAI найден (${maskedKey()}) — генерация пойдёт через OpenAI`
+    : 'Ключ OpenAI не задан — работают бесплатные API. Вставить ключ можно в интерфейсе студии.');
   if (OFFLINE_MODE) console.log('OFFLINE_MODE=1 — все шаги используют локальные заглушки без сети');
 });

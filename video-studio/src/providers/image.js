@@ -65,7 +65,7 @@ export async function generateImage({ prompt, width, height, sceneIndex = 0 }, l
   if (OFFLINE_MODE) {
     return buildPlaceholderImage(prompt, width, height, sceneIndex);
   }
-  if (openaiConfigured) {
+  if (openaiConfigured()) {
     try {
       return await generateImageOpenAI(prompt, width, height);
     } catch (err) {
