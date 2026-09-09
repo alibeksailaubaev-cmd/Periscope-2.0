@@ -72,7 +72,9 @@ function normalizeScript(raw, preset) {
     title: String(raw.title || '').trim() || 'Без названия',
     characterSheet: String(raw.characterSheet || '').trim(),
     coverPrompt: String(raw.coverPrompt || raw.scenes?.[0]?.imagePrompt || '').trim() || 'documentary cover art',
-    scenes: scenes.slice(0, preset.scenes * 2).map((scene) => ({
+    // Every extra scene is another paid image, so a model that overshoots
+    // the requested count doesn't get to spend the budget for you.
+    scenes: scenes.slice(0, preset.scenes).map((scene) => ({
       narration: String(scene.narration || '').trim(),
       imagePrompt: String(scene.imagePrompt || '').trim() || 'documentary illustration',
     })).filter((scene) => scene.narration.length > 0),

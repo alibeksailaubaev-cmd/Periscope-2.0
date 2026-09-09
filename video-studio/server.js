@@ -18,9 +18,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 function jobSummary(job) {
-  const total = Object.values(job.progress).reduce((a, b) => a + b, 0);
-  const totalMax = job.progress.scriptsTotal + job.progress.voiceTotal + job.progress.framesTotal + job.progress.videoTotal;
-  const percent = totalMax > 0 ? Math.round((total / (totalMax * 2)) * 100) : 0;
+  const p = job.progress;
+  const done = p.scriptsDone + p.voiceDone + p.framesDone + p.videoDone;
+  const planned = p.scriptsTotal + p.voiceTotal + p.framesTotal + p.videoTotal;
+  const percent = planned > 0 ? Math.round((done / planned) * 100) : 0;
   return {
     id: job.id,
     status: job.status,
@@ -29,7 +30,7 @@ function jobSummary(job) {
     delivery: job.delivery,
     title: job.title,
     options: job.options,
-    progress: job.progress,
+    progress: p,
     percent,
     error: job.error,
     createdAt: job.createdAt,
