@@ -122,6 +122,11 @@ export async function generateScript({ topic, delivery, format, options }, logge
   }
 }
 
+// Image models render Cyrillic as garbled lookalikes ("ВАСТОК" for
+// "ВОСТОК"), which instantly gives a frame away as generated, so every
+// prompt carries an explicit ban on lettering.
+const NO_TEXT = 'no text, no lettering, no writing, no letters, no signage, no watermarks, no captions';
+
 export function styleSuffix(visualStyle) {
-  return VISUAL_STYLES[visualStyle] || VISUAL_STYLES.realism;
+  return `${VISUAL_STYLES[visualStyle] || VISUAL_STYLES.realism}, ${NO_TEXT}`;
 }
