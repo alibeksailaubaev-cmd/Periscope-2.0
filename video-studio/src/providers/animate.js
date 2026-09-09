@@ -3,16 +3,21 @@ import sharp from 'sharp';
 import { generateVideoOpenAI, openaiConfigured } from './openai.js';
 import { probeDurationSeconds, fitClipToAudio } from '../ffmpegTools.js';
 
-// Video models render fixed short durations; narration is usually longer,
-// so the clip is slowed/looped to cover the scene rather than cutting the
-// voice off.
-const MAX_CLIP_SECONDS = 12;
+// The video API only accepts these exact clip lengths. Narration rarely
+// matches one of them, so the nearest is picked and the clip is looped to
+// cover the rest of the line.
+const ALLOWED_CLIP_SECONDS = [4, 8, 12];
+
+function nearestAllowedSeconds(seconds) {
+  return ALLOWED_CLIP_SECONDS.reduce(
+    (best, value) => (Math.abs(value - seconds) < Math.abs(best - seconds) ? value : best),
+  );
+}
 
 export async function animateScene({ imagePath, audioPath, prompt, outPath, width, height }, logger) {
   if (!openaiConfigured()) throw new Error('анимация требует ключ OpenAI');
 
-  const narrationSeconds = await probeDurationSeconds(audioPath);
-  const seconds = Math.min(MAX_CLIP_SECONDS, Math.max(4, Math.round(narrationSeconds)));
+  const seconds = nearestAllowedSeconds(await probeDurationSeconds(audioPath));
 
   // The video API rejects a reference frame whose dimensions differ from
   // the requested clip size, and the image models return their own sizes.
