@@ -201,7 +201,9 @@ createForm.addEventListener('submit', async (e) => {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    createForm.reset();
+    // Only the topic is cleared: resetting the whole form would throw away
+    // the format, style and animation choices on every submit.
+    createForm.querySelector('textarea[name="topic"]').value = '';
     await refreshJobList();
     selectJob(job.id);
   } catch (err) {

@@ -10,7 +10,12 @@ import { openaiConfigured } from './src/providers/openai.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// A stale cached app.js silently drops newly added form fields, so the
+// dashboard is always served fresh — it is a local tool, nothing to gain
+// from caching it.
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res) => res.setHeader('cache-control', 'no-store'),
+}));
 
 function jobSummary(job) {
   const total = Object.values(job.progress).reduce((a, b) => a + b, 0);
