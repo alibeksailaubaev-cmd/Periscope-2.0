@@ -1,6 +1,7 @@
+import fs from 'node:fs';
 import {
   openaiApiKey, OPENAI_CHAT_MODEL, OPENAI_TTS_MODEL, OPENAI_TTS_VOICE,
-  OPENAI_IMAGE_MODEL, OPENAI_IMAGE_QUALITY,
+  OPENAI_IMAGE_MODEL, OPENAI_IMAGE_QUALITY, OPENAI_VIDEO_MODEL,
 } from '../config.js';
 
 const REQUEST_TIMEOUT_MS = 120_000;
@@ -143,6 +144,97 @@ export async function generateImageOpenAI(prompt, width, height, notify) {
         notify?.(`Модель картинок: ${model}`);
       }
       return image;
+    } catch (err) {
+      lastError = err;
+      if (!MODEL_UNAVAILABLE.test(err.message)) throw err;
+    }
+  }
+  throw lastError;
+}
+
+// Video generation is asynchronous: the request returns a job that has to
+// be polled until the render finishes, then the file is downloaded
+// separately. Model names churn like the image ones, so try in order.
+const VIDEO_MODEL_CANDIDATES = ['sora-2', 'sora-2-pro', 'sora-1'];
+const VIDEO_POLL_INTERVAL_MS = 5_000;
+const VIDEO_TIMEOUT_MS = 15 * 60_000;
+let knownGoodVideoModel = null;
+
+function videoSizeFor(width, height) {
+  return width > height ? '1280x720' : '720x1280';
+}
+
+async function startVideoJob(model, prompt, seconds, width, height, imagePath, notify) {
+  const size = videoSizeFor(width, height);
+  const url = 'https://api.openai.com/v1/videos';
+
+  // With a reference frame the clip keeps the look of the still we already
+  // generated, so the animated scenes match the rest of the documentary.
+  if (imagePath) {
+    const form = new FormData();
+    form.append('model', model);
+    form.append('prompt', prompt);
+    form.append('size', size);
+    form.append('seconds', String(seconds));
+    form.append('input_reference', new Blob([await fs.promises.readFile(imagePath)], { type: 'image/jpeg' }), 'reference.jpg');
+    const response = await withTimeoutFetch(url, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${openaiApiKey()}` },
+      body: form,
+    }, notify);
+    if (response.ok) return (await response.json())?.id;
+    const message = await readErrorMessage(response);
+    notify?.(`Кадр как референс не принят (${message}) — генерирую по описанию`);
+  }
+
+  const response = await withTimeoutFetch(url, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ model, prompt, size, seconds: String(seconds) }),
+  }, notify);
+  if (!response.ok) throw new Error(`OpenAI video: ${await readErrorMessage(response)}`);
+  return (await response.json())?.id;
+}
+
+async function waitForVideo(videoId, notify) {
+  const deadline = Date.now() + VIDEO_TIMEOUT_MS;
+  while (Date.now() < deadline) {
+    const response = await withTimeoutFetch(`https://api.openai.com/v1/videos/${videoId}`, {
+      headers: authHeaders(),
+    }, notify);
+    if (!response.ok) throw new Error(`OpenAI video: ${await readErrorMessage(response)}`);
+    const job = await response.json();
+    if (job.status === 'completed') return;
+    if (job.status === 'failed') throw new Error(`OpenAI video: ${job?.error?.message || 'рендер не удался'}`);
+    await sleep(VIDEO_POLL_INTERVAL_MS);
+  }
+  throw new Error('OpenAI video: рендер не уложился в 15 минут');
+}
+
+async function downloadVideo(videoId, notify) {
+  const response = await withTimeoutFetch(`https://api.openai.com/v1/videos/${videoId}/content`, {
+    headers: authHeaders(),
+  }, notify);
+  if (!response.ok) throw new Error(`OpenAI video: скачивание не удалось (HTTP ${response.status})`);
+  return Buffer.from(await response.arrayBuffer());
+}
+
+export async function generateVideoOpenAI({ prompt, seconds, width, height, imagePath }, notify) {
+  const candidates = knownGoodVideoModel
+    ? [knownGoodVideoModel]
+    : [OPENAI_VIDEO_MODEL, ...VIDEO_MODEL_CANDIDATES.filter((m) => m !== OPENAI_VIDEO_MODEL)];
+
+  let lastError;
+  for (const model of candidates) {
+    try {
+      const videoId = await startVideoJob(model, prompt, seconds, width, height, imagePath, notify);
+      if (!videoId) throw new Error('OpenAI video: ответ без идентификатора задачи');
+      if (knownGoodVideoModel !== model) {
+        knownGoodVideoModel = model;
+        notify?.(`Модель анимации: ${model}`);
+      }
+      await waitForVideo(videoId, notify);
+      return await downloadVideo(videoId, notify);
     } catch (err) {
       lastError = err;
       if (!MODEL_UNAVAILABLE.test(err.message)) throw err;

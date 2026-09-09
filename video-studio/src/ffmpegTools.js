@@ -63,6 +63,24 @@ export async function buildSceneClip({ imagePath, audioPath, outPath, width, hei
   return duration;
 }
 
+// Lays the narration over a generated clip. The clip is almost always
+// shorter than the voice track, so it loops until the narration ends
+// rather than leaving the scene silent or cutting the sentence short.
+export async function fitClipToAudio({ videoPath, audioPath, outPath, width, height, fps = 30 }) {
+  const duration = await probeDurationSeconds(audioPath);
+  await runFfmpeg([
+    '-stream_loop', '-1', '-i', videoPath,
+    '-i', audioPath,
+    '-filter_complex',
+    `[0:v]scale=${width}:${height}:force_original_aspect_ratio=increase,` +
+    `crop=${width}:${height},fps=${fps},format=yuv420p[v]`,
+    '-map', '[v]', '-map', '1:a',
+    '-c:v', 'libx264', '-c:a', 'aac', '-pix_fmt', 'yuv420p',
+    '-t', String(duration),
+    outPath,
+  ]);
+}
+
 // Re-encodes on concat (rather than -c copy) so clips of slightly
 // different frame counts still produce a clean, seekable final file.
 export async function concatClips(clipPaths, outPath) {

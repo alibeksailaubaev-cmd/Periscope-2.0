@@ -55,6 +55,9 @@ export const OPENAI_IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1
 // costs several times more. 'medium' keeps a documentary looking decent
 // without burning a small balance in one video.
 export const OPENAI_IMAGE_QUALITY = process.env.OPENAI_IMAGE_QUALITY || 'medium';
+// Animating scenes costs roughly twenty times more than a still image,
+// so it is opt-in per job rather than a default.
+export const OPENAI_VIDEO_MODEL = process.env.OPENAI_VIDEO_MODEL || 'sora-2';
 
 // Persists the key so it survives a restart, and applies it immediately
 // so the running pipeline picks it up without one.

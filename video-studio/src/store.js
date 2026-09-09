@@ -56,6 +56,7 @@ export function createJob(input) {
       visualStyle: ['realism', 'illustration', 'cinematic'].includes(input.visualStyle)
         ? input.visualStyle
         : 'realism',
+      animation: ['none', 'first', 'all'].includes(input.animation) ? input.animation : 'none',
     },
     title: null,
     script: null,

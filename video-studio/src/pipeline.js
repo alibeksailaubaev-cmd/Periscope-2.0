@@ -5,6 +5,7 @@ import { generateScript, styleSuffix } from './providers/script.js';
 import { synthesizeSpeech } from './providers/tts.js';
 import { generateImage } from './providers/image.js';
 import { buildSceneClip, concatClips } from './ffmpegTools.js';
+import { animateScene } from './providers/animate.js';
 import { FORMAT_PRESETS } from './config.js';
 
 class PausedError extends Error {}
@@ -80,18 +81,38 @@ export async function runJob(jobId) {
       saveJob(job);
     }
 
+    const animateCount = { none: 0, first: 1, all: scenes.length }[job.options.animation] ?? 0;
     const clipPaths = scenes.map((_, i) => path.join(clipsDir, `scene_${i}.mp4`));
     for (let i = 0; i < scenes.length; i++) {
       checkPause(job);
       if (!fs.existsSync(clipPaths[i])) {
-        logger.line(`Собираю видео-сегмент ${i + 1}/${scenes.length}`);
-        await buildSceneClip({
-          imagePath: path.join(imagesDir, `scene_${i}.jpg`),
-          audioPath: path.join(audioDir, `scene_${i}.mp3`),
-          outPath: clipPaths[i],
-          width: preset.width,
-          height: preset.height,
-        });
+        const imagePath = path.join(imagesDir, `scene_${i}.jpg`);
+        const audioPath = path.join(audioDir, `scene_${i}.mp3`);
+        if (i < animateCount) {
+          logger.line(`Анимирую сцену ${i + 1}/${scenes.length} (это дольше и дороже обычного кадра)`);
+          try {
+            await animateScene({
+              imagePath,
+              audioPath,
+              prompt: `${scenes[i].imagePrompt}, ${styleText}`,
+              outPath: clipPaths[i],
+              width: preset.width,
+              height: preset.height,
+            }, logger);
+          } catch (err) {
+            logger.line(`Анимация не удалась (${err.message}) — собираю сцену обычным кадром`);
+          }
+        }
+        if (!fs.existsSync(clipPaths[i])) {
+          logger.line(`Собираю видео-сегмент ${i + 1}/${scenes.length}`);
+          await buildSceneClip({
+            imagePath,
+            audioPath,
+            outPath: clipPaths[i],
+            width: preset.width,
+            height: preset.height,
+          });
+        }
       }
       job.progress.videoDone = i + 1;
       saveJob(job);
