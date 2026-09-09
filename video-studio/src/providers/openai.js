@@ -23,6 +23,19 @@ async function plainFetch(url, options) {
   }
 }
 
+// An exhausted balance comes back with the same 429 as a rate limit, but
+// waiting cannot fix it — only a top-up can — so it is passed straight
+// through instead of stalling every remaining scene.
+async function isOutOfCredit(response) {
+  try {
+    const data = await response.clone().json();
+    return /insufficient_quota|billing|exceeded your current quota/i
+      .test(`${data?.error?.code} ${data?.error?.type} ${data?.error?.message}`);
+  } catch {
+    return false;
+  }
+}
+
 // New accounts get a low images-per-minute allowance, and a documentary
 // fires a dozen requests back to back, so waiting out a 429 is normal
 // operation here rather than an error worth falling back over.
@@ -31,6 +44,10 @@ async function withTimeoutFetch(url, options, notify) {
   for (let attempt = 0; ; attempt++) {
     const response = await plainFetch(url, options);
     if (response.status !== 429 || attempt >= RATE_LIMIT_RETRIES) return response;
+    if (await isOutOfCredit(response)) {
+      notify?.('На балансе OpenAI закончились деньги');
+      return response;
+    }
     const retryAfter = Number(response.headers.get('retry-after'));
     const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
       ? retryAfter * 1000
