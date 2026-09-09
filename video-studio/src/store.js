@@ -59,6 +59,7 @@ export function createJob(input) {
       animation: ['none', 'first', 'all'].includes(input.animation) ? input.animation : 'none',
     },
     title: null,
+    characterSheet: String(input.characterSheet || '').trim(),
     script: null,
     progress: {
       scriptsTotal: 0, scriptsDone: 0,

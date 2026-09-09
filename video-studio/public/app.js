@@ -16,6 +16,9 @@ const healthEl = document.getElementById('health');
 const createForm = document.getElementById('create-form');
 const keyForm = document.getElementById('key-form');
 const keyStatusEl = document.getElementById('key-status');
+const scenesEl = document.getElementById('scenes');
+const characterBox = document.getElementById('character-box');
+const characterInput = document.getElementById('character-input');
 
 async function api(url, options) {
   const res = await fetch(url, options);
@@ -129,9 +132,95 @@ function selectJob(jobId) {
     logEl.textContent += JSON.parse(e.data) + '\n';
     logEl.scrollTop = logEl.scrollHeight;
   });
+  let lastSignature = '';
   eventSource.addEventListener('progress', (e) => {
-    renderOverview(JSON.parse(e.data));
+    const job = JSON.parse(e.data);
+    renderOverview(job);
+    // Only redraw the scene list when something about it actually changed.
+    const signature = JSON.stringify(job.progress) + job.status;
+    if (signature !== lastSignature) {
+      lastSignature = signature;
+      refreshScenes().catch(() => {});
+    }
   });
+  refreshScenes().catch(() => {});
+}
+
+function sceneCard(scene, jobId) {
+  const card = document.createElement('div');
+  card.className = 'scene-card';
+
+  const thumb = scene.hasImage
+    ? `<img class="scene-thumb" src="/api/jobs/${jobId}/scenes/${scene.index}/image?t=${Date.now()}" alt="кадр ${scene.index + 1}">`
+    : '<div class="scene-thumb empty">кадр<br>ещё не готов</div>';
+
+  card.innerHTML = `
+    ${thumb}
+    <div class="scene-body">
+      <div class="scene-head">
+        <span class="scene-num">Сцена ${scene.index + 1}</span>
+        <span class="scene-flags">
+          <span class="flag ${scene.hasAudio ? 'on' : ''}">озвучка</span>
+          <span class="flag ${scene.hasImage ? 'on' : ''}">кадр</span>
+          <span class="flag ${scene.hasClip ? 'anim' : ''}">видео</span>
+        </span>
+      </div>
+      <label class="scene-field">Закадровый текст
+        <textarea rows="3" data-field="narration">${escapeHtml(scene.narration)}</textarea>
+      </label>
+      <label class="scene-field">Промпт кадра (на английском)
+        <textarea rows="3" data-field="imagePrompt">${escapeHtml(scene.imagePrompt)}</textarea>
+      </label>
+      <div class="scene-actions">
+        <button data-act="save">Сохранить</button>
+        <button data-act="redraw">Перерисовать кадр</button>
+        <button data-act="revoice">Переозвучить</button>
+        ${scene.hasAudio ? `<audio controls preload="none" src="/api/jobs/${jobId}/scenes/${scene.index}/audio"></audio>` : ''}
+      </div>
+    </div>`;
+
+  const readEdits = () => ({
+    narration: card.querySelector('[data-field="narration"]').value,
+    imagePrompt: card.querySelector('[data-field="imagePrompt"]').value,
+  });
+  const save = () => api(`/api/jobs/${jobId}/scenes/${scene.index}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(readEdits()),
+  });
+  // Edits are saved before regenerating, so the new asset uses what is on
+  // screen rather than what the model originally wrote.
+  const regenerate = async (parts) => {
+    await save();
+    await api(`/api/jobs/${jobId}/scenes/${scene.index}/regenerate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ parts }),
+    });
+    await refreshScenes();
+  };
+
+  card.querySelector('[data-act="save"]').addEventListener('click', () => save().catch((e) => alert(e.message)));
+  card.querySelector('[data-act="redraw"]').addEventListener('click', () => regenerate(['image']).catch((e) => alert(e.message)));
+  card.querySelector('[data-act="revoice"]').addEventListener('click', () => regenerate(['audio']).catch((e) => alert(e.message)));
+  return card;
+}
+
+async function refreshScenes() {
+  if (!selectedJobId) return;
+  const { scenes, characterSheet } = await api(`/api/jobs/${selectedJobId}/scenes`);
+  characterBox.hidden = scenes.length === 0;
+  if (document.activeElement !== characterInput) characterInput.value = characterSheet;
+
+  if (scenes.length === 0) {
+    scenesEl.innerHTML = '<p class="muted" style="padding:12px">Сценарий ещё не готов — сцены появятся здесь.</p>';
+    return;
+  }
+  // Editing in place would fight the periodic refresh, so cards are only
+  // rebuilt while none of their fields is focused.
+  if (scenesEl.contains(document.activeElement)) return;
+  scenesEl.innerHTML = '';
+  for (const scene of scenes) scenesEl.appendChild(sceneCard(scene, selectedJobId));
 }
 
 async function refreshJobList() {
@@ -189,6 +278,7 @@ createForm.addEventListener('submit', async (e) => {
     const data = new FormData(createForm);
     const payload = {
       topic: data.get('topic'),
+      characterSheet: data.get('characterSheet'),
       delivery: data.get('delivery'),
       format: data.get('format'),
       visualStyle: data.get('visualStyle'),
@@ -212,6 +302,27 @@ createForm.addEventListener('submit', async (e) => {
     submitBtn.disabled = false;
   }
 });
+
+document.getElementById('character-save').addEventListener('click', async () => {
+  try {
+    await api(`/api/jobs/${selectedJobId}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ characterSheet: characterInput.value }),
+    });
+    alert('Персонаж сохранён. Нажмите «Перерисовать кадр» на сценах, которые нужно обновить.');
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+for (const tab of document.querySelectorAll('.tab')) {
+  tab.addEventListener('click', () => {
+    for (const other of document.querySelectorAll('.tab')) other.classList.toggle('active', other === tab);
+    document.getElementById('tab-scenes').hidden = tab.dataset.tab !== 'scenes';
+    document.getElementById('tab-log').hidden = tab.dataset.tab !== 'log';
+  });
+}
 
 refreshJobList();
 refreshHealth();

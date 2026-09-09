@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PORT, OFFLINE_MODE, saveOpenAIKey, openaiApiKey } from './src/config.js';
-import { createJob, listJobs, getJob, deleteJob, getLogger, jobPath } from './src/store.js';
+import { createJob, listJobs, getJob, deleteJob, getLogger, jobPath, saveJob } from './src/store.js';
 import { enqueue, pauseJob, resumeJob, status as queueStatus } from './src/queue.js';
 import { openaiConfigured } from './src/providers/openai.js';
 
@@ -36,6 +36,7 @@ function jobSummary(job) {
     updatedAt: job.updatedAt,
     hasVideo: Boolean(job.outputVideo && fs.existsSync(jobPath(job.id, job.outputVideo))),
     hasCover: Boolean(job.coverImage && fs.existsSync(jobPath(job.id, job.coverImage))),
+    characterSheet: job.characterSheet || job.script?.characterSheet || '',
   };
 }
 
@@ -121,6 +122,112 @@ app.get('/api/jobs/:id/cover', (req, res) => {
   const job = getJob(req.params.id);
   if (!job?.coverImage) return res.status(404).end();
   res.sendFile(jobPath(job.id, job.coverImage));
+});
+
+app.patch('/api/jobs/:id', (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Задание не найдено' });
+  if (job.status === 'running') return res.status(400).json({ error: 'Сначала остановите задание' });
+  if (typeof req.body?.characterSheet === 'string') {
+    job.characterSheet = req.body.characterSheet.trim();
+    saveJob(job);
+  }
+  res.json(jobSummary(job));
+});
+
+function sceneAsset(job, index, kind) {
+  const file = { image: `images/scene_${index}.jpg`, audio: `audio/scene_${index}.mp3`, clip: `clips/scene_${index}.mp4` }[kind];
+  return file ? jobPath(job.id, file) : null;
+}
+
+// Scene index coming from a URL: must land inside this job's scene list.
+function readScene(req, res) {
+  const job = getJob(req.params.id);
+  if (!job?.script) {
+    res.status(404).json({ error: 'Сценарий ещё не готов' });
+    return null;
+  }
+  const index = Number(req.params.index);
+  if (!Number.isInteger(index) || index < 0 || index >= job.script.scenes.length) {
+    res.status(404).json({ error: 'Такой сцены нет' });
+    return null;
+  }
+  return { job, index };
+}
+
+app.get('/api/jobs/:id/scenes', (req, res) => {
+  const job = getJob(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Задание не найдено' });
+  if (!job.script) return res.json({ characterSheet: '', scenes: [] });
+  res.json({
+    characterSheet: job.characterSheet || job.script.characterSheet || '',
+    scenes: job.script.scenes.map((scene, index) => ({
+      index,
+      narration: scene.narration,
+      imagePrompt: scene.imagePrompt,
+      hasImage: fs.existsSync(sceneAsset(job, index, 'image')),
+      hasAudio: fs.existsSync(sceneAsset(job, index, 'audio')),
+      hasClip: fs.existsSync(sceneAsset(job, index, 'clip')),
+    })),
+  });
+});
+
+app.get('/api/jobs/:id/scenes/:index/:kind(image|audio|clip)', (req, res) => {
+  const found = readScene(req, res);
+  if (!found) return;
+  const filePath = sceneAsset(found.job, found.index, req.params.kind);
+  if (!fs.existsSync(filePath)) return res.status(404).end();
+  res.sendFile(filePath);
+});
+
+app.patch('/api/jobs/:id/scenes/:index', (req, res) => {
+  const found = readScene(req, res);
+  if (!found) return;
+  const { job, index } = found;
+  if (job.status === 'running') return res.status(400).json({ error: 'Сначала остановите задание' });
+
+  const scene = job.script.scenes[index];
+  if (typeof req.body?.narration === 'string' && req.body.narration.trim()) {
+    scene.narration = req.body.narration.trim();
+  }
+  if (typeof req.body?.imagePrompt === 'string' && req.body.imagePrompt.trim()) {
+    scene.imagePrompt = req.body.imagePrompt.trim();
+  }
+  saveJob(job);
+  res.json({ index, narration: scene.narration, imagePrompt: scene.imagePrompt });
+});
+
+// Regeneration works by deleting what the scene already has: the pipeline
+// skips every step whose file exists, so resuming rebuilds exactly the
+// pieces that were removed.
+app.post('/api/jobs/:id/scenes/:index/regenerate', (req, res) => {
+  const found = readScene(req, res);
+  if (!found) return;
+  const { job, index } = found;
+  if (job.status === 'running') return res.status(400).json({ error: 'Сначала остановите задание' });
+
+  const parts = Array.isArray(req.body?.parts) && req.body.parts.length
+    ? req.body.parts.filter((p) => ['image', 'audio'].includes(p))
+    : ['image'];
+  for (const part of [...parts, 'clip']) {
+    fs.rmSync(sceneAsset(job, index, part), { force: true });
+  }
+  // The assembled video no longer matches the scenes it was built from.
+  const finalPath = jobPath(job.id, 'output', 'video.mp4');
+  fs.rmSync(finalPath, { force: true });
+  job.outputVideo = null;
+  job.progress.framesDone = Math.min(job.progress.framesDone, index);
+  job.progress.voiceDone = parts.includes('audio') ? Math.min(job.progress.voiceDone, index) : job.progress.voiceDone;
+  job.progress.videoDone = Math.min(job.progress.videoDone, index);
+  job.status = 'paused';
+  saveJob(job);
+
+  try {
+    resumeJob(job.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 app.get('/api/jobs/:id/stream', (req, res) => {

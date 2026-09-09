@@ -58,7 +58,8 @@ export async function runJob(jobId) {
     const styleText = styleSuffix(job.options.visualStyle);
     // Repeating one fixed description in every prompt is what keeps a
     // recurring character recognisable from scene to scene.
-    const character = job.script.characterSheet ? `${job.script.characterSheet}, ` : '';
+    const sheet = (job.characterSheet || job.script.characterSheet || '').trim();
+    const character = sheet ? `${sheet}, ` : '';
     const scenePrompt = (i) => `${scenes[i].imagePrompt}, ${character}${styleText}`;
 
     for (let i = 0; i < scenes.length; i++) {

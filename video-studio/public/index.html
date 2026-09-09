@@ -27,6 +27,11 @@
         <label>Тема
           <textarea name="topic" rows="2" placeholder="Например: Викинги — походы и грабежи" required></textarea>
         </label>
+        <label>Персонаж
+          <textarea name="characterSheet" rows="2"
+            placeholder="Например: a chubby orange tabby cat in a blue spacesuit"></textarea>
+          <span class="hint">Задайте, чтобы продолжить серию тем же героем. Пусто — придумает сам.</span>
+        </label>
         <label>Подача
           <input type="text" name="delivery" placeholder="Историко-документальная" />
         </label>
@@ -75,8 +80,20 @@
       <div id="overview" class="overview">
         <p class="muted">Выберите задание слева.</p>
       </div>
-      <div class="log-box">
-        <div class="log-header">Журнал</div>
+      <div class="tabs">
+        <button class="tab active" data-tab="scenes">Сцены</button>
+        <button class="tab" data-tab="log">Журнал</button>
+      </div>
+      <div id="tab-scenes" class="tab-panel">
+        <div id="character-box" class="character-box" hidden>
+          <label>Персонаж (применится при перегенерации кадров)
+            <textarea id="character-input" rows="2"></textarea>
+          </label>
+          <button id="character-save" type="button">Сохранить персонажа</button>
+        </div>
+        <div id="scenes" class="scenes"></div>
+      </div>
+      <div id="tab-log" class="tab-panel" hidden>
         <pre id="log" class="log"></pre>
       </div>
     </section>
