@@ -63,6 +63,12 @@ export async function buildSceneClip({ imagePath, audioPath, outPath, width, hei
   return duration;
 }
 
+// The closing frame of a clip, used as the opening reference for the next
+// one so an animated sequence continues instead of restarting.
+export async function extractLastFrame(videoPath, outPath) {
+  await runFfmpeg(['-sseof', '-0.4', '-i', videoPath, '-frames:v', '1', '-q:v', '2', outPath]);
+}
+
 // Lays the narration over a generated clip. The clip is almost always
 // shorter than the voice track, so it loops until the narration ends
 // rather than leaving the scene silent or cutting the sentence short.

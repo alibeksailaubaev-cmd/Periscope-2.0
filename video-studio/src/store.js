@@ -57,6 +57,7 @@ export function createJob(input) {
         ? input.visualStyle
         : 'realism',
       animation: ['none', 'first', 'all'].includes(input.animation) ? input.animation : 'none',
+      continuousMotion: Boolean(input.continuousMotion),
     },
     title: null,
     characterSheet: String(input.characterSheet || '').trim(),

@@ -283,6 +283,7 @@ createForm.addEventListener('submit', async (e) => {
       format: data.get('format'),
       visualStyle: data.get('visualStyle'),
       animation: data.get('animation'),
+      continuousMotion: data.get('continuousMotion') === 'on',
       historicalAccuracy: data.get('historicalAccuracy') === 'on',
       materialsProfile: data.get('materialsProfile') === 'on',
     };

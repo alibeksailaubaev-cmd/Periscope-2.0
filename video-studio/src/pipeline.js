@@ -4,7 +4,7 @@ import { getJob, saveJob, getLogger, jobPath } from './store.js';
 import { generateScript, styleSuffix } from './providers/script.js';
 import { synthesizeSpeech } from './providers/tts.js';
 import { generateImage } from './providers/image.js';
-import { buildSceneClip, concatClips } from './ffmpegTools.js';
+import { buildSceneClip, concatClips, extractLastFrame } from './ffmpegTools.js';
 import { animateScene } from './providers/animate.js';
 import { FORMAT_PRESETS } from './config.js';
 
@@ -96,6 +96,13 @@ export async function runJob(jobId) {
         if (i < animateCount) {
           logger.line(`Анимирую сцену ${i + 1}/${scenes.length} (это дольше и дороже обычного кадра)`);
           try {
+            // Chaining off the previous clip's last frame keeps the action
+            // flowing; without it every scene opens as a fresh shot.
+            let continueFrom = null;
+            if (job.options.continuousMotion && i > 0 && fs.existsSync(clipPaths[i - 1])) {
+              continueFrom = path.join(clipsDir, `carry_${i}.jpg`);
+              await extractLastFrame(clipPaths[i - 1], continueFrom);
+            }
             await animateScene({
               imagePath,
               audioPath,
@@ -103,6 +110,7 @@ export async function runJob(jobId) {
               outPath: clipPaths[i],
               width: preset.width,
               height: preset.height,
+              continueFrom,
             }, logger);
           } catch (err) {
             logger.line(`Анимация не удалась (${err.message}) — собираю сцену обычным кадром`);

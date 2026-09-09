@@ -14,15 +14,19 @@ function nearestAllowedSeconds(seconds) {
   );
 }
 
-export async function animateScene({ imagePath, audioPath, prompt, outPath, width, height }, logger) {
+export async function animateScene({ imagePath, audioPath, prompt, outPath, width, height, continueFrom }, logger) {
   if (!openaiConfigured()) throw new Error('анимация требует ключ OpenAI');
 
   const seconds = nearestAllowedSeconds(await probeDurationSeconds(audioPath));
 
+  // Starting from the previous clip's closing frame makes the sequence read
+  // as one continuous shot; otherwise the scene's own still is the anchor.
+  const referencePath = `${outPath}.ref.jpg`;
+  const source = continueFrom || imagePath;
+  if (continueFrom) logger.line('Продолжаю с последнего кадра предыдущей сцены');
   // The video API rejects a reference frame whose dimensions differ from
   // the requested clip size, and the image models return their own sizes.
-  const referencePath = `${outPath}.ref.jpg`;
-  await sharp(imagePath).resize(width, height, { fit: 'cover' }).jpeg({ quality: 92 }).toFile(referencePath);
+  await sharp(source).resize(width, height, { fit: 'cover' }).jpeg({ quality: 92 }).toFile(referencePath);
 
   const rawPath = `${outPath}.raw.mp4`;
   try {
