@@ -655,6 +655,16 @@ body {
   display: block;
 }
 
+.list-card-video-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  background: #14211f;
+}
+
 .media-video-badge {
   position: absolute;
   left: 8px;
@@ -2449,12 +2459,27 @@ function renderView(direction = 0) {
   renderDots(list.length, state.index);
 }
 
-// Разметка миниатюры одного элемента (фото или видео) — переиспользуется
-// в списке и в полоске миниатюр карточки.
+// Разметка миниатюры одного элемента (фото или видео) — для полоски
+// миниатюр внутри карточки (там всегда только медиа ТЕКУЩЕЙ записи, то
+// есть максимум несколько файлов одновременно в DOM).
 function mediaThumbMarkup(item) {
   if (!item) return "";
   if (item.type === "video") {
     return `<video src="${item.src}" muted preload="metadata"></video><span class="media-video-badge">▶</span>`;
+  }
+  return `<img src="${item.src}" alt="" />`;
+}
+
+// Облегчённая миниатюра для списка (renderListView) — рендерится сразу
+// для ВСЕХ записей раздела. Полноразмерное видео как <video src="..."> не
+// вставляем: если в разделе десятки видео, встраивание их dataURL прямо в
+// один большой HTML-фрагмент разом может занять сотни МБ/несколько ГБ и
+// уронить вкладку. В списке видео показываем как статичную иконку —
+// смотреть его целиком можно по клику (лайтбокс), как и раньше.
+function listThumbMarkup(item) {
+  if (!item) return "";
+  if (item.type === "video") {
+    return `<div class="list-card-video-placeholder">🎥</div><span class="media-video-badge">▶</span>`;
   }
   return `<img src="${item.src}" alt="" />`;
 }
@@ -2471,7 +2496,7 @@ function renderListView(list) {
         return `
         <div class="list-card" data-idx="${idx}">
           <div class="list-card-photo" data-role="photo" title="${media.length ? "Открыть целиком" : "Нет фото/видео"}">
-            ${media.length ? mediaThumbMarkup(media[0]) : "📷"}
+            ${media.length ? listThumbMarkup(media[0]) : "📷"}
             ${media.length > 1 ? `<span class="photo-count-badge">+${media.length - 1}</span>` : ""}
             ${media.length ? '<span class="zoom-hint">⤢</span>' : ""}
           </div>
