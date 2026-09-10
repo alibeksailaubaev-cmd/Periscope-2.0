@@ -6,7 +6,7 @@ import {
   Phone, ClipboardCheck, DoorOpen, Truck, ShieldCheck, Package, Boxes, Home,
   Siren, Bug, FileText, GraduationCap, Megaphone, BadgeCheck, FlaskConical,
   Droplets, Warehouse, Layers, Car, Users, AlertTriangle, Gauge, ChevronDown,
-  X, ArrowRight, TrendingUp, ShieldAlert, UserPlus, Radar, Sun, Moon,
+  X, ArrowRight, TrendingUp, ShieldAlert, UserPlus, Radar,
   Building2, Clock, Check, Activity, Egg, Bird, Route, MapPin,
 } from "lucide-react";
 
@@ -25,70 +25,40 @@ const HF_BG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABYPERMRDh
 const THEMES = {
   light: {
     key: "light",
-    /* фирменная палитра: песочный фон, бирюзовый акцент, графитовый текст */
-    bg: "#e7dec4",
-    text: "#221f18",
-    muted: "#575146",
-    faint: "#837c6b",
-    panel: "linear-gradient(180deg, rgba(0,163,163,0.075), rgba(0,163,163,0.015)), #fbfdfb",
-    panelHi: "linear-gradient(180deg, rgba(0,163,163,0.12), rgba(0,163,163,0.03)), #fbfdfb",
-    solid: "#fbfdfb",
-    border: "rgba(0,118,117,0.24)",
-    borderHi: "rgba(0,118,117,0.42)",
-    grid: "rgba(60,52,30,0.10)",
+    /* фирменная палитра Aitas UKPF: тёплый песочно-оранжевый фон, акцент —
+       оранжевый с вывески завода, графитовый текст */
+    bg: "#f1e0c4",
+    text: "#241d15",
+    muted: "#6b5842",
+    faint: "#8f7a5c",
+    panel: "linear-gradient(180deg, rgba(214,120,47,0.08), rgba(214,120,47,0.015)), #fdf9f0",
+    panelHi: "linear-gradient(180deg, rgba(214,120,47,0.13), rgba(214,120,47,0.03)), #fdf9f0",
+    solid: "#fdf9f0",
+    border: "rgba(181,97,31,0.24)",
+    borderHi: "rgba(181,97,31,0.44)",
+    grid: "rgba(70,50,25,0.10)",
     blue: "#1f6f87",
     violet: "#7c4f86",
     cyan: "#00a3a3",
     red: "#b23a2c",
     amber: "#b0741a",
     teal: "#00908f",
-    shadow: "0 1px 2px rgba(60,50,25,0.06), 0 16px 34px -22px rgba(60,50,25,0.45)",
-    glowA: "rgba(0,163,163,0.22)",
+    brand: "#d9781f",
+    brandDeep: "#b8621f",
+    shadow: "0 1px 2px rgba(65,45,20,0.07), 0 16px 34px -22px rgba(65,45,20,0.45)",
+    glowA: "rgba(214,120,47,0.24)",
     glowB: "rgba(124,79,134,0.18)",
     glowC: "rgba(178,58,44,0.18)",
     bgImageOpacity: 0.22,
-    bgWash: "rgba(231,222,196,0.88)",
+    bgWash: "rgba(241,224,196,0.88)",
     blobs: [
-      "radial-gradient(closest-side, rgba(0,163,163,0.20), transparent)",
+      "radial-gradient(closest-side, rgba(214,120,47,0.20), transparent)",
       "radial-gradient(closest-side, rgba(176,116,26,0.16), transparent)",
-      "radial-gradient(closest-side, rgba(0,144,143,0.14), transparent)",
+      "radial-gradient(closest-side, rgba(199,106,46,0.14), transparent)",
       "radial-gradient(closest-side, rgba(178,58,44,0.10), transparent)",
     ],
-    surface: "#fdfbf5",
-    ground: "#ddd3b6",
-  },
-  dark: {
-    key: "dark",
-    bg: "#05070f",
-    text: "#e9eefb",
-    muted: "#a3aec8",
-    faint: "#7b8aa6",
-    panel: "rgba(255,255,255,0.045)",
-    panelHi: "rgba(255,255,255,0.075)",
-    solid: "rgba(11,15,28,0.90)",
-    border: "rgba(255,255,255,0.10)",
-    borderHi: "rgba(255,255,255,0.20)",
-    grid: "rgba(255,255,255,0.06)",
-    blue: "#4f8cff",
-    violet: "#a06bff",
-    cyan: "#22d3ee",
-    red: "#ff4d5e",
-    amber: "#ffb020",
-    teal: "#2dd4bf",
-    shadow: "0 30px 70px -28px rgba(0,0,0,0.9)",
-    glowA: "rgba(79,140,255,0.30)",
-    glowB: "rgba(160,107,255,0.26)",
-    glowC: "rgba(255,77,94,0.22)",
-    bgImageOpacity: 0.18,
-    bgWash: "rgba(5,7,15,0.78)",
-    blobs: [
-      "radial-gradient(closest-side, rgba(79,140,255,0.50), transparent)",
-      "radial-gradient(closest-side, rgba(160,107,255,0.42), transparent)",
-      "radial-gradient(closest-side, rgba(34,211,238,0.30), transparent)",
-      "radial-gradient(closest-side, rgba(255,77,94,0.26), transparent)",
-    ],
-    surface: "#111828",
-    ground: "#0b1120",
+    surface: "#fefaf2",
+    ground: "#e3d1a9",
   },
 };
 
@@ -400,7 +370,7 @@ function BrandRail({ T }) {
           initial={{ opacity: 0, x: -14 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15 + i * 0.06, duration: 0.5, ease: EASE }}
-          style={{ width: 42, height: 42, background: T.cyan }}
+          style={{ width: 42, height: 42, background: T.brand }}
           className="grid place-items-center"
         >
           <svg viewBox="0 0 28 28" width="21" height="21">{g}</svg>
@@ -466,7 +436,7 @@ function Panel({ T, children, className = "", delay = 0 }) {
    6. ХЕДЕР
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function Header({ T, period, setPeriod, theme, setTheme }) {
+function Header({ T, period, setPeriod }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -18 }}
@@ -480,7 +450,7 @@ function Header({ T, period, setPeriod, theme, setTheme }) {
           transition={{ type: "spring", stiffness: 300, damping: 18 }}
           className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl"
           style={{
-            background: `linear-gradient(135deg, ${T.cyan}, ${T.teal})`,
+            background: `linear-gradient(135deg, ${T.brand}, ${T.brandDeep})`,
             boxShadow: `0 14px 32px -10px ${T.glowA}`,
           }}
         >
@@ -521,7 +491,7 @@ function Header({ T, period, setPeriod, theme, setTheme }) {
                   layoutId="period-pill"
                   className="absolute inset-0 rounded-lg"
                   style={{
-                    background: `linear-gradient(135deg, ${T.cyan}, ${T.teal})`,
+                    background: `linear-gradient(135deg, ${T.brand}, ${T.brandDeep})`,
                     boxShadow: `0 8px 22px -8px ${T.glowA}`,
                   }}
                   transition={{ type: "spring", stiffness: 420, damping: 34 }}
@@ -531,26 +501,6 @@ function Header({ T, period, setPeriod, theme, setTheme }) {
             </button>
           ))}
         </div>
-
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="grid h-[38px] w-[38px] place-items-center rounded-xl backdrop-blur-xl"
-          style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}
-          title="Сменить тему"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={theme}
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 90, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-            >
-              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-            </motion.span>
-          </AnimatePresence>
-        </button>
-
 
       </div>
     </motion.div>
@@ -1173,9 +1123,9 @@ function LogisticsMap({ T }) {
 
 const ROLES = [
   { n: 1, title: "Входной контроль периметра", hours: 36.0, now: true,
-    duties: "Проходная, согласования, подрядчики, входной контроль сырья и ТМЦ, внешний пест-контроль" },
+    duties: "Проходная, согласования, подрядчики" },
   { n: 2, title: "Внешние риски и контрагенты", hours: 36.5, now: true,
-    duties: "Санобработка транспорта до погрузки сырья, аудит контрагентов, поставщики, ЛПХ, ситуация в регионе, ВНД по сырью" },
+    duties: "Санобработка транспорта до погрузки сырья, поставщики, ЛПХ, ситуация в регионе, ВНД по сырью" },
   { n: 3, title: "Внутренний операционный контроль", hours: 34.5, now: false,
     duties: "Дезбарьеры, верификация мойки, МиДС, АТЦ, склад лузги, пометохранилище, биоотходы" },
   { n: 4, title: "Аудит, ВНД и лаборатория", hours: 36.0, now: false,
@@ -2020,7 +1970,7 @@ function IntroOrbit({ T, split, onContour }) {
       {dots.map((d) => (
         <g key={d.id}>
           <motion.line
-            stroke={split ? d.color : T.teal} strokeWidth={0.8} strokeDasharray="2 7"
+            stroke={split ? d.color : T.brand} strokeWidth={0.8} strokeDasharray="2 7"
             initial={false}
             animate={{
               x1: split ? d.sx : d.mx, y1: split ? d.sy : d.my,
@@ -2031,7 +1981,7 @@ function IntroOrbit({ T, split, onContour }) {
           />
           <motion.circle
             r={7} initial={false}
-            animate={{ cx: split ? d.sx : d.mx, cy: split ? d.sy : d.my, fill: split ? d.color : T.teal }}
+            animate={{ cx: split ? d.sx : d.mx, cy: split ? d.sy : d.my, fill: split ? d.color : T.brand }}
             transition={spring}
             style={{ filter: T.key === "dark" ? `drop-shadow(0 0 5px ${d.color})` : "none" }}
           />
@@ -2039,7 +1989,7 @@ function IntroOrbit({ T, split, onContour }) {
             r={14} initial={false}
             animate={{
               cx: split ? d.sx : d.mx, cy: split ? d.sy : d.my,
-              fill: split ? d.color : T.teal, opacity: [0.08, 0.2, 0.08],
+              fill: split ? d.color : T.brand, opacity: [0.08, 0.2, 0.08],
             }}
             transition={{ ...spring, opacity: { duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: d.i * 0.11 } }}
           />
@@ -2054,7 +2004,7 @@ function IntroOrbit({ T, split, onContour }) {
       >
         {[0, 1].map((k) => (
           <motion.circle
-            key={k} cx={ICC.x} cy={ICC.y} r={114} fill="none" stroke={T.teal} strokeWidth={1.2}
+            key={k} cx={ICC.x} cy={ICC.y} r={114} fill="none" stroke={T.brand} strokeWidth={1.2}
             initial={{ scale: 1, opacity: 0.35 }}
             animate={{ scale: [1, 1.22], opacity: [0.35, 0] }}
             transition={{ duration: 3.2, repeat: Infinity, ease: "easeOut", delay: k * 1.6 }}
@@ -2063,16 +2013,16 @@ function IntroOrbit({ T, split, onContour }) {
         ))}
         <circle cx={ICC.x} cy={ICC.y} r={114} fill={T.solid} stroke={T.borderHi} strokeWidth={1.4} />
         <motion.circle
-          cx={ICC.x} cy={ICC.y} r={126} fill="none" stroke={T.teal}
+          cx={ICC.x} cy={ICC.y} r={126} fill="none" stroke={T.brand}
           strokeWidth={1.3} strokeDasharray="9 8" opacity={0.75}
           animate={{ rotate: 360 }}
           transition={{ duration: 150, repeat: Infinity, ease: "linear" }}
           style={{ originX: `${ICC.x}px`, originY: `${ICC.y}px` }}
         />
         <g transform={`translate(${ICC.x}, ${ICC.y - 6})`}>
-          <path d={SHIELD} fill={T.teal} opacity={0.14} />
-          <path d={SHIELD} fill="none" stroke={T.teal} strokeWidth={2} strokeLinejoin="round" />
-          <path d="M -9 -28 L -3 -21 L 10 -35" fill="none" stroke={T.teal} strokeWidth={2.6}
+          <path d={SHIELD} fill={T.brand} opacity={0.14} />
+          <path d={SHIELD} fill="none" stroke={T.brand} strokeWidth={2} strokeLinejoin="round" />
+          <path d="M -9 -28 L -3 -21 L 10 -35" fill="none" stroke={T.brand} strokeWidth={2.6}
                 strokeLinecap="round" strokeLinejoin="round" />
           <text x={0} y={24} textAnchor="middle" fontSize="15" fontWeight="700" letterSpacing="0.5" fill={T.text}>
             БИОБЕЗОПАСНОСТЬ
@@ -2400,10 +2350,9 @@ function BiosecurityIntro({ T }) {
 }
 
 export default function BiosecurityExecutiveDashboard() {
-  const [theme, setTheme] = useState("light");
   const [period, setPeriod] = useState("week");
   const [open, setOpen] = useState("external");   // 'external' | 'internal' — used by the analytics chart below
-  const T = THEMES[theme];
+  const T = THEMES.light;
 
   const P = PERIODS[period];
   const demand = Math.round(METRICS.demandWeek * P.k);
@@ -2427,7 +2376,7 @@ export default function BiosecurityExecutiveDashboard() {
       <BrandRail T={T} />
 
       <div className="relative mx-auto max-w-[1280px] px-4 py-8 sm:px-7 sm:py-10">
-        <Header T={T} period={period} setPeriod={setPeriod} theme={theme} setTheme={setTheme} />
+        <Header T={T} period={period} setPeriod={setPeriod} />
 
         {/* ── ЧТО ТАКОЕ БИОБЕЗОПАСНОСТЬ ───────────────────────────────── */}
         <div className="mt-7">
