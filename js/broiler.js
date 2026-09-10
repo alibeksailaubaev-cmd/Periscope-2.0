@@ -61,7 +61,7 @@ const SECTIONS = [
 // Тексты интерфейса, одинаковые для всех трёх разделов.
 const COMMON_TEXT = {
   sidebarTotal: "Всего записей",
-  addHint: "Можно выбрать сразу много файлов (100+) — по умолчанию каждый станет отдельной карточкой. Видео весит намного больше фото — предпочтительны короткие ролики.",
+  addHint: "Можно выбрать сразу много файлов (100+) — по умолчанию каждый станет отдельной карточкой. Фото и видео сжимаются автоматически; сжатие видео занимает время — дождитесь окончания.",
   fieldLocationLabel: "Место / участок",
   fieldTextLabel: "Описание несоответствия",
   addDialogTitleOne: "Новая запись",
@@ -117,6 +117,7 @@ const els = {
   addDialogTitle: document.getElementById("addDialogTitle"),
   addForm: document.getElementById("addForm"),
   cancelAddBtn: document.getElementById("cancelAddBtn"),
+  saveAddBtn: document.getElementById("saveAddBtn"),
   fieldLocation: document.getElementById("fieldLocation"),
   fieldLocationLabel: document.getElementById("fieldLocationLabel"),
   locationOptions: document.getElementById("locationOptions"),
@@ -1082,10 +1083,10 @@ function promptAddMedia(entryId) {
   input.addEventListener("change", () => {
     const files = Array.from(input.files).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
     if (!files.length) return;
-    Promise.all(files.map(fileToMediaItem)).then((items) => {
+    filesToMediaItems(files).then((items) => {
       const entry = state.entries.find((e) => e.id === entryId);
       if (!entry) return;
-      entry.media.push(...items.filter(Boolean));
+      entry.media.push(...items);
       saveEntries();
       renderView();
     });
@@ -1105,14 +1106,18 @@ function deleteMediaFromEntry(entryId, mediaIndex) {
 // Add dialog (в т.ч. массовая загрузка нескольких фото сразу)
 // ---------------------------------------------------------------------------
 
-function openAddDialog() {
-  els.addForm.reset();
+function resetDropzone() {
   state.pendingMedia = [];
   els.dropPreview.hidden = true;
   els.dropzoneHint.hidden = false;
   els.dropzoneNote.hidden = true;
   els.splitToggle.hidden = true;
   els.fieldSplitCards.checked = true;
+}
+
+function openAddDialog() {
+  els.addForm.reset();
+  resetDropzone();
 
   els.fieldLocationLabel.textContent = COMMON_TEXT.fieldLocationLabel;
   els.fieldLocation.placeholder = currentSection().fieldLocationPlaceholder;
@@ -1154,12 +1159,35 @@ els.dropzone.addEventListener("drop", (e) => {
   if (files && files.length) handlePickedFiles(files);
 });
 
+// Пока идёт обработка (особенно перекодирование видео — оно занимает
+// секунды-минуты), показываем, что происходит, и не даём сохранить
+// наполовину готовый набор файлов.
+function showIntakeProgress({ index, total, file, percent }) {
+  const isVideo = file.type.startsWith("video/");
+  const position = total > 1 ? ` ${index + 1} из ${total}` : "";
+  els.dropPreview.hidden = true;
+  els.dropzoneHint.hidden = true;
+  els.dropzoneNote.hidden = false;
+  els.dropzoneNote.textContent = isVideo
+    ? `🎥 Сжатие видео${position} — ${Math.round(percent * 100)}%. Это может занять некоторое время.`
+    : `Обработка фото${position}...`;
+}
+
 async function handlePickedFiles(fileList) {
   const files = Array.from(fileList).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
   if (!files.length) return;
 
-  state.pendingMedia = (await Promise.all(files.map(fileToMediaItem))).filter(Boolean);
-  if (!state.pendingMedia.length) return;
+  els.saveAddBtn.disabled = true;
+  try {
+    state.pendingMedia = await filesToMediaItems(files, showIntakeProgress);
+  } finally {
+    els.saveAddBtn.disabled = false;
+  }
+
+  if (!state.pendingMedia.length) {
+    resetDropzone();
+    return;
+  }
   updateAddDialogMode();
 
   const photoCount = state.pendingMedia.filter((m) => m.type === "photo").length;
@@ -1210,29 +1238,290 @@ function fileToDataUrl(file) {
   return readFileAsDataUrl(file).then(compressDataUrl);
 }
 
-// Видео (в отличие от фото) на клиенте не пережимается — нет простого
-// надёжного способа перекодировать видео в браузере без тяжёлых
-// библиотек. Проверено на практике: один файл, приближающийся к 500 МБ,
-// надёжно роняет вкладку при формировании копии для отправки (там всё
-// содержимое собирается в одну JSON-строку) — поэтому лимит здесь
-// заметно строже верхней границы, которую теоретически можно прочитать
-// в память.
-const MAX_VIDEO_BYTES = 250 * 1024 * 1024; // ~250 МБ
+// Видео с телефона весит 60-120 МБ на минуту съёмки — один такой ролик
+// тяжелее нескольких сотен фотографий, и пара роликов делает копию для
+// отправки неподъёмной. Поэтому видео, как и фото, пережимается прямо в
+// браузере: кадры вытягиваются из <video> на ускоренном воспроизведении,
+// уменьшаются до 720p и кодируются в VP9 через WebCodecs, звук
+// перекодируется в Opus, всё собирается в WebM (см. compressVideoFile).
+// Типичный выигрыш — в 10-15 раз.
+//
+// Если WebCodecs в браузере нет или перекодирование сорвалось, ролик
+// сохраняется как есть: лучше тяжёлый файл, чем потерянная запись.
+const MAX_VIDEO_BYTES = 250 * 1024 * 1024; // предел на то, что кладётся в хранилище
+const VIDEO_TARGET_HEIGHT = 720;
+const VIDEO_COMPRESS_MIN_BYTES = 5 * 1024 * 1024; // мелкие ролики не трогаем
+const VIDEO_PLAYBACK_RATE = 4; // во столько раз быстрее реального времени тянем кадры
+const VIDEO_KEYFRAME_INTERVAL_SEC = 2;
+const VIDEO_ENCODE_QUEUE_LIMIT = 20; // при переполнении очереди кадр пропускаем, а не копим память
 
-async function fileToMediaItem(file) {
+function videoCompressionSupported() {
+  return (
+    typeof window.VideoEncoder === "function" &&
+    typeof window.VideoFrame === "function" &&
+    typeof window.WebMMuxer !== "undefined" &&
+    typeof HTMLVideoElement.prototype.requestVideoFrameCallback === "function"
+  );
+}
+
+function videoBitrateFor(width, height) {
+  // ~1,5 Мбит/с для 720p — для показа несоответствия этого с запасом,
+  // а вес падает на порядок.
+  return Math.max(400000, Math.min(2000000, Math.round(width * height * 1.6)));
+}
+
+// Звук перекодируем отдельно и целиком: decodeAudioData разбирает
+// дорожку намного быстрее реального времени, поэтому ускоренная перемотка
+// видео (где звук был бы искажён) на него не влияет. Любая осечка здесь
+// не критична — вернём null и соберём ролик без звука.
+const AUDIO_DECODE_MAX_BYTES = 300 * 1024 * 1024;
+
+async function encodeAudioTrack(file) {
+  if (typeof window.AudioEncoder !== "function" || typeof window.AudioData !== "function") return null;
+  // decodeAudioData требует весь файл в памяти целиком, да ещё и разворачивает
+  // звук в PCM. На очень тяжёлых роликах это самый крупный пик памяти во всём
+  // процессе, поэтому там звук не переносим: сжатая картинка без звука лучше,
+  // чем упавшая вкладка.
+  if (file.size > AUDIO_DECODE_MAX_BYTES) return null;
+  try {
+    const sampleRate = 48000; // Opus работает на 48 кГц; decodeAudioData сам пересэмплирует
+    const decodeCtx = new OfflineAudioContext(2, 1, sampleRate);
+    const buffer = await decodeCtx.decodeAudioData(await file.arrayBuffer());
+    if (!buffer || !buffer.length) return null;
+
+    const numberOfChannels = Math.min(2, buffer.numberOfChannels);
+    const support = await AudioEncoder.isConfigSupported({
+      codec: "opus",
+      numberOfChannels,
+      sampleRate,
+      bitrate: 64000,
+    });
+    if (!support || !support.supported) return null;
+
+    const chunks = [];
+    let failed = false;
+    const encoder = new AudioEncoder({
+      output: (chunk, meta) => chunks.push({ kind: "audio", chunk, meta }),
+      error: () => {
+        failed = true;
+      },
+    });
+    encoder.configure({ codec: "opus", numberOfChannels, sampleRate, bitrate: 64000 });
+
+    const frameSize = Math.round(sampleRate * 0.02); // порции по 20 мс
+    const channelData = [];
+    for (let ch = 0; ch < numberOfChannels; ch++) channelData.push(buffer.getChannelData(ch));
+    const interleaved = new Float32Array(frameSize * numberOfChannels);
+
+    for (let offset = 0; offset < buffer.length && !failed; offset += frameSize) {
+      const count = Math.min(frameSize, buffer.length - offset);
+      for (let ch = 0; ch < numberOfChannels; ch++) {
+        const data = channelData[ch];
+        for (let i = 0; i < count; i++) interleaved[i * numberOfChannels + ch] = data[offset + i];
+      }
+      const audioData = new AudioData({
+        format: "f32",
+        sampleRate,
+        numberOfFrames: count,
+        numberOfChannels,
+        timestamp: Math.round((offset / sampleRate) * 1e6),
+        data: interleaved.subarray(0, count * numberOfChannels),
+      });
+      encoder.encode(audioData);
+      audioData.close();
+    }
+
+    await encoder.flush();
+    encoder.close();
+    if (failed || !chunks.length) return null;
+    return { chunks, numberOfChannels, sampleRate };
+  } catch (err) {
+    return null;
+  }
+}
+
+// Возвращает Blob с пережатым роликом либо null, если сжимать нечем или
+// смысла нет (результат не легче исходника).
+async function compressVideoFile(file, onProgress) {
+  if (!videoCompressionSupported()) return null;
+
+  const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.src = url;
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+
+  let encoder = null;
+  try {
+    await new Promise((resolve, reject) => {
+      video.onloadedmetadata = () => resolve();
+      video.onerror = () => reject(new Error("не удалось прочитать видео"));
+    });
+
+    const srcW = video.videoWidth;
+    const srcH = video.videoHeight;
+    if (!srcW || !srcH) throw new Error("в файле нет видеодорожки");
+
+    // Ширина и высота должны быть чётными — этого требуют кодеки.
+    const scale = Math.min(1, VIDEO_TARGET_HEIGHT / srcH);
+    const width = Math.max(2, Math.round((srcW * scale) / 2) * 2);
+    const height = Math.max(2, Math.round((srcH * scale) / 2) * 2);
+
+    const audio = await encodeAudioTrack(file);
+
+    const target = new WebMMuxer.ArrayBufferTarget();
+    const muxer = new WebMMuxer.Muxer({
+      target,
+      video: { codec: "V_VP9", width, height },
+      audio: audio
+        ? { codec: "A_OPUS", numberOfChannels: audio.numberOfChannels, sampleRate: audio.sampleRate }
+        : undefined,
+      firstTimestampBehavior: "offset",
+    });
+
+    const chunks = audio ? audio.chunks.slice() : [];
+    let encodeError = null;
+    encoder = new VideoEncoder({
+      output: (chunk, meta) => chunks.push({ kind: "video", chunk, meta }),
+      error: (err) => {
+        encodeError = err;
+      },
+    });
+    encoder.configure({
+      codec: "vp09.00.10.08",
+      width,
+      height,
+      bitrate: videoBitrateFor(width, height),
+      framerate: 30,
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx2d = canvas.getContext("2d", { alpha: false });
+
+    const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 0;
+    let frameCount = 0;
+    let lastKeyframeTime = -Infinity;
+
+    video.playbackRate = VIDEO_PLAYBACK_RATE;
+
+    await new Promise((resolve, reject) => {
+      let finished = false;
+      const finish = () => {
+        if (!finished) {
+          finished = true;
+          resolve();
+        }
+      };
+      video.onended = finish;
+      video.onerror = () => reject(new Error("сбой воспроизведения при перекодировании"));
+
+      const onFrame = (now, metadata) => {
+        if (finished) return;
+        if (encodeError) {
+          reject(encodeError);
+          return;
+        }
+        try {
+          // Очередь кодировщика переполнена (медленная машина) — этот кадр
+          // пропускаем: ролик станет чуть менее плавным, зато память не
+          // растёт бесконтрольно.
+          if (encoder.encodeQueueSize <= VIDEO_ENCODE_QUEUE_LIMIT) {
+            ctx2d.drawImage(video, 0, 0, width, height);
+            const mediaTime = metadata.mediaTime;
+            const keyFrame = mediaTime - lastKeyframeTime >= VIDEO_KEYFRAME_INTERVAL_SEC;
+            if (keyFrame) lastKeyframeTime = mediaTime;
+            const frame = new VideoFrame(canvas, { timestamp: Math.max(0, Math.round(mediaTime * 1e6)) });
+            encoder.encode(frame, { keyFrame });
+            frame.close();
+            frameCount++;
+            if (duration && onProgress) onProgress(Math.min(0.99, metadata.mediaTime / duration));
+          }
+        } catch (err) {
+          reject(err);
+          return;
+        }
+        video.requestVideoFrameCallback(onFrame);
+      };
+
+      video.requestVideoFrameCallback(onFrame);
+      video.play().catch(reject);
+    });
+
+    await encoder.flush();
+    if (encodeError) throw encodeError;
+    if (!frameCount) throw new Error("не удалось получить ни одного кадра");
+
+    // Мультиплексор ждёт куски по возрастанию времени, а звук и видео
+    // кодировались раздельно — поэтому сначала сливаем их в общий поток.
+    chunks.sort((a, b) => a.chunk.timestamp - b.chunk.timestamp);
+    for (const item of chunks) {
+      if (item.kind === "video") muxer.addVideoChunk(item.chunk, item.meta);
+      else muxer.addAudioChunk(item.chunk, item.meta);
+    }
+    muxer.finalize();
+
+    const blob = new Blob([target.buffer], { type: "video/webm" });
+    if (onProgress) onProgress(1);
+    return blob.size < file.size ? blob : null;
+  } finally {
+    if (encoder && encoder.state !== "closed") {
+      try {
+        encoder.close();
+      } catch (err) {
+        // уже закрыт — не важно
+      }
+    }
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function fileToMediaItem(file, onProgress) {
   if (file.type.startsWith("video/")) {
-    if (file.size > MAX_VIDEO_BYTES) {
+    let blob = file;
+    if (file.size > VIDEO_COMPRESS_MIN_BYTES) {
+      try {
+        const compressed = await compressVideoFile(file, onProgress);
+        if (compressed) blob = compressed;
+      } catch (err) {
+        console.warn(`Не удалось сжать видео «${file.name}», сохраняем как есть`, err);
+      }
+    }
+    if (blob.size > MAX_VIDEO_BYTES) {
       alert(
-        `Видео «${file.name}» слишком большое (${(file.size / 1024 / 1024).toFixed(0)} МБ, лимит ~250 МБ). ` +
-          "Более тяжёлые ролики надёжно роняют вкладку при формировании копии для отправки — сожмите видео или снимите более короткий ролик."
+        `Видео «${file.name}» слишком большое (${(blob.size / 1024 / 1024).toFixed(0)} МБ, лимит ~250 МБ) ` +
+          "и его не удалось пережать в этом браузере. Более тяжёлые ролики роняют вкладку при формировании " +
+          "копии для отправки — сожмите видео заранее или снимите ролик покороче."
       );
       return null;
     }
-    const src = await readFileAsDataUrl(file);
+    const src = await readFileAsDataUrl(blob);
     return { type: "video", src };
   }
   const src = await fileToDataUrl(file);
   return { type: "photo", src };
+}
+
+// Файлы обрабатываем по одному, а не через Promise.all: перекодирование
+// видео тяжёлое, параллельно оно только отнимает друг у друга процессор и
+// раздувает память, да и показать внятный прогресс по очереди проще.
+async function filesToMediaItems(files, onProgress) {
+  const items = [];
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const report = (percent) => {
+      if (onProgress) onProgress({ index: i, total: files.length, file, percent });
+    };
+    report(0);
+    const item = await fileToMediaItem(file, report);
+    if (item) items.push(item);
+  }
+  return items;
 }
 
 function compressDataUrl(dataUrl) {
