@@ -1993,7 +1993,7 @@ function getEmbeddedAll() {
     if (tag) {
       const data = JSON.parse(tag.textContent.trim());
       if (Array.isArray(data)) {
-        embeddedAllCache = data.length ? { [SECTIONS[0].key]: data } : null;
+        embeddedAllCache = { [SECTIONS[0].key]: data };
       } else if (data && typeof data === "object") {
         embeddedAllCache = data;
       }
@@ -2011,10 +2011,13 @@ async function loadSectionEntries(sectionKey) {
 
     // Открыт файл-копия, полученный от кого-то другого через «Скачать
     // копию для отправки» — в нём уже вшиты данные. Подхватываем
-    // встроенные данные как стартовые.
+    // встроенные данные как стартовые. Пустой раздел в такой копии — это
+    // тоже осмысленный ответ ("отправитель сюда ничего не клал"), поэтому
+    // ниже к демо-записям не проваливаемся: получатель должен видеть
+    // ровно то, что ему прислали, и ничего сверх этого.
     const embeddedAll = getEmbeddedAll();
-    if (embeddedAll && embeddedAll[sectionKey] && embeddedAll[sectionKey].length) {
-      const normalized = normalizeEntries(embeddedAll[sectionKey], sectionKey);
+    if (embeddedAll) {
+      const normalized = normalizeEntries(embeddedAll[sectionKey] || [], sectionKey);
       await idbSet(sectionKey, normalized).catch(() => {});
       return normalized;
     }

@@ -192,12 +192,16 @@ function idbSet(key, data) {
   );
 }
 
+// null означает "встроенных данных нет вовсе" (обычный файл дашборда), а
+// пустой массив — "это копия для отправки, но раздел в ней пуст". Разница
+// важна: во втором случае получателю нельзя подсовывать демо-записи,
+// которых отправитель не присылал.
 function readEmbeddedJson(tagId) {
   try {
     const tag = document.getElementById(tagId);
     if (!tag) return null;
     const data = JSON.parse(tag.textContent.trim());
-    return Array.isArray(data) && data.length ? data : null;
+    return Array.isArray(data) ? data : null;
   } catch (err) {
     return null;
   }
