@@ -4423,14 +4423,47 @@ function showIntakeProgress({ index, total, file, percent }) {
   els.dropPreview.hidden = true;
   els.dropzoneHint.hidden = true;
   els.dropzoneNote.hidden = false;
-  els.dropzoneNote.textContent = isVideo
-    ? `🎥 Сжатие видео${position} — ${Math.round(percent * 100)}%. Это может занять некоторое время.`
-    : `Обработка фото${position}...`;
+
+  if (!isVideo) {
+    els.dropzoneNote.textContent = `Обработка фото${position}...`;
+    return;
+  }
+  // Пока не пошли кадры, показывать «0%» — только пугать: непонятно,
+  // работает оно или встало. Честнее сказать, что идёт подготовка.
+  els.dropzoneNote.textContent =
+    percent > 0
+      ? `🎥 Сжатие видео${position} — ${Math.round(percent * 100)}%. Не закрывайте вкладку.`
+      : `🎥 Готовим видео${position} к сжатию... Не закрывайте вкладку.`;
+}
+
+// Замерено на практике: перекодирование съедает примерно 2 МБ исходного
+// видео в секунду. Точность тут не нужна — нужен честный порядок величины,
+// чтобы человек заранее понимал, ждать ему минуту или полчаса, и мог
+// разбить загрузку на части.
+const VIDEO_COMPRESS_BYTES_PER_SEC = 2 * 1024 * 1024;
+
+function confirmLongIntake(files) {
+  const videoBytes = files
+    .filter((f) => f.type.startsWith("video/") && f.size > VIDEO_COMPRESS_MIN_BYTES)
+    .reduce((sum, f) => sum + f.size, 0);
+  if (!videoBytes) return true;
+
+  const minutes = Math.round(videoBytes / VIDEO_COMPRESS_BYTES_PER_SEC / 60);
+  if (minutes < 3) return true;
+
+  return confirm(
+    `Выбрано видео примерно на ${(videoBytes / 1024 / 1024).toFixed(0)} МБ — сжатие займёт ориентировочно ${minutes} мин.\n\n` +
+      "Всё это время вкладку нужно держать открытой. Если это много — нажмите «Отмена» и загрузите файлы частями.\n\nПродолжить?"
+  );
 }
 
 async function handlePickedFiles(fileList) {
   const files = Array.from(fileList).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
   if (!files.length) return;
+  if (!confirmLongIntake(files)) {
+    resetDropzone();
+    return;
+  }
 
   els.saveAddBtn.disabled = true;
   try {
@@ -4509,6 +4542,8 @@ const VIDEO_COMPRESS_MIN_BYTES = 5 * 1024 * 1024; // мелкие ролики �
 const VIDEO_PLAYBACK_RATE = 4; // во столько раз быстрее реального времени тянем кадры
 const VIDEO_KEYFRAME_INTERVAL_SEC = 2;
 const VIDEO_ENCODE_QUEUE_LIMIT = 20; // при переполнении очереди кадр пропускаем, а не копим память
+const VIDEO_METADATA_TIMEOUT_MS = 20000;
+const VIDEO_STALL_TIMEOUT_MS = 25000; // столько ждём следующий кадр при открытой вкладке
 
 function videoCompressionSupported() {
   return (
@@ -4609,9 +4644,19 @@ async function compressVideoFile(file, onProgress) {
 
   let encoder = null;
   try {
+    // Браузер не всегда сообщает об ошибке: на неподдерживаемом кодеке
+    // (скажем, HEVC со свежего айфона) он может просто молча ничего не
+    // сделать. Поэтому ждём метаданные с ограничением по времени.
     await new Promise((resolve, reject) => {
-      video.onloadedmetadata = () => resolve();
-      video.onerror = () => reject(new Error("не удалось прочитать видео"));
+      const timer = setTimeout(() => reject(new Error("браузер не смог прочитать видео")), VIDEO_METADATA_TIMEOUT_MS);
+      video.onloadedmetadata = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      video.onerror = () => {
+        clearTimeout(timer);
+        reject(new Error("браузер не поддерживает формат этого видео"));
+      };
     });
 
     const srcW = video.videoWidth;
@@ -4664,19 +4709,43 @@ async function compressVideoFile(file, onProgress) {
 
     await new Promise((resolve, reject) => {
       let finished = false;
-      const finish = () => {
-        if (!finished) {
-          finished = true;
-          resolve();
-        }
+      let lastProgressAt = Date.now();
+      let watchdog = null;
+
+      const settle = (fn, arg) => {
+        if (finished) return;
+        finished = true;
+        clearInterval(watchdog);
+        fn(arg);
       };
+      const finish = () => settle(resolve);
+      const fail = (err) => settle(reject, err);
+
+      // Свёрнутую вкладку браузер перестаёт отрисовывать, и кадры честно
+      // не идут — это не зависание, поэтому время в фоне не засчитываем.
+      // Но если вкладка на виду, а кадров всё равно нет (застрявший
+      // декодер, полуподдерживаемый кодек), ждать вечно нельзя: одна такая
+      // запись подвесит всю очередь из сотни файлов. Сдаёмся и сохраняем
+      // ролик как есть.
+      watchdog = setInterval(() => {
+        if (finished) return;
+        if (document.hidden) {
+          lastProgressAt = Date.now();
+          return;
+        }
+        if (Date.now() - lastProgressAt > VIDEO_STALL_TIMEOUT_MS) {
+          fail(new Error("перекодирование остановилось"));
+        }
+      }, 2000);
+
       video.onended = finish;
-      video.onerror = () => reject(new Error("сбой воспроизведения при перекодировании"));
+      video.onerror = () => fail(new Error("сбой воспроизведения при перекодировании"));
 
       const onFrame = (now, metadata) => {
         if (finished) return;
+        lastProgressAt = Date.now();
         if (encodeError) {
-          reject(encodeError);
+          fail(encodeError);
           return;
         }
         try {
@@ -4695,14 +4764,14 @@ async function compressVideoFile(file, onProgress) {
             if (duration && onProgress) onProgress(Math.min(0.99, metadata.mediaTime / duration));
           }
         } catch (err) {
-          reject(err);
+          fail(err);
           return;
         }
         video.requestVideoFrameCallback(onFrame);
       };
 
       video.requestVideoFrameCallback(onFrame);
-      video.play().catch(reject);
+      video.play().catch(fail);
     });
 
     await encoder.flush();
