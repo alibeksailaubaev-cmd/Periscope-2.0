@@ -45,6 +45,7 @@ const THEMES = {
     teal: "#00908f",
     brand: "#d9781f",
     brandDeep: "#b8621f",
+    logoText: "#5a3a27",
     shadow: "0 1px 2px rgba(65,45,20,0.07), 0 16px 34px -22px rgba(65,45,20,0.45)",
     glowA: "rgba(214,120,47,0.24)",
     glowB: "rgba(124,79,134,0.18)",
@@ -457,7 +458,7 @@ function Header({ T, period, setPeriod }) {
           <ShieldAlert size={22} color="#fff" />
         </motion.div>
         <div>
-          <div className="mb-1 font-mono text-[13px] uppercase tracking-[0.22em]" style={{ color: T.faint }}>
+          <div className="mb-1 font-mono text-[13px] font-semibold uppercase tracking-[0.22em]" style={{ color: T.logoText }}>
             Aitas UKPF · Усть-Каменогорская птицефабрика · служба биобезопасности
           </div>
           <h1 className="text-[24px] font-semibold leading-tight tracking-tight sm:text-[30px]" style={{ color: T.text }}>
