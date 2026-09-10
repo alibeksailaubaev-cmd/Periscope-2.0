@@ -2530,11 +2530,6 @@ export default function BiosecurityExecutiveDashboard() {
 
             <ChartPanel T={T} period={period} open={open} />
 
-            <p className="mt-3 text-[14.5px] leading-relaxed" style={{ color: T.muted }}>
-              Всё, что на графике выше зелёного пунктира, — <b style={{ color: T.text }}>не выполняется</b>.
-              Двое расходуют свой ресурс полностью, поэтому дело не в темпе работы: физически
-              нельзя сделать {METRICS.demandWeek} часов силами {METRICS.capacityWeek}-часовой службы.
-            </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {[
                 { l: "Самый тяжёлый день недели", v: `${Math.max(...P.demand.map((d, i) => (P.capacity[i] ? Math.round((d / P.capacity[i]) * 100) : 0)))}%`, c: T.red },
