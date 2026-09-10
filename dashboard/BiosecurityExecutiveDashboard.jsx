@@ -611,285 +611,6 @@ function StatCard({ T, item, index }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   8. ДВА КОНТУРА: слева внешний, справа внутренний
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Мини-сцена внешнего контура: поток извне упирается в границу */
-function ExternalScene({ T, active }) {
-  const c = active ? T.violet : T.muted;
-  const incoming = [
-    { i: 0, x: 42,  icon: "truck" },
-    { i: 1, x: 118, icon: "person" },
-    { i: 2, x: 196, icon: "box" },
-    { i: 3, x: 264, icon: "bug" },
-  ];
-  return (
-    <svg viewBox="0 0 320 150" className="w-full" style={{ height: 150 }}>
-      {/* граница */}
-      <line x1="10" y1="100" x2="310" y2="100" stroke={c} strokeWidth={active ? 2.4 : 1.6} strokeDasharray="7 6" opacity={0.9} />
-      {Array.from({ length: 10 }).map((_, i) => (
-        <motion.circle
-          key={i}
-          cx={26 + i * 30} cy={100} r={active ? 4.6 : 3.4}
-          fill={active ? T.violet : T.faint}
-          animate={{ opacity: [0.45, 1, 0.45] }}
-          transition={{ duration: 2.2, repeat: Infinity, delay: i * 0.13 }}
-        />
-      ))}
-      {/* поток извне */}
-      {incoming.map((it) => (
-        <motion.g
-          key={it.i}
-          initial={{ y: -30, opacity: 0 }}
-          animate={{ y: [-30, 52, 58, 52], opacity: [0, 1, 1, 0.15] }}
-          transition={{
-            duration: active ? 2.4 : 3.4,
-            repeat: Infinity,
-            delay: it.i * (active ? 0.42 : 0.7),
-            ease: "easeInOut",
-            times: [0, 0.55, 0.7, 1],
-          }}
-        >
-          {it.icon === "truck" && (
-            <g transform={`translate(${it.x - 12}, 22)`}>
-              <rect x="0" y="4" width="17" height="11" rx="2.5" fill={T.blue} />
-              <rect x="16" y="7" width="8" height="8" rx="2" fill={T.cyan} />
-              <circle cx="6" cy="16.5" r="2.2" fill={T.text} opacity="0.55" />
-              <circle cx="19" cy="16.5" r="2.2" fill={T.text} opacity="0.55" />
-            </g>
-          )}
-          {it.icon === "person" && (
-            <g transform={`translate(${it.x}, 26)`}>
-              <circle cx="0" cy="0" r="5" fill={T.cyan} />
-              <path d="M -6 18 L -5 6 Q 0 2 5 6 L 6 18 Z" fill={T.cyan} opacity="0.85" />
-            </g>
-          )}
-          {it.icon === "box" && (
-            <g transform={`translate(${it.x - 8}, 24)`}>
-              <rect x="0" y="0" width="17" height="15" rx="2" fill={T.amber} opacity="0.9" />
-              <line x1="8.5" y1="0" x2="8.5" y2="15" stroke="#fff" strokeWidth="1.4" opacity="0.7" />
-            </g>
-          )}
-          {it.icon === "bug" && (
-            <g transform={`translate(${it.x}, 28)`}>
-              <ellipse cx="0" cy="0" rx="6" ry="8" fill={T.red} opacity="0.9" />
-              <line x1="-8" y1="-5" x2="-3" y2="-2" stroke={T.red} strokeWidth="1.6" />
-              <line x1="8" y1="-5" x2="3" y2="-2" stroke={T.red} strokeWidth="1.6" />
-            </g>
-          )}
-        </motion.g>
-      ))}
-      {/* «остановлено на границе» */}
-      <motion.rect
-        x="10" y="88" width="300" height="14" rx="7"
-        fill={active ? T.violet : T.faint}
-        animate={{ opacity: active ? [0.10, 0.22, 0.10] : 0.07 }}
-        transition={{ duration: 2, repeat: Infinity }}
-      />
-      <text x="160" y="128" textAnchor="middle" fontSize="13" fill={T.faint}>
-        всё, что заходит на территорию, проходит здесь
-      </text>
-    </svg>
-  );
-}
-
-/* Мини-сцена внутреннего контура: перемещения между объектами */
-function InternalScene({ T, active }) {
-  const c = active ? T.cyan : T.muted;
-  const nodes = [
-    { x: 48,  y: 46, label: "Склад" },
-    { x: 160, y: 30, label: "Инкубатор" },
-    { x: 268, y: 56, label: "Площадки" },
-    { x: 108, y: 100, label: "АТЦ" },
-    { x: 214, y: 104, label: "Ангар" },
-  ];
-  const links = [[0, 1], [0, 3], [0, 2], [1, 2], [3, 1], [3, 4]];
-  return (
-    <svg viewBox="0 0 320 150" className="w-full" style={{ height: 150 }}>
-      {links.map(([a, b], i) => {
-        const p1 = nodes[a], p2 = nodes[b];
-        return (
-          <g key={i}>
-            <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={c} strokeWidth={1.1} strokeDasharray="4 5" opacity={0.5} />
-            <motion.circle
-              r={active ? 3.6 : 2.8}
-              fill={active ? T.cyan : T.faint}
-              initial={{ cx: p1.x, cy: p1.y, opacity: 0 }}
-              animate={{ cx: [p1.x, p2.x], cy: [p1.y, p2.y], opacity: [0, 1, 1, 0] }}
-              transition={{
-                duration: active ? 1.8 : 2.8,
-                repeat: Infinity,
-                delay: i * (active ? 0.28 : 0.45),
-                ease: "linear",
-                opacity: { duration: active ? 1.8 : 2.8, repeat: Infinity, delay: i * (active ? 0.28 : 0.45), times: [0, 0.12, 0.85, 1] },
-              }}
-            />
-          </g>
-        );
-      })}
-      {nodes.map((n, i) => (
-        <g key={n.label}>
-          <rect x={n.x - 15} y={n.y - 10} width="30" height="20" rx="5"
-                fill={active ? `${T.cyan}22` : T.grid} stroke={c} strokeWidth="1.1" />
-          <text x={n.x} y={n.y + 22} textAnchor="middle" fontSize="11" fill={T.faint}>{n.label}</text>
-        </g>
-      ))}
-      <text x="160" y="140" textAnchor="middle" fontSize="13" fill={T.faint}>
-        перемещения между зонами внутри контура
-      </text>
-    </svg>
-  );
-}
-
-function ContourCard({ T, contour, active, onClick, side }) {
-  const C = CONTOURS[contour];
-  const Icon = C.icon;
-  const accent = contour === "external" ? T.violet : T.cyan;
-  return (
-    <motion.button
-      onClick={onClick}
-      initial={{ opacity: 0, x: side === "left" ? -26 : 26 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, ease: EASE }}
-      whileHover={{ y: -5 }}
-      className="relative overflow-hidden rounded-2xl p-5 text-left backdrop-blur-xl"
-      style={{
-        background: active ? `${accent}0f` : T.panel,
-        border: `1.5px solid ${active ? accent : T.border}`,
-        boxShadow: active ? `0 26px 54px -26px ${accent}` : T.shadow,
-      }}
-    >
-      {active && (
-        <motion.div
-          layoutId="contour-glow"
-          className="pointer-events-none absolute -right-10 -top-14 h-44 w-44 rounded-full"
-          style={{ background: accent, filter: "blur(60px)", opacity: 0.22 }}
-        />
-      )}
-      <div className="relative flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-xl" style={{ background: `${accent}1f`, color: accent }}>
-          <Icon size={19} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-[18px] font-semibold" style={{ color: T.text }}>{C.title}</div>
-          {C.sub ? <div className="text-[14px]" style={{ color: T.faint }}>{C.sub}</div> : null}
-        </div>
-        <div className="text-right">
-          <div className="font-mono text-[13.5px]" style={{ color: T.faint }}>направлений</div>
-          <div className="text-[22px] font-semibold leading-none" style={{ color: accent }}>{C.items.length}</div>
-        </div>
-        <motion.span animate={{ rotate: active ? 180 : 0 }} transition={{ duration: 0.3 }} style={{ color: T.faint }}>
-          <ChevronDown size={16} />
-        </motion.span>
-      </div>
-
-      <div className="relative mt-2">
-        {contour === "external" ? <ExternalScene T={T} active={active} /> : <InternalScene T={T} active={active} />}
-      </div>
-
-      <div className="relative mt-1 flex items-center gap-3">
-        <div className="flex-1">
-          <div className="mb-1 flex justify-between font-mono text-[12.5px]" style={{ color: T.faint }}>
-            <span>покрытие</span>
-            <span>{fmt(C.covered, 1)} из {fmt(C.demand, 1)} ч/нед</span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full" style={{ background: T.grid }}>
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: `linear-gradient(90deg, ${T.amber}, ${T.red})` }}
-              initial={{ width: 0 }}
-              whileInView={{ width: `${C.coverage}%` }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, ease: EASE }}
-            />
-          </div>
-        </div>
-        <div className="text-[21px] font-semibold" style={{ color: C.coverage < 60 ? T.red : T.amber }}>
-          {C.coverage}%
-        </div>
-      </div>
-    </motion.button>
-  );
-}
-
-function ContourTaskList({ T, contour }) {
-  const C = CONTOURS[contour];
-  const accent = contour === "external" ? T.violet : T.cyan;
-  const toneMap = { blue: T.blue, cyan: T.cyan, red: T.red };
-  const groups = Object.values(GROUPS)
-    .map((g) => ({ ...g, items: C.items.filter((t) => t.group === g.id) }))
-    .filter((g) => g.items.length);
-  let idx = 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, height: 0 }}
-      animate={{ opacity: 1, height: "auto" }}
-      exit={{ opacity: 0, height: 0 }}
-      transition={{ duration: 0.5, ease: EASE }}
-      className="overflow-hidden"
-    >
-      <div className="pt-5">
-        <div className="mb-4 flex flex-wrap items-center gap-2.5">
-          <span className="rounded-lg px-2.5 py-1 text-[14.5px] font-semibold" style={{ background: `${accent}1a`, color: accent }}>
-            {C.title}
-          </span>
-          <span className="text-[14.5px]" style={{ color: T.muted }}>
-            {C.items.length} направлений контроля
-          </span>
-        </div>
-
-        <div className="space-y-5">
-          {groups.map((g) => {
-            const GIcon = g.icon;
-            const tone = toneMap[g.tone];
-            return (
-              <div key={g.id}>
-                <div className="mb-2.5 flex items-center gap-2.5">
-                  <div className="grid h-7 w-7 place-items-center rounded-lg" style={{ background: `${tone}1f`, color: tone }}>
-                    <GIcon size={14} />
-                  </div>
-                  <span className="text-[15.5px] font-semibold" style={{ color: T.text }}>{g.title}</span>
-                  <div className="h-px flex-1" style={{ background: T.border }} />
-                </div>
-                <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-                  {g.items.map((t) => {
-                    const Icon = t.icon;
-                    const delay = 0.04 * idx++;
-                    return (
-                      <motion.div
-                        key={t.id}
-                        initial={{ opacity: 0, x: -18, scale: 0.98 }}
-                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                        transition={{ delay, duration: 0.42, ease: EASE }}
-                        whileHover={{ y: -3, boxShadow: `0 18px 34px -22px ${tone}` }}
-                        className="rounded-xl p-3.5 backdrop-blur-xl"
-                        style={{ background: T.panelHi, border: `1px solid ${T.border}` }}
-                      >
-                        <div className="flex items-start gap-2.5">
-                          <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: `${tone}1a`, color: tone }}>
-                            <Icon size={15} />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[15px] font-semibold leading-tight" style={{ color: T.text }}>{t.name}</div>
-                            <div className="mt-0.5 text-[13.5px] leading-snug" style={{ color: T.faint }}>{t.note}</div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
    9. СЦЕНА НАГРУЗКИ: весь объём садится на одного действующего специалиста
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -2556,7 +2277,7 @@ function MindMap({ T, accent, hubTitle, hubSub, items, onItem }) {
   );
 }
 
-function BiosecurityIntro({ T, onPick }) {
+function BiosecurityIntro({ T }) {
   const [level, setLevel] = useState(0);      // 0 — ядро, 1 — два контура, 2 — направления, 3 — подсписок
   const [contour, setContour] = useState(null);
   const [task, setTask] = useState(null);
@@ -2607,16 +2328,6 @@ function BiosecurityIntro({ T, onPick }) {
             </span>
           ))}
         </div>
-        {level >= 2 && contour && (
-          <button
-            onClick={() => onPick(contour)}
-            className="ml-auto flex items-center gap-1.5 rounded-xl px-3 py-2 text-[13.5px]"
-            style={{ background: T.panelHi, border: `1px solid ${T.border}`, color: accent }}
-          >
-            полный список ниже
-            <ArrowRight size={13} />
-          </button>
-        )}
       </div>
 
       <motion.div
@@ -2673,15 +2384,8 @@ function BiosecurityIntro({ T, onPick }) {
 export default function BiosecurityExecutiveDashboard() {
   const [theme, setTheme] = useState("light");
   const [period, setPeriod] = useState("week");
-  const [open, setOpen] = useState("external");   // 'external' | 'internal' | null
-  const contoursRef = useRef(null);
+  const [open, setOpen] = useState("external");   // 'external' | 'internal' — used by the analytics chart below
   const T = THEMES[theme];
-
-  /* из интро — сразу в список направлений выбранного контура */
-  const goToContour = (c) => {
-    setOpen(c);
-    setTimeout(() => contoursRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
-  };
 
   const P = PERIODS[period];
   const demand = Math.round(METRICS.demandWeek * P.k);
@@ -2711,36 +2415,12 @@ export default function BiosecurityExecutiveDashboard() {
         <div className="mt-7">
           <Panel T={T}>
             <SectionHead T={T} title="Биобезопасность" />
-            <BiosecurityIntro T={T} onPick={goToContour} />
+            <BiosecurityIntro T={T} />
           </Panel>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-4">
           {stats.map((s, i) => <StatCard key={s.label} T={T} item={s} index={i} />)}
-        </div>
-
-        {/* ── ДВА КОНТУРА ─────────────────────────────────────────────── */}
-        <div className="mt-5 scroll-mt-6" ref={contoursRef}>
-          <Panel T={T}>
-            <div className="mb-4 flex justify-end">
-              <div className="flex items-center gap-2 rounded-xl px-3 py-2 text-[14px]"
-                   style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.muted }}>
-                <ArrowRight size={13} color={T.cyan} />
-                {open ? `открыт: ${CONTOURS[open].title.toLowerCase()}` : "оба контура свёрнуты"}
-              </div>
-            </div>
-            <div className="grid gap-4 lg:grid-cols-2">
-              <ContourCard T={T} contour="external" side="left"
-                           active={open === "external"}
-                           onClick={() => setOpen(open === "external" ? null : "external")} />
-              <ContourCard T={T} contour="internal" side="right"
-                           active={open === "internal"}
-                           onClick={() => setOpen(open === "internal" ? null : "internal")} />
-            </div>
-            <AnimatePresence mode="wait" initial={false}>
-              {open && <ContourTaskList key={open} T={T} contour={open} />}
-            </AnimatePresence>
-          </Panel>
         </div>
 
         {/* ── НАГРУЗКА САДИТСЯ НА ДВОИХ ───────────────────────────────── */}
