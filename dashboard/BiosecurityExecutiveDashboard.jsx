@@ -437,6 +437,48 @@ function Panel({ T, children, className = "", delay = 0 }) {
    6. ХЕДЕР
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Ручная отрисовка фирменного петуха с логотипа Aitas UKPF — одна
+   непрерывная линия: гребень, голова с прикрытым глазом, клюв, тело,
+   закручивающееся в спираль хвоста. */
+function RoosterMark({ color, size = 28 }) {
+  return (
+    <svg viewBox="0 0 120 120" width={size} height={size} fill="none">
+      <path
+        d="M 44,58
+           C 38,42 41,24 53,15
+           C 58,26 58,36 55,48
+           C 61,30 68,17 78,16
+           C 84,25 81,38 72,49
+           C 79,37 89,32 97,36
+           C 100,44 95,52 85,56
+           C 94,55 100,59 101,65
+           C 100,71 92,74 84,71
+           C 90,76 92,83 88,90
+           C 81,96 69,98 60,92
+           C 51,87 47,78 49,68
+           C 43,72 38,80 39,90
+           C 40,98 35,104 26,105
+           C 18,106 12,101 12,93
+           C 12,86 18,81 25,82
+           C 20,84 17,89 19,94
+           C 21,98 27,99 31,95
+           C 35,91 34,85 29,82"
+        stroke={color}
+        strokeWidth="6.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M 58,62 C 61,68 67,68 70,62"
+        stroke={color}
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function Header({ T, period, setPeriod }) {
   return (
     <motion.div
@@ -449,17 +491,25 @@ function Header({ T, period, setPeriod }) {
         <motion.div
           whileHover={{ rotate: -6, scale: 1.06 }}
           transition={{ type: "spring", stiffness: 300, damping: 18 }}
-          className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl"
+          className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl"
           style={{
-            background: `linear-gradient(135deg, ${T.brand}, ${T.brandDeep})`,
+            background: "#e4c49d",
             boxShadow: `0 14px 32px -10px ${T.glowA}`,
           }}
         >
-          <ShieldAlert size={22} color="#fff" />
+          <RoosterMark color={T.logoText} size={34} />
         </motion.div>
         <div>
-          <div className="mb-1 font-mono text-[13px] font-semibold uppercase tracking-[0.22em]" style={{ color: T.logoText }}>
-            Aitas UKPF · Усть-Каменогорская птицефабрика · служба биобезопасности
+          <div className="mb-1 flex flex-wrap items-baseline gap-x-2.5">
+            <span className="lowercase tracking-tight" style={{ color: T.logoText, fontSize: 19, fontWeight: 700 }}>
+              aitas ukpf
+            </span>
+            <span className="lowercase" style={{ color: T.logoText, fontSize: 13.5 }}>
+              усть-каменогорская птицефабрика
+            </span>
+            <span className="font-mono text-[12px] uppercase tracking-[0.18em]" style={{ color: T.faint }}>
+              · служба биобезопасности
+            </span>
           </div>
           <h1 className="text-[24px] font-semibold leading-tight tracking-tight sm:text-[30px]" style={{ color: T.text }}>
             Мониторинг биобезопасности и нагрузка персонала
