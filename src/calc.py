@@ -99,6 +99,7 @@ def build_rows(schedule, norms, prices):
         treatments = treatments_for(counts, set(data["shops"]), codes, occurrence)
         per_house = to_float(norm["Норма средства на птичник"])
         position, price, price_unit = prices.get(agent, ("", None, ""))
+        solution = to_float(norm["Раствор, л"])
 
         month_qty = per_house * treatments if per_house is not None else None
         total = month_qty * price if month_qty is not None and price is not None else None
@@ -125,8 +126,10 @@ def build_rows(schedule, norms, prices):
             "Позиция прайса": position,
             "Ед.изм": norm["Ед.изм"],
             "Расход на 1 птичник": per_house,
+            "Раствор на 1 птичник, л": solution,
             "Обработок за месяц": treatments,
             "Расход за месяц": month_qty,
+            "Раствор за месяц, л": solution * treatments if solution is not None else None,
             "Цена за ед.": price,
             "Сумма": total,
             "Замечания": "; ".join(problems),
@@ -165,21 +168,21 @@ def build_workbook(rows, schedule, out_path):
 
     header = ["Приложение", "Процесс", "Код", "Площадка", "Цеха", "Средство",
               "Позиция прайса", "Ед.изм", "Расход на 1 птичник",
-              "Обработок за месяц", "Расход за месяц", "Цена за ед.", "Сумма",
-              "Замечания"]
+              "Раствор на 1 птичник, л", "Обработок за месяц", "Расход за месяц",
+              "Раствор за месяц, л", "Цена за ед.", "Сумма", "Замечания"]
     ws = wb.create_sheet("Расчёт")
     write_sheet(ws, header, [[r[h] for h in header] for r in rows],
-                money_cols=(12, 13), number_cols=(9, 11))
+                money_cols=(14, 15), number_cols=(9, 10, 12, 13))
     for row_idx, r in enumerate(rows, start=2):
         if r["Замечания"]:
             for col in range(1, len(header) + 1):
                 ws.cell(row_idx, col).fill = WARN_FILL
     total_row = ws.max_row + 2
-    ws.cell(total_row, 12, "ИТОГО").font = Font(bold=True)
-    ws.cell(total_row, 13, "=SUM(M2:M{})".format(ws.max_row - 1)).font = Font(bold=True)
-    ws.cell(total_row, 13).number_format = "# ##0.00"
+    ws.cell(total_row, 14, "ИТОГО").font = Font(bold=True)
+    ws.cell(total_row, 15, "=SUM(O2:O{})".format(ws.max_row - 1)).font = Font(bold=True)
+    ws.cell(total_row, 15).number_format = "# ##0.00"
     for col, width in zip(range(1, len(header) + 1),
-                          (11, 36, 8, 11, 26, 34, 34, 8, 14, 12, 14, 13, 15, 28)):
+                          (11, 36, 8, 11, 26, 34, 34, 8, 14, 16, 12, 14, 16, 13, 15, 28)):
         ws.column_dimensions[chr(64 + col)].width = width
 
     # Группируем по позиции прайса: в программе одно и то же средство
@@ -217,21 +220,22 @@ def build_workbook(rows, schedule, out_path):
 
 def print_report(rows, schedule):
     print("Период: {} — {}\n".format(schedule["period"]["from"], schedule["period"]["to"]))
-    fmt = "{:<38} {:<8} {:<26} {:>10} {:>7} {:>12} {:>12} {:>14}"
-    print(fmt.format("Процесс", "Площадка", "Средство", "на птичн.", "обраб.",
-                     "за месяц", "цена", "сумма"))
-    print("-" * 134)
+    fmt = "{:<38} {:<8} {:<26} {:>10} {:>9} {:>7} {:>12} {:>12} {:>14}"
+    print(fmt.format("Процесс", "Площадка", "Средство", "на птичн.", "р-р, л",
+                     "обраб.", "за месяц", "цена", "сумма"))
+    print("-" * 146)
     total = 0.0
     for r in rows:
         total += r["Сумма"] or 0.0
         print(fmt.format(
             r["Процесс"][:38], r["Площадка"], r["Средство"][:26],
             "{:.3f}".format(r["Расход на 1 птичник"]) if r["Расход на 1 птичник"] is not None else "—",
+            "{:g}".format(r["Раствор на 1 птичник, л"]) if r["Раствор на 1 птичник, л"] is not None else "—",
             r["Обработок за месяц"],
             "{:.3f}".format(r["Расход за месяц"]) if r["Расход за месяц"] is not None else "—",
             "{:,.2f}".format(r["Цена за ед."]) if r["Цена за ед."] is not None else "нет цены",
             "{:,.2f}".format(r["Сумма"]) if r["Сумма"] is not None else "—"))
-    print("-" * 134)
+    print("-" * 146)
     print("ИТОГО: {:,.2f}".format(total))
 
     # ОЧН стоит в той же ячейке графика, что и ОС («ОС/ОЧН»), и учтена по ОС.
