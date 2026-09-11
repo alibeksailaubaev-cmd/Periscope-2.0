@@ -111,7 +111,7 @@ APPENDICES = [
     {
         "sheet": "приложение №13", "no": "13", "rows": (13, 22),
         "process": "Дезинфекция линий поения (санация 4)", "day": "8",
-        "code": "ПДГ", "kind": "средство",
+        "code": "ПДГ", "kind": "средство", "solution_from_conc": True,
         "site": "A", "agent": "C", "value": "D", "conc": "E", "unit": "кг",
     },
     {

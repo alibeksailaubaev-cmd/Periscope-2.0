@@ -134,6 +134,7 @@ def build_extra_rows(extra, prices, houses_per_shop):
             "Ед.изм": price_unit or norm["Ед.изм"],
             "Норма": per_unit,
             "Норма на": norm["Норма на"],
+            "Концентрация": None,
             "Подпись колонки нормы": "",
             "Раствор на 1 птичник, л": None,
             "Кол-во за месяц": qty,
@@ -197,6 +198,7 @@ def build_rows(schedule, norms, prices):
             "Ед.изм": price_unit or norm["Ед.изм"],
             "Норма": per_house,
             "Норма на": "птичник",
+            "Концентрация": to_float(norm.get("Концентрация")),
             "Подпись колонки нормы": norm.get("Подпись колонки нормы", ""),
             "Раствор на 1 птичник, л": solution,
             "Кол-во за месяц": treatments,
@@ -323,21 +325,23 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
 
     header = ["Процесс", "Площадка", "Цеха", "Наименование дезсредства",
               "Птичников на площадке", "Ед.изм", "Норма", "Норма на",
-              "Раствор на 1 птичник, л", "Кол-во за месяц",
+              "Концентрация", "Раствор на 1 птичник, л", "Кол-во за месяц",
               "Раствор за месяц, л", "Цена за ед.", "Сумма", "Замечания"]
     ws = wb.create_sheet("Расчёт")
     write_sheet(ws, header, [[r[h] for h in header] for r in rows],
-                money_cols=(12, 13), number_cols=(7, 9, 11))
+                money_cols=(13, 14), number_cols=(7, 10, 12))
+    for row_idx in range(2, ws.max_row + 1):
+        ws.cell(row_idx, 9).number_format = "0.0%"
     for row_idx, r in enumerate(rows, start=2):
         if r["Замечания"]:
             for col in range(1, len(header) + 1):
                 ws.cell(row_idx, col).fill = WARN_FILL
     total_row = ws.max_row + 2
-    ws.cell(total_row, 12, "ИТОГО").font = Font(bold=True)
-    ws.cell(total_row, 13, "=SUM(M2:M{})".format(ws.max_row - 1)).font = Font(bold=True)
-    ws.cell(total_row, 13).number_format = "# ##0.00"
+    ws.cell(total_row, 13, "ИТОГО").font = Font(bold=True)
+    ws.cell(total_row, 14, "=SUM(N2:N{})".format(ws.max_row - 1)).font = Font(bold=True)
+    ws.cell(total_row, 14).number_format = "# ##0.00"
     for col, width in zip(range(1, len(header) + 1),
-                          (36, 11, 26, 44, 12, 8, 10, 11, 16, 13, 16, 13, 15, 34)):
+                          (36, 11, 26, 44, 12, 8, 10, 11, 13, 16, 13, 16, 13, 15, 34)):
         ws.column_dimensions[chr(64 + col)].width = width
 
     # Группируем по позиции прайса: в программе одно и то же средство
