@@ -175,13 +175,15 @@ def build_rows(schedule, norms, prices):
         month_qty = per_house * treatments if per_house is not None else None
         total = month_qty * price if month_qty is not None and price is not None else None
 
+        if treatments == 0:
+            # Площадка в этом месяце в график санразрыва не попала — строки нет.
+            continue
+
         problems = []
         if per_house is None:
             problems.append("нет нормы")
         if price is None:
             problems.append("нет цены")
-        if treatments == 0:
-            problems.append("нет обработок в графике")
         elif treatments != houses and code != "ГГ+ГФ":
             problems.append("обработок {} при {} птичниках — цикл выходит за месяц"
                             .format(treatments, houses))
