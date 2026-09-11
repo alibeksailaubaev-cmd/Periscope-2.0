@@ -19,6 +19,7 @@ from collections import Counter, defaultdict
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from parse_schedule import parse  # noqa: E402
@@ -231,7 +232,90 @@ def write_sheet(ws, header, data_rows, money_cols=(), number_cols=()):
     ws.auto_filter.ref = "A1:{}{}".format(chr(64 + len(header)), ws.max_row)
 
 
-def build_workbook(rows, schedule, out_path):
+def norms_lookup(norms):
+    """(цех, код, № вхождения или None) -> строки норм."""
+    lookup = defaultdict(list)
+    for norm in norms:
+        occurrence = int(norm["Вхождение"]) if (norm.get("Вхождение") or "").strip() else None
+        lookup[(norm["Цех"], norm["Код в графике"], occurrence)].append(norm)
+    return lookup
+
+
+def build_daily(schedule, norms, prices):
+    """Расход и стоимость по дням — из отметок графика санитарного разрыва."""
+    lookup = norms_lookup(norms)
+    daily = defaultdict(lambda: {"qty": 0.0, "sum": 0.0, "houses": 0})
+
+    for house in schedule["houses"]:
+        seen = Counter()
+        for event in sorted(house["events"], key=lambda e: e["date"]):
+            seen[event["code"]] += 1
+            matched = (lookup.get((house["shop"], event["code"], seen[event["code"]]), [])
+                       + lookup.get((house["shop"], event["code"], None), []))
+            for norm in matched:
+                per_house = to_float(norm["Норма средства на птичник"])
+                if per_house is None:
+                    continue
+                _, price, _ = prices.get(norm["Средство"].strip(), ("", None, ""))
+                key = (event["date"], norm["Процесс"], norm["Средство"], norm["Ед.изм"])
+                daily[key]["qty"] += per_house
+                daily[key]["sum"] += per_house * price if price is not None else 0.0
+                daily[key]["houses"] += 1
+
+    return [{
+        "Дата": date,
+        "Процесс": process,
+        "Средство": agent,
+        "Ед.изм": unit,
+        "Птичников": data["houses"],
+        "Расход": data["qty"],
+        "Сумма": data["sum"],
+    } for (date, process, agent, unit), data in sorted(daily.items())]
+
+
+def build_schedule_sheet(wb, schedule):
+    """Лист с самим графиком: птичники по строкам, дни месяца по колонкам."""
+    ws = wb.create_sheet("График санразрыва")
+    days = sorted({e["date"] for h in schedule["houses"] for e in h["events"]})
+    first, last = schedule["period"]["from"], schedule["period"]["to"]
+    all_days = []
+    from datetime import date, timedelta
+    d = date.fromisoformat(first)
+    while d <= date.fromisoformat(last):
+        all_days.append(d.isoformat())
+        d += timedelta(days=1)
+
+    ws.append(["Цех", "Этаж"] + [int(x[8:]) for x in all_days])
+    for col in range(1, len(all_days) + 3):
+        cell = ws.cell(1, col)
+        cell.font = Font(bold=True)
+        cell.fill = HEAD_FILL
+        cell.border = BORDER
+        cell.alignment = Alignment(horizontal="center")
+
+    index = {d: i for i, d in enumerate(all_days)}
+    for house in schedule["houses"]:
+        line = [""] * len(all_days)
+        for event in house["events"]:
+            pos = index.get(event["date"])
+            if pos is None:
+                continue
+            line[pos] = event["code"] if not line[pos] else line[pos] + "/" + event["code"]
+        ws.append([house["shop"], house["floor"]] + line)
+        r = ws.max_row
+        for col in range(1, len(all_days) + 3):
+            ws.cell(r, col).border = BORDER
+            ws.cell(r, col).alignment = Alignment(horizontal="center")
+
+    ws.column_dimensions["A"].width = 8
+    ws.column_dimensions["B"].width = 6
+    for col in range(3, len(all_days) + 3):
+        ws.column_dimensions[get_column_letter(col)].width = 9
+    ws.freeze_panes = "C2"
+    return ws
+
+
+def build_workbook(rows, schedule, out_path, daily=None, norms=None):
     wb = Workbook()
     wb.remove(wb.active)
 
@@ -281,6 +365,22 @@ def build_workbook(rows, schedule, out_path):
                 [[k, v or None] for k, v in sorted(by_site.items())], money_cols=(2,))
     for col, width in zip("AB", (16, 18)):
         ws3.column_dimensions[col].width = width
+
+    if daily:
+        ws4 = wb.create_sheet("Расход по дням")
+        write_sheet(ws4, ["Дата", "Процесс", "Средство", "Ед.изм", "Птичников",
+                          "Расход", "Сумма"],
+                    [[d["Дата"], d["Процесс"], d["Средство"], d["Ед.изм"],
+                      d["Птичников"], d["Расход"], d["Сумма"] or None] for d in daily],
+                    money_cols=(7,), number_cols=(6,))
+        for col, width in zip("ABCDEFG", (12, 36, 34, 9, 11, 13, 15)):
+            ws4.column_dimensions[col].width = width
+        total = ws4.max_row + 2
+        ws4.cell(total, 6, "ИТОГО по графику").font = Font(bold=True)
+        ws4.cell(total, 7, "=SUM(G2:G{})".format(ws4.max_row - 1)).font = Font(bold=True)
+        ws4.cell(total, 7).number_format = "# ##0.00"
+
+    build_schedule_sheet(wb, schedule)
 
     out_dir = os.path.dirname(os.path.abspath(out_path))
     if out_dir:
@@ -357,7 +457,8 @@ def main(argv=None):
     if args.extra and os.path.exists(args.extra):
         rows += build_extra_rows(read_csv(args.extra), prices, houses_per_shop)
 
-    build_workbook(rows, schedule, args.out)
+    daily = build_daily(schedule, norms, prices)
+    build_workbook(rows, schedule, args.out, daily, norms)
     print("Расчёт сохранён:", args.out)
     if not args.quiet:
         print()
