@@ -229,7 +229,7 @@ def write_sheet(ws, header, data_rows, money_cols=(), number_cols=()):
         for col in money_cols:
             ws.cell(r, col).number_format = "# ##0.00"
         for col in number_cols:
-            ws.cell(r, col).number_format = "# ##0.000"
+            ws.cell(r, col).number_format = "# ##0.###"
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = "A1:{}{}".format(chr(64 + len(header)), ws.max_row)
 
