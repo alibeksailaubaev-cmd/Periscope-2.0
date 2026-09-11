@@ -135,10 +135,9 @@ def build_extra_rows(extra, prices, houses_per_shop):
             "Наименование дезсредства": position or agent,
             "Ед.изм": price_unit or norm["Ед.изм"],
             "Норма": per_unit,
-            "Норма на": norm["Норма на"],
             "Концентрация": None,
             "Подпись колонки нормы": "",
-            "Кол-во единиц": units,
+            "Входят в сан разрыв": units,
             "Раз в месяц": times,
             "Расход за месяц, л/кг": month_qty,
             "Цена за ед.": price,
@@ -200,10 +199,9 @@ def build_rows(schedule, norms, prices):
             "Наименование дезсредства": position or agent,
             "Ед.изм": price_unit or norm["Ед.изм"],
             "Норма": per_house,
-            "Норма на": "птичник",
             "Концентрация": to_float(norm.get("Концентрация")),
             "Подпись колонки нормы": norm.get("Подпись колонки нормы", ""),
-            "Кол-во единиц": treatments,
+            "Входят в сан разрыв": treatments,
             "Раз в месяц": 1,
             "Расход за месяц, л/кг": month_qty,
             "Цена за ед.": price,
@@ -326,30 +324,30 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     wb.remove(wb.active)
 
     header = ["Процесс", "Площадка", "Цеха", "Наименование дезсредства",
-              "Птичников на площадке", "Ед.изм", "Норма", "Норма на",
-              "Концентрация", "Кол-во единиц", "Раз в месяц",
-              "Расход за месяц, л/кг", "Цена за ед.", "Сумма", "Замечания"]
+              "Птичников на площадке", "Ед.изм", "Норма", "Концентрация",
+              "Входят в сан разрыв", "Раз в месяц", "Расход за месяц, л/кг",
+              "Цена за ед.", "Сумма", "Замечания"]
     ws = wb.create_sheet("Расчёт")
     write_sheet(ws, header, [[r[h] for h in header] for r in rows],
-                money_cols=(13, 14), number_cols=(7, 12))
+                money_cols=(12, 13), number_cols=(7, 11))
     # Сумму и объём раствора за месяц считает сам Excel: если поправить норму
     # или цену прямо в книге, итог пересчитается.
     for row_idx, row in enumerate(rows, start=2):
-        ws.cell(row_idx, 9).number_format = "0.0%"
+        ws.cell(row_idx, 8).number_format = "0.0%"
         if row["Норма"] is not None:
-            ws.cell(row_idx, 12).value = "=G{0}*J{0}*K{0}".format(row_idx)
+            ws.cell(row_idx, 11).value = "=G{0}*I{0}*J{0}".format(row_idx)
         if row["Норма"] is not None and row["Цена за ед."] is not None:
-            ws.cell(row_idx, 14).value = "=L{0}*M{0}".format(row_idx)
+            ws.cell(row_idx, 13).value = "=K{0}*L{0}".format(row_idx)
     for row_idx, r in enumerate(rows, start=2):
         if r["Замечания"]:
             for col in range(1, len(header) + 1):
                 ws.cell(row_idx, col).fill = WARN_FILL
     total_row = ws.max_row + 2
-    ws.cell(total_row, 13, "ИТОГО").font = Font(bold=True)
-    ws.cell(total_row, 14, "=SUM(N2:N{})".format(ws.max_row - 1)).font = Font(bold=True)
-    ws.cell(total_row, 14).number_format = "# ##0.00"
+    ws.cell(total_row, 12, "ИТОГО").font = Font(bold=True)
+    ws.cell(total_row, 13, "=SUM(M2:M{})".format(ws.max_row - 1)).font = Font(bold=True)
+    ws.cell(total_row, 13).number_format = "# ##0.00"
     for col, width in zip(range(1, len(header) + 1),
-                          (36, 11, 26, 44, 12, 8, 10, 11, 13, 12, 12, 17, 13, 15, 34)):
+                          (36, 11, 26, 44, 12, 8, 10, 13, 15, 12, 17, 13, 15, 34)):
         ws.column_dimensions[chr(64 + col)].width = width
 
     # Группируем по позиции прайса: в программе одно и то же средство
@@ -458,7 +456,7 @@ def self_checks(rows, schedule, daily, confirmed=None):
 
     for row in rows:
         houses = row["Птичников на площадке"]
-        treatments_total = row["Кол-во единиц"] * row["Раз в месяц"]
+        treatments_total = row["Входят в сан разрыв"] * row["Раз в месяц"]
         if row["Код"] != "—" and houses and treatments_total > houses:
             problems.append(
                 "{} на {}: обработок {} при {} птичниках — операция повторяется в цикле"
@@ -476,9 +474,9 @@ def self_checks(rows, schedule, daily, confirmed=None):
 
 def print_report(rows, schedule):
     print("Период: {} — {}\n".format(schedule["period"]["from"], schedule["period"]["to"]))
-    fmt = "{:<38} {:<8} {:<26} {:>10} {:>9} {:>7} {:>12} {:>12} {:>14}"
-    print(fmt.format("Процесс", "Площадка", "Средство", "норма", "на",
-                     "кол-во", "за месяц", "цена", "сумма"))
+    fmt = "{:<38} {:<8} {:<26} {:>10} {:>9} {:>12} {:>12} {:>14}"
+    print(fmt.format("Процесс", "Площадка", "Средство", "норма",
+                     "в разрыве", "за месяц", "цена", "сумма"))
     print("-" * 153)
     total = 0.0
     for r in rows:
@@ -486,8 +484,7 @@ def print_report(rows, schedule):
         print(fmt.format(
             r["Процесс"][:38], r["Площадка"], r["Средство"][:26],
             "{:.3f}".format(r["Норма"]) if r["Норма"] is not None else "—",
-            r["Норма на"][:8],
-            r["Кол-во единиц"] * r["Раз в месяц"],
+            r["Входят в сан разрыв"] * r["Раз в месяц"],
             "{:.3f}".format(r["Расход за месяц, л/кг"]) if r["Расход за месяц, л/кг"] is not None else "—",
             "{:,.2f}".format(r["Цена за ед."]) if r["Цена за ед."] is not None else "нет цены",
             "{:,.2f}".format(r["Сумма"]) if r["Сумма"] is not None else "—"))
