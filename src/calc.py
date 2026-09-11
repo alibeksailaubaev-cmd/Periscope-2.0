@@ -363,31 +363,32 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     wb = Workbook()
     wb.remove(wb.active)
 
+    # «Птичников на площадке» не выводим: номера птичников видны в «Корпусах».
     header = ["Процесс", "Площадка", "Корпуса", "Наименование дезсредства",
-              "Птичников на площадке", "Ед.изм", "Норма", "Концентрация",
-              "Входят в сан разрыв", "Раз в месяц", "Расход за месяц, л/кг",
-              "Цена за ед.", "Сумма", "Замечания"]
+              "Ед.изм", "Норма", "Концентрация", "Входят в сан разрыв",
+              "Раз в месяц", "Расход за месяц, л/кг", "Цена за ед.", "Сумма",
+              "Замечания"]
     ws = wb.create_sheet("Расчёт")
     write_sheet(ws, header, [[r[h] for h in header] for r in rows],
-                money_cols=(12, 13), number_cols=(7, 11))
+                money_cols=(11, 12), number_cols=(6, 10))
     # Сумму и объём раствора за месяц считает сам Excel: если поправить норму
     # или цену прямо в книге, итог пересчитается.
     for row_idx, row in enumerate(rows, start=2):
-        ws.cell(row_idx, 8).number_format = "0.0%"
+        ws.cell(row_idx, 7).number_format = "0.0%"
         if row["Норма"] is not None:
-            ws.cell(row_idx, 11).value = "=G{0}*I{0}*J{0}".format(row_idx)
+            ws.cell(row_idx, 10).value = "=F{0}*H{0}*I{0}".format(row_idx)
         if row["Норма"] is not None and row["Цена за ед."] is not None:
-            ws.cell(row_idx, 13).value = "=K{0}*L{0}".format(row_idx)
+            ws.cell(row_idx, 12).value = "=J{0}*K{0}".format(row_idx)
     for row_idx, r in enumerate(rows, start=2):
         if r["Замечания"]:
             for col in range(1, len(header) + 1):
                 ws.cell(row_idx, col).fill = WARN_FILL
     total_row = ws.max_row + 2
-    ws.cell(total_row, 12, "ИТОГО").font = Font(bold=True)
-    ws.cell(total_row, 13, "=SUM(M2:M{})".format(ws.max_row - 1)).font = Font(bold=True)
-    ws.cell(total_row, 13).number_format = "# ##0.00"
+    ws.cell(total_row, 11, "ИТОГО").font = Font(bold=True)
+    ws.cell(total_row, 12, "=SUM(L2:L{})".format(ws.max_row - 1)).font = Font(bold=True)
+    ws.cell(total_row, 12).number_format = "# ##0.00"
     for col, width in zip(range(1, len(header) + 1),
-                          (36, 11, 26, 44, 12, 8, 10, 13, 15, 12, 17, 13, 15, 34)):
+                          (36, 11, 26, 44, 8, 10, 13, 15, 12, 17, 13, 15, 34)):
         ws.column_dimensions[chr(64 + col)].width = width
 
     # Группируем по позиции прайса: в программе одно и то же средство
