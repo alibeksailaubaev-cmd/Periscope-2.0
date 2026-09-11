@@ -142,9 +142,15 @@ HOUSE_RE = re.compile(r"^(БП\s*\d+|[А-Я])[\s-]*(\d+)?(?:-(\d+))?$")
 
 
 def count_houses(wb):
-    """Цех -> сколько в нём птичников по спискам санитарной программы."""
+    """Цех -> сколько в нём птичников по спискам санитарной программы.
+
+    В части версий программы листов со списками нет — тогда возвращается
+    пустой словарь, и число птичников берётся из графика санразрыва.
+    """
     counts = Counter()
     for sheet, ref in HOUSE_LISTS:
+        if sheet not in wb.sheetnames:
+            continue
         text = wb[sheet][ref].value or ""
         for part in re.split(r"[;.]", str(text)):
             part = part.strip()
@@ -195,6 +201,11 @@ def parse(path):
     warnings = []
 
     for spec in APPENDICES:
+        if spec["sheet"] not in wb.sheetnames:
+            warnings.append("приложения «{}» в этой версии программы нет — "
+                            "процесс «{}» не считается"
+                            .format(spec["sheet"], spec["process"]))
+            continue
         ws = wb[spec["sheet"]]
         label = value_label(ws, spec)
         seen = set()
@@ -279,8 +290,10 @@ def main(argv=None):
     print("Нормы записаны:", args.out)
     print("  строк:", len(rows))
     print("  приложений:", len({r["Приложение"] for r in rows}))
+    houses = {r["Цех"]: r["Птичников в цехе"] for r in rows}
+    total = sum(n for n in houses.values() if isinstance(n, int))
     print("  птичников по спискам программы:",
-          sum({r["Цех"]: r["Птичников в цехе"] for r in rows}.values()))
+          total if total else "списков нет, возьмутся из графика")
     for w in dict.fromkeys(warnings):
         print("  ВНИМАНИЕ:", w)
     return 0

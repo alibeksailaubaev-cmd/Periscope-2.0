@@ -168,7 +168,11 @@ python3 src/calc.py data/grafik-sanrazryva-2026-09.xlsx --out out/raschet-2026-0
 * `data/grafik-sanrazryva-2026-08.xlsx` и `-09.xlsx` — графики санитарного
   разрыва за август и сентябрь 2026 (исходные).
 * `data/grafik-sanrazryva-2026-10.xlsx` — октябрь, построен из них.
-* `data/sanitarnaya-programma-31.08.2026.xlsx` — санитарная программа с приложениями.
+* `data/sanitarnaya-programma-19.07.2026.xlsx` — санитарная программа, действует
+  на август: мойка идёт Хачонетом и Фоснитацидом, нормы формалина на газацию
+  выше, приложения №17 (дезинсекция) в ней нет.
+* `data/sanitarnaya-programma-31.08.2026.xlsx` — программа с сентября.
+* `data/normy-2026-08.csv` — нормы августа, `data/normy.csv` — с сентября.
 * `data/normy.csv` — нормы, собранные из приложений (генерируется `parse_program.py`).
 * `data/dezsredstva.csv` — прайс дезсредств.
 * `data/normy_dopolnitelno.csv` — нормы работ вне графика санразрыва:

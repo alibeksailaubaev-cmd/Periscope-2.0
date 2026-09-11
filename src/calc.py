@@ -196,7 +196,10 @@ def build_rows(schedule, norms, prices):
         key = (norm["Приложение"], norm["Процесс"], norm["Код в графике"],
                norm["Участок"], norm["Средство"], norm.get("Вхождение", ""))
         grouped[key]["shops"].append(norm["Цех"])
-        houses_per_shop[norm["Цех"]] = to_float(norm.get("Птичников в цехе")) or 0
+        # Если в программе нет списков птичников, берём их из графика.
+        houses_per_shop[norm["Цех"]] = (to_float(norm.get("Птичников в цехе"))
+                                        or len(schedule.get("floors", {})
+                                               .get(norm["Цех"], [])))
         grouped[key]["norm"] = norm
 
     rows = []
@@ -503,6 +506,16 @@ def self_checks(rows, schedule, daily, confirmed=None):
                 "{} на {}: обработок {} при {} птичниках — операция повторяется в цикле"
                 .format(row["Процесс"][:30], row["Площадка"],
                         treatments_total, houses))
+
+    # Отметки, которые в графике есть, а нормы для них в программе нет.
+    covered = {c for r in rows for c in r["Код"].split("+")} | {"ОЧН"}
+    in_schedule = {e["code"] for h in schedule["houses"] for e in h["events"]}
+    for code in sorted(in_schedule - covered):
+        problems.append(
+            "отметка {} есть в графике ({} раз), но нормы в санитарной программе "
+            "нет — расход по ней не посчитан".format(
+                code, sum(1 for h in schedule["houses"]
+                          for e in h["events"] if e["code"] == code)))
 
     by_graph = sum(r["Сумма"] or 0 for r in rows if r["Код"] != "—")
     by_daily = sum(d["Сумма"] for d in daily)
