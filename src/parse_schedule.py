@@ -131,6 +131,7 @@ def parse(path, sheet=None, corrections=None):
     days = read_day_columns(ws)
 
     houses = []
+    floors = {}
     unknown = set()
 
     for shop, row_from, row_to in SHOP_BLOCKS:
@@ -138,6 +139,7 @@ def parse(path, sheet=None, corrections=None):
             floor = ws.cell(row, COL_FLOOR).value
             if floor is None:
                 continue
+            floors.setdefault(shop, []).append(floor)
             events = []
             for col, day in sorted(days.items()):
                 raw = ws.cell(row, col).value
@@ -176,6 +178,7 @@ def parse(path, sheet=None, corrections=None):
             "to": max(days.values()).isoformat(),
         },
         "houses": houses,
+        "floors": floors,
         "unknown_marks": sorted(unknown),
     }
 

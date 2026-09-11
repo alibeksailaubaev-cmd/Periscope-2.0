@@ -71,6 +71,41 @@ def load_prices(price_path, map_path):
     return mapping
 
 
+def shop_labels(schedule):
+    """Цех -> подпись с номерами птичников, например «А 1-10»."""
+    labels = {}
+    for shop, floors in schedule.get("floors", {}).items():
+        numbers = sorted(int(f) for f in floors if str(f).strip().isdigit())
+        if not numbers:
+            labels[shop] = shop
+        elif numbers == list(range(numbers[0], numbers[-1] + 1)):
+            labels[shop] = "{} {}-{}".format(shop, numbers[0], numbers[-1])
+        else:
+            labels[shop] = "{} {}".format(shop, ", ".join(map(str, numbers)))
+    return labels
+
+
+def corps_label(shops, labels, floors=None):
+    """Подпись площадки.
+
+    Один цех — «А 1-10». Несколько корпусов с одинаковой этажностью —
+    «Г 1 — Г 5, этажи 1-4», иначе перечисление через запятую.
+    """
+    shops = sorted(shops)
+    if len(shops) == 1:
+        return labels.get(shops[0], shops[0])
+
+    floors = floors or {}
+    ranges = set()
+    for shop in shops:
+        numbers = sorted(int(f) for f in floors.get(shop, []) if str(f).strip().isdigit())
+        ranges.add((numbers[0], numbers[-1]) if numbers else None)
+    if len(ranges) == 1 and None not in ranges:
+        low, high = ranges.pop()
+        return "{} — {}, этажи {}-{}".format(shops[0], shops[-1], low, high)
+    return ", ".join(labels.get(shop, shop) for shop in shops)
+
+
 def count_operations(schedule):
     """(цех, код, № вхождения) -> сколько раз операция проводится за период.
 
@@ -97,12 +132,14 @@ def treatments_for(counts, shops, codes, occurrence):
     return total
 
 
-def build_extra_rows(extra, prices, houses_per_shop):
+def build_extra_rows(extra, prices, houses_per_shop, labels=None, floors=None):
     """Работы, идущие не по графику санразрыва: дератизация, коврики, барьеры.
 
     Норма задаётся на птичник, корпус, барьер или сразу на площадку, поэтому
     количество за месяц берётся из самой таблицы: единиц × раз в месяц.
     """
+    labels = labels or {}
+    floors = floors or {}
     rows = []
     for norm in extra:
         agent = norm["Средство"].strip()
@@ -128,7 +165,9 @@ def build_extra_rows(extra, prices, houses_per_shop):
             "Процесс": norm["Процесс"],
             "Код": "—",
             "Площадка": norm["Площадка"],
-            "Цеха": norm["Цеха"],
+            "Корпуса": corps_label(
+                [x.strip() for x in norm["Цеха"].split(",") if x.strip()],
+                labels, floors) if norm["Цеха"] != "все" else "все площадки",
             "Птичников на площадке": int(sum(houses_per_shop.get(s, 0) for s in shops))
                                      or sum(houses_per_shop.values()),
             "Средство": agent,
@@ -149,6 +188,7 @@ def build_extra_rows(extra, prices, houses_per_shop):
 
 def build_rows(schedule, norms, prices):
     counts = count_operations(schedule)
+    labels = shop_labels(schedule)
     grouped = defaultdict(lambda: {"shops": [], "norm": None})
 
     houses_per_shop = {}
@@ -193,7 +233,7 @@ def build_rows(schedule, norms, prices):
             "Процесс": process,
             "Код": code,
             "Площадка": site,
-            "Цеха": ", ".join(sorted(set(data["shops"]))),
+            "Корпуса": corps_label(set(data["shops"]), labels, schedule.get("floors")),
             "Птичников на площадке": houses,
             "Средство": agent,
             "Наименование дезсредства": position or agent,
@@ -323,7 +363,7 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     wb = Workbook()
     wb.remove(wb.active)
 
-    header = ["Процесс", "Площадка", "Цеха", "Наименование дезсредства",
+    header = ["Процесс", "Площадка", "Корпуса", "Наименование дезсредства",
               "Птичников на площадке", "Ед.изм", "Норма", "Концентрация",
               "Входят в сан разрыв", "Раз в месяц", "Расход за месяц, л/кг",
               "Цена за ед.", "Сумма", "Замечания"]
@@ -540,7 +580,8 @@ def main(argv=None):
     prices = load_prices(args.price, args.map)
     rows, houses_per_shop = build_rows(schedule, norms, prices)
     if args.extra and os.path.exists(args.extra):
-        rows += build_extra_rows(read_csv(args.extra), prices, houses_per_shop)
+        rows += build_extra_rows(read_csv(args.extra), prices, houses_per_shop,
+                                 shop_labels(schedule), schedule.get("floors"))
 
     daily = build_daily(schedule, norms, prices)
     checks = self_checks(rows, schedule, daily, load_confirmations(args.confirmed))
