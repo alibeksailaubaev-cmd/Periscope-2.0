@@ -31,6 +31,22 @@ START_MARK = "ОС"       # с чего начинается цикл
 END_MARK = "ЗС"         # чем заканчивается
 
 HEAD_FILL = PatternFill("solid", fgColor="D9E2F3")
+
+# Заливка отметок — как в исходном графике: красным начало санразрыва,
+# синим мойка, зелёным подготовка, жёлтым заселение. Остальное без заливки.
+MARK_FILLS = [
+    ("ОС", PatternFill("solid", fgColor="FFFF0000")),
+    ("ПДГ", PatternFill("solid", fgColor="FF92D050")),
+    ("ЗС", PatternFill("solid", fgColor="FFFFFF00")),
+    ("МС", PatternFill("solid", fgColor="FF4F81BD")),
+]
+
+
+def mark_fill(mark):
+    for key, fill in MARK_FILLS:
+        if key in mark:
+            return fill
+    return None
 THIN = Side(style="thin", color="B0B0B0")
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
@@ -202,11 +218,32 @@ def write_schedule(source, plan, month_from, month_to, out_path, title):
             ws.cell(row, mirror_floor).value = floor
             ws.cell(row, mirror_floor + 1).value = shop if row == row_from else None
             for day, mark in plan.get((shop, floor), {}).items():
-                ws.cell(row, FIRST_DAY_COL + (day - month_from).days).value = mark
+                cell = ws.cell(row, FIRST_DAY_COL + (day - month_from).days)
+                cell.value = mark
+                fill = mark_fill(mark)
+                if fill:
+                    cell.fill = fill
+                    if fill.start_color.rgb == "FF4F81BD":
+                        cell.font = Font(color="FFFFFFFF")
             for col in range(1, mirror_floor + 2):
                 cell = ws.cell(row, col)
                 cell.border = BORDER
                 cell.alignment = Alignment(horizontal="center", vertical="center")
+
+    legend = [
+        ("ос", "освобождение", "ДС", "дезинсекция", "СО", "септик обработка"),
+        ("ОЧ", "очистка", "ГФ", "газация формалином", "ОД", "обработка дорог"),
+        ("ОЧН", "очистка ночь", "ГГ", "газация глутаркой", "МС", "мойка сутки"),
+        ("П", "побелка день", "мд", "мойка ДЕНЬ", "МН", "мойка ночь"),
+        ("ПН", "побелка ночь", "р", "ремонт", "Ш", "ШАХТА"),
+        ("ДЗ", "дезинфекция", "ПДГ", "подготовка", "ПР", "приемка птичника"),
+        ("ЗО", "засыпка", "ЗС", "заселение", "ЗН", "засыпка в ночь"),
+    ]
+    first_legend_row = 132
+    for i, line in enumerate(legend):
+        row = first_legend_row + i * 2
+        for j, value in enumerate(line):
+            ws.cell(row, FIRST_DAY_COL + j + (j // 2)).value = value
 
     ws.column_dimensions["A"].width = 9
     ws.column_dimensions["B"].width = 7
