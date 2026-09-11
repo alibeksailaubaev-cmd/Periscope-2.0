@@ -54,7 +54,7 @@ SHOP_BLOCKS = [
 HEADER_ROW = 7
 COL_FLOOR = 2          # B — этаж
 FIRST_DAY_COL = 3      # C — 1-е число
-LAST_DAY_COL = 32      # AF — 30/31-е число
+MAX_DAY_COLS = 31      # в месяце не больше 31 дня
 
 # Отметка -> (код операции, человекочитаемое название, этап санации)
 OPERATIONS = {
@@ -86,7 +86,7 @@ def split_marks(raw):
 def read_day_columns(ws):
     """Колонка -> дата из строки-шапки."""
     days = {}
-    for col in range(FIRST_DAY_COL, LAST_DAY_COL + 1):
+    for col in range(FIRST_DAY_COL, FIRST_DAY_COL + MAX_DAY_COLS):
         value = ws.cell(HEADER_ROW, col).value
         if isinstance(value, datetime):
             days[col] = value.date()
