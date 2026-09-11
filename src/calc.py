@@ -138,8 +138,7 @@ def build_extra_rows(extra, prices, houses_per_shop):
             "Подпись колонки нормы": "",
             "Раствор на 1 птичник, л": None,
             "Кол-во за месяц": qty,
-            "Расход за месяц": month_qty,
-            "Раствор за месяц, л": None,
+            "Расход за месяц, л/кг": month_qty,
             "Цена за ед.": price,
             "Сумма": total,
             "Замечания": "; ".join(problems),
@@ -202,8 +201,7 @@ def build_rows(schedule, norms, prices):
             "Подпись колонки нормы": norm.get("Подпись колонки нормы", ""),
             "Раствор на 1 птичник, л": solution,
             "Кол-во за месяц": treatments,
-            "Расход за месяц": month_qty,
-            "Раствор за месяц, л": solution * treatments if solution is not None else None,
+            "Расход за месяц, л/кг": month_qty,
             "Цена за ед.": price,
             "Сумма": total,
             "Замечания": "; ".join(problems),
@@ -326,7 +324,7 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     header = ["Процесс", "Площадка", "Цеха", "Наименование дезсредства",
               "Птичников на площадке", "Ед.изм", "Норма", "Норма на",
               "Концентрация", "Раствор на 1 птичник, л", "Кол-во за месяц",
-              "Раствор за месяц, л", "Цена за ед.", "Сумма", "Замечания"]
+              "Расход за месяц, л/кг", "Цена за ед.", "Сумма", "Замечания"]
     ws = wb.create_sheet("Расчёт")
     write_sheet(ws, header, [[r[h] for h in header] for r in rows],
                 money_cols=(13, 14), number_cols=(7, 10, 12))
@@ -334,10 +332,10 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     # или цену прямо в книге, итог пересчитается.
     for row_idx, row in enumerate(rows, start=2):
         ws.cell(row_idx, 9).number_format = "0.0%"
+        if row["Норма"] is not None:
+            ws.cell(row_idx, 12).value = "=G{0}*K{0}".format(row_idx)
         if row["Норма"] is not None and row["Цена за ед."] is not None:
-            ws.cell(row_idx, 14).value = "=G{0}*K{0}*M{0}".format(row_idx)
-        if row["Раствор на 1 птичник, л"] is not None:
-            ws.cell(row_idx, 12).value = "=J{0}*K{0}".format(row_idx)
+            ws.cell(row_idx, 14).value = "=L{0}*M{0}".format(row_idx)
     for row_idx, r in enumerate(rows, start=2):
         if r["Замечания"]:
             for col in range(1, len(header) + 1):
@@ -347,17 +345,17 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     ws.cell(total_row, 14, "=SUM(N2:N{})".format(ws.max_row - 1)).font = Font(bold=True)
     ws.cell(total_row, 14).number_format = "# ##0.00"
     for col, width in zip(range(1, len(header) + 1),
-                          (36, 11, 26, 44, 12, 8, 10, 11, 13, 16, 13, 16, 13, 15, 34)):
+                          (36, 11, 26, 44, 12, 8, 10, 11, 13, 16, 13, 17, 13, 15, 34)):
         ws.column_dimensions[chr(64 + col)].width = width
 
     # Группируем по позиции прайса: в программе одно и то же средство
     # встречается в разных написаниях («Формалин», «формалин», «Формалин 37,6%»).
     by_agent = defaultdict(lambda: [0.0, 0.0, "", ""])
     for r in rows:
-        if r["Расход за месяц"] is None:
+        if r["Расход за месяц, л/кг"] is None:
             continue
         item = by_agent[r["Наименование дезсредства"]]
-        item[0] += r["Расход за месяц"]
+        item[0] += r["Расход за месяц, л/кг"]
         item[1] += r["Сумма"] or 0.0
         item[2] = r["Ед.изм"]
         item[3] = "нет цены" if r["Цена за ед."] is None else ""
@@ -486,7 +484,7 @@ def print_report(rows, schedule):
             "{:g}".format(r["Раствор на 1 птичник, л"]) if r["Раствор на 1 птичник, л"] is not None else "—",
             r["Норма на"][:8],
             r["Кол-во за месяц"],
-            "{:.3f}".format(r["Расход за месяц"]) if r["Расход за месяц"] is not None else "—",
+            "{:.3f}".format(r["Расход за месяц, л/кг"]) if r["Расход за месяц, л/кг"] is not None else "—",
             "{:,.2f}".format(r["Цена за ед."]) if r["Цена за ед."] is not None else "нет цены",
             "{:,.2f}".format(r["Сумма"]) if r["Сумма"] is not None else "—"))
     print("-" * 153)
