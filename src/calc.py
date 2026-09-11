@@ -29,6 +29,21 @@ THIN = Side(style="thin", color="B0B0B0")
 BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
 
+# Средства, у которых норма задана в литрах, а цена в килограммах (или наоборот).
+# Такие пары считаются один к одному, а список выводится отдельным замечанием.
+LITRE_KILO = {"л", "кг", "л (дм3)"}
+UNIT_MISMATCHES = {}
+
+
+def note_unit_mismatch(agent, norm_unit, price_unit):
+    norm_unit = (norm_unit or "").strip().lower()
+    price_unit = (price_unit or "").strip().lower()
+    if not norm_unit or not price_unit or norm_unit == price_unit:
+        return
+    if norm_unit in LITRE_KILO and price_unit in LITRE_KILO:
+        UNIT_MISMATCHES[agent] = (norm_unit, price_unit)
+
+
 def read_csv(path):
     with open(path, encoding="utf-8-sig", newline="") as fh:
         return list(csv.DictReader(fh, delimiter=";"))
@@ -99,10 +114,7 @@ def build_extra_rows(extra, prices, houses_per_shop):
         problems = []
         if price is None:
             problems.append("нет цены")
-        norm_unit = (norm["Ед.изм"] or "").strip().lower()
-        if price_unit and norm_unit and norm_unit not in price_unit.lower():
-            problems.append("ед.изм нормы «{}» ≠ ед.изм прайса «{}»".format(
-                norm["Ед.изм"], price_unit))
+        note_unit_mismatch(agent, norm["Ед.изм"], price_unit)
         # В «Замечания» выносим только то, что требует решения, а не пояснения.
         if "уточнить" in (norm.get("Примечание") or "").lower():
             problems.append(norm["Примечание"])
@@ -169,10 +181,7 @@ def build_rows(schedule, norms, prices):
         elif treatments != houses and code != "ГГ+ГФ":
             problems.append("обработок {} при {} птичниках — цикл выходит за месяц"
                             .format(treatments, houses))
-        norm_unit = (norm["Ед.изм"] or "").strip().lower()
-        if price_unit and norm_unit and norm_unit not in price_unit.lower():
-            problems.append("ед.изм нормы «{}» ≠ ед.изм прайса «{}»".format(
-                norm["Ед.изм"], price_unit))
+        note_unit_mismatch(agent, norm["Ед.изм"], price_unit)
 
         rows.append({
             "Приложение": app,
@@ -307,6 +316,11 @@ def print_report(rows, schedule):
     if missing:
         print("\nЕсть в графике, но нормы в санитарной программе не нашлось: "
               + ", ".join(missing))
+
+    if UNIT_MISMATCHES:
+        print("\nНорма и цена заданы в разных единицах (считаю 1 л = 1 кг):")
+        for agent, (norm_unit, price_unit) in sorted(UNIT_MISMATCHES.items()):
+            print("  {}: норма в {}, цена за {}".format(agent[:50], norm_unit, price_unit))
 
     problems = [r for r in rows if r["Замечания"]]
     if problems:
