@@ -330,8 +330,14 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     ws = wb.create_sheet("Расчёт")
     write_sheet(ws, header, [[r[h] for h in header] for r in rows],
                 money_cols=(13, 14), number_cols=(7, 10, 12))
-    for row_idx in range(2, ws.max_row + 1):
+    # Сумму и объём раствора за месяц считает сам Excel: если поправить норму
+    # или цену прямо в книге, итог пересчитается.
+    for row_idx, row in enumerate(rows, start=2):
         ws.cell(row_idx, 9).number_format = "0.0%"
+        if row["Норма"] is not None and row["Цена за ед."] is not None:
+            ws.cell(row_idx, 14).value = "=G{0}*K{0}*M{0}".format(row_idx)
+        if row["Раствор на 1 птичник, л"] is not None:
+            ws.cell(row_idx, 12).value = "=J{0}*K{0}".format(row_idx)
     for row_idx, r in enumerate(rows, start=2):
         if r["Замечания"]:
             for col in range(1, len(header) + 1):
