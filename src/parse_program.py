@@ -41,38 +41,41 @@ SITE_BY_NUMBER = {
 # Разбор приложений. kind:
 #   occurrence — если операция за цикл повторяется (дезинфекция идёт дважды),
 #   номер вхождения: 1 — первая по дате, 2 — вторая. Пусто — считать все.
-#   «средство» — в колонке value уже количество средства;
-#   «раствор»  — в колонке value объём раствора, средство = раствор × концентрация.
+#   «средство» — в колонке value количество самого средства;
+#   «раствор»  — в колонке value объём готового раствора, средство = раствор × %.
+# В приложениях №2-6 колонка подписана «кол-во дез. раствора», но по факту это
+# количество средства (подтверждено заказчиком), а % — концентрация разведения,
+# поэтому объём раствора получается делением: средство / концентрация.
 # code — отметка в графике санитарного разрыва, по которой считается частота.
 APPENDICES = [
     {
         "sheet": "приложение №2,", "no": "2", "rows": (13, 22),
         "process": "Дезинфекция линий поения (санация 2)", "day": "2",
-        "code": "МС", "kind": "раствор",
+        "code": "МС", "kind": "средство", "solution_from_conc": True,
         "site": "C", "agent": "E", "value": "F", "conc": "G", "unit": "л",
     },
     {
         "sheet": "приложение №3", "no": "3", "rows": (13, 22),
         "process": "Мойка", "day": "2",
-        "code": "МС", "kind": "раствор",
+        "code": "МС", "kind": "средство", "solution_from_conc": True,
         "site": "C", "agent": "E", "value": "F", "conc": "G", "unit": "л",
     },
     {
         "sheet": "приложение №4", "no": "4", "rows": (13, 22),
         "process": "Мойка", "day": "2",
-        "code": "МС", "kind": "раствор",
+        "code": "МС", "kind": "средство", "solution_from_conc": True,
         "site": "C", "agent": "E", "value": "F", "conc": "G", "unit": "л",
     },
     {
         "sheet": "приложение №5", "no": "5", "rows": (13, 22),
         "process": "Дезинфекция линий поения (санация 1)", "day": "1",
-        "code": "ОС", "kind": "раствор",
+        "code": "ОС", "kind": "средство", "solution_from_conc": True,
         "site": "C", "agent": "E", "value": "F", "conc": "G", "unit": "кг",
     },
     {
         "sheet": "приложение №6", "no": "6", "rows": (13, 22),
         "process": "Дезинфекция линий поения (санация 3)", "day": "3",
-        "code": "ПР", "kind": "раствор",
+        "code": "ПР", "kind": "средство", "solution_from_conc": True,
         "site": "C", "agent": "E", "value": "F", "conc": "G", "unit": "л",
     },
     {
@@ -211,7 +214,10 @@ def parse(path):
                 solution_qty = float(value)
             else:
                 agent_qty = float(value)
-                solution_qty = float(solution) if solution else None
+                if spec.get("solution_from_conc") and conc:
+                    solution_qty = float(value) / float(conc)
+                else:
+                    solution_qty = float(solution) if solution else None
 
             for site in sites:
                 if site in seen:
