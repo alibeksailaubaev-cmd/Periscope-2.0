@@ -130,7 +130,7 @@ def build_extra_rows(extra, prices, houses_per_shop):
             "Птичников на площадке": int(sum(houses_per_shop.get(s, 0) for s in shops))
                                      or sum(houses_per_shop.values()),
             "Средство": agent,
-            "Позиция прайса": position,
+            "Наименование дезсредства": position or agent,
             "Ед.изм": price_unit or norm["Ед.изм"],
             "Норма": per_unit,
             "Норма на": norm["Норма на"],
@@ -193,7 +193,7 @@ def build_rows(schedule, norms, prices):
             "Цеха": ", ".join(sorted(set(data["shops"]))),
             "Птичников на площадке": houses,
             "Средство": agent,
-            "Позиция прайса": position,
+            "Наименование дезсредства": position or agent,
             "Ед.изм": price_unit or norm["Ед.изм"],
             "Норма": per_house,
             "Норма на": "птичник",
@@ -321,24 +321,23 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     wb = Workbook()
     wb.remove(wb.active)
 
-    header = ["Приложение", "Процесс", "Код", "Площадка", "Цеха", "Средство",
-              "Позиция прайса", "Птичников на площадке", "Ед.изм",
-              "Норма", "Норма на", "Раствор на 1 птичник, л",
-              "Кол-во за месяц", "Расход за месяц", "Раствор за месяц, л",
-              "Цена за ед.", "Сумма", "Замечания"]
+    header = ["Процесс", "Площадка", "Цеха", "Наименование дезсредства",
+              "Птичников на площадке", "Ед.изм", "Норма", "Норма на",
+              "Раствор на 1 птичник, л", "Кол-во за месяц",
+              "Раствор за месяц, л", "Цена за ед.", "Сумма", "Замечания"]
     ws = wb.create_sheet("Расчёт")
     write_sheet(ws, header, [[r[h] for h in header] for r in rows],
-                money_cols=(16, 17), number_cols=(10, 12, 14, 15))
+                money_cols=(12, 13), number_cols=(7, 9, 11))
     for row_idx, r in enumerate(rows, start=2):
         if r["Замечания"]:
             for col in range(1, len(header) + 1):
                 ws.cell(row_idx, col).fill = WARN_FILL
     total_row = ws.max_row + 2
-    ws.cell(total_row, 16, "ИТОГО").font = Font(bold=True)
-    ws.cell(total_row, 17, "=SUM(Q2:Q{})".format(ws.max_row - 1)).font = Font(bold=True)
-    ws.cell(total_row, 17).number_format = "# ##0.00"
+    ws.cell(total_row, 12, "ИТОГО").font = Font(bold=True)
+    ws.cell(total_row, 13, "=SUM(M2:M{})".format(ws.max_row - 1)).font = Font(bold=True)
+    ws.cell(total_row, 13).number_format = "# ##0.00"
     for col, width in zip(range(1, len(header) + 1),
-                          (11, 36, 8, 11, 26, 34, 34, 12, 8, 10, 11, 16, 13, 14, 16, 13, 15, 34)):
+                          (36, 11, 26, 44, 12, 8, 10, 11, 16, 13, 16, 13, 15, 34)):
         ws.column_dimensions[chr(64 + col)].width = width
 
     # Группируем по позиции прайса: в программе одно и то же средство
@@ -347,7 +346,7 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None
     for r in rows:
         if r["Расход за месяц"] is None:
             continue
-        item = by_agent[r["Позиция прайса"] or r["Средство"]]
+        item = by_agent[r["Наименование дезсредства"]]
         item[0] += r["Расход за месяц"]
         item[1] += r["Сумма"] or 0.0
         item[2] = r["Ед.изм"]
@@ -420,7 +419,7 @@ def self_checks(rows, schedule, daily, confirmed=None):
     for row in rows:
         if row["Код"] == "—":
             continue
-        key = (row["Код"], row["Площадка"], row["Позиция прайса"] or row["Средство"])
+        key = (row["Код"], row["Площадка"], row["Наименование дезсредства"])
         duplicates[key].add(row["Приложение"])
     for (code, site, agent), apps in sorted(duplicates.items()):
         if len(apps) > 1:
