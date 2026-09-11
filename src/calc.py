@@ -335,6 +335,8 @@ def main(argv=None):
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("xlsx", help="график санитарного разрыва")
     ap.add_argument("--sheet", help="лист графика (по умолчанию первый)")
+    ap.add_argument("--fix", default="data/pravki_grafika.csv",
+                    help="файл ручных правок графика")
     ap.add_argument("--norms", default="data/normy.csv")
     ap.add_argument("--extra", default="data/normy_dopolnitelno.csv",
                     help="нормы работ, не привязанных к графику санразрыва")
@@ -344,7 +346,11 @@ def main(argv=None):
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args(argv)
 
-    schedule = parse(args.xlsx, args.sheet)
+    schedule = parse(args.xlsx, args.sheet, args.fix)
+    if schedule["corrections"]:
+        print("Внесено ручных правок в график: {}".format(schedule["corrections"]))
+    for miss in schedule["corrections_missed"]:
+        print("ВНИМАНИЕ: правка не применена, птичник не найден: {}".format(miss))
     norms = read_csv(args.norms)
     prices = load_prices(args.price, args.map)
     rows, houses_per_shop = build_rows(schedule, norms, prices)

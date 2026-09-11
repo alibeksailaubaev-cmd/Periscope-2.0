@@ -20,6 +20,7 @@
 
 import argparse
 import csv
+import os
 import json
 import re
 import sys
@@ -92,7 +93,38 @@ def read_day_columns(ws):
     return days
 
 
-def parse(path, sheet=None):
+def read_corrections(path):
+    """Ручные правки графика: отметки, пропущенные при его составлении."""
+    if not path or not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8-sig", newline="") as fh:
+        return [r for r in csv.DictReader(fh, delimiter=";") if (r.get("Цех") or "").strip()]
+
+
+def apply_corrections(houses, corrections):
+    added, missed = 0, []
+    for fix in corrections:
+        shop, floor = fix["Цех"].strip(), str(fix["Этаж"]).strip()
+        mark = fix["Код"].strip().upper()
+        code, name, stage = OPERATIONS[mark]
+        for house in houses:
+            if house["shop"] == shop and str(house["floor"]) == floor:
+                house["events"].append({
+                    "date": fix["Дата"].strip(),
+                    "code": code,
+                    "name": name,
+                    "stage": stage,
+                    "cell": "{} (правка)".format(mark),
+                })
+                house["events"].sort(key=lambda e: e["date"])
+                added += 1
+                break
+        else:
+            missed.append("{} / этаж {}".format(shop, floor))
+    return added, missed
+
+
+def parse(path, sheet=None, corrections=None):
     wb = openpyxl.load_workbook(path, data_only=True)
     ws = wb[sheet] if sheet else wb.worksheets[0]
     days = read_day_columns(ws)
@@ -131,8 +163,12 @@ def parse(path, sheet=None):
                     "events": events,
                 })
 
+    added, missed = apply_corrections(houses, read_corrections(corrections))
+
     return {
         "source": str(path),
+        "corrections": added,
+        "corrections_missed": missed,
         "sheet": ws.title,
         "period": {
             "from": min(days.values()).isoformat(),
@@ -158,7 +194,12 @@ def write_csv(data, path):
 def print_report(data):
     print("График: {} ({} — {})".format(
         data["sheet"], data["period"]["from"], data["period"]["to"]))
-    print("Птичников с отметками: {}\n".format(len(data["houses"])))
+    print("Птичников с отметками: {}".format(len(data["houses"])))
+    if data["corrections"]:
+        print("Внесено ручных правок: {}".format(data["corrections"]))
+    for miss in data["corrections_missed"]:
+        print("ВНИМАНИЕ: правка не применена, птичник не найден: {}".format(miss))
+    print()
     for house in data["houses"]:
         print(house["house"])
         for e in house["events"]:
@@ -174,12 +215,14 @@ def main(argv=None):
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("xlsx", help="файл графика санитарного разрыва")
     ap.add_argument("--sheet", help="имя листа (по умолчанию первый)")
+    ap.add_argument("--fix", default="data/pravki_grafika.csv",
+                    help="файл ручных правок графика")
     ap.add_argument("--json", metavar="FILE", help="сохранить результат в JSON")
     ap.add_argument("--csv", metavar="FILE", help="сохранить результат в CSV")
     ap.add_argument("--quiet", action="store_true", help="не печатать отчёт в консоль")
     args = ap.parse_args(argv)
 
-    data = parse(args.xlsx, args.sheet)
+    data = parse(args.xlsx, args.sheet, args.fix)
     if args.json:
         with open(args.json, "w", encoding="utf-8") as fh:
             json.dump(data, fh, ensure_ascii=False, indent=2)
