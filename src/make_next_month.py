@@ -4,7 +4,8 @@
 Опирается на график предыдущего месяца:
 
   * шаблон цикла (последовательность отметок и интервалы между ними) берётся
-    из самих птичников — по завершённым циклам этого цеха;
+    из самих птичников — по завершённым циклам этого цеха; ключ --templates-from
+    ограничивает набор графиков, по которым шаблон строится;
   * месяцев-источников можно указать несколько (от раннего к позднему), тогда
     история птичника склеивается и в расчёт берётся последнее событие;
   * незакрытые на конец месяца циклы продолжаются по шаблону;
@@ -20,6 +21,7 @@ import argparse
 import calendar
 import collections
 import os
+import re
 import sys
 from datetime import date, timedelta
 
@@ -102,8 +104,21 @@ def cycle_template(marks, start_date):
     return [((day - start_date).days, mark) for day, mark in marks]
 
 
+def duplicate_codes(template):
+    """Коды, встречающиеся в цикле больше одного раза (ДЗ идёт дважды штатно)."""
+    counter = collections.Counter()
+    for _, mark in template:
+        counter.update(mark_codes(mark))
+    return {code for code, n in counter.items() if n > 1 and code not in ("ДЗ", "Р")}
+
+
 def build_templates(houses):
-    """Цех -> шаблон цикла. Берём самый частый завершённый цикл цеха."""
+    """Цех -> шаблон цикла.
+
+    Берём самый частый завершённый цикл цеха. При равенстве частот
+    предпочитаем цикл без повторов операций: редкий вариант с двойной
+    обработкой, размноженный на весь цех, завышает расход.
+    """
     per_shop = collections.defaultdict(collections.Counter)
     overall = collections.Counter()
 
@@ -120,9 +135,50 @@ def build_templates(houses):
             per_shop[house["shop"]][template] += 1
             overall[template] += 1
 
-    fallback = overall.most_common(1)[0][0] if overall else None
-    return ({shop: counter.most_common(1)[0][0] for shop, counter in per_shop.items()},
-            fallback)
+    def best(counter):
+        return max(counter.items(),
+                   key=lambda kv: (kv[1], -len(duplicate_codes(kv[0]))))[0]
+
+    fallback = best(overall) if overall else None
+    chosen = {shop: best(counter) for shop, counter in per_shop.items()}
+
+    warnings = []
+    for shop, template in sorted(chosen.items()):
+        repeats = duplicate_codes(template)
+        if repeats:
+            warnings.append(
+                "цех {}: в шаблоне цикла операция {} встречается дважды — "
+                "так в исходном графике, проверьте, что это не опечатка"
+                .format(shop, ", ".join(sorted(repeats))))
+        if per_shop[shop][template] == 1:
+            warnings.append(
+                "цех {}: шаблон построен по единственному завершённому циклу — "
+                "остальные выходят за границы присланных месяцев"
+                .format(shop))
+    return chosen, fallback, warnings
+
+
+def mark_codes(mark):
+    """'ЗО/ДЗ\\ГГ' -> {'ЗО', 'ДЗ', 'ГГ'} — для сравнения отметок между собой."""
+    return {p.strip().upper() for p in re.split(r"[\\/|,]+", str(mark)) if p.strip()}
+
+
+def resume_point(template, done):
+    """Индекс шага шаблона, на котором цикл уже остановился.
+
+    Сопоставляем по самим отметкам, а не по номеру дня: реальный график
+    бывает сдвинут относительно шаблона, и сопоставление по дням приводило
+    к повторной простановке уже выполненных работ через границу месяца.
+    """
+    index = -1
+    position = 0
+    for _, mark in done:
+        codes = mark_codes(mark)
+        for step in range(position, len(template)):
+            if mark_codes(template[step][1]) & codes:
+                index, position = step, step + 1
+                break
+    return index
 
 
 def open_cycle(house):
@@ -160,14 +216,13 @@ def generate(houses, templates, fallback, month_from, month_to, grow_days):
         opened = open_cycle(house)
         if opened:
             start, done = opened
-            done_offsets = {(day - start).days for day, _ in done}
-            for offset, mark in template:
-                day = start + timedelta(days=offset)
-                if offset in done_offsets or day < month_from:
-                    continue
-                if day <= month_to:
+            index = resume_point(template, done)
+            last_day, last_offset = done[-1][0], (template[index][0] if index >= 0 else 0)
+            for offset, mark in template[index + 1:]:
+                day = last_day + timedelta(days=offset - last_offset)
+                if month_from <= day <= month_to:
                     marks[day] = mark
-            settled = start + timedelta(days=cycle_len)
+            settled = last_day + timedelta(days=cycle_len - last_offset)
 
         if settled is None:
             unknown.append("{} / этаж {}".format(house["shop"], house["floor"]))
@@ -281,6 +336,11 @@ def main(argv=None):
                     help="графики предыдущих месяцев, от раннего к позднему")
     ap.add_argument("--month", required=True, help="новый месяц в виде ГГГГ-ММ")
     ap.add_argument("--days", type=int, default=40, help="длительность выращивания, дней")
+    ap.add_argument("--templates-from", nargs="*", metavar="XLSX",
+                    help="графики, по которым строить шаблон цикла (по умолчанию все). "
+                         "Указывайте только настоящие графики: если брать шаблон из "
+                         "ранее построенных месяцев, редкий вариант цикла "
+                         "размножается и подменяет собой обычный")
     ap.add_argument("--sheet", help="лист исходного графика")
     ap.add_argument("--out", required=True)
     ap.add_argument("--title", help="имя листа нового графика")
@@ -291,7 +351,8 @@ def main(argv=None):
     month_to = date(year, month, calendar.monthrange(year, month)[1])
 
     houses = merge_months(args.xlsx, args.sheet)
-    templates = build_templates(houses)
+    source = merge_months(args.templates_from, args.sheet) if args.templates_from else houses
+    templates = build_templates(source)
     plan, unknown = generate(houses, templates, templates[1],
                              month_from, month_to, args.days)
 
@@ -309,6 +370,8 @@ def main(argv=None):
         if template != templates[1]:
             print("  шаблон цеха {}: ".format(shop) + "  ".join(
                 "+{}:{}".format(o, m) for o, m in template))
+    for text in templates[2]:
+        print("  ВНИМАНИЕ: {}".format(text))
     for house in unknown:
         print("  ВНИМАНИЕ: нет данных для планирования: {}".format(house))
     return 0

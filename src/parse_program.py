@@ -179,6 +179,15 @@ def cell(ws, col, row):
     return value.strip() if isinstance(value, str) else value
 
 
+def value_label(ws, spec):
+    """Подпись колонки, из которой взята норма — нужна для проверок."""
+    for row in range(1, spec["rows"][0]):
+        text = cell(ws, spec["value"], row)
+        if isinstance(text, str) and text.strip():
+            return " ".join(text.split())
+    return ""
+
+
 def parse(path):
     wb = openpyxl.load_workbook(path, data_only=True)
     houses = count_houses(wb)
@@ -187,6 +196,7 @@ def parse(path):
 
     for spec in APPENDICES:
         ws = wb[spec["sheet"]]
+        label = value_label(ws, spec)
         seen = set()
         current = None
         for row in range(spec["rows"][0], spec["rows"][1] + 1):
@@ -239,6 +249,7 @@ def parse(path):
                         "Раствор, л": solution_qty if solution_qty is not None else "",
                         "Концентрация": conc if conc is not None else "",
                         "Как задано": spec["kind"],
+                        "Подпись колонки нормы": label,
                     })
 
     return rows, warnings

@@ -134,6 +134,7 @@ def build_extra_rows(extra, prices, houses_per_shop):
             "Ед.изм": norm["Ед.изм"],
             "Норма": per_unit,
             "Норма на": norm["Норма на"],
+            "Подпись колонки нормы": "",
             "Раствор на 1 птичник, л": None,
             "Кол-во за месяц": qty,
             "Расход за месяц": month_qty,
@@ -196,6 +197,7 @@ def build_rows(schedule, norms, prices):
             "Ед.изм": norm["Ед.изм"],
             "Норма": per_house,
             "Норма на": "птичник",
+            "Подпись колонки нормы": norm.get("Подпись колонки нормы", ""),
             "Раствор на 1 птичник, л": solution,
             "Кол-во за месяц": treatments,
             "Расход за месяц": month_qty,
@@ -315,7 +317,7 @@ def build_schedule_sheet(wb, schedule):
     return ws
 
 
-def build_workbook(rows, schedule, out_path, daily=None, norms=None):
+def build_workbook(rows, schedule, out_path, daily=None, norms=None, checks=None):
     wb = Workbook()
     wb.remove(wb.active)
 
@@ -380,12 +382,84 @@ def build_workbook(rows, schedule, out_path, daily=None, norms=None):
         ws4.cell(total, 7, "=SUM(G2:G{})".format(ws4.max_row - 1)).font = Font(bold=True)
         ws4.cell(total, 7).number_format = "# ##0.00"
 
+    ws5 = wb.create_sheet("Проверки")
+    write_sheet(ws5, ["№", "Что проверено"],
+                [[i, text] for i, text in enumerate(checks or ["замечаний нет"], 1)])
+    ws5.column_dimensions["A"].width = 6
+    ws5.column_dimensions["B"].width = 120
+
     build_schedule_sheet(wb, schedule)
 
     out_dir = os.path.dirname(os.path.abspath(out_path))
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
     wb.save(out_path)
+
+
+def load_confirmations(path):
+    """Приложения, прочтение которых заказчик уже подтвердил."""
+    if not path or not os.path.exists(path):
+        return {}
+    return {r["Приложение"].strip(): r["Что подтверждено"].strip()
+            for r in read_csv(path) if (r.get("Приложение") or "").strip()}
+
+
+def self_checks(rows, schedule, daily, confirmed=None):
+    """Проверки правдоподобности. Ловят ошибки того же класса, что уже были.
+
+    1. Одно средство на одной операции из разных приложений — риск двойного счёта.
+    2. Норма меньше единицы — в приложениях «кол-во дез. раствора» это
+       количество средства, а не раствора; если умножить на процент,
+       расход занижается в десятки раз.
+    3. Обработок больше, чем птичников, — повтор операции в цикле.
+    4. Сумма по дням должна совпадать с суммой по графику.
+    """
+    problems = []
+
+    duplicates = defaultdict(set)
+    for row in rows:
+        if row["Код"] == "—":
+            continue
+        key = (row["Код"], row["Площадка"], row["Позиция прайса"] or row["Средство"])
+        duplicates[key].add(row["Приложение"])
+    for (code, site, agent), apps in sorted(duplicates.items()):
+        if len(apps) > 1:
+            problems.append(
+                "двойной счёт? {} на {} по коду {} считается в приложениях {}"
+                .format(agent[:40], site, code, ", ".join(sorted(apps))))
+
+    # Колонка, подписанная «раствор», но взятая как количество средства —
+    # ровно та ловушка, на которой расход уже был занижен в 50 раз.
+    ambiguous = {}
+    for row in rows:
+        label = (row.get("Подпись колонки нормы") or "")
+        if row["Код"] != "—" and "раствор" in label.lower():
+            ambiguous[row["Приложение"]] = (label, row["Средство"], row["Норма"],
+                                            row["Ед.изм"])
+    confirmed = confirmed or {}
+    for app, (label, agent, norm, unit) in sorted(ambiguous.items(), key=lambda x: int(x[0])):
+        if app in confirmed:
+            continue
+        problems.append(
+            "прил. №{}: колонка нормы подписана «{}», а значение ({} {} на птичник, "
+            "{}) взято как количество средства — подтвердить"
+            .format(app, label, norm, unit, agent[:34]))
+
+    for row in rows:
+        houses = row["Птичников на площадке"]
+        if row["Код"] != "—" and houses and row["Кол-во за месяц"] > houses:
+            problems.append(
+                "{} на {}: обработок {} при {} птичниках — операция повторяется в цикле"
+                .format(row["Процесс"][:30], row["Площадка"],
+                        row["Кол-во за месяц"], houses))
+
+    by_graph = sum(r["Сумма"] or 0 for r in rows if r["Код"] != "—")
+    by_daily = sum(d["Сумма"] for d in daily)
+    if abs(by_graph - by_daily) > 0.01:
+        problems.append("расхождение: по графику {:,.2f}, по дням {:,.2f}"
+                        .format(by_graph, by_daily))
+
+    return problems
 
 
 def print_report(rows, schedule):
@@ -442,6 +516,8 @@ def main(argv=None):
                     help="нормы работ, не привязанных к графику санразрыва")
     ap.add_argument("--price", default="data/dezsredstva.csv")
     ap.add_argument("--map", default="data/sopostavlenie.csv")
+    ap.add_argument("--confirmed", default="data/podtverzhdeno.csv",
+                    help="приложения, прочтение которых подтверждено заказчиком")
     ap.add_argument("--out", default="out/raschet.xlsx")
     ap.add_argument("--quiet", action="store_true")
     args = ap.parse_args(argv)
@@ -458,8 +534,15 @@ def main(argv=None):
         rows += build_extra_rows(read_csv(args.extra), prices, houses_per_shop)
 
     daily = build_daily(schedule, norms, prices)
-    build_workbook(rows, schedule, args.out, daily, norms)
+    checks = self_checks(rows, schedule, daily, load_confirmations(args.confirmed))
+    build_workbook(rows, schedule, args.out, daily, norms, checks)
     print("Расчёт сохранён:", args.out)
+    if checks:
+        print("\nПроверки — {} замечани(й):".format(len(checks)))
+        for text in checks:
+            print("  •", text)
+    else:
+        print("Проверки пройдены без замечаний.")
     if not args.quiet:
         print()
         print_report(rows, schedule)
