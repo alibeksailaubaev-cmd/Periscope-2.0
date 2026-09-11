@@ -14,6 +14,8 @@ import csv
 import re
 import sys
 
+from collections import Counter
+
 import openpyxl
 
 # Участок санитарной программы -> цеха графика санитарного разрыва.
@@ -125,6 +127,29 @@ APPENDICES = [
 
 SITE_RE = re.compile(r"участок\s*№?\s*([\d,\s]+)\s*\(([^)]+)\)", re.IGNORECASE)
 
+# Листы со списками птичников: лист -> ячейка со списком.
+HOUSE_LISTS = [("№1 ", "C9"), ("№2", "C9")]
+HOUSE_RE = re.compile(r"^(БП\s*\d+|[А-Я])[\s-]*(\d+)?(?:-(\d+))?$")
+
+
+def count_houses(wb):
+    """Цех -> сколько в нём птичников по спискам санитарной программы."""
+    counts = Counter()
+    for sheet, ref in HOUSE_LISTS:
+        text = wb[sheet][ref].value or ""
+        for part in re.split(r"[;.]", str(text)):
+            part = part.strip()
+            if not part.startswith("Птичник"):
+                continue
+            name = part.replace("Птичник", "").strip()
+            if name.startswith("БП"):
+                counts["БП " + re.search(r"БП\s*(\d+)", name).group(1)] += 1
+                continue
+            multi = re.match(r"^([А-Я])\s*(\d+)-(\d+)$", name)
+            counts["{} {}".format(multi.group(1), multi.group(2)) if multi
+                   else name.split()[0]] += 1
+    return counts
+
 
 def parse_sites(text):
     """'Бройлерный участок №12,13,14 (БП)' -> ['БП 12', 'БП 13', 'БП 14']"""
@@ -147,6 +172,7 @@ def cell(ws, col, row):
 
 def parse(path):
     wb = openpyxl.load_workbook(path, data_only=True)
+    houses = count_houses(wb)
     rows = []
     warnings = []
 
@@ -195,6 +221,7 @@ def parse(path):
                         "Участок": site,
                         "Цех": shop,
                         "Средство": agent,
+                        "Птичников в цехе": houses.get(shop, ""),
                         "Ед.изм": spec["unit"],
                         "Норма средства на птичник": round(agent_qty, 4) if agent_qty is not None else "",
                         "Раствор, л": solution_qty if solution_qty is not None else "",
@@ -229,6 +256,8 @@ def main(argv=None):
     print("Нормы записаны:", args.out)
     print("  строк:", len(rows))
     print("  приложений:", len({r["Приложение"] for r in rows}))
+    print("  птичников по спискам программы:",
+          sum({r["Цех"]: r["Птичников в цехе"] for r in rows}.values()))
     for w in dict.fromkeys(warnings):
         print("  ВНИМАНИЕ:", w)
     return 0

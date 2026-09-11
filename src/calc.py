@@ -85,10 +85,12 @@ def build_rows(schedule, norms, prices):
     counts = count_operations(schedule)
     grouped = defaultdict(lambda: {"shops": [], "norm": None})
 
+    houses_per_shop = {}
     for norm in norms:
         key = (norm["Приложение"], norm["Процесс"], norm["Код в графике"],
                norm["Участок"], norm["Средство"], norm.get("Вхождение", ""))
         grouped[key]["shops"].append(norm["Цех"])
+        houses_per_shop[norm["Цех"]] = to_float(norm.get("Птичников в цехе")) or 0
         grouped[key]["norm"] = norm
 
     rows = []
@@ -96,7 +98,9 @@ def build_rows(schedule, norms, prices):
         norm = data["norm"]
         codes = code.split("+")
         occurrence = int(norm["Вхождение"]) if (norm.get("Вхождение") or "").strip() else None
-        treatments = treatments_for(counts, set(data["shops"]), codes, occurrence)
+        shops = set(data["shops"])
+        treatments = treatments_for(counts, shops, codes, occurrence)
+        houses = int(sum(houses_per_shop.get(shop, 0) for shop in shops))
         per_house = to_float(norm["Норма средства на птичник"])
         position, price, price_unit = prices.get(agent, ("", None, ""))
         solution = to_float(norm["Раствор, л"])
@@ -111,6 +115,9 @@ def build_rows(schedule, norms, prices):
             problems.append("нет цены")
         if treatments == 0:
             problems.append("нет обработок в графике")
+        elif treatments != houses and code != "ГГ+ГФ":
+            problems.append("обработок {} при {} птичниках — цикл выходит за месяц"
+                            .format(treatments, houses))
         norm_unit = (norm["Ед.изм"] or "").strip().lower()
         if price_unit and norm_unit and norm_unit not in price_unit.lower():
             problems.append("ед.изм нормы «{}» ≠ ед.изм прайса «{}»".format(
@@ -122,6 +129,7 @@ def build_rows(schedule, norms, prices):
             "Код": code,
             "Площадка": site,
             "Цеха": ", ".join(sorted(set(data["shops"]))),
+            "Птичников на площадке": houses,
             "Средство": agent,
             "Позиция прайса": position,
             "Ед.изм": norm["Ед.изм"],
@@ -167,22 +175,23 @@ def build_workbook(rows, schedule, out_path):
     wb.remove(wb.active)
 
     header = ["Приложение", "Процесс", "Код", "Площадка", "Цеха", "Средство",
-              "Позиция прайса", "Ед.изм", "Расход на 1 птичник",
-              "Раствор на 1 птичник, л", "Обработок за месяц", "Расход за месяц",
-              "Раствор за месяц, л", "Цена за ед.", "Сумма", "Замечания"]
+              "Позиция прайса", "Птичников на площадке", "Ед.изм",
+              "Расход на 1 птичник", "Раствор на 1 птичник, л",
+              "Обработок за месяц", "Расход за месяц", "Раствор за месяц, л",
+              "Цена за ед.", "Сумма", "Замечания"]
     ws = wb.create_sheet("Расчёт")
     write_sheet(ws, header, [[r[h] for h in header] for r in rows],
-                money_cols=(14, 15), number_cols=(9, 10, 12, 13))
+                money_cols=(15, 16), number_cols=(10, 11, 13, 14))
     for row_idx, r in enumerate(rows, start=2):
         if r["Замечания"]:
             for col in range(1, len(header) + 1):
                 ws.cell(row_idx, col).fill = WARN_FILL
     total_row = ws.max_row + 2
-    ws.cell(total_row, 14, "ИТОГО").font = Font(bold=True)
-    ws.cell(total_row, 15, "=SUM(O2:O{})".format(ws.max_row - 1)).font = Font(bold=True)
-    ws.cell(total_row, 15).number_format = "# ##0.00"
+    ws.cell(total_row, 15, "ИТОГО").font = Font(bold=True)
+    ws.cell(total_row, 16, "=SUM(P2:P{})".format(ws.max_row - 1)).font = Font(bold=True)
+    ws.cell(total_row, 16).number_format = "# ##0.00"
     for col, width in zip(range(1, len(header) + 1),
-                          (11, 36, 8, 11, 26, 34, 34, 8, 14, 16, 12, 14, 16, 13, 15, 28)):
+                          (11, 36, 8, 11, 26, 34, 34, 12, 8, 14, 16, 12, 14, 16, 13, 15, 28)):
         ws.column_dimensions[chr(64 + col)].width = width
 
     # Группируем по позиции прайса: в программе одно и то же средство
@@ -220,10 +229,10 @@ def build_workbook(rows, schedule, out_path):
 
 def print_report(rows, schedule):
     print("Период: {} — {}\n".format(schedule["period"]["from"], schedule["period"]["to"]))
-    fmt = "{:<38} {:<8} {:<26} {:>10} {:>9} {:>7} {:>12} {:>12} {:>14}"
+    fmt = "{:<38} {:<8} {:<26} {:>10} {:>9} {:>6} {:>7} {:>12} {:>12} {:>14}"
     print(fmt.format("Процесс", "Площадка", "Средство", "на птичн.", "р-р, л",
-                     "обраб.", "за месяц", "цена", "сумма"))
-    print("-" * 146)
+                     "птичн.", "обраб.", "за месяц", "цена", "сумма"))
+    print("-" * 153)
     total = 0.0
     for r in rows:
         total += r["Сумма"] or 0.0
@@ -231,11 +240,12 @@ def print_report(rows, schedule):
             r["Процесс"][:38], r["Площадка"], r["Средство"][:26],
             "{:.3f}".format(r["Расход на 1 птичник"]) if r["Расход на 1 птичник"] is not None else "—",
             "{:g}".format(r["Раствор на 1 птичник, л"]) if r["Раствор на 1 птичник, л"] is not None else "—",
+            r["Птичников на площадке"],
             r["Обработок за месяц"],
             "{:.3f}".format(r["Расход за месяц"]) if r["Расход за месяц"] is not None else "—",
             "{:,.2f}".format(r["Цена за ед."]) if r["Цена за ед."] is not None else "нет цены",
             "{:,.2f}".format(r["Сумма"]) if r["Сумма"] is not None else "—"))
-    print("-" * 146)
+    print("-" * 153)
     print("ИТОГО: {:,.2f}".format(total))
 
     # ОЧН стоит в той же ячейке графика, что и ОС («ОС/ОЧН»), и учтена по ОС.
