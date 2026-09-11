@@ -103,7 +103,8 @@ def build_extra_rows(extra, prices, houses_per_shop):
         if price_unit and norm_unit and norm_unit not in price_unit.lower():
             problems.append("ед.изм нормы «{}» ≠ ед.изм прайса «{}»".format(
                 norm["Ед.изм"], price_unit))
-        if norm.get("Примечание"):
+        # В «Замечания» выносим только то, что требует решения, а не пояснения.
+        if "уточнить" in (norm.get("Примечание") or "").lower():
             problems.append(norm["Примечание"])
 
         shops = [s.strip() for s in norm["Цеха"].split(",") if s.strip()]
