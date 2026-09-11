@@ -131,7 +131,7 @@ def build_extra_rows(extra, prices, houses_per_shop):
                                      or sum(houses_per_shop.values()),
             "Средство": agent,
             "Позиция прайса": position,
-            "Ед.изм": norm["Ед.изм"],
+            "Ед.изм": price_unit or norm["Ед.изм"],
             "Норма": per_unit,
             "Норма на": norm["Норма на"],
             "Подпись колонки нормы": "",
@@ -194,7 +194,7 @@ def build_rows(schedule, norms, prices):
             "Птичников на площадке": houses,
             "Средство": agent,
             "Позиция прайса": position,
-            "Ед.изм": norm["Ед.изм"],
+            "Ед.изм": price_unit or norm["Ед.изм"],
             "Норма": per_house,
             "Норма на": "птичник",
             "Подпись колонки нормы": norm.get("Подпись колонки нормы", ""),
@@ -492,9 +492,10 @@ def print_report(rows, schedule):
               + ", ".join(missing))
 
     if UNIT_MISMATCHES:
-        print("\nНорма и цена заданы в разных единицах (считаю 1 л = 1 кг):")
+        print("\nЕдиница взята из прайса, в санитарной программе подписана иначе:")
         for agent, (norm_unit, price_unit) in sorted(UNIT_MISMATCHES.items()):
-            print("  {}: норма в {}, цена за {}".format(agent[:50], norm_unit, price_unit))
+            print("  {}: в программе {}, в прайсе {} — считается в {}"
+                  .format(agent[:46], norm_unit, price_unit, price_unit))
 
     problems = [r for r in rows if r["Замечания"]]
     if problems:
