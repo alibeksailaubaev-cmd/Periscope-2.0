@@ -22,6 +22,7 @@ from datetime import date, timedelta
 
 import openpyxl
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from parse_schedule import SHOP_BLOCKS, HEADER_ROW, COL_FLOOR, FIRST_DAY_COL  # noqa: E402
@@ -152,50 +153,66 @@ def generate(houses, templates, fallback, month_from, month_to, grow_days):
 
 
 def write_schedule(source, plan, month_from, month_to, out_path, title):
-    """Записываем новый месяц в той же раскладке, что и исходный график."""
-    wb = openpyxl.load_workbook(source)
-    ws = wb.worksheets[0]
+    """Записываем новый месяц чистой книгой, сохраняя раскладку строк.
+
+    Строки птичников остаются на тех же местах, что и в исходном графике
+    (см. SHOP_BLOCKS), поэтому файл разбирается тем же parse_schedule.
+    """
+    src = openpyxl.load_workbook(source, data_only=True)
+    src_ws = src.worksheets[0]
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
     ws.title = title
 
-    days = [month_from + timedelta(days=i) for i in range((month_to - month_from).days + 1)]
+    days = [month_from + timedelta(days=i)
+            for i in range((month_to - month_from).days + 1)]
 
-    # Объединённые ячейки старой раскладки мешают записи — снимаем объединение.
-    for merged in list(ws.merged_cells.ranges):
-        if merged.min_col >= FIRST_DAY_COL:
-            ws.unmerge_cells(str(merged))
+    ws["A6"] = ('График  санитарного разрыва  производственных цехов  на   {}  '
+                'АО "Усть-Каменогорская птицефабрика"'.format(title))
+    ws["A6"].font = Font(bold=True, size=12)
 
-    # Чистим область дней с запасом и убираем зеркальные колонки старой раскладки.
-    for row in range(HEADER_ROW, 130):
-        for col in range(FIRST_DAY_COL, FIRST_DAY_COL + 33):
-            ws.cell(row, col).value = None
-
+    header = [("A", "Цех"), ("B", "Этаж")]
+    for col, text in header:
+        cell = ws["{}{}".format(col, HEADER_ROW)]
+        cell.value = text
     for i, day in enumerate(days):
         cell = ws.cell(HEADER_ROW, FIRST_DAY_COL + i)
         cell.value = day
         cell.number_format = "DD.MM"
 
-    # Зеркальные колонки «Этаж» и «Цех» ставим сразу за последним днём.
     mirror_floor = FIRST_DAY_COL + len(days)
-    mirror_shop = mirror_floor + 1
     ws.cell(HEADER_ROW, mirror_floor).value = "Этаж"
-    ws.cell(HEADER_ROW, mirror_shop).value = "Цех"
+    ws.cell(HEADER_ROW, mirror_floor + 1).value = "Цех"
+
+    for col in range(1, mirror_floor + 2):
+        cell = ws.cell(HEADER_ROW, col)
+        cell.font = Font(bold=True)
+        cell.fill = HEAD_FILL
+        cell.border = BORDER
+        cell.alignment = Alignment(horizontal="center", vertical="center")
 
     for shop, row_from, row_to in SHOP_BLOCKS:
         for row in range(row_from, row_to + 1):
-            floor = ws.cell(row, COL_FLOOR).value
+            floor = src_ws.cell(row, COL_FLOOR).value
             if floor is None:
                 continue
+            ws.cell(row, 1).value = shop if row == row_from else None
+            ws.cell(row, COL_FLOOR).value = floor
             ws.cell(row, mirror_floor).value = floor
-            if row == row_from:
-                ws.cell(row, mirror_shop).value = shop
-            marks = plan.get((shop, floor), {})
-            for day, mark in marks.items():
+            ws.cell(row, mirror_floor + 1).value = shop if row == row_from else None
+            for day, mark in plan.get((shop, floor), {}).items():
                 ws.cell(row, FIRST_DAY_COL + (day - month_from).days).value = mark
+            for col in range(1, mirror_floor + 2):
+                cell = ws.cell(row, col)
+                cell.border = BORDER
+                cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    for cell in ("A6",):
-        if ws[cell].value:
-            ws[cell] = 'График  санитарного разрыва  производственных цехов  на   {}  ' \
-                       'АО "Усть-Каменогорская птицефабрика"'.format(title)
+    ws.column_dimensions["A"].width = 9
+    ws.column_dimensions["B"].width = 7
+    for col in range(FIRST_DAY_COL, mirror_floor + 2):
+        ws.column_dimensions[get_column_letter(col)].width = 9
+    ws.freeze_panes = "C{}".format(HEADER_ROW + 1)
 
     wb.save(out_path)
 
