@@ -5,11 +5,14 @@
 
   * шаблон цикла (последовательность отметок и интервалы между ними) берётся
     из самих птичников — по завершённым циклам этого цеха;
+  * месяцев-источников можно указать несколько (от раннего к позднему), тогда
+    история птичника склеивается и в расчёт берётся последнее событие;
   * незакрытые на конец месяца циклы продолжаются по шаблону;
   * после заселения (ЗС) птица растёт заданное число дней, затем начинается
     новый цикл с освобождения (ОС/ОЧН).
 
-    python3 src/make_next_month.py data/grafik-sanrazryva-2026-09.xlsx \
+    python3 src/make_next_month.py data/grafik-sanrazryva-2026-08.xlsx \
+        data/grafik-sanrazryva-2026-09.xlsx \
         --month 2026-10 --days 40 --out data/grafik-sanrazryva-2026-10.xlsx
 """
 
@@ -75,6 +78,23 @@ def read_month(path, sheet=None):
                     marks.append((day, str(value).strip()))
             houses.append({"shop": shop, "floor": floor, "row": row, "marks": marks})
     return houses, sorted(days.values())
+
+
+def merge_months(sources, sheet=None):
+    """История птичника из нескольких месяцев подряд, отсортированная по датам."""
+    merged = {}
+    order = []
+    for path in sources:
+        houses, _ = read_month(path, sheet)
+        for house in houses:
+            key = (house["shop"], house["floor"])
+            if key not in merged:
+                merged[key] = {"shop": house["shop"], "floor": house["floor"], "marks": []}
+                order.append(key)
+            merged[key]["marks"].extend(house["marks"])
+    for house in merged.values():
+        house["marks"].sort(key=lambda x: x[0])
+    return [merged[k] for k in order]
 
 
 def cycle_template(marks, start_date):
@@ -257,7 +277,8 @@ def write_schedule(source, plan, month_from, month_to, out_path, title):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("xlsx", help="график предыдущего месяца")
+    ap.add_argument("xlsx", nargs="+",
+                    help="графики предыдущих месяцев, от раннего к позднему")
     ap.add_argument("--month", required=True, help="новый месяц в виде ГГГГ-ММ")
     ap.add_argument("--days", type=int, default=40, help="длительность выращивания, дней")
     ap.add_argument("--sheet", help="лист исходного графика")
@@ -269,7 +290,7 @@ def main(argv=None):
     month_from = date(year, month, 1)
     month_to = date(year, month, calendar.monthrange(year, month)[1])
 
-    houses, _ = read_month(args.xlsx, args.sheet)
+    houses = merge_months(args.xlsx, args.sheet)
     templates = build_templates(houses)
     plan, unknown = generate(houses, templates, templates[1],
                              month_from, month_to, args.days)
@@ -277,7 +298,7 @@ def main(argv=None):
     title = args.title or "{} {}".format(
         ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август",
          "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"][month - 1], str(year)[2:])
-    write_schedule(args.xlsx, plan, month_from, month_to, args.out, title)
+    write_schedule(args.xlsx[-1], plan, month_from, month_to, args.out, title)
 
     print("График построен:", args.out)
     print("  период: {} — {}, выращивание {} дней".format(month_from, month_to, args.days))
