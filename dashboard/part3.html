@@ -553,29 +553,13 @@ async function load(file){
   }
 }
 
-/* логотип: вшивается при сборке или выбирается вручную и запоминается в браузере */
+/* логотип: вшивается при сборке (window.BUILT_IN_LOGO) */
 (function logo(){
   const img = document.getElementById("logo");
   const word = document.getElementById("wordmark");
-  const show = src => {
-    if (!src) return;
-    img.src = src; img.classList.remove("hidden"); word.classList.add("hidden");
-  };
-  let saved = null;
-  try { saved = localStorage.getItem("ukpf-logo"); } catch (e) {}
-  show(window.BUILT_IN_LOGO || saved);
-
-  const input = document.getElementById("logofile");
-  document.getElementById("logobtn").onclick = () => input.click();
-  input.onchange = () => {
-    const f = input.files[0]; if (!f) return;
-    const fr = new FileReader();
-    fr.onload = () => {
-      show(fr.result);
-      try { localStorage.setItem("ukpf-logo", fr.result); } catch (e) {}
-    };
-    fr.readAsDataURL(f);
-  };
+  const src = window.BUILT_IN_LOGO;
+  if (!src) return;
+  img.src = src; img.classList.remove("hidden"); word.classList.add("hidden");
 })();
 
 /* орнаментальная колонка слева — как на фирменном фоне */
