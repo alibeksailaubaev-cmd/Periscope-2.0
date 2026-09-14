@@ -140,6 +140,130 @@ function structure(host, rows){
   host.appendChild(stack); host.appendChild(legend);
 }
 
+
+/* ---------------- панель площадок ---------------- */
+const siteOf = shop => {
+  for (const [site, shops] of Object.entries(DATA.sites)) if (shops.includes(shop)) return site;
+  return shop;
+};
+
+function sitesPanel(host, sched, calc){
+  /* по каждому цеху: какие этажи есть в графике и какие реально зашли в санразрыв */
+  const inWork = {};
+  for (const h of sched.houses) (inWork[h.shop] = inWork[h.shop] || new Set()).add(String(h.floor));
+
+  const sites = {};
+  for (const [shop, floors] of Object.entries(sched.floors)){
+    const site = siteOf(shop);
+    const s = sites[site] || (sites[site] = { site, shops: [], houses: 0, inHouses: 0,
+                                              corps: 0, inCorps: 0 });
+    const done = inWork[shop] || new Set();
+    s.shops.push({ shop, floors: floors.map(String), done });
+    s.houses += floors.length; s.inHouses += done.size;
+    s.corps += 1; s.inCorps += done.size ? 1 : 0;
+  }
+  for (const s of Object.values(sites))
+    s.sum = calc.rows.filter(r => r.graph && r.site === s.site)
+                     .reduce((a, r) => a + (r.sum || 0), 0);
+
+  const order = Object.values(sites).sort((a, b) => b.sum - a.sum);
+  let current = order.length ? order[0].site : null;
+
+  const chips = el("div", "chips");
+  const body = el("div");
+  host.innerHTML = ""; host.appendChild(chips); host.appendChild(body);
+
+  order.forEach(s => {
+    const c = el("button", "chip");
+    c.innerHTML = s.site + " <s>" + s.inHouses + "/" + s.houses + "</s>";
+    c.setAttribute("aria-pressed", s.site === current);
+    c.onclick = () => {
+      current = s.site;
+      chips.querySelectorAll(".chip").forEach((b, i) =>
+        b.setAttribute("aria-pressed", order[i].site === current));
+      draw();
+    };
+    chips.appendChild(c);
+  });
+
+  function draw(){
+    const s = sites[current];
+    if (!s) return;
+    body.innerHTML = "";
+
+    const kp = el("div", "kpis");
+    const mini = (k, v, u) => { const n = el("div", "kpi");
+      n.appendChild(el("div", "k", k)); n.appendChild(el("div", "v", v));
+      if (u) n.appendChild(el("div", "u", u)); return n; };
+    const ops = sched.houses.filter(h => siteOf(h.shop) === current)
+                            .reduce((a, h) => a + h.events.length, 0);
+    kp.appendChild(mini("Корпусов в санразрыве", s.inCorps + " из " + s.corps,
+      s.shops.map(x => x.shop).join(", ")));
+    kp.appendChild(mini("Птичников в санразрыве", s.inHouses + " из " + s.houses,
+      s.houses ? Math.round(s.inHouses / s.houses * 100) + " % площадки" : ""));
+    kp.appendChild(mini("Отметок в графике", String(ops), "учитываемых операций"));
+    kp.appendChild(mini("Сумма по графику", fmt(s.sum, 0) + " ₸",
+      s.inHouses ? fmt(s.sum / s.inHouses, 0) + " ₸ на птичник" : ""));
+    body.appendChild(kp);
+
+    /* корпуса площадки: сколько птичников вошло и какие работы на них прошли */
+    const ORDER = ["ОС","МС","ПР","ДС","ДЗ","ГГ","ГФ","ОД","ПДГ","СО"];
+    const perShop = {};
+    for (const h of sched.houses){
+      if (siteOf(h.shop) !== current) continue;
+      const m = perShop[h.shop] = perShop[h.shop] || {};
+      for (const e of h.events) m[e.code] = (m[e.code] || 0) + 1;
+    }
+    const used = ORDER.filter(c => Object.values(perShop).some(m => m[c]));
+    const names = {};
+    for (const o of Object.values(DATA.ops)) names[o.code] = o.name;
+
+    body.appendChild(el("h4", null, "Корпуса площадки " + current));
+    let html = "<div class='tblwrap'><table><thead><tr>" +
+      "<th>Корпус</th><th>Птичников всего</th><th>Вошло в санразрыв</th><th>Какие птичники</th>" +
+      used.map(c => "<th title='" + (names[c] || c) + "'>" + c + "</th>").join("") +
+      "</tr></thead><tbody>";
+    const shops = [...s.shops].sort((a, b) => a.shop.localeCompare(b.shop, "ru"));
+    for (const c of shops){
+      const nums = c.floors.filter(f => c.done.has(f));
+      const m = perShop[c.shop] || {};
+      html += "<tr><td>" + c.shop + "</td>" +
+              "<td class='n'>" + c.floors.length + "</td>" +
+              "<td class='n'>" + (c.done.size || "—") + "</td>" +
+              "<td>" + (nums.length ? nums.join(", ") : "не входил") + "</td>" +
+              used.map(k => "<td class='n'>" + (m[k] || "") + "</td>").join("") + "</tr>";
+    }
+    const tot = {};
+    for (const m of Object.values(perShop)) for (const [k, v] of Object.entries(m)) tot[k] = (tot[k] || 0) + v;
+    html += "</tbody><tfoot><tr><td>Итого " + current + "</td>" +
+            "<td class='n'>" + s.houses + "</td><td class='n'>" + s.inHouses + "</td><td></td>" +
+            used.map(k => "<td class='n'>" + (tot[k] || "") + "</td>").join("") +
+            "</tr></tfoot></table></div>";
+    body.appendChild(el("div", null, html));
+    if (used.length)
+      body.appendChild(el("p", "cap",
+        "Колонки — коды работ: " + used.map(c => c + " — " + (names[c] || c)).join(", ") + "."));
+
+    const rows = calc.rows.filter(r => r.site === current)
+                          .sort((a, b) => (b.sum || 0) - (a.sum || 0));
+    body.appendChild(el("h4", null, "Чем и сколько израсходовано на площадке " + current));
+    let h2 = "<div class='tblwrap'><table><thead><tr>" +
+      "<th>Процесс</th><th>Дезсредство</th><th>Норма</th><th>Ед.</th>" +
+      "<th>Птичников</th><th>Раз в месяц</th><th>Расход</th><th>Цена</th><th>Сумма</th>" +
+      "</tr></thead><tbody>";
+    for (const r of rows)
+      h2 += "<tr><td>" + r.proc + "</td><td>" + r.agent + "</td>" +
+            "<td class='n'>" + fmtQ(r.norm) + "</td><td>" + r.unit + "</td>" +
+            "<td class='n'>" + r.units + "</td><td class='n'>" + r.times + "</td>" +
+            "<td class='n'>" + fmtQ(r.qty) + "</td><td class='n'>" + fmt(r.price) + "</td>" +
+            "<td class='n'>" + fmt(r.sum) + "</td></tr>";
+    h2 += "</tbody><tfoot><tr><td colspan='8'>ИТОГО по площадке " + current + "</td><td class='n'>" +
+          fmt(rows.reduce((a, r) => a + (r.sum || 0), 0)) + "</td></tr></tfoot></table></div>";
+    body.appendChild(el("div", null, h2));
+  }
+  draw();
+}
+
 /* ---------------- таблица ---------------- */
 const COLS = [
   { k: "proc",  t: "Процесс" },
@@ -250,6 +374,15 @@ function render(){
   pStruct.appendChild(structHost);
   out.appendChild(pStruct);
   structure(structHost, calc.rows);
+
+  const pSites = el("div", "panel");
+  pSites.appendChild(el("h3", null, "Разбор по площадке"));
+  pSites.appendChild(el("p", "cap",
+    "Выберите площадку — видно, какие корпуса и птичники вошли в санразрыв и чем их обрабатывали"));
+  const sitesHost = el("div");
+  pSites.appendChild(sitesHost);
+  out.appendChild(pSites);
+  sitesPanel(sitesHost, sched, calc);
 
   const pViz = el("div", "panel");
   pViz.appendChild(el("h3", null, "Разрезы расхода"));
