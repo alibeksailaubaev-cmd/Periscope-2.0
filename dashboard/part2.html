@@ -1,0 +1,246 @@
+<script>
+"use strict";
+const DATA = __DATA__;
+
+/* ============================ чтение xlsx без библиотек ============================ */
+/* xlsx — это zip; распаковку делает встроенный в браузер DecompressionStream,
+   поэтому файл работает офлайн и ничего не подгружает. */
+async function unzip(buf){
+  const dv = new DataView(buf), u8 = new Uint8Array(buf);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= 0 && i > u8.length - 66000; i--)
+    if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  if (eocd < 0) throw new Error("это не xlsx: не найден конец zip-архива");
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const files = {};
+  for (let i = 0; i < count; i++){
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const csize  = dv.getUint32(p + 20, true);
+    const nlen   = dv.getUint16(p + 28, true);
+    const elen   = dv.getUint16(p + 30, true);
+    const clen   = dv.getUint16(p + 32, true);
+    const lho    = dv.getUint32(p + 42, true);
+    const name   = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen));
+    const lnl = dv.getUint16(lho + 26, true), lel = dv.getUint16(lho + 28, true);
+    const start = lho + 30 + lnl + lel;
+    files[name] = { method, bytes: u8.subarray(start, start + csize) };
+    p += 46 + nlen + elen + clen;
+  }
+  const out = {};
+  for (const [name, f] of Object.entries(files)){
+    if (!/\.(xml|rels)$/i.test(name)) continue;
+    if (f.method === 0){ out[name] = new TextDecoder().decode(f.bytes); continue; }
+    const stream = new Blob([f.bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    out[name] = await new Response(stream).text();
+  }
+  return out;
+}
+
+const colNum = ref => { let n = 0; for (const ch of ref){ const c = ch.charCodeAt(0);
+  if (c < 65 || c > 90) break; n = n * 26 + (c - 64); } return n; };
+const rowNum = ref => parseInt(ref.replace(/^[A-Z]+/, ""), 10);
+const serialToDate = v => new Date(Math.round((v - 25569) * 86400000));
+
+async function readSheet(buf){
+  const parts = await unzip(buf);
+  const doc = s => new DOMParser().parseFromString(s, "application/xml");
+  const shared = [];
+  if (parts["xl/sharedStrings.xml"])
+    for (const si of doc(parts["xl/sharedStrings.xml"]).getElementsByTagName("si"))
+      shared.push(Array.from(si.getElementsByTagName("t")).map(t => t.textContent).join(""));
+  const sheetFile = Object.keys(parts).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort()[0];
+  if (!sheetFile) throw new Error("в файле нет листов");
+  let title = "";
+  if (parts["xl/workbook.xml"]){
+    const s = doc(parts["xl/workbook.xml"]).getElementsByTagName("sheet")[0];
+    if (s) title = s.getAttribute("name") || "";
+  }
+  const cells = new Map();
+  for (const c of doc(parts[sheetFile]).getElementsByTagName("c")){
+    const ref = c.getAttribute("r"); if (!ref) continue;
+    const t = c.getAttribute("t");
+    let val = null;
+    if (t === "inlineStr"){
+      val = Array.from(c.getElementsByTagName("t")).map(x => x.textContent).join("");
+    } else {
+      const v = c.getElementsByTagName("v")[0];
+      if (!v) continue;
+      val = t === "s" ? shared[+v.textContent]
+          : (t === "str" || t === "e" ? v.textContent : +v.textContent);
+    }
+    if (val === null || val === "") continue;
+    cells.set(rowNum(ref) + "," + colNum(ref), val);
+  }
+  return { cells, title, get: (r, c) => cells.get(r + "," + c) };
+}
+
+/* ============================ разбор графика санразрыва ============================ */
+const HEADER_ROW = 7, COL_FLOOR = 2, FIRST_DAY = 3;
+const splitMarks = s => String(s).split(/[\\/|,]+/).map(x => x.trim().toUpperCase()).filter(Boolean);
+
+function parseSchedule(sheet){
+  const days = [];
+  for (let c = FIRST_DAY; c < FIRST_DAY + 31; c++){
+    const v = sheet.get(HEADER_ROW, c);
+    if (typeof v === "number" && v > 30000 && v < 60000) days.push({ col: c, date: serialToDate(v) });
+  }
+  if (!days.length) throw new Error("в строке 7 не найдены даты — похоже, это не график санитарного разрыва");
+
+  const houses = [], floors = {}, unknown = new Set();
+  for (const b of DATA.blocks){
+    for (let r = b.from; r <= b.to; r++){
+      const floor = sheet.get(r, COL_FLOOR);
+      if (floor === undefined || floor === null || floor === "") continue;
+      (floors[b.shop] = floors[b.shop] || []).push(floor);
+      const events = [];
+      for (const d of days){
+        const raw = sheet.get(r, d.col);
+        if (raw === undefined || raw === null || String(raw).trim() === "") continue;
+        for (const m of splitMarks(raw)){
+          if (DATA.ops[m]) events.push({ date: d.date, code: DATA.ops[m].code, mark: m });
+          else if (!DATA.ignored.includes(m)) unknown.add(m);
+        }
+      }
+      if (events.length) houses.push({ shop: b.shop, floor, events });
+    }
+  }
+  return { houses, floors, days, from: days[0].date, to: days[days.length - 1].date,
+           unknown: [...unknown], title: sheet.title };
+}
+
+/* ============================ расчёт ============================ */
+const fmt = (n, d) => (n === null || n === undefined) ? "—"
+  : n.toLocaleString("ru-RU", { minimumFractionDigits: d === undefined ? 2 : d,
+                                maximumFractionDigits: d === undefined ? 2 : d });
+const fmtQ = n => (n === null || n === undefined) ? "—"
+  : n.toLocaleString("ru-RU", { maximumFractionDigits: 3 });
+
+function priceOf(agent){
+  const position = DATA.map[agent] || agent;
+  const p = DATA.prices[position];
+  return { position, price: p ? p.price : null, unit: p ? p.unit : "" };
+}
+
+function corpsLabel(shops, floors){
+  const lab = s => {
+    const nums = (floors[s] || []).map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);
+    if (!nums.length) return s;
+    const seq = nums.every((n, i) => i === 0 || n === nums[i - 1] + 1);
+    return seq ? s + " " + nums[0] + "-" + nums[nums.length - 1] : s + " " + nums.join(", ");
+  };
+  shops = [...shops].sort();
+  if (shops.length === 1) return lab(shops[0]);
+  const ranges = new Set(shops.map(s => {
+    const n = (floors[s] || []).map(Number).filter(x => !isNaN(x)).sort((a, b) => a - b);
+    return n.length ? n[0] + "-" + n[n.length - 1] : "?";
+  }));
+  if (ranges.size === 1 && !ranges.has("?"))
+    return shops[0] + " — " + shops[shops.length - 1] + ", этажи " + [...ranges][0];
+  return shops.map(lab).join(", ");
+}
+
+function compute(sched, programKey){
+  const norms = DATA.programs[programKey];
+
+  /* сколько раз каждая операция проведена: цех | код | номер вхождения в цикле */
+  const counts = new Map();
+  for (const h of sched.houses){
+    const seen = {};
+    for (const e of [...h.events].sort((a, b) => a.date - b.date)){
+      seen[e.code] = (seen[e.code] || 0) + 1;
+      const k = h.shop + "|" + e.code + "|" + seen[e.code];
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+  }
+  const treatments = (shops, codes, occ) => {
+    let n = 0;
+    for (const [k, v] of counts){
+      const parts = k.split("|");
+      if (shops.has(parts[0]) && codes.includes(parts[1]) && (!occ || +parts[2] === occ)) n += v;
+    }
+    return n;
+  };
+
+  const groups = new Map();
+  for (const n of norms){
+    const key = [n.app, n.proc, n.code, n.occ || "", n.site, n.agent].join("");
+    if (!groups.has(key)) groups.set(key, { n, shops: new Set() });
+    groups.get(key).shops.add(n.shop);
+  }
+
+  const rows = [];
+  for (const g of groups.values()){
+    const n = g.n;
+    const t = treatments(g.shops, n.code.split("+"), n.occ);
+    if (!t) continue;                       /* площадки нет в графике этого месяца */
+    const pr = priceOf(n.agent);
+    const qty = n.norm === null ? null : n.norm * t;
+    rows.push({ proc: n.proc, site: n.site, corps: corpsLabel(g.shops, sched.floors),
+      agent: pr.position, unit: pr.unit, norm: n.norm, conc: n.conc,
+      units: t, times: 1, qty, price: pr.price,
+      sum: (qty !== null && pr.price !== null) ? qty * pr.price : null,
+      graph: true, code: n.code, note: pr.price === null ? "нет цены в прайсе" : "" });
+  }
+
+  const shopsInFile = new Set(Object.keys(sched.floors));
+  for (const e of DATA.extra){
+    const pr = priceOf(e.agent);
+    const qty = e.norm * e.units * e.times;
+    const known = e.shops.filter(s => shopsInFile.has(s));
+    rows.push({ proc: e.proc, site: e.site,
+      corps: e.shops[0] === "все" ? "все площадки"
+                                  : corpsLabel(known.length ? known : e.shops, sched.floors),
+      agent: pr.position, unit: pr.unit, norm: e.norm, conc: null,
+      units: e.units, times: e.times, qty, price: pr.price,
+      sum: pr.price !== null ? qty * pr.price : null,
+      graph: false, code: "—", note: pr.price === null ? "нет цены в прайсе" : (e.note || "") });
+  }
+
+  const ORDER = ["ОС","МС","ПР","ДС","ДЗ","ГГ","ГФ","ОД","ПДГ","СО","—"];
+  rows.sort((a, b) => (ORDER.indexOf(a.code) - ORDER.indexOf(b.code)) ||
+                      a.proc.localeCompare(b.proc, "ru") || a.site.localeCompare(b.site, "ru"));
+
+  /* расход по дням — только работы по графику */
+  const lookup = new Map();
+  for (const n of norms){
+    const k = n.shop + "|" + n.code + "|" + (n.occ || 0);
+    if (!lookup.has(k)) lookup.set(k, []);
+    lookup.get(k).push(n);
+  }
+  const daily = new Map();
+  for (const h of sched.houses){
+    const seen = {};
+    for (const e of [...h.events].sort((a, b) => a.date - b.date)){
+      seen[e.code] = (seen[e.code] || 0) + 1;
+      const hit = (lookup.get(h.shop + "|" + e.code + "|" + seen[e.code]) || [])
+        .concat(lookup.get(h.shop + "|" + e.code + "|0") || []);
+      for (const n of hit){
+        if (n.norm === null) continue;
+        const price = priceOf(n.agent).price;
+        const key = e.date.toISOString().slice(0, 10);
+        const cur = daily.get(key) || { sum: 0, ops: 0 };
+        cur.sum += price === null ? 0 : n.norm * price;
+        cur.ops += 1;
+        daily.set(key, cur);
+      }
+    }
+  }
+
+  const checks = [];
+  if (sched.unknown.length)
+    checks.push("В графике встретились незнакомые отметки: " + sched.unknown.join(", ") + " — они не учтены.");
+  const covered = new Set(rows.flatMap(r => r.code.split("+")).concat(["ОЧН", "—"]));
+  const inFile = new Set(sched.houses.flatMap(h => h.events.map(e => e.code)));
+  for (const c of [...inFile].filter(x => !covered.has(x)).sort()){
+    const times = sched.houses.reduce((s, h) => s + h.events.filter(e => e.code === c).length, 0);
+    checks.push("Отметка " + c + " есть в графике (" + times +
+                " раз), но нормы в санитарной программе нет — расход по ней не посчитан.");
+  }
+  for (const r of rows) if (r.price === null)
+    checks.push("Нет цены в прайсе: " + r.agent + " — расход посчитан, сумма нет.");
+
+  return { rows, daily, checks: [...new Set(checks)] };
+}
+</script>

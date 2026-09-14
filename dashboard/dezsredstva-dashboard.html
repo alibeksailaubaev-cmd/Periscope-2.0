@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Расход дезсредств — Усть-Каменогорская птицефабрика</title>
+<style>
+:root{
+  --sand:#E5DCC2; --sand-deep:#D8CEB0; --surface:#F4EFE1; --surface-2:#FBF8EF;
+  --teal:#00897B; --teal-deep:#046A60; --teal-soft:#D7E9E5;
+  --brown:#4F2E1C; --ink:#2B1C12; --ink-2:#5C4A3C; --muted:#8B7B6B;
+  --grid:#DED4BA; --rule:#CFC4A6;
+  --s1:#00897B; --s2:#C4571F; --s3:#2A6FD6; --s4:#9A7B00;
+  --s5:#B8437E; --s6:#2E7D32; --s7:#5B4BA8; --s8:#A33A2E;
+  --radius:14px;
+  --font:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--ink);font:14px/1.5 var(--font);
+     -webkit-font-smoothing:antialiased}
+.app{display:grid;grid-template-columns:56px minmax(0,1fr);min-height:100vh}
+
+/* ---- орнаментальная колонка, как на фирменном фоне ---- */
+.rail{background:var(--sand);padding:14px 0;display:flex;flex-direction:column;
+      align-items:center;gap:8px;border-right:1px solid var(--rule)}
+.rail i{width:36px;height:36px;border-radius:8px;background:var(--teal);display:block;
+        opacity:.92;transition:transform .5s cubic-bezier(.2,.9,.25,1),opacity .4s}
+.rail i:nth-child(even){opacity:.8}
+.rail:hover i{transform:translateY(-2px)}
+.rail i svg{width:36px;height:36px;display:block}
+
+.main{padding:22px 26px 60px;max-width:1500px;width:100%;min-width:0}
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;
+           padding-bottom:16px;border-bottom:2px solid var(--rule);margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 420px}
+.brand .mark{width:44px;height:44px;border-radius:10px;background:var(--teal);
+             display:grid;place-items:center;flex:none}
+.brand h1{margin:0;font-size:19px;letter-spacing:.2px;color:var(--brown);font-weight:700;overflow-wrap:anywhere}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--ink-2)}
+
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{appearance:none;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink);
+     font:600 13px var(--font);padding:9px 14px;border-radius:10px;cursor:pointer;
+     transition:background .18s,border-color .18s,transform .12s}
+.btn:hover{background:#fff;border-color:var(--teal)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.primary:hover{background:var(--teal-deep);border-color:var(--teal-deep)}
+select.btn{padding-right:28px}
+
+/* ---- зона загрузки ---- */
+.drop{border:2px dashed var(--rule);border-radius:var(--radius);background:var(--surface);
+      padding:44px 24px;text-align:center;transition:border-color .2s,background .2s}
+.drop.over{border-color:var(--teal);background:var(--teal-soft)}
+.drop h2{margin:0 0 6px;font-size:17px;color:var(--brown)}
+.drop p{margin:0 0 16px;color:var(--ink-2);font-size:13px}
+.drop small{display:block;margin-top:14px;color:var(--muted);font-size:12px}
+
+.hidden{display:none!important}
+
+/* ---- карточки ---- */
+.hero{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);
+      padding:20px 22px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;
+             border-radius:50%;background:var(--teal);opacity:.06}
+.hero .lbl{font-size:12.5px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.7px}
+.hero .val{font-size:40px;font-weight:700;color:var(--brown);line-height:1.1;margin-top:4px;
+           font-variant-numeric:tabular-nums}
+.hero .sub{margin-top:6px;font-size:13px;color:var(--ink-2)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);padding:14px 16px}
+.kpi .k{font-size:12px;color:var(--ink-2);letter-spacing:.3px}
+.kpi .v{font-size:22px;font-weight:700;color:var(--brown);margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .u{font-size:12px;color:var(--muted);margin-top:2px}
+
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);
+       padding:18px 20px;margin-bottom:18px;min-width:0}
+.panel h3{margin:0 0 2px;font-size:15px;color:var(--brown)}
+.panel .cap{margin:0 0 16px;font-size:12.5px;color:var(--ink-2)}
+
+/* ---- переключатель диаграмм ---- */
+.tabs{display:inline-flex;background:var(--sand-deep);border-radius:10px;padding:3px;gap:2px;
+      position:relative;margin-bottom:4px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{white-space:nowrap}
+.tabs button{appearance:none;border:0;background:transparent;color:var(--ink-2);cursor:pointer;
+             font:600 13px var(--font);padding:7px 14px;border-radius:8px;position:relative;z-index:1;
+             transition:color .22s}
+.tabs button[aria-selected="true"]{color:#fff}
+.tabs .glider{position:absolute;top:3px;bottom:3px;background:var(--teal);border-radius:8px;
+              transition:transform .42s cubic-bezier(.22,.85,.3,1),width .42s cubic-bezier(.22,.85,.3,1);z-index:0}
+
+.viz{position:relative;min-height:340px}
+.view{position:absolute;inset:0;opacity:0;transform:translateY(10px) scale(.99);
+      pointer-events:none;transition:opacity .34s ease,transform .44s cubic-bezier(.22,.85,.3,1)}
+.view.on{opacity:1;transform:none;pointer-events:auto;position:relative}
+
+/* ---- горизонтальные столбики ---- */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:center}
+.bar .nm{font-size:13px;color:var(--ink);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.bar .track{height:22px;background:var(--sand-deep);border-radius:6px;overflow:hidden;min-width:0}
+.bar .fill{height:100%;background:var(--teal);border-radius:0 6px 6px 0;width:0;
+           transition:width .7s cubic-bezier(.22,.85,.3,1)}
+.bar .vl{font-size:13px;font-weight:600;color:var(--brown);font-variant-numeric:tabular-nums;
+         min-width:112px;text-align:right}
+.bar:hover .fill{background:var(--teal-deep)}
+.bar .sub{grid-column:2/4;font-size:11.5px;color:var(--muted);margin-top:-4px}
+
+/* ---- 100% стек ---- */
+.stack{display:flex;height:30px;border-radius:8px;overflow:hidden;background:var(--sand-deep);gap:2px}
+.stack span{height:100%;transition:flex-basis .7s cubic-bezier(.22,.85,.3,1);flex-grow:0;flex-shrink:0;
+            min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px}
+.legend b{display:flex;align-items:center;gap:7px;font:500 12.5px var(--font);color:var(--ink-2)}
+.legend i{width:11px;height:11px;border-radius:3px;flex:none}
+.legend em{font-style:normal;color:var(--brown);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ---- линия по дням ---- */
+.linewrap{position:relative}
+svg.line{width:100%;height:300px;display:block;overflow:visible}
+svg.line .grid{stroke:var(--grid);stroke-width:1}
+svg.line .axis{stroke:var(--rule);stroke-width:1}
+svg.line .area{fill:var(--teal);opacity:.12}
+svg.line .path{fill:none;stroke:var(--teal);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+svg.line .dot{fill:var(--teal);stroke:var(--surface);stroke-width:2}
+svg.line text{fill:var(--muted);font:11px var(--font)}
+svg.line .cross{stroke:var(--teal-deep);stroke-width:1;stroke-dasharray:3 3;opacity:0}
+.tip{position:absolute;background:var(--brown);color:#fff;padding:8px 11px;border-radius:8px;
+     font:12.5px/1.45 var(--font);pointer-events:none;opacity:0;transition:opacity .15s;
+     white-space:nowrap;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.tip b{font-variant-numeric:tabular-nums}
+
+/* ---- таблица ---- */
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:center}
+input.f{border:1px solid var(--rule);background:var(--surface-2);border-radius:10px;padding:9px 12px;
+        font:13px var(--font);color:var(--ink);min-width:200px}
+input.f:focus{outline:2px solid var(--teal);outline-offset:-1px}
+.tblwrap{overflow-x:auto;max-width:100%;border:1px solid var(--rule);border-radius:10px;background:var(--surface-2)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{background:var(--sand-deep);color:var(--brown);text-align:left;padding:10px 11px;font-weight:700;
+   position:sticky;top:0;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{background:var(--teal-soft)}
+td{padding:8px 11px;border-top:1px solid var(--grid);white-space:nowrap}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--teal-soft)}
+tfoot td{border-top:2px solid var(--rule);font-weight:700;background:var(--sand-deep);color:var(--brown)}
+
+.note{background:var(--surface-2);border-left:4px solid var(--s4);border-radius:0 10px 10px 0;
+      padding:12px 14px;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.note b{color:var(--brown)}
+.note.err{border-left-color:var(--s8)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);
+       font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}.rail{display:none}
+  .main{padding:16px 14px 44px}
+  .bar{grid-template-columns:110px 1fr}.bar .vl{grid-column:2;text-align:left;min-width:0}
+  .hero .val{font-size:30px}
+  .tabs button{padding:7px 9px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="rail" aria-hidden="true"></nav>
+<div class="main">
+
+<header class="top">
+  <div class="brand">
+    <div class="mark">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3c2.2 0 4 1.8 4 4v2h2l-1.5 2.5"/>
+        <path d="M16 9c0 3.5-2.5 6-6 6s-6 2-6 4"/>
+        <circle cx="14" cy="7" r=".9" fill="#fff" stroke="none"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Расход дезсредств по графику санитарного разрыва</h1>
+      <p>АО «Усть-Каменогорская птицефабрика» · офлайн-расчёт, работает без интернета</p>
+    </div>
+  </div>
+  <div class="controls">
+    <label class="btn" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      Программа норм
+      <select id="prog" class="btn" style="border:0;background:transparent;padding:0;font-weight:700"></select>
+    </label>
+    <button class="btn" id="again">Загрузить другой график</button>
+    <button class="btn primary hidden" id="csv">Скачать расчёт CSV</button>
+  </div>
+</header>
+
+<section id="dropzone" class="drop">
+  <h2>Перетащите сюда график санитарного разрыва</h2>
+  <p>файл .xlsx — тот же формат, что и «График санитарного разрыва … 2026 г.»</p>
+  <button class="btn primary" id="pick">Выбрать файл</button>
+  <input type="file" id="file" accept=".xlsx" class="hidden">
+  <small>Ничего никуда не отправляется: файл разбирается прямо в браузере.</small>
+</section>
+
+<main id="out" class="hidden"></main>
+
+<footer>
+  <span id="src">—</span>
+  <span>Нормы — из санитарной программы, цены — из прайса, количество обработок — из графика</span>
+</footer>
+
+</div></div>
+
+<script>
+"use strict";
+const DATA = {"blocks":[{"shop":"А","from":8,"to":17},{"shop":"Ж","from":18,"to":22},{"shop":"Б","from":23,"to":32},{"shop":"Е","from":33,"to":42},{"shop":"В","from":43,"to":57},{"shop":"БП 12","from":58,"to":69},{"shop":"БП 13","from":70,"to":81},{"shop":"БП 14","from":82,"to":93},{"shop":"Г 5","from":94,"to":97},{"shop":"Г 4","from":98,"to":101},{"shop":"Г 3","from":102,"to":105},{"shop":"Г 2","from":106,"to":109},{"shop":"Г 1","from":110,"to":113},{"shop":"Д 1","from":114,"to":117},{"shop":"Д 2","from":118,"to":121},{"shop":"Д 3","from":122,"to":125},{"shop":"Д 4","from":126,"to":129}],"ops":{"ОС":{"code":"ОС","name":"освобождение"},"ОЧ":{"code":"ОЧ","name":"очистка"},"ОЧН":{"code":"ОЧН","name":"очистка ночь"},"МС":{"code":"МС","name":"мойка сутки"},"МН":{"code":"МН","name":"мойка ночь"},"МД":{"code":"МД","name":"мойка день"},"ПР":{"code":"ПР","name":"приёмка птичника"},"ДС":{"code":"ДС","name":"дезинсекция"},"ДЗ":{"code":"ДЗ","name":"дезинфекция"},"ГГ":{"code":"ГГ","name":"газация глутаркой"},"ГФ":{"code":"ГФ","name":"газация формалином"},"ОД":{"code":"ОД","name":"обработка дорог"},"ПДГ":{"code":"ПДГ","name":"подготовка"},"СО":{"code":"СО","name":"септик-обработка"}},"ignored":["ЗН","ЗО","ЗОН","ЗС","П","ПН","Р","С","Ш"],"prices":{"Аттракт, Неизвестная характеристика":{"unit":"кг","price":26938.8},"Биоэксклин ДЭЗ, Неизвестная характеристика":{"unit":"кг","price":null},"Гербицид, Смерч":{"unit":"л","price":3000.0},"Гипохлорид кальция (Не использовать), Неизвестная характеристика":{"unit":"кг","price":820.0},"Глутаровый альдегид, Неизвестная характеристика":{"unit":"кг","price":1355.0},"Келион, Неизвестная характеристика":{"unit":"л","price":105555.0},"Клей от крыс, Неизвестная характеристика":{"unit":"шт","price":160.0},"Клиодезив 25 гр, Неизвестная характеристика":{"unit":"шт","price":803.6},"Мага Торнакс, Неизвестная характеристика":{"unit":"кг","price":1279.0},"Моющее средство (кг), кислотное Фоснитацид":{"unit":"кг","price":1155.0},"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором":{"unit":"кг","price":648.9},"Моющие и Дезинфицирующие средства, Экоклин Универсал":{"unit":"кг","price":1910.0},"Моющие и Дезинфицирующие средства (л), кислотное Кателон 203":{"unit":"л","price":1891.8},"НоваЛюкс №115, Неизвестная характеристика":{"unit":"кг","price":667.1},"Сода каустическая, 98,5%":{"unit":"кг","price":385.0},"Средство дезинфицирующее (кг), Forcela CIP OXY кислотно-перекисное средство":{"unit":"кг","price":1406.0},"Средство дезинфицирующее (кг), беспенное кислотное моющее средство СИД-200":{"unit":"кг","price":2405.0},"Средство дезинфицирующее (кг), Гипохлорид кальция, порошкообразное":{"unit":"кг","price":883.0},"Средство дезинфицирующее (кг), Мирмекон 632В":{"unit":"кг","price":1730.0},"Средство дезинфицирующее (кг), Хачонет, щелочное пенное":{"unit":"кг","price":2244.3},"Средство дезинфицирующее (л), Dezonium, антисептик":{"unit":"л","price":2900.0},"Средство дезинфицирующее (л), Invasept Forte FD антисептик":{"unit":"л","price":1380.0},"Средство дезинфицирующее (л), Биоэксклин ДЕЗ Форте 6":{"unit":"л","price":1320.0},"Средство дезинфицирующее (л), Доктор Вик антисептик":{"unit":"л","price":3700.0},"Средство дезинфицирующее Clearadez, Неизвестная характеристика":{"unit":"кг","price":null},"Средство дезинфицирующее ГиперДез, Неизвестная характеристика":{"unit":"кг","price":2900.0},"Средство инсектицидное, Альфа Инсектум":{"unit":"л","price":15600.0},"Средство инсектицидное, Дракер 10.2":{"unit":"л","price":21864.0},"Средство инсектицидное, Инсектфос":{"unit":"л","price":10247.0},"Средство инсектицидное (кг), Last Fly (Ласт Флай)":{"unit":"кг","price":33000.0},"Средство инсектицидное (кг), Байцидал ВП 25":{"unit":"кг","price":44154.0},"Средство инсектицидное (кг), МС Маггот":{"unit":"кг","price":23000.0},"Средство инсектоакарицидное, Сольфисан":{"unit":"л (дм3)","price":22883.7},"Средство родентицидное (кг), Бромодил":{"unit":"кг","price":null},"Средство родентицидное (кг), Зерноцин НЕО 20 кг":{"unit":"кг","price":740.0},"Средство родентицидное (кг), Крысоед приманка":{"unit":"кг","price":1471.1},"Средство родентицидное (кг), Песткиллер, брикеты 5 кг":{"unit":"кг","price":3642.5},"Средство родентицидное (кг), Щелкунчик 10 кг":{"unit":"кг","price":3687.5},"Торнакс-С, Неизвестная характеристика":{"unit":"кг","price":2000.0},"Фоби Супер, Неизвестная характеристика":{"unit":"л","price":42743.25},"Хлор, ДП-2Т, Неизвестная характеристика":{"unit":"кг","price":3000.0},"Цифлунит, 5л":{"unit":"л","price":12876.0},"Шашка инсектоакарицидная, Фомор Вет, 100гр":{"unit":"шт","price":2199.6},"Формалин":{"unit":"кг","price":295.0},"Вирмагнум":{"unit":"кг","price":1889.0},"Кателон 101":{"unit":"кг","price":1448.8}},"map":{"СИД-200":"Средство дезинфицирующее (кг), беспенное кислотное моющее средство СИД-200","Кателон 101":"Кателон 101","Кателон 203":"Моющие и Дезинфицирующие средства (л), кислотное Кателон 203","Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором","Формалин":"Формалин","формалин":"Формалин","Формалин 37,6%":"Формалин","Глутаровый альдегид":"Глутаровый альдегид, Неизвестная характеристика","Клеодезив":"Клиодезив 25 гр, Неизвестная характеристика","Хлор ДП -2 Т":"Хлор, ДП-2Т, Неизвестная характеристика","Гипохлорид кальция":"Средство дезинфицирующее (кг), Гипохлорид кальция, порошкообразное","Средство инсектицидное Альфа Инсектум":"Средство инсектицидное, Альфа Инсектум","Вирмагнум":"Вирмагнум","каустическая сода":"Сода каустическая, 98,5%","Песткиллер":"Средство родентицидное (кг), Песткиллер, брикеты 5 кг","Зерноцин НЕО":"Средство родентицидное (кг), Зерноцин НЕО 20 кг","клей от крыс":"Клей от крыс, Неизвестная характеристика","Средство дезинфицирующее Доктор Вик антисептик":"Средство дезинфицирующее (л), Доктор Вик антисептик","Хачонет":"Средство дезинфицирующее (кг), Хачонет, щелочное пенное","Моющее средство кислотное Фоснитацид":"Моющее средство (кг), кислотное Фоснитацид","НоваЛюкс №115":"НоваЛюкс №115, Неизвестная характеристика"},"programs":{"2026-08 (19.07.2026)":[{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 1","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 2","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 3","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 4","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 5","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Д","shop":"Д 1","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Д","shop":"Д 2","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Д","shop":"Д 3","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Д","shop":"Д 4","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Б","shop":"Б","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Е","shop":"Е","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"А","shop":"А","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Ж","shop":"Ж","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"В","shop":"В","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"БП 12","shop":"БП 12","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"БП 13","shop":"БП 13","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"БП 14","shop":"БП 14","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 1","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 2","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 3","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 4","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 5","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 1","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 2","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 3","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 4","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Б","shop":"Б","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Е","shop":"Е","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"А","shop":"А","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Ж","shop":"Ж","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"В","shop":"В","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"БП 12","shop":"БП 12","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"БП 13","shop":"БП 13","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"БП 14","shop":"БП 14","agent":"Хачонет","norm":25.0,"conc":0.06},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 1","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 2","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 3","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 4","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 5","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 1","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 2","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 3","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 4","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Б","shop":"Б","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Е","shop":"Е","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"А","shop":"А","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Ж","shop":"Ж","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"В","shop":"В","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"БП 12","shop":"БП 12","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"БП 13","shop":"БП 13","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"БП 14","shop":"БП 14","agent":"Моющее средство кислотное Фоснитацид","norm":23.0,"conc":0.1},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 1","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 2","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 3","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 4","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 5","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Д","shop":"Д 1","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Д","shop":"Д 2","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Д","shop":"Д 3","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Д","shop":"Д 4","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Б","shop":"Б","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Е","shop":"Е","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"А","shop":"А","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Ж","shop":"Ж","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"В","shop":"В","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"БП 12","shop":"БП 12","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"БП 13","shop":"БП 13","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"БП 14","shop":"БП 14","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 1","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 2","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 3","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 4","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 5","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Д","shop":"Д 1","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Д","shop":"Д 2","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Д","shop":"Д 3","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Д","shop":"Д 4","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Б","shop":"Б","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Е","shop":"Е","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"А","shop":"А","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Ж","shop":"Ж","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"В","shop":"В","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"БП 12","shop":"БП 12","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"БП 13","shop":"БП 13","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"БП 14","shop":"БП 14","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 1","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 2","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 3","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 4","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 5","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Д","shop":"Д 1","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Д","shop":"Д 2","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Д","shop":"Д 3","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Д","shop":"Д 4","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Б","shop":"Б","agent":"формалин","norm":50.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Е","shop":"Е","agent":"формалин","norm":50.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"А","shop":"А","agent":"формалин","norm":50.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Ж","shop":"Ж","agent":"формалин","norm":50.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"В","shop":"В","agent":"формалин","norm":80.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"БП 12","shop":"БП 12","agent":"формалин","norm":80.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"БП 13","shop":"БП 13","agent":"формалин","norm":80.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"БП 14","shop":"БП 14","agent":"формалин","norm":80.0,"conc":0.05},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 1","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 2","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 3","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 4","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 5","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Д","shop":"Д 1","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Д","shop":"Д 2","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Д","shop":"Д 3","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Д","shop":"Д 4","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Б","shop":"Б","agent":"Глутаровый альдегид","norm":8.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Е","shop":"Е","agent":"Глутаровый альдегид","norm":8.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"А","shop":"А","agent":"Глутаровый альдегид","norm":8.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Ж","shop":"Ж","agent":"Глутаровый альдегид","norm":8.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"В","shop":"В","agent":"Глутаровый альдегид","norm":12.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"БП 12","shop":"БП 12","agent":"Глутаровый альдегид","norm":12.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"БП 13","shop":"БП 13","agent":"Глутаровый альдегид","norm":12.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"БП 14","shop":"БП 14","agent":"Глутаровый альдегид","norm":12.0,"conc":0.01},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"В","shop":"В","agent":"Формалин 37,6%","norm":210.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 1","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 2","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 3","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 4","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 5","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Д","shop":"Д 1","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Д","shop":"Д 2","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Д","shop":"Д 3","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Д","shop":"Д 4","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Б","shop":"Б","agent":"Формалин 37,6%","norm":100.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Е","shop":"Е","agent":"Формалин 37,6%","norm":100.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"А","shop":"А","agent":"Формалин 37,6%","norm":100.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Ж","shop":"Ж","agent":"Формалин 37,6%","norm":100.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Формалин 37,6%","norm":230.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Формалин 37,6%","norm":230.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Формалин 37,6%","norm":230.0,"conc":0.376},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 1","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 2","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 3","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 4","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 5","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Д","shop":"Д 1","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Д","shop":"Д 2","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Д","shop":"Д 3","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Д","shop":"Д 4","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Б","shop":"Б","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Е","shop":"Е","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"А","shop":"А","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Ж","shop":"Ж","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"В","shop":"В","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 1","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 2","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 3","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 4","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 5","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 1","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 2","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 3","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 4","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Б","shop":"Б","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Е","shop":"Е","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"А","shop":"А","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Ж","shop":"Ж","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"В","shop":"В","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 1","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 2","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 3","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 4","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 5","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 1","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 2","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 3","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 4","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Б","shop":"Б","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Е","shop":"Е","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"А","shop":"А","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Ж","shop":"Ж","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"В","shop":"В","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"Б","shop":"Б","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"В","shop":"В","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"БП 12","shop":"БП 12","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"БП 13","shop":"БП 13","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"БП 14","shop":"БП 14","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"В","shop":"В","agent":"Глутаровый альдегид","norm":14.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 1","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 2","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 3","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 4","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 5","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Д","shop":"Д 1","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Д","shop":"Д 2","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Д","shop":"Д 3","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Д","shop":"Д 4","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Б","shop":"Б","agent":"Глутаровый альдегид","norm":7.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Е","shop":"Е","agent":"Глутаровый альдегид","norm":7.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"А","shop":"А","agent":"Глутаровый альдегид","norm":7.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Ж","shop":"Ж","agent":"Глутаровый альдегид","norm":7.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Глутаровый альдегид","norm":15.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Глутаровый альдегид","norm":15.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Глутаровый альдегид","norm":15.0,"conc":0.1},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 1","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 2","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 3","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 4","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 5","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Д","shop":"Д 1","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Д","shop":"Д 2","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Д","shop":"Д 3","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Д","shop":"Д 4","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"А","shop":"А","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.01},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Ж","shop":"Ж","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.01},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Б","shop":"Б","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.01},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Е","shop":"Е","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.01},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"В","shop":"В","agent":"Средство инсектицидное Альфа Инсектум","norm":1.7,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"БП 12","shop":"БП 12","agent":"Средство инсектицидное Альфа Инсектум","norm":1.7,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"БП 13","shop":"БП 13","agent":"Средство инсектицидное Альфа Инсектум","norm":1.7,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"БП 14","shop":"БП 14","agent":"Средство инсектицидное Альфа Инсектум","norm":1.7,"conc":0.005}],"с сентября (31.08.2026)":[{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 1","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 2","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 3","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 4","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Г","shop":"Г 5","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Д","shop":"Д 1","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Д","shop":"Д 2","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Д","shop":"Д 3","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Д","shop":"Д 4","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Б","shop":"Б","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Е","shop":"Е","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"А","shop":"А","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"Ж","shop":"Ж","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"В","shop":"В","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"БП 12","shop":"БП 12","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"БП 13","shop":"БП 13","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"2","proc":"Дезинфекция линий поения (санация 2)","code":"МС","occ":null,"site":"БП 14","shop":"БП 14","agent":"СИД-200","norm":6.0,"conc":0.02},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 1","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 2","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 3","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 4","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 5","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 1","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 2","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 3","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 4","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Б","shop":"Б","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Е","shop":"Е","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"А","shop":"А","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"Ж","shop":"Ж","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"В","shop":"В","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"БП 12","shop":"БП 12","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"БП 13","shop":"БП 13","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"3","proc":"Мойка","code":"МС","occ":null,"site":"БП 14","shop":"БП 14","agent":"Кателон 101","norm":20.0,"conc":0.15},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 1","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 2","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 3","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 4","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Г","shop":"Г 5","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 1","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 2","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 3","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Д","shop":"Д 4","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Б","shop":"Б","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Е","shop":"Е","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"А","shop":"А","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"Ж","shop":"Ж","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"В","shop":"В","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"БП 12","shop":"БП 12","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"БП 13","shop":"БП 13","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"4","proc":"Мойка","code":"МС","occ":null,"site":"БП 14","shop":"БП 14","agent":"Кателон 203","norm":20.0,"conc":0.05},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 1","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 2","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 3","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 4","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Г","shop":"Г 5","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Д","shop":"Д 1","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Д","shop":"Д 2","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Д","shop":"Д 3","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Д","shop":"Д 4","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Б","shop":"Б","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Е","shop":"Е","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"А","shop":"А","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"Ж","shop":"Ж","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"В","shop":"В","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"БП 12","shop":"БП 12","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"БП 13","shop":"БП 13","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"5","proc":"Дезинфекция линий поения (санация 1)","code":"ОС","occ":null,"site":"БП 14","shop":"БП 14","agent":"Моющие и Дезинфицирующие средства, НоваЛюкс-102 щелочное беспенное моющее с активным хлором,","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 1","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 2","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 3","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 4","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Г","shop":"Г 5","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Д","shop":"Д 1","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Д","shop":"Д 2","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Д","shop":"Д 3","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Д","shop":"Д 4","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Б","shop":"Б","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Е","shop":"Е","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"А","shop":"А","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"Ж","shop":"Ж","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"В","shop":"В","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"БП 12","shop":"БП 12","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"БП 13","shop":"БП 13","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"6","proc":"Дезинфекция линий поения (санация 3)","code":"ПР","occ":null,"site":"БП 14","shop":"БП 14","agent":"Формалин","norm":6.0,"conc":0.02},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 1","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 2","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 3","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 4","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Г","shop":"Г 5","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Д","shop":"Д 1","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Д","shop":"Д 2","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Д","shop":"Д 3","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Д","shop":"Д 4","agent":"формалин","norm":70.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Б","shop":"Б","agent":"формалин","norm":50.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Е","shop":"Е","agent":"формалин","norm":50.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"А","shop":"А","agent":"формалин","norm":50.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"Ж","shop":"Ж","agent":"формалин","norm":50.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"В","shop":"В","agent":"формалин","norm":80.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"БП 12","shop":"БП 12","agent":"формалин","norm":80.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"БП 13","shop":"БП 13","agent":"формалин","norm":80.0,"conc":0.05},{"app":"8","proc":"Влажная дезинфекция","code":"ДЗ","occ":1,"site":"БП 14","shop":"БП 14","agent":"формалин","norm":80.0,"conc":0.05},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 1","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 2","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 3","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 4","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Г","shop":"Г 5","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Д","shop":"Д 1","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Д","shop":"Д 2","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Д","shop":"Д 3","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Д","shop":"Д 4","agent":"Глутаровый альдегид","norm":10.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Б","shop":"Б","agent":"Глутаровый альдегид","norm":8.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Е","shop":"Е","agent":"Глутаровый альдегид","norm":8.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"А","shop":"А","agent":"Глутаровый альдегид","norm":8.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"Ж","shop":"Ж","agent":"Глутаровый альдегид","norm":8.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"В","shop":"В","agent":"Глутаровый альдегид","norm":12.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"БП 12","shop":"БП 12","agent":"Глутаровый альдегид","norm":12.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"БП 13","shop":"БП 13","agent":"Глутаровый альдегид","norm":12.0,"conc":0.01},{"app":"9","proc":"Влажная дезинфекция на подстилку","code":"ДЗ","occ":2,"site":"БП 14","shop":"БП 14","agent":"Глутаровый альдегид","norm":12.0,"conc":0.01},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"В","shop":"В","agent":"Формалин 37,6%","norm":140.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 1","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 2","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 3","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 4","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Г","shop":"Г 5","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Д","shop":"Д 1","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Д","shop":"Д 2","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Д","shop":"Д 3","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Д","shop":"Д 4","agent":"Формалин 37,6%","norm":90.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Б","shop":"Б","agent":"Формалин 37,6%","norm":70.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Е","shop":"Е","agent":"Формалин 37,6%","norm":70.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"А","shop":"А","agent":"Формалин 37,6%","norm":70.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"Ж","shop":"Ж","agent":"Формалин 37,6%","norm":70.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Формалин 37,6%","norm":150.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Формалин 37,6%","norm":150.0,"conc":0.376},{"app":"11","proc":"Аэрозольная газация формалином","code":"ГФ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Формалин 37,6%","norm":150.0,"conc":0.376},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 1","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 2","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 3","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 4","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Г","shop":"Г 5","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Д","shop":"Д 1","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Д","shop":"Д 2","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Д","shop":"Д 3","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Д","shop":"Д 4","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Б","shop":"Б","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Е","shop":"Е","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"А","shop":"А","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"Ж","shop":"Ж","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"В","shop":"В","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация ракет","code":"ГГ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Клеодезив","norm":5.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 1","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 2","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 3","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 4","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 5","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 1","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 2","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 3","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 4","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Б","shop":"Б","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Е","shop":"Е","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"А","shop":"А","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"Ж","shop":"Ж","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"В","shop":"В","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"12","proc":"Газация птичников (подготовка)","code":"ПДГ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Клеодезив","norm":30.0,"conc":null},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 1","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 2","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 3","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 4","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Г","shop":"Г 5","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 1","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 2","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 3","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Д","shop":"Д 4","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Б","shop":"Б","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Е","shop":"Е","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"А","shop":"А","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"Ж","shop":"Ж","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"В","shop":"В","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"13","proc":"Дезинфекция линий поения (санация 4)","code":"ПДГ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Хлор ДП -2 Т","norm":0.33,"conc":0.02},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"Б","shop":"Б","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"В","shop":"В","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"БП 12","shop":"БП 12","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"БП 13","shop":"БП 13","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"15","proc":"Обработка септиков","code":"СО","occ":null,"site":"БП 14","shop":"БП 14","agent":"Гипохлорид кальция","norm":5.0,"conc":null},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"В","shop":"В","agent":"Глутаровый альдегид","norm":14.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 1","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 2","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 3","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 4","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Г","shop":"Г 5","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Д","shop":"Д 1","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Д","shop":"Д 2","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Д","shop":"Д 3","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Д","shop":"Д 4","agent":"Глутаровый альдегид","norm":9.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Б","shop":"Б","agent":"Глутаровый альдегид","norm":7.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Е","shop":"Е","agent":"Глутаровый альдегид","norm":7.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"А","shop":"А","agent":"Глутаровый альдегид","norm":7.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"Ж","shop":"Ж","agent":"Глутаровый альдегид","norm":7.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"БП 12","shop":"БП 12","agent":"Глутаровый альдегид","norm":15.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"БП 13","shop":"БП 13","agent":"Глутаровый альдегид","norm":15.0,"conc":0.1},{"app":"16","proc":"Аэрозольная газация глутаркой","code":"ГГ","occ":null,"site":"БП 14","shop":"БП 14","agent":"Глутаровый альдегид","norm":15.0,"conc":0.1},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 1","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 2","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 3","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 4","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Г","shop":"Г 5","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Д","shop":"Д 1","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Д","shop":"Д 2","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Д","shop":"Д 3","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Д","shop":"Д 4","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"А","shop":"А","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.01},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Ж","shop":"Ж","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.01},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Б","shop":"Б","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.01},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"Е","shop":"Е","agent":"Средство инсектицидное Альфа Инсектум","norm":2.0,"conc":0.01},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"В","shop":"В","agent":"Средство инсектицидное Альфа Инсектум","norm":1.7,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"БП 12","shop":"БП 12","agent":"Средство инсектицидное Альфа Инсектум","norm":1.7,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"БП 13","shop":"БП 13","agent":"Средство инсектицидное Альфа Инсектум","norm":1.7,"conc":0.005},{"app":"17","proc":"Влажная дезинсекция","code":"ДС","occ":null,"site":"БП 14","shop":"БП 14","agent":"Средство инсектицидное Альфа Инсектум","norm":1.7,"conc":0.005}]},"extra":[{"proc":"Дератизация","site":"Г","shops":["Г 1","Г 2","Г 3","Г 4","Г 5"],"agent":"клей от крыс","norm":6.0,"units":20,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"Г","shops":["Г 1","Г 2","Г 3","Г 4","Г 5"],"agent":"Песткиллер","norm":2.0,"units":5,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"Г","shops":["Г 1","Г 2","Г 3","Г 4","Г 5"],"agent":"Зерноцин НЕО","norm":30.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"Д","shops":["Д 1","Д 2","Д 3","Д 4"],"agent":"клей от крыс","norm":6.0,"units":16,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"Д","shops":["Д 1","Д 2","Д 3","Д 4"],"agent":"Песткиллер","norm":2.0,"units":4,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"Д","shops":["Д 1","Д 2","Д 3","Д 4"],"agent":"Зерноцин НЕО","norm":30.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"А","shops":["А"],"agent":"клей от крыс","norm":4.0,"units":10,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"А","shops":["А"],"agent":"Песткиллер","norm":0.5,"units":10,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"А","shops":["А"],"agent":"Зерноцин НЕО","norm":20.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"Б","shops":["Б"],"agent":"клей от крыс","norm":4.0,"units":10,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"Б","shops":["Б"],"agent":"Песткиллер","norm":0.5,"units":10,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"Б","shops":["Б"],"agent":"Зерноцин НЕО","norm":20.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"Е","shops":["Е"],"agent":"клей от крыс","norm":4.0,"units":10,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"Е","shops":["Е"],"agent":"Песткиллер","norm":0.5,"units":10,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"Е","shops":["Е"],"agent":"Зерноцин НЕО","norm":20.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"Ж","shops":["Ж"],"agent":"клей от крыс","norm":4.0,"units":5,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"Ж","shops":["Ж"],"agent":"Песткиллер","norm":5.0,"units":1,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"Ж","shops":["Ж"],"agent":"Зерноцин НЕО","norm":10.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"В","shops":["В"],"agent":"клей от крыс","norm":4.0,"units":15,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"В","shops":["В"],"agent":"Песткиллер","norm":0.4,"units":15,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"В","shops":["В"],"agent":"Зерноцин НЕО","norm":60.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"БП 12","shops":["БП 12"],"agent":"клей от крыс","norm":4.0,"units":12,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"БП 12","shops":["БП 12"],"agent":"Песткиллер","norm":0.5,"units":12,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"БП 12","shops":["БП 12"],"agent":"Зерноцин НЕО","norm":40.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"БП 13","shops":["БП 13"],"agent":"клей от крыс","norm":4.0,"units":12,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"БП 13","shops":["БП 13"],"agent":"Песткиллер","norm":0.5,"units":12,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"БП 13","shops":["БП 13"],"agent":"Зерноцин НЕО","norm":40.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Дератизация","site":"БП 14","shops":["БП 14"],"agent":"клей от крыс","norm":4.0,"units":12,"times":8,"note":"обход 8 раза в месяц"},{"proc":"Дератизация","site":"БП 14","shops":["БП 14"],"agent":"Песткиллер","norm":0.5,"units":12,"times":4,"note":"обход 4 раза в месяц"},{"proc":"Дератизация","site":"БП 14","shops":["БП 14"],"agent":"Зерноцин НЕО","norm":40.0,"units":1,"times":2,"note":"обход 2 раза в месяц"},{"proc":"Обработка рук","site":"все","shops":["все"],"agent":"Средство дезинфицирующее Доктор Вик антисептик","norm":0.5,"units":122,"times":4,"note":"раз в 7 дней, в месяце 30-31 день — 4 заправки"},{"proc":"Заправка дезковриков","site":"все","shops":["все"],"agent":"Вирмагнум","norm":0.2,"units":122,"times":4,"note":"раз в 7 дней, в месяце 30-31 день — 4 заправки"},{"proc":"Заправка дезбарьеров","site":"все","shops":["все"],"agent":"каустическая сода","norm":50.0,"units":24,"times":8,"note":""}],"sites":{"Г":["Г 1","Г 2","Г 3","Г 4","Г 5"],"Д":["Д 1","Д 2","Д 3","Д 4"]}};
+
+/* ============================ чтение xlsx без библиотек ============================ */
+/* xlsx — это zip; распаковку делает встроенный в браузер DecompressionStream,
+   поэтому файл работает офлайн и ничего не подгружает. */
+async function unzip(buf){
+  const dv = new DataView(buf), u8 = new Uint8Array(buf);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= 0 && i > u8.length - 66000; i--)
+    if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  if (eocd < 0) throw new Error("это не xlsx: не найден конец zip-архива");
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const files = {};
+  for (let i = 0; i < count; i++){
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const csize  = dv.getUint32(p + 20, true);
+    const nlen   = dv.getUint16(p + 28, true);
+    const elen   = dv.getUint16(p + 30, true);
+    const clen   = dv.getUint16(p + 32, true);
+    const lho    = dv.getUint32(p + 42, true);
+    const name   = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen));
+    const lnl = dv.getUint16(lho + 26, true), lel = dv.getUint16(lho + 28, true);
+    const start = lho + 30 + lnl + lel;
+    files[name] = { method, bytes: u8.subarray(start, start + csize) };
+    p += 46 + nlen + elen + clen;
+  }
+  const out = {};
+  for (const [name, f] of Object.entries(files)){
+    if (!/\.(xml|rels)$/i.test(name)) continue;
+    if (f.method === 0){ out[name] = new TextDecoder().decode(f.bytes); continue; }
+    const stream = new Blob([f.bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+    out[name] = await new Response(stream).text();
+  }
+  return out;
+}
+
+const colNum = ref => { let n = 0; for (const ch of ref){ const c = ch.charCodeAt(0);
+  if (c < 65 || c > 90) break; n = n * 26 + (c - 64); } return n; };
+const rowNum = ref => parseInt(ref.replace(/^[A-Z]+/, ""), 10);
+const serialToDate = v => new Date(Math.round((v - 25569) * 86400000));
+
+async function readSheet(buf){
+  const parts = await unzip(buf);
+  const doc = s => new DOMParser().parseFromString(s, "application/xml");
+  const shared = [];
+  if (parts["xl/sharedStrings.xml"])
+    for (const si of doc(parts["xl/sharedStrings.xml"]).getElementsByTagName("si"))
+      shared.push(Array.from(si.getElementsByTagName("t")).map(t => t.textContent).join(""));
+  const sheetFile = Object.keys(parts).filter(n => /^xl\/worksheets\/sheet\d+\.xml$/.test(n)).sort()[0];
+  if (!sheetFile) throw new Error("в файле нет листов");
+  let title = "";
+  if (parts["xl/workbook.xml"]){
+    const s = doc(parts["xl/workbook.xml"]).getElementsByTagName("sheet")[0];
+    if (s) title = s.getAttribute("name") || "";
+  }
+  const cells = new Map();
+  for (const c of doc(parts[sheetFile]).getElementsByTagName("c")){
+    const ref = c.getAttribute("r"); if (!ref) continue;
+    const t = c.getAttribute("t");
+    let val = null;
+    if (t === "inlineStr"){
+      val = Array.from(c.getElementsByTagName("t")).map(x => x.textContent).join("");
+    } else {
+      const v = c.getElementsByTagName("v")[0];
+      if (!v) continue;
+      val = t === "s" ? shared[+v.textContent]
+          : (t === "str" || t === "e" ? v.textContent : +v.textContent);
+    }
+    if (val === null || val === "") continue;
+    cells.set(rowNum(ref) + "," + colNum(ref), val);
+  }
+  return { cells, title, get: (r, c) => cells.get(r + "," + c) };
+}
+
+/* ============================ разбор графика санразрыва ============================ */
+const HEADER_ROW = 7, COL_FLOOR = 2, FIRST_DAY = 3;
+const splitMarks = s => String(s).split(/[\\/|,]+/).map(x => x.trim().toUpperCase()).filter(Boolean);
+
+function parseSchedule(sheet){
+  const days = [];
+  for (let c = FIRST_DAY; c < FIRST_DAY + 31; c++){
+    const v = sheet.get(HEADER_ROW, c);
+    if (typeof v === "number" && v > 30000 && v < 60000) days.push({ col: c, date: serialToDate(v) });
+  }
+  if (!days.length) throw new Error("в строке 7 не найдены даты — похоже, это не график санитарного разрыва");
+
+  const houses = [], floors = {}, unknown = new Set();
+  for (const b of DATA.blocks){
+    for (let r = b.from; r <= b.to; r++){
+      const floor = sheet.get(r, COL_FLOOR);
+      if (floor === undefined || floor === null || floor === "") continue;
+      (floors[b.shop] = floors[b.shop] || []).push(floor);
+      const events = [];
+      for (const d of days){
+        const raw = sheet.get(r, d.col);
+        if (raw === undefined || raw === null || String(raw).trim() === "") continue;
+        for (const m of splitMarks(raw)){
+          if (DATA.ops[m]) events.push({ date: d.date, code: DATA.ops[m].code, mark: m });
+          else if (!DATA.ignored.includes(m)) unknown.add(m);
+        }
+      }
+      if (events.length) houses.push({ shop: b.shop, floor, events });
+    }
+  }
+  return { houses, floors, days, from: days[0].date, to: days[days.length - 1].date,
+           unknown: [...unknown], title: sheet.title };
+}
+
+/* ============================ расчёт ============================ */
+const fmt = (n, d) => (n === null || n === undefined) ? "—"
+  : n.toLocaleString("ru-RU", { minimumFractionDigits: d === undefined ? 2 : d,
+                                maximumFractionDigits: d === undefined ? 2 : d });
+const fmtQ = n => (n === null || n === undefined) ? "—"
+  : n.toLocaleString("ru-RU", { maximumFractionDigits: 3 });
+
+function priceOf(agent){
+  const position = DATA.map[agent] || agent;
+  const p = DATA.prices[position];
+  return { position, price: p ? p.price : null, unit: p ? p.unit : "" };
+}
+
+function corpsLabel(shops, floors){
+  const lab = s => {
+    const nums = (floors[s] || []).map(Number).filter(n => !isNaN(n)).sort((a, b) => a - b);
+    if (!nums.length) return s;
+    const seq = nums.every((n, i) => i === 0 || n === nums[i - 1] + 1);
+    return seq ? s + " " + nums[0] + "-" + nums[nums.length - 1] : s + " " + nums.join(", ");
+  };
+  shops = [...shops].sort();
+  if (shops.length === 1) return lab(shops[0]);
+  const ranges = new Set(shops.map(s => {
+    const n = (floors[s] || []).map(Number).filter(x => !isNaN(x)).sort((a, b) => a - b);
+    return n.length ? n[0] + "-" + n[n.length - 1] : "?";
+  }));
+  if (ranges.size === 1 && !ranges.has("?"))
+    return shops[0] + " — " + shops[shops.length - 1] + ", этажи " + [...ranges][0];
+  return shops.map(lab).join(", ");
+}
+
+function compute(sched, programKey){
+  const norms = DATA.programs[programKey];
+
+  /* сколько раз каждая операция проведена: цех | код | номер вхождения в цикле */
+  const counts = new Map();
+  for (const h of sched.houses){
+    const seen = {};
+    for (const e of [...h.events].sort((a, b) => a.date - b.date)){
+      seen[e.code] = (seen[e.code] || 0) + 1;
+      const k = h.shop + "|" + e.code + "|" + seen[e.code];
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+  }
+  const treatments = (shops, codes, occ) => {
+    let n = 0;
+    for (const [k, v] of counts){
+      const parts = k.split("|");
+      if (shops.has(parts[0]) && codes.includes(parts[1]) && (!occ || +parts[2] === occ)) n += v;
+    }
+    return n;
+  };
+
+  const groups = new Map();
+  for (const n of norms){
+    const key = [n.app, n.proc, n.code, n.occ || "", n.site, n.agent].join("");
+    if (!groups.has(key)) groups.set(key, { n, shops: new Set() });
+    groups.get(key).shops.add(n.shop);
+  }
+
+  const rows = [];
+  for (const g of groups.values()){
+    const n = g.n;
+    const t = treatments(g.shops, n.code.split("+"), n.occ);
+    if (!t) continue;                       /* площадки нет в графике этого месяца */
+    const pr = priceOf(n.agent);
+    const qty = n.norm === null ? null : n.norm * t;
+    rows.push({ proc: n.proc, site: n.site, corps: corpsLabel(g.shops, sched.floors),
+      agent: pr.position, unit: pr.unit, norm: n.norm, conc: n.conc,
+      units: t, times: 1, qty, price: pr.price,
+      sum: (qty !== null && pr.price !== null) ? qty * pr.price : null,
+      graph: true, code: n.code, note: pr.price === null ? "нет цены в прайсе" : "" });
+  }
+
+  const shopsInFile = new Set(Object.keys(sched.floors));
+  for (const e of DATA.extra){
+    const pr = priceOf(e.agent);
+    const qty = e.norm * e.units * e.times;
+    const known = e.shops.filter(s => shopsInFile.has(s));
+    rows.push({ proc: e.proc, site: e.site,
+      corps: e.shops[0] === "все" ? "все площадки"
+                                  : corpsLabel(known.length ? known : e.shops, sched.floors),
+      agent: pr.position, unit: pr.unit, norm: e.norm, conc: null,
+      units: e.units, times: e.times, qty, price: pr.price,
+      sum: pr.price !== null ? qty * pr.price : null,
+      graph: false, code: "—", note: pr.price === null ? "нет цены в прайсе" : (e.note || "") });
+  }
+
+  const ORDER = ["ОС","МС","ПР","ДС","ДЗ","ГГ","ГФ","ОД","ПДГ","СО","—"];
+  rows.sort((a, b) => (ORDER.indexOf(a.code) - ORDER.indexOf(b.code)) ||
+                      a.proc.localeCompare(b.proc, "ru") || a.site.localeCompare(b.site, "ru"));
+
+  /* расход по дням — только работы по графику */
+  const lookup = new Map();
+  for (const n of norms){
+    const k = n.shop + "|" + n.code + "|" + (n.occ || 0);
+    if (!lookup.has(k)) lookup.set(k, []);
+    lookup.get(k).push(n);
+  }
+  const daily = new Map();
+  for (const h of sched.houses){
+    const seen = {};
+    for (const e of [...h.events].sort((a, b) => a.date - b.date)){
+      seen[e.code] = (seen[e.code] || 0) + 1;
+      const hit = (lookup.get(h.shop + "|" + e.code + "|" + seen[e.code]) || [])
+        .concat(lookup.get(h.shop + "|" + e.code + "|0") || []);
+      for (const n of hit){
+        if (n.norm === null) continue;
+        const price = priceOf(n.agent).price;
+        const key = e.date.toISOString().slice(0, 10);
+        const cur = daily.get(key) || { sum: 0, ops: 0 };
+        cur.sum += price === null ? 0 : n.norm * price;
+        cur.ops += 1;
+        daily.set(key, cur);
+      }
+    }
+  }
+
+  const checks = [];
+  if (sched.unknown.length)
+    checks.push("В графике встретились незнакомые отметки: " + sched.unknown.join(", ") + " — они не учтены.");
+  const covered = new Set(rows.flatMap(r => r.code.split("+")).concat(["ОЧН", "—"]));
+  const inFile = new Set(sched.houses.flatMap(h => h.events.map(e => e.code)));
+  for (const c of [...inFile].filter(x => !covered.has(x)).sort()){
+    const times = sched.houses.reduce((s, h) => s + h.events.filter(e => e.code === c).length, 0);
+    checks.push("Отметка " + c + " есть в графике (" + times +
+                " раз), но нормы в санитарной программе нет — расход по ней не посчитан.");
+  }
+  for (const r of rows) if (r.price === null)
+    checks.push("Нет цены в прайсе: " + r.agent + " — расход посчитан, сумма нет.");
+
+  return { rows, daily, checks: [...new Set(checks)] };
+}
+</script>
+
+<script>
+"use strict";
+const SERIES = ["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"]
+  .map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+const el = (tag, cls, html) => { const n = document.createElement(tag);
+  if (cls) n.className = cls; if (html !== undefined) n.innerHTML = html; return n; };
+const MONTHS = ["января","февраля","марта","апреля","мая","июня",
+                "июля","августа","сентября","октября","ноября","декабря"];
+const ruDate = d => d.getDate() + " " + MONTHS[d.getMonth()];
+
+let STATE = { sched: null, calc: null, program: null, view: "sites", sort: { key: "sum", dir: -1 }, q: "" };
+
+/* ---------------- агрегаты ---------------- */
+const groupSum = (rows, key) => {
+  const m = new Map();
+  for (const r of rows){
+    const k = typeof key === "function" ? key(r) : r[key];
+    const cur = m.get(k) || { name: k, sum: 0, qty: 0, unit: r.unit, ops: 0 };
+    cur.sum += r.sum || 0; cur.qty += r.qty || 0; cur.ops += r.units * r.times;
+    if (cur.unit !== r.unit) cur.unit = "";
+    m.set(k, cur);
+  }
+  return [...m.values()].sort((a, b) => b.sum - a.sum);
+};
+
+/* ---------------- столбики ---------------- */
+function bars(host, items, opts){
+  opts = opts || {};
+  host.innerHTML = "";
+  const wrap = el("div", "bars");
+  const max = Math.max(...items.map(i => i.sum), 1);
+  items.forEach((it, idx) => {
+    const row = el("div", "bar");
+    row.appendChild(el("div", "nm", it.name));
+    const track = el("div", "track");
+    const fill = el("div", "fill");
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el("div", "vl", fmt(it.sum, 0) + " ₸"));
+    if (opts.sub) row.appendChild(el("div", "sub", opts.sub(it)));
+    row.title = it.name + ": " + fmt(it.sum) + " ₸" + (opts.sub ? " · " + opts.sub(it) : "");
+    wrap.appendChild(row);
+    requestAnimationFrame(() => setTimeout(() => {
+      fill.style.width = (it.sum / max * 100).toFixed(2) + "%";
+    }, 40 + idx * 45));
+  });
+  host.appendChild(wrap);
+}
+
+/* ---------------- линия по дням ---------------- */
+function lineChart(host, points){
+  host.innerHTML = "";
+  if (points.length < 2){ host.appendChild(el("p", "cap", "Для линии нужно минимум два дня с работами.")); return; }
+  const wrap = el("div", "linewrap");
+  const W = 1000, H = 300, L = 64, R = 12, T = 14, B = 34;
+  const max = Math.max(...points.map(p => p.sum)) * 1.08 || 1;
+  const x = i => L + i * (W - L - R) / (points.length - 1);
+  const y = v => T + (1 - v / max) * (H - T - B);
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "line");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.setAttribute("preserveAspectRatio", "none");
+  const add = (tag, attrs, text) => {
+    const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (text !== undefined) n.textContent = text;
+    svg.appendChild(n); return n;
+  };
+  for (let g = 0; g <= 4; g++){
+    const v = max * g / 4;
+    add("line", { class: "grid", x1: L, x2: W - R, y1: y(v), y2: y(v) });
+    add("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end" },
+        (v / 1000).toLocaleString("ru-RU", { maximumFractionDigits: 0 }) + " тыс.");
+  }
+  add("line", { class: "axis", x1: L, x2: W - R, y1: y(0), y2: y(0) });
+  const step = Math.ceil(points.length / 12);
+  points.forEach((p, i) => { if (i % step === 0)
+    add("text", { x: x(i), y: H - 12, "text-anchor": "middle" }, p.date.getDate()); });
+
+  const d = points.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.sum).toFixed(1)).join(" ");
+  add("path", { class: "area", d: d + " L" + x(points.length - 1) + " " + y(0) + " L" + x(0) + " " + y(0) + " Z" });
+  const path = add("path", { class: "path", d });
+  const len = path.getTotalLength ? path.getTotalLength() : 2000;
+  path.style.strokeDasharray = len; path.style.strokeDashoffset = len;
+  requestAnimationFrame(() => { path.style.transition = "stroke-dashoffset 1s ease"; path.style.strokeDashoffset = 0; });
+
+  const cross = add("line", { class: "cross", y1: T, y2: y(0) });
+  const dot = add("circle", { class: "dot", r: 5, opacity: 0 });
+  const tip = el("div", "tip");
+  wrap.appendChild(svg); wrap.appendChild(tip);
+
+  svg.addEventListener("pointermove", ev => {
+    const box = svg.getBoundingClientRect();
+    const px = (ev.clientX - box.left) / box.width * W;
+    let i = Math.round((px - L) / ((W - L - R) / (points.length - 1)));
+    i = Math.max(0, Math.min(points.length - 1, i));
+    const p = points[i];
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.style.opacity = .8;
+    dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(p.sum)); dot.setAttribute("opacity", 1);
+    tip.innerHTML = "<b>" + ruDate(p.date) + "</b><br>" + fmt(p.sum) + " ₸ · " + p.ops + " работ";
+    const left = x(i) / W * box.width;
+    tip.style.left = Math.min(Math.max(left - 60, 0), box.width - 150) + "px";
+    tip.style.top = (y(p.sum) / H * box.height - 58) + "px";
+    tip.style.opacity = 1;
+  });
+  svg.addEventListener("pointerleave", () => {
+    cross.style.opacity = 0; dot.setAttribute("opacity", 0); tip.style.opacity = 0;
+  });
+  host.appendChild(wrap);
+}
+
+/* ---------------- структура по процессам ---------------- */
+function structure(host, rows){
+  const all = groupSum(rows, "proc").filter(g => g.sum > 0);
+  const top = all.slice(0, 7);
+  const rest = all.slice(7);
+  if (rest.length) top.push({ name: "Прочие процессы (" + rest.length + ")",
+                              sum: rest.reduce((s, r) => s + r.sum, 0) });
+  const total = top.reduce((s, r) => s + r.sum, 0) || 1;
+  host.innerHTML = "";
+  const stack = el("div", "stack");
+  const legend = el("div", "legend");
+  top.forEach((g, i) => {
+    const seg = el("span");
+    seg.style.background = SERIES[i % SERIES.length];
+    seg.style.flexBasis = "0%";
+    seg.title = g.name + ": " + fmt(g.sum) + " ₸";
+    stack.appendChild(seg);
+    const b = el("b");
+    const dot = el("i"); dot.style.background = SERIES[i % SERIES.length];
+    b.appendChild(dot);
+    b.appendChild(document.createTextNode(g.name + " "));
+    b.appendChild(el("em", null, (g.sum / total * 100).toFixed(1).replace(".", ",") + " %"));
+    legend.appendChild(b);
+    requestAnimationFrame(() => setTimeout(() => {
+      seg.style.flexBasis = (g.sum / total * 100).toFixed(3) + "%";
+    }, 60 + i * 60));
+  });
+  host.appendChild(stack); host.appendChild(legend);
+}
+
+/* ---------------- таблица ---------------- */
+const COLS = [
+  { k: "proc",  t: "Процесс" },
+  { k: "site",  t: "Площадка" },
+  { k: "corps", t: "Корпуса" },
+  { k: "agent", t: "Наименование дезсредства" },
+  { k: "unit",  t: "Ед." },
+  { k: "norm",  t: "Норма", n: 1 },
+  { k: "conc",  t: "Конц.", n: 1, pct: true },
+  { k: "units", t: "Входят в сан разрыв", n: 1 },
+  { k: "times", t: "Раз в месяц", n: 1 },
+  { k: "qty",   t: "Расход за месяц", n: 1 },
+  { k: "price", t: "Цена за ед.", n: 1, money: true },
+  { k: "sum",   t: "Сумма", n: 1, money: true },
+  { k: "note",  t: "Замечания" }
+];
+
+function table(host){
+  const rows = STATE.calc.rows.filter(r => {
+    if (!STATE.q) return true;
+    const q = STATE.q.toLowerCase();
+    return (r.proc + " " + r.site + " " + r.corps + " " + r.agent).toLowerCase().includes(q);
+  });
+  const { key, dir } = STATE.sort;
+  rows.sort((a, b) => {
+    const x = a[key], y = b[key];
+    if (typeof x === "number" || typeof y === "number") return ((x || 0) - (y || 0)) * dir;
+    return String(x || "").localeCompare(String(y || ""), "ru") * dir;
+  });
+  const total = rows.reduce((s, r) => s + (r.sum || 0), 0);
+  let html = "<table><thead><tr>";
+  for (const c of COLS) html += "<th data-k='" + c.k + "'>" + c.t +
+    (STATE.sort.key === c.k ? (dir > 0 ? " ▲" : " ▼") : "") + "</th>";
+  html += "</tr></thead><tbody>";
+  for (const r of rows){
+    html += "<tr>";
+    for (const c of COLS){
+      const v = r[c.k];
+      let s;
+      if (v === null || v === undefined || v === "") s = c.n ? "—" : "";
+      else if (c.pct) s = (v * 100).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + " %";
+      else if (c.money) s = fmt(v);
+      else if (c.n) s = fmtQ(v);
+      else s = String(v);
+      html += "<td class='" + (c.n ? "n" : "") + "'>" + s + "</td>";
+    }
+    html += "</tr>";
+  }
+  html += "</tbody><tfoot><tr><td colspan='11'>ИТОГО по " + rows.length + " строкам</td>" +
+          "<td class='n'>" + fmt(total) + "</td><td></td></tr></tfoot></table>";
+  host.innerHTML = html;
+  host.querySelectorAll("th").forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    STATE.sort = { key: k, dir: STATE.sort.key === k ? -STATE.sort.dir : -1 };
+    table(host);
+  });
+}
+
+/* ---------------- сборка страницы ---------------- */
+function render(){
+  const { sched, calc } = STATE;
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+  out.classList.remove("hidden");
+
+  const graph = calc.rows.filter(r => r.graph).reduce((s, r) => s + (r.sum || 0), 0);
+  const extra = calc.rows.filter(r => !r.graph).reduce((s, r) => s + (r.sum || 0), 0);
+  /* отметки считаем по самому графику: по строкам норм одна и та же отметка
+     попадает в несколько приложений и счёт задваивается */
+  const ops = sched.houses.reduce((s, h) => s + h.events.length, 0);
+  const agents = new Set(calc.rows.filter(r => r.sum !== null).map(r => r.agent)).size;
+
+  const period = ruDate(sched.from) + " — " + ruDate(sched.to) + " " + sched.to.getFullYear();
+  document.getElementById("src").textContent = "Источник: " + (sched.title || "лист графика") +
+    " · " + period + " · нормы: " + STATE.program;
+
+  const hero = el("div", "hero");
+  hero.appendChild(el("div", "lbl", "Расход дезсредств за период"));
+  hero.appendChild(el("div", "val", fmt(graph + extra) + " ₸"));
+  hero.appendChild(el("div", "sub", period + " · " + sched.title));
+  out.appendChild(hero);
+
+  const kpis = el("div", "kpis");
+  const kpi = (k, v, u) => { const n = el("div", "kpi");
+    n.appendChild(el("div", "k", k)); n.appendChild(el("div", "v", v));
+    if (u) n.appendChild(el("div", "u", u)); return n; };
+  kpis.appendChild(kpi("По графику санразрыва", fmt(graph, 0) + " ₸",
+    (graph / (graph + extra) * 100).toFixed(0) + " % итога"));
+  kpis.appendChild(kpi("Вне графика", fmt(extra, 0) + " ₸", "дератизация, барьеры, руки, коврики"));
+  kpis.appendChild(kpi("Птичников в санразрыве", String(sched.houses.length), "из 122 по программе"));
+  kpis.appendChild(kpi("Отметок в графике", String(ops), "учитываемых операций"));
+  kpis.appendChild(kpi("Средств задействовано", String(agents), "позиций прайса"));
+  out.appendChild(kpis);
+
+  const pStruct = el("div", "panel");
+  pStruct.appendChild(el("h3", null, "Структура расхода по процессам"));
+  pStruct.appendChild(el("p", "cap", "Доля каждого процесса в общей сумме за период"));
+  const structHost = el("div");
+  pStruct.appendChild(structHost);
+  out.appendChild(pStruct);
+  structure(structHost, calc.rows);
+
+  const pViz = el("div", "panel");
+  pViz.appendChild(el("h3", null, "Разрезы расхода"));
+  pViz.appendChild(el("p", "cap", "Переключайте разрез — данные те же, взгляд разный"));
+  const tabs = el("div", "tabs");
+  const glider = el("div", "glider");
+  tabs.appendChild(glider);
+  const VIEWS = [
+    { id: "sites",   t: "По площадкам" },
+    { id: "agents",  t: "По дезсредствам" },
+    { id: "procs",   t: "По процессам" },
+    { id: "days",    t: "По дням" }
+  ];
+  const viz = el("div", "viz");
+  const hosts = {};
+  VIEWS.forEach(v => {
+    const b = el("button", null, v.t);
+    b.setAttribute("aria-selected", v.id === STATE.view);
+    b.onclick = () => switchTo(v.id);
+    tabs.appendChild(b);
+    const view = el("div", "view" + (v.id === STATE.view ? " on" : ""));
+    hosts[v.id] = view; viz.appendChild(view);
+  });
+  pViz.appendChild(tabs); pViz.appendChild(viz);
+  out.appendChild(pViz);
+
+  function fill(id){
+    const host = hosts[id];
+    if (id === "sites")
+      bars(host, groupSum(calc.rows.filter(r => r.graph), "site"),
+           { sub: g => g.ops + " обработок" });
+    if (id === "agents")
+      bars(host, groupSum(calc.rows, "agent").slice(0, 12),
+           { sub: g => fmtQ(g.qty) + " " + (g.unit || "") });
+    if (id === "procs")
+      bars(host, groupSum(calc.rows, "proc"), { sub: g => g.ops + " работ" });
+    if (id === "days"){
+      const pts = [...calc.daily.entries()].sort()
+        .map(([d, v]) => ({ date: new Date(d + "T00:00:00"), sum: v.sum, ops: v.ops }));
+      lineChart(host, pts);
+    }
+  }
+  function moveGlider(){
+    const btns = [...tabs.querySelectorAll("button")];
+    const i = VIEWS.findIndex(v => v.id === STATE.view);
+    const b = btns[i]; if (!b) return;
+    glider.style.width = b.offsetWidth + "px";
+    glider.style.transform = "translateX(" + (b.offsetLeft - 3) + "px)";
+  }
+  function switchTo(id){
+    if (id === STATE.view) return;
+    STATE.view = id;
+    tabs.querySelectorAll("button").forEach((b, i) =>
+      b.setAttribute("aria-selected", VIEWS[i].id === id));
+    Object.entries(hosts).forEach(([k, h]) => h.classList.toggle("on", k === id));
+    fill(id); moveGlider();
+  }
+  fill(STATE.view);
+  requestAnimationFrame(moveGlider);
+  window.addEventListener("resize", moveGlider);
+
+  const pTbl = el("div", "panel");
+  pTbl.appendChild(el("h3", null, "Полная расшифровка"));
+  pTbl.appendChild(el("p", "cap", "Расход = норма × входят в сан разрыв × раз в месяц. Сумма = расход × цена"));
+  const tools = el("div", "tools");
+  const inp = el("input", "f"); inp.type = "search";
+  inp.placeholder = "Фильтр: площадка, средство, процесс…";
+  inp.oninput = () => { STATE.q = inp.value; table(tblHost); };
+  tools.appendChild(inp);
+  pTbl.appendChild(tools);
+  const tblHost = el("div", "tblwrap");
+  pTbl.appendChild(tblHost);
+  out.appendChild(pTbl);
+  table(tblHost);
+
+  if (calc.checks.length){
+    const pChk = el("div", "panel");
+    pChk.appendChild(el("h3", null, "Проверки"));
+    pChk.appendChild(el("p", "cap", "Что осталось неучтённым или требует подтверждения"));
+    calc.checks.forEach(c => pChk.appendChild(el("div", "note", c)));
+    out.appendChild(pChk);
+  }
+  document.getElementById("csv").classList.remove("hidden");
+}
+
+/* ---------------- выгрузка ---------------- */
+function toCSV(){
+  const head = COLS.map(c => c.t).join(";");
+  const lines = STATE.calc.rows.map(r => COLS.map(c => {
+    const v = r[c.k];
+    if (v === null || v === undefined) return "";
+    return typeof v === "number" ? String(v).replace(".", ",") : String(v).replace(/;/g, ",");
+  }).join(";"));
+  const total = STATE.calc.rows.reduce((s, r) => s + (r.sum || 0), 0);
+  lines.push(["ИТОГО", "", "", "", "", "", "", "", "", "", "",
+              String(total.toFixed(2)).replace(".", ","), ""].join(";"));
+  const blob = new Blob(["﻿" + head + "\n" + lines.join("\n")],
+                        { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "raschet-dezsredstv.csv";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---------------- загрузка файла ---------------- */
+const dz = document.getElementById("dropzone");
+const fileInput = document.getElementById("file");
+const progSel = document.getElementById("prog");
+Object.keys(DATA.programs).forEach(k => {
+  const o = document.createElement("option"); o.value = k; o.textContent = k;
+  progSel.appendChild(o);
+});
+progSel.value = Object.keys(DATA.programs)[1] || Object.keys(DATA.programs)[0];
+STATE.program = progSel.value;
+progSel.onchange = () => { STATE.program = progSel.value;
+  if (STATE.sched){ STATE.calc = compute(STATE.sched, STATE.program); render(); } };
+
+document.getElementById("pick").onclick = () => fileInput.click();
+document.getElementById("again").onclick = () => {
+  dz.classList.remove("hidden"); document.getElementById("out").classList.add("hidden");
+  document.getElementById("csv").classList.add("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+document.getElementById("csv").onclick = toCSV;
+fileInput.onchange = () => fileInput.files[0] && load(fileInput.files[0]);
+["dragenter","dragover"].forEach(e => dz.addEventListener(e, ev => {
+  ev.preventDefault(); dz.classList.add("over"); }));
+["dragleave","drop"].forEach(e => dz.addEventListener(e, ev => {
+  ev.preventDefault(); dz.classList.remove("over"); }));
+dz.addEventListener("drop", ev => { const f = ev.dataTransfer.files[0]; if (f) load(f); });
+
+async function load(file){
+  dz.innerHTML = "<h2>Читаю " + file.name + "…</h2><p>разбор идёт в браузере</p>";
+  try {
+    const sheet = await readSheet(await file.arrayBuffer());
+    const sched = parseSchedule(sheet);
+    if (!sched.houses.length) throw new Error("в графике нет ни одной учитываемой отметки");
+    STATE.sched = sched;
+    STATE.calc = compute(sched, STATE.program);
+    dz.classList.add("hidden");
+    render();
+  } catch (err){
+    dz.innerHTML = "<h2>Не получилось прочитать файл</h2>" +
+      "<div class='note err'><b>" + (err && err.message ? err.message : err) + "</b></div>" +
+      "<p style='margin-top:14px'>Нужен .xlsx с графиком санитарного разрыва: " +
+      "даты в строке 7, цеха и этажи слева.</p>" +
+      "<button class='btn primary' onclick='document.getElementById(\"file\").click()'>Выбрать другой файл</button>";
+    dz.classList.remove("hidden");
+  }
+}
+
+/* орнаментальная колонка слева — как на фирменном фоне */
+(function rail(){
+  const rail = document.querySelector(".rail");
+  const shapes = [
+    "M6 18c0-7 6-12 12-12s12 5 12 12-6 12-12 12", "M18 6v24M6 18h24",
+    "M18 5l11 13-11 13L7 18z", "M18 7a11 11 0 100 22 11 11 0 000-22zm0 6a5 5 0 110 10 5 5 0 010-10z",
+    "M9 27c6-4 6-14 0-18 9 0 9 18 0 18zm18 0c-6-4-6-14 0-18-9 0-9 18 0 18z",
+    "M18 6l4 8 8 4-8 4-4 8-4-8-8-4 8-4z", "M7 18h22M18 7v22M11 11l14 14M25 11L11 25",
+    "M18 8c5 0 9 4 9 9s-4 9-9 9-9-4-9-9", "M9 22c4-8 14-8 18 0M9 14c4 8 14 8 18 0"
+  ];
+  for (let i = 0; i < 14; i++){
+    const i_ = document.createElement("i");
+    i_.innerHTML = "<svg viewBox='0 0 36 36' fill='none' stroke='#F4EFE1' stroke-width='2' " +
+      "stroke-linecap='round' stroke-linejoin='round'><path d='" + shapes[i % shapes.length] + "'/></svg>";
+    rail.appendChild(i_);
+  }
+})();
+</script>
+</body>
+</html>

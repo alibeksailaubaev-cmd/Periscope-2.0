@@ -1,0 +1,414 @@
+<script>
+"use strict";
+const SERIES = ["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"]
+  .map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+const el = (tag, cls, html) => { const n = document.createElement(tag);
+  if (cls) n.className = cls; if (html !== undefined) n.innerHTML = html; return n; };
+const MONTHS = ["января","февраля","марта","апреля","мая","июня",
+                "июля","августа","сентября","октября","ноября","декабря"];
+const ruDate = d => d.getDate() + " " + MONTHS[d.getMonth()];
+
+let STATE = { sched: null, calc: null, program: null, view: "sites", sort: { key: "sum", dir: -1 }, q: "" };
+
+/* ---------------- агрегаты ---------------- */
+const groupSum = (rows, key) => {
+  const m = new Map();
+  for (const r of rows){
+    const k = typeof key === "function" ? key(r) : r[key];
+    const cur = m.get(k) || { name: k, sum: 0, qty: 0, unit: r.unit, ops: 0 };
+    cur.sum += r.sum || 0; cur.qty += r.qty || 0; cur.ops += r.units * r.times;
+    if (cur.unit !== r.unit) cur.unit = "";
+    m.set(k, cur);
+  }
+  return [...m.values()].sort((a, b) => b.sum - a.sum);
+};
+
+/* ---------------- столбики ---------------- */
+function bars(host, items, opts){
+  opts = opts || {};
+  host.innerHTML = "";
+  const wrap = el("div", "bars");
+  const max = Math.max(...items.map(i => i.sum), 1);
+  items.forEach((it, idx) => {
+    const row = el("div", "bar");
+    row.appendChild(el("div", "nm", it.name));
+    const track = el("div", "track");
+    const fill = el("div", "fill");
+    track.appendChild(fill);
+    row.appendChild(track);
+    row.appendChild(el("div", "vl", fmt(it.sum, 0) + " ₸"));
+    if (opts.sub) row.appendChild(el("div", "sub", opts.sub(it)));
+    row.title = it.name + ": " + fmt(it.sum) + " ₸" + (opts.sub ? " · " + opts.sub(it) : "");
+    wrap.appendChild(row);
+    requestAnimationFrame(() => setTimeout(() => {
+      fill.style.width = (it.sum / max * 100).toFixed(2) + "%";
+    }, 40 + idx * 45));
+  });
+  host.appendChild(wrap);
+}
+
+/* ---------------- линия по дням ---------------- */
+function lineChart(host, points){
+  host.innerHTML = "";
+  if (points.length < 2){ host.appendChild(el("p", "cap", "Для линии нужно минимум два дня с работами.")); return; }
+  const wrap = el("div", "linewrap");
+  const W = 1000, H = 300, L = 64, R = 12, T = 14, B = 34;
+  const max = Math.max(...points.map(p => p.sum)) * 1.08 || 1;
+  const x = i => L + i * (W - L - R) / (points.length - 1);
+  const y = v => T + (1 - v / max) * (H - T - B);
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("class", "line");
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.setAttribute("preserveAspectRatio", "none");
+  const add = (tag, attrs, text) => {
+    const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (text !== undefined) n.textContent = text;
+    svg.appendChild(n); return n;
+  };
+  for (let g = 0; g <= 4; g++){
+    const v = max * g / 4;
+    add("line", { class: "grid", x1: L, x2: W - R, y1: y(v), y2: y(v) });
+    add("text", { x: L - 8, y: y(v) + 4, "text-anchor": "end" },
+        (v / 1000).toLocaleString("ru-RU", { maximumFractionDigits: 0 }) + " тыс.");
+  }
+  add("line", { class: "axis", x1: L, x2: W - R, y1: y(0), y2: y(0) });
+  const step = Math.ceil(points.length / 12);
+  points.forEach((p, i) => { if (i % step === 0)
+    add("text", { x: x(i), y: H - 12, "text-anchor": "middle" }, p.date.getDate()); });
+
+  const d = points.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.sum).toFixed(1)).join(" ");
+  add("path", { class: "area", d: d + " L" + x(points.length - 1) + " " + y(0) + " L" + x(0) + " " + y(0) + " Z" });
+  const path = add("path", { class: "path", d });
+  const len = path.getTotalLength ? path.getTotalLength() : 2000;
+  path.style.strokeDasharray = len; path.style.strokeDashoffset = len;
+  requestAnimationFrame(() => { path.style.transition = "stroke-dashoffset 1s ease"; path.style.strokeDashoffset = 0; });
+
+  const cross = add("line", { class: "cross", y1: T, y2: y(0) });
+  const dot = add("circle", { class: "dot", r: 5, opacity: 0 });
+  const tip = el("div", "tip");
+  wrap.appendChild(svg); wrap.appendChild(tip);
+
+  svg.addEventListener("pointermove", ev => {
+    const box = svg.getBoundingClientRect();
+    const px = (ev.clientX - box.left) / box.width * W;
+    let i = Math.round((px - L) / ((W - L - R) / (points.length - 1)));
+    i = Math.max(0, Math.min(points.length - 1, i));
+    const p = points[i];
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.style.opacity = .8;
+    dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(p.sum)); dot.setAttribute("opacity", 1);
+    tip.innerHTML = "<b>" + ruDate(p.date) + "</b><br>" + fmt(p.sum) + " ₸ · " + p.ops + " работ";
+    const left = x(i) / W * box.width;
+    tip.style.left = Math.min(Math.max(left - 60, 0), box.width - 150) + "px";
+    tip.style.top = (y(p.sum) / H * box.height - 58) + "px";
+    tip.style.opacity = 1;
+  });
+  svg.addEventListener("pointerleave", () => {
+    cross.style.opacity = 0; dot.setAttribute("opacity", 0); tip.style.opacity = 0;
+  });
+  host.appendChild(wrap);
+}
+
+/* ---------------- структура по процессам ---------------- */
+function structure(host, rows){
+  const all = groupSum(rows, "proc").filter(g => g.sum > 0);
+  const top = all.slice(0, 7);
+  const rest = all.slice(7);
+  if (rest.length) top.push({ name: "Прочие процессы (" + rest.length + ")",
+                              sum: rest.reduce((s, r) => s + r.sum, 0) });
+  const total = top.reduce((s, r) => s + r.sum, 0) || 1;
+  host.innerHTML = "";
+  const stack = el("div", "stack");
+  const legend = el("div", "legend");
+  top.forEach((g, i) => {
+    const seg = el("span");
+    seg.style.background = SERIES[i % SERIES.length];
+    seg.style.flexBasis = "0%";
+    seg.title = g.name + ": " + fmt(g.sum) + " ₸";
+    stack.appendChild(seg);
+    const b = el("b");
+    const dot = el("i"); dot.style.background = SERIES[i % SERIES.length];
+    b.appendChild(dot);
+    b.appendChild(document.createTextNode(g.name + " "));
+    b.appendChild(el("em", null, (g.sum / total * 100).toFixed(1).replace(".", ",") + " %"));
+    legend.appendChild(b);
+    requestAnimationFrame(() => setTimeout(() => {
+      seg.style.flexBasis = (g.sum / total * 100).toFixed(3) + "%";
+    }, 60 + i * 60));
+  });
+  host.appendChild(stack); host.appendChild(legend);
+}
+
+/* ---------------- таблица ---------------- */
+const COLS = [
+  { k: "proc",  t: "Процесс" },
+  { k: "site",  t: "Площадка" },
+  { k: "corps", t: "Корпуса" },
+  { k: "agent", t: "Наименование дезсредства" },
+  { k: "unit",  t: "Ед." },
+  { k: "norm",  t: "Норма", n: 1 },
+  { k: "conc",  t: "Конц.", n: 1, pct: true },
+  { k: "units", t: "Входят в сан разрыв", n: 1 },
+  { k: "times", t: "Раз в месяц", n: 1 },
+  { k: "qty",   t: "Расход за месяц", n: 1 },
+  { k: "price", t: "Цена за ед.", n: 1, money: true },
+  { k: "sum",   t: "Сумма", n: 1, money: true },
+  { k: "note",  t: "Замечания" }
+];
+
+function table(host){
+  const rows = STATE.calc.rows.filter(r => {
+    if (!STATE.q) return true;
+    const q = STATE.q.toLowerCase();
+    return (r.proc + " " + r.site + " " + r.corps + " " + r.agent).toLowerCase().includes(q);
+  });
+  const { key, dir } = STATE.sort;
+  rows.sort((a, b) => {
+    const x = a[key], y = b[key];
+    if (typeof x === "number" || typeof y === "number") return ((x || 0) - (y || 0)) * dir;
+    return String(x || "").localeCompare(String(y || ""), "ru") * dir;
+  });
+  const total = rows.reduce((s, r) => s + (r.sum || 0), 0);
+  let html = "<table><thead><tr>";
+  for (const c of COLS) html += "<th data-k='" + c.k + "'>" + c.t +
+    (STATE.sort.key === c.k ? (dir > 0 ? " ▲" : " ▼") : "") + "</th>";
+  html += "</tr></thead><tbody>";
+  for (const r of rows){
+    html += "<tr>";
+    for (const c of COLS){
+      const v = r[c.k];
+      let s;
+      if (v === null || v === undefined || v === "") s = c.n ? "—" : "";
+      else if (c.pct) s = (v * 100).toLocaleString("ru-RU", { maximumFractionDigits: 1 }) + " %";
+      else if (c.money) s = fmt(v);
+      else if (c.n) s = fmtQ(v);
+      else s = String(v);
+      html += "<td class='" + (c.n ? "n" : "") + "'>" + s + "</td>";
+    }
+    html += "</tr>";
+  }
+  html += "</tbody><tfoot><tr><td colspan='11'>ИТОГО по " + rows.length + " строкам</td>" +
+          "<td class='n'>" + fmt(total) + "</td><td></td></tr></tfoot></table>";
+  host.innerHTML = html;
+  host.querySelectorAll("th").forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    STATE.sort = { key: k, dir: STATE.sort.key === k ? -STATE.sort.dir : -1 };
+    table(host);
+  });
+}
+
+/* ---------------- сборка страницы ---------------- */
+function render(){
+  const { sched, calc } = STATE;
+  const out = document.getElementById("out");
+  out.innerHTML = "";
+  out.classList.remove("hidden");
+
+  const graph = calc.rows.filter(r => r.graph).reduce((s, r) => s + (r.sum || 0), 0);
+  const extra = calc.rows.filter(r => !r.graph).reduce((s, r) => s + (r.sum || 0), 0);
+  /* отметки считаем по самому графику: по строкам норм одна и та же отметка
+     попадает в несколько приложений и счёт задваивается */
+  const ops = sched.houses.reduce((s, h) => s + h.events.length, 0);
+  const agents = new Set(calc.rows.filter(r => r.sum !== null).map(r => r.agent)).size;
+
+  const period = ruDate(sched.from) + " — " + ruDate(sched.to) + " " + sched.to.getFullYear();
+  document.getElementById("src").textContent = "Источник: " + (sched.title || "лист графика") +
+    " · " + period + " · нормы: " + STATE.program;
+
+  const hero = el("div", "hero");
+  hero.appendChild(el("div", "lbl", "Расход дезсредств за период"));
+  hero.appendChild(el("div", "val", fmt(graph + extra) + " ₸"));
+  hero.appendChild(el("div", "sub", period + " · " + sched.title));
+  out.appendChild(hero);
+
+  const kpis = el("div", "kpis");
+  const kpi = (k, v, u) => { const n = el("div", "kpi");
+    n.appendChild(el("div", "k", k)); n.appendChild(el("div", "v", v));
+    if (u) n.appendChild(el("div", "u", u)); return n; };
+  kpis.appendChild(kpi("По графику санразрыва", fmt(graph, 0) + " ₸",
+    (graph / (graph + extra) * 100).toFixed(0) + " % итога"));
+  kpis.appendChild(kpi("Вне графика", fmt(extra, 0) + " ₸", "дератизация, барьеры, руки, коврики"));
+  kpis.appendChild(kpi("Птичников в санразрыве", String(sched.houses.length), "из 122 по программе"));
+  kpis.appendChild(kpi("Отметок в графике", String(ops), "учитываемых операций"));
+  kpis.appendChild(kpi("Средств задействовано", String(agents), "позиций прайса"));
+  out.appendChild(kpis);
+
+  const pStruct = el("div", "panel");
+  pStruct.appendChild(el("h3", null, "Структура расхода по процессам"));
+  pStruct.appendChild(el("p", "cap", "Доля каждого процесса в общей сумме за период"));
+  const structHost = el("div");
+  pStruct.appendChild(structHost);
+  out.appendChild(pStruct);
+  structure(structHost, calc.rows);
+
+  const pViz = el("div", "panel");
+  pViz.appendChild(el("h3", null, "Разрезы расхода"));
+  pViz.appendChild(el("p", "cap", "Переключайте разрез — данные те же, взгляд разный"));
+  const tabs = el("div", "tabs");
+  const glider = el("div", "glider");
+  tabs.appendChild(glider);
+  const VIEWS = [
+    { id: "sites",   t: "По площадкам" },
+    { id: "agents",  t: "По дезсредствам" },
+    { id: "procs",   t: "По процессам" },
+    { id: "days",    t: "По дням" }
+  ];
+  const viz = el("div", "viz");
+  const hosts = {};
+  VIEWS.forEach(v => {
+    const b = el("button", null, v.t);
+    b.setAttribute("aria-selected", v.id === STATE.view);
+    b.onclick = () => switchTo(v.id);
+    tabs.appendChild(b);
+    const view = el("div", "view" + (v.id === STATE.view ? " on" : ""));
+    hosts[v.id] = view; viz.appendChild(view);
+  });
+  pViz.appendChild(tabs); pViz.appendChild(viz);
+  out.appendChild(pViz);
+
+  function fill(id){
+    const host = hosts[id];
+    if (id === "sites")
+      bars(host, groupSum(calc.rows.filter(r => r.graph), "site"),
+           { sub: g => g.ops + " обработок" });
+    if (id === "agents")
+      bars(host, groupSum(calc.rows, "agent").slice(0, 12),
+           { sub: g => fmtQ(g.qty) + " " + (g.unit || "") });
+    if (id === "procs")
+      bars(host, groupSum(calc.rows, "proc"), { sub: g => g.ops + " работ" });
+    if (id === "days"){
+      const pts = [...calc.daily.entries()].sort()
+        .map(([d, v]) => ({ date: new Date(d + "T00:00:00"), sum: v.sum, ops: v.ops }));
+      lineChart(host, pts);
+    }
+  }
+  function moveGlider(){
+    const btns = [...tabs.querySelectorAll("button")];
+    const i = VIEWS.findIndex(v => v.id === STATE.view);
+    const b = btns[i]; if (!b) return;
+    glider.style.width = b.offsetWidth + "px";
+    glider.style.transform = "translateX(" + (b.offsetLeft - 3) + "px)";
+  }
+  function switchTo(id){
+    if (id === STATE.view) return;
+    STATE.view = id;
+    tabs.querySelectorAll("button").forEach((b, i) =>
+      b.setAttribute("aria-selected", VIEWS[i].id === id));
+    Object.entries(hosts).forEach(([k, h]) => h.classList.toggle("on", k === id));
+    fill(id); moveGlider();
+  }
+  fill(STATE.view);
+  requestAnimationFrame(moveGlider);
+  window.addEventListener("resize", moveGlider);
+
+  const pTbl = el("div", "panel");
+  pTbl.appendChild(el("h3", null, "Полная расшифровка"));
+  pTbl.appendChild(el("p", "cap", "Расход = норма × входят в сан разрыв × раз в месяц. Сумма = расход × цена"));
+  const tools = el("div", "tools");
+  const inp = el("input", "f"); inp.type = "search";
+  inp.placeholder = "Фильтр: площадка, средство, процесс…";
+  inp.oninput = () => { STATE.q = inp.value; table(tblHost); };
+  tools.appendChild(inp);
+  pTbl.appendChild(tools);
+  const tblHost = el("div", "tblwrap");
+  pTbl.appendChild(tblHost);
+  out.appendChild(pTbl);
+  table(tblHost);
+
+  if (calc.checks.length){
+    const pChk = el("div", "panel");
+    pChk.appendChild(el("h3", null, "Проверки"));
+    pChk.appendChild(el("p", "cap", "Что осталось неучтённым или требует подтверждения"));
+    calc.checks.forEach(c => pChk.appendChild(el("div", "note", c)));
+    out.appendChild(pChk);
+  }
+  document.getElementById("csv").classList.remove("hidden");
+}
+
+/* ---------------- выгрузка ---------------- */
+function toCSV(){
+  const head = COLS.map(c => c.t).join(";");
+  const lines = STATE.calc.rows.map(r => COLS.map(c => {
+    const v = r[c.k];
+    if (v === null || v === undefined) return "";
+    return typeof v === "number" ? String(v).replace(".", ",") : String(v).replace(/;/g, ",");
+  }).join(";"));
+  const total = STATE.calc.rows.reduce((s, r) => s + (r.sum || 0), 0);
+  lines.push(["ИТОГО", "", "", "", "", "", "", "", "", "", "",
+              String(total.toFixed(2)).replace(".", ","), ""].join(";"));
+  const blob = new Blob(["﻿" + head + "\n" + lines.join("\n")],
+                        { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "raschet-dezsredstv.csv";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---------------- загрузка файла ---------------- */
+const dz = document.getElementById("dropzone");
+const fileInput = document.getElementById("file");
+const progSel = document.getElementById("prog");
+Object.keys(DATA.programs).forEach(k => {
+  const o = document.createElement("option"); o.value = k; o.textContent = k;
+  progSel.appendChild(o);
+});
+progSel.value = Object.keys(DATA.programs)[1] || Object.keys(DATA.programs)[0];
+STATE.program = progSel.value;
+progSel.onchange = () => { STATE.program = progSel.value;
+  if (STATE.sched){ STATE.calc = compute(STATE.sched, STATE.program); render(); } };
+
+document.getElementById("pick").onclick = () => fileInput.click();
+document.getElementById("again").onclick = () => {
+  dz.classList.remove("hidden"); document.getElementById("out").classList.add("hidden");
+  document.getElementById("csv").classList.add("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+document.getElementById("csv").onclick = toCSV;
+fileInput.onchange = () => fileInput.files[0] && load(fileInput.files[0]);
+["dragenter","dragover"].forEach(e => dz.addEventListener(e, ev => {
+  ev.preventDefault(); dz.classList.add("over"); }));
+["dragleave","drop"].forEach(e => dz.addEventListener(e, ev => {
+  ev.preventDefault(); dz.classList.remove("over"); }));
+dz.addEventListener("drop", ev => { const f = ev.dataTransfer.files[0]; if (f) load(f); });
+
+async function load(file){
+  dz.innerHTML = "<h2>Читаю " + file.name + "…</h2><p>разбор идёт в браузере</p>";
+  try {
+    const sheet = await readSheet(await file.arrayBuffer());
+    const sched = parseSchedule(sheet);
+    if (!sched.houses.length) throw new Error("в графике нет ни одной учитываемой отметки");
+    STATE.sched = sched;
+    STATE.calc = compute(sched, STATE.program);
+    dz.classList.add("hidden");
+    render();
+  } catch (err){
+    dz.innerHTML = "<h2>Не получилось прочитать файл</h2>" +
+      "<div class='note err'><b>" + (err && err.message ? err.message : err) + "</b></div>" +
+      "<p style='margin-top:14px'>Нужен .xlsx с графиком санитарного разрыва: " +
+      "даты в строке 7, цеха и этажи слева.</p>" +
+      "<button class='btn primary' onclick='document.getElementById(\"file\").click()'>Выбрать другой файл</button>";
+    dz.classList.remove("hidden");
+  }
+}
+
+/* орнаментальная колонка слева — как на фирменном фоне */
+(function rail(){
+  const rail = document.querySelector(".rail");
+  const shapes = [
+    "M6 18c0-7 6-12 12-12s12 5 12 12-6 12-12 12", "M18 6v24M6 18h24",
+    "M18 5l11 13-11 13L7 18z", "M18 7a11 11 0 100 22 11 11 0 000-22zm0 6a5 5 0 110 10 5 5 0 010-10z",
+    "M9 27c6-4 6-14 0-18 9 0 9 18 0 18zm18 0c-6-4-6-14 0-18-9 0-9 18 0 18z",
+    "M18 6l4 8 8 4-8 4-4 8-4-8-8-4 8-4z", "M7 18h22M18 7v22M11 11l14 14M25 11L11 25",
+    "M18 8c5 0 9 4 9 9s-4 9-9 9-9-4-9-9", "M9 22c4-8 14-8 18 0M9 14c4 8 14 8 18 0"
+  ];
+  for (let i = 0; i < 14; i++){
+    const i_ = document.createElement("i");
+    i_.innerHTML = "<svg viewBox='0 0 36 36' fill='none' stroke='#F4EFE1' stroke-width='2' " +
+      "stroke-linecap='round' stroke-linejoin='round'><path d='" + shapes[i % shapes.length] + "'/></svg>";
+    rail.appendChild(i_);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Расход дезсредств — Усть-Каменогорская птицефабрика</title>
+<style>
+:root{
+  --sand:#E5DCC2; --sand-deep:#D8CEB0; --surface:#F4EFE1; --surface-2:#FBF8EF;
+  --teal:#00897B; --teal-deep:#046A60; --teal-soft:#D7E9E5;
+  --brown:#4F2E1C; --ink:#2B1C12; --ink-2:#5C4A3C; --muted:#8B7B6B;
+  --grid:#DED4BA; --rule:#CFC4A6;
+  --s1:#00897B; --s2:#C4571F; --s3:#2A6FD6; --s4:#9A7B00;
+  --s5:#B8437E; --s6:#2E7D32; --s7:#5B4BA8; --s8:#A33A2E;
+  --radius:14px;
+  --font:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--ink);font:14px/1.5 var(--font);
+     -webkit-font-smoothing:antialiased}
+.app{display:grid;grid-template-columns:56px minmax(0,1fr);min-height:100vh}
+
+/* ---- орнаментальная колонка, как на фирменном фоне ---- */
+.rail{background:var(--sand);padding:14px 0;display:flex;flex-direction:column;
+      align-items:center;gap:8px;border-right:1px solid var(--rule)}
+.rail i{width:36px;height:36px;border-radius:8px;background:var(--teal);display:block;
+        opacity:.92;transition:transform .5s cubic-bezier(.2,.9,.25,1),opacity .4s}
+.rail i:nth-child(even){opacity:.8}
+.rail:hover i{transform:translateY(-2px)}
+.rail i svg{width:36px;height:36px;display:block}
+
+.main{padding:22px 26px 60px;max-width:1500px;width:100%;min-width:0}
+header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;
+           padding-bottom:16px;border-bottom:2px solid var(--rule);margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 420px}
+.brand .mark{width:44px;height:44px;border-radius:10px;background:var(--teal);
+             display:grid;place-items:center;flex:none}
+.brand h1{margin:0;font-size:19px;letter-spacing:.2px;color:var(--brown);font-weight:700;overflow-wrap:anywhere}
+.brand p{margin:2px 0 0;font-size:12.5px;color:var(--ink-2)}
+
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{appearance:none;border:1px solid var(--rule);background:var(--surface-2);color:var(--ink);
+     font:600 13px var(--font);padding:9px 14px;border-radius:10px;cursor:pointer;
+     transition:background .18s,border-color .18s,transform .12s}
+.btn:hover{background:#fff;border-color:var(--teal)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn.primary:hover{background:var(--teal-deep);border-color:var(--teal-deep)}
+select.btn{padding-right:28px}
+
+/* ---- зона загрузки ---- */
+.drop{border:2px dashed var(--rule);border-radius:var(--radius);background:var(--surface);
+      padding:44px 24px;text-align:center;transition:border-color .2s,background .2s}
+.drop.over{border-color:var(--teal);background:var(--teal-soft)}
+.drop h2{margin:0 0 6px;font-size:17px;color:var(--brown)}
+.drop p{margin:0 0 16px;color:var(--ink-2);font-size:13px}
+.drop small{display:block;margin-top:14px;color:var(--muted);font-size:12px}
+
+.hidden{display:none!important}
+
+/* ---- карточки ---- */
+.hero{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);
+      padding:20px 22px;margin-bottom:14px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:180px;height:180px;
+             border-radius:50%;background:var(--teal);opacity:.06}
+.hero .lbl{font-size:12.5px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.7px}
+.hero .val{font-size:40px;font-weight:700;color:var(--brown);line-height:1.1;margin-top:4px;
+           font-variant-numeric:tabular-nums}
+.hero .sub{margin-top:6px;font-size:13px;color:var(--ink-2)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);padding:14px 16px}
+.kpi .k{font-size:12px;color:var(--ink-2);letter-spacing:.3px}
+.kpi .v{font-size:22px;font-weight:700;color:var(--brown);margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .u{font-size:12px;color:var(--muted);margin-top:2px}
+
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:var(--radius);
+       padding:18px 20px;margin-bottom:18px;min-width:0}
+.panel h3{margin:0 0 2px;font-size:15px;color:var(--brown)}
+.panel .cap{margin:0 0 16px;font-size:12.5px;color:var(--ink-2)}
+
+/* ---- переключатель диаграмм ---- */
+.tabs{display:inline-flex;background:var(--sand-deep);border-radius:10px;padding:3px;gap:2px;
+      position:relative;margin-bottom:4px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{white-space:nowrap}
+.tabs button{appearance:none;border:0;background:transparent;color:var(--ink-2);cursor:pointer;
+             font:600 13px var(--font);padding:7px 14px;border-radius:8px;position:relative;z-index:1;
+             transition:color .22s}
+.tabs button[aria-selected="true"]{color:#fff}
+.tabs .glider{position:absolute;top:3px;bottom:3px;background:var(--teal);border-radius:8px;
+              transition:transform .42s cubic-bezier(.22,.85,.3,1),width .42s cubic-bezier(.22,.85,.3,1);z-index:0}
+
+.viz{position:relative;min-height:340px}
+.view{position:absolute;inset:0;opacity:0;transform:translateY(10px) scale(.99);
+      pointer-events:none;transition:opacity .34s ease,transform .44s cubic-bezier(.22,.85,.3,1)}
+.view.on{opacity:1;transform:none;pointer-events:auto;position:relative}
+
+/* ---- горизонтальные столбики ---- */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:center}
+.bar .nm{font-size:13px;color:var(--ink);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.bar .track{height:22px;background:var(--sand-deep);border-radius:6px;overflow:hidden;min-width:0}
+.bar .fill{height:100%;background:var(--teal);border-radius:0 6px 6px 0;width:0;
+           transition:width .7s cubic-bezier(.22,.85,.3,1)}
+.bar .vl{font-size:13px;font-weight:600;color:var(--brown);font-variant-numeric:tabular-nums;
+         min-width:112px;text-align:right}
+.bar:hover .fill{background:var(--teal-deep)}
+.bar .sub{grid-column:2/4;font-size:11.5px;color:var(--muted);margin-top:-4px}
+
+/* ---- 100% стек ---- */
+.stack{display:flex;height:30px;border-radius:8px;overflow:hidden;background:var(--sand-deep);gap:2px}
+.stack span{height:100%;transition:flex-basis .7s cubic-bezier(.22,.85,.3,1);flex-grow:0;flex-shrink:0;
+            min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px}
+.legend b{display:flex;align-items:center;gap:7px;font:500 12.5px var(--font);color:var(--ink-2)}
+.legend i{width:11px;height:11px;border-radius:3px;flex:none}
+.legend em{font-style:normal;color:var(--brown);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ---- линия по дням ---- */
+.linewrap{position:relative}
+svg.line{width:100%;height:300px;display:block;overflow:visible}
+svg.line .grid{stroke:var(--grid);stroke-width:1}
+svg.line .axis{stroke:var(--rule);stroke-width:1}
+svg.line .area{fill:var(--teal);opacity:.12}
+svg.line .path{fill:none;stroke:var(--teal);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+svg.line .dot{fill:var(--teal);stroke:var(--surface);stroke-width:2}
+svg.line text{fill:var(--muted);font:11px var(--font)}
+svg.line .cross{stroke:var(--teal-deep);stroke-width:1;stroke-dasharray:3 3;opacity:0}
+.tip{position:absolute;background:var(--brown);color:#fff;padding:8px 11px;border-radius:8px;
+     font:12.5px/1.45 var(--font);pointer-events:none;opacity:0;transition:opacity .15s;
+     white-space:nowrap;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.tip b{font-variant-numeric:tabular-nums}
+
+/* ---- таблица ---- */
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px;align-items:center}
+input.f{border:1px solid var(--rule);background:var(--surface-2);border-radius:10px;padding:9px 12px;
+        font:13px var(--font);color:var(--ink);min-width:200px}
+input.f:focus{outline:2px solid var(--teal);outline-offset:-1px}
+.tblwrap{overflow-x:auto;max-width:100%;border:1px solid var(--rule);border-radius:10px;background:var(--surface-2)}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th{background:var(--sand-deep);color:var(--brown);text-align:left;padding:10px 11px;font-weight:700;
+   position:sticky;top:0;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{background:var(--teal-soft)}
+td{padding:8px 11px;border-top:1px solid var(--grid);white-space:nowrap}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--teal-soft)}
+tfoot td{border-top:2px solid var(--rule);font-weight:700;background:var(--sand-deep);color:var(--brown)}
+
+.note{background:var(--surface-2);border-left:4px solid var(--s4);border-radius:0 10px 10px 0;
+      padding:12px 14px;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.note b{color:var(--brown)}
+.note.err{border-left-color:var(--s8)}
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--rule);
+       font-size:12px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}.rail{display:none}
+  .main{padding:16px 14px 44px}
+  .bar{grid-template-columns:110px 1fr}.bar .vl{grid-column:2;text-align:left;min-width:0}
+  .hero .val{font-size:30px}
+  .tabs button{padding:7px 9px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="rail" aria-hidden="true"></nav>
+<div class="main">
+
+<header class="top">
+  <div class="brand">
+    <div class="mark">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3c2.2 0 4 1.8 4 4v2h2l-1.5 2.5"/>
+        <path d="M16 9c0 3.5-2.5 6-6 6s-6 2-6 4"/>
+        <circle cx="14" cy="7" r=".9" fill="#fff" stroke="none"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Расход дезсредств по графику санитарного разрыва</h1>
+      <p>АО «Усть-Каменогорская птицефабрика» · офлайн-расчёт, работает без интернета</p>
+    </div>
+  </div>
+  <div class="controls">
+    <label class="btn" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      Программа норм
+      <select id="prog" class="btn" style="border:0;background:transparent;padding:0;font-weight:700"></select>
+    </label>
+    <button class="btn" id="again">Загрузить другой график</button>
+    <button class="btn primary hidden" id="csv">Скачать расчёт CSV</button>
+  </div>
+</header>
+
+<section id="dropzone" class="drop">
+  <h2>Перетащите сюда график санитарного разрыва</h2>
+  <p>файл .xlsx — тот же формат, что и «График санитарного разрыва … 2026 г.»</p>
+  <button class="btn primary" id="pick">Выбрать файл</button>
+  <input type="file" id="file" accept=".xlsx" class="hidden">
+  <small>Ничего никуда не отправляется: файл разбирается прямо в браузере.</small>
+</section>
+
+<main id="out" class="hidden"></main>
+
+<footer>
+  <span id="src">—</span>
+  <span>Нормы — из санитарной программы, цены — из прайса, количество обработок — из графика</span>
+</footer>
+
+</div></div>
