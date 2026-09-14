@@ -69,6 +69,16 @@ def build(args):
 
     parts = [io.open(os.path.join(args.src, n), encoding="utf-8").read()
              for n in ("part1.html", "part2.html", "part3.html")]
+
+    if args.logo:
+        import base64
+        import mimetypes
+        mime = mimetypes.guess_type(args.logo)[0] or "image/png"
+        with open(args.logo, "rb") as fh:
+            uri = "data:{};base64,{}".format(mime, base64.b64encode(fh.read()).decode())
+        parts[0] = parts[0].replace("</head>",
+            "<script>window.BUILT_IN_LOGO=" + json.dumps(uri) + ";</script>\n</head>")
+        print("  логотип вшит:", args.logo)
     payload = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     parts[1] = parts[1].replace("__DATA__", payload)
     html = "\n".join(parts)
@@ -90,6 +100,7 @@ def main(argv=None):
     ap.add_argument("--price", default="data/dezsredstva.csv")
     ap.add_argument("--map", default="data/sopostavlenie.csv")
     ap.add_argument("--extra", default="data/normy_dopolnitelno.csv")
+    ap.add_argument("--logo", help="файл логотипа — вшивается в дэшборд")
     ap.add_argument("--program", action="append", metavar="ИМЯ=ФАЙЛ",
                     default=None, help="набор норм, можно указать несколько")
     args = ap.parse_args(argv)
