@@ -216,6 +216,15 @@ function render(){
   document.getElementById("src").textContent = "Источник: " + (sched.title || "лист графика") +
     " · " + period + " · нормы: " + STATE.program;
 
+  const layoutBad = calc.checks.filter(c => c.startsWith("Раскладка"));
+  if (layoutBad.length){
+    const warn = el("div", "panel");
+    warn.style.borderColor = "#A33A2E";
+    warn.appendChild(el("h3", null, "Внимание: раскладка файла отличается от обычной"));
+    layoutBad.forEach(c => warn.appendChild(el("div", "note err", c)));
+    out.appendChild(warn);
+  }
+
   const hero = el("div", "hero");
   hero.appendChild(el("div", "lbl", "Расход дезсредств за период"));
   hero.appendChild(el("div", "val", fmt(graph + extra) + " ₸"));
@@ -320,7 +329,8 @@ function render(){
     const pChk = el("div", "panel");
     pChk.appendChild(el("h3", null, "Проверки"));
     pChk.appendChild(el("p", "cap", "Что осталось неучтённым или требует подтверждения"));
-    calc.checks.forEach(c => pChk.appendChild(el("div", "note", c)));
+    calc.checks.forEach(c => pChk.appendChild(
+      el("div", "note" + (c.startsWith("Раскладка") ? " err" : ""), c)));
     out.appendChild(pChk);
   }
   document.getElementById("csv").classList.remove("hidden");

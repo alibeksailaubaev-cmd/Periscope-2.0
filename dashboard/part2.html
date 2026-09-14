@@ -88,6 +88,25 @@ function parseSchedule(sheet){
   }
   if (!days.length) throw new Error("в строке 7 не найдены даты — похоже, это не график санитарного разрыва");
 
+  /* Раскладка строк жёсткая: каждый цех занимает свой диапазон строк. Если
+     строки сдвинуты, птичники молча приписались бы к чужой площадке, поэтому
+     сверяем номера этажей: в блоке из N строк должны стоять этажи 1..N
+     (порядок бывает любой — у Б и Г он идёт вниз). */
+  const layout = [];
+  for (const b of DATA.blocks){
+    const need = b.to - b.from + 1;
+    const got = [];
+    for (let r = b.from; r <= b.to; r++){
+      const v = sheet.get(r, COL_FLOOR);
+      if (v !== undefined && v !== null && String(v).trim() !== "") got.push(Number(v));
+    }
+    const ok = got.length === need && new Set(got).size === need &&
+               Math.min.apply(null, got) === 1 && Math.max.apply(null, got) === need;
+    if (!ok)
+      layout.push(b.shop + " (строки " + b.from + "–" + b.to + "): ожидались этажи 1–" +
+                  need + ", в файле " + (got.length ? got.join(", ") : "пусто"));
+  }
+
   const houses = [], floors = {}, unknown = new Set();
   for (const b of DATA.blocks){
     for (let r = b.from; r <= b.to; r++){
@@ -107,7 +126,7 @@ function parseSchedule(sheet){
     }
   }
   return { houses, floors, days, from: days[0].date, to: days[days.length - 1].date,
-           unknown: [...unknown], title: sheet.title };
+           unknown: [...unknown], layout, title: sheet.title };
 }
 
 /* ============================ расчёт ============================ */
@@ -229,6 +248,9 @@ function compute(sched, programKey){
   }
 
   const checks = [];
+  for (const l of sched.layout)
+    checks.push("Раскладка строк не совпадает с ожидаемой: " + l +
+      ". Птичники могли попасть не на свою площадку — сверьте файл с обычным графиком.");
   if (sched.unknown.length)
     checks.push("В графике встретились незнакомые отметки: " + sched.unknown.join(", ") + " — они не учтены.");
   const covered = new Set(rows.flatMap(r => r.code.split("+")).concat(["ОЧН", "—"]));
