@@ -794,13 +794,13 @@ kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-
       <button class="burger" id="burger" title="Меню"><svg viewBox="0 0 24 24"><use href="#i-menu"/></svg></button>
       <div class="topbar-txt">
         <h1>Контроль ТМЦ, ИЯ и сырья — ККЗ</h1>
-        <p class="src" id="dataInfo"><span class="dot"></span><span id="dataInfoText">Демо-данные — загрузите свой файл или используйте пример</span></p>
+        <p class="src" id="dataInfo"><span class="dot"></span><span id="dataInfoText">Загрузите файл Excel, чтобы увидеть свои данные</span></p>
       </div>
       <div class="spacer"></div>
       <div class="toolbar">
         <input type="file" id="fileInput" accept=".xlsx,.xls">
         <button class="btn" id="loadBtn"><svg><use href="#i-upload"/></svg>Загрузить Excel</button>
-        <button class="btn ghost" id="demoBtn"><svg><use href="#i-beaker"/></svg>Демо-данные</button>
+        <button class="btn ghost" id="demoBtn"><svg><use href="#i-beaker"/></svg>Пример данных</button>
       </div>
       <div class="brand-lockup">
         <span class="brand-img full" role="img" aria-label="aitas ukpf"></span>
@@ -2493,11 +2493,11 @@ $("fileInput").addEventListener("change", (e) => { loadWorkbookFile(e.target.fil
 $("demoBtn").addEventListener("click", () => {
   RECORDS = genDemoData();
   TRANSPORT_RECORDS = [];
-  setDataInfo("Демо-данные · записей: " + RECORDS.length);
+  setDataInfo("Записей: " + RECORDS.length);
   populateFilterOptions();
   applyFilters();
   refreshTransportSection();
-  toast("Загружены демо-данные", "30 дней приёмок и перемещений", "ok");
+  toast("Данные обновлены", "30 дней приёмок и перемещений", "ok");
 });
 
 FILTER_IDS.forEach((id) => {
@@ -3077,14 +3077,14 @@ pestLoad();
 $("pestDate").value = pestTodayStr();
 
 RECORDS = genDemoData();
-setDataInfo("Демо-данные · записей: " + RECORDS.length);
+setDataInfo("Записей: " + RECORDS.length);
 populateFilterOptions();
 applyFilters();
 refreshTransportSection();
 
 setTimeout(() => toast(
   "Дэшборд готов",
-  "Показаны демо-данные. Перетащите файл Excel в окно или нажмите «Загрузить Excel», чтобы увидеть свои данные.",
+  "Перетащите файл Excel в окно или нажмите «Загрузить Excel», чтобы увидеть свои данные.",
   "info", 7000), 700);
 </script>
 </body>
