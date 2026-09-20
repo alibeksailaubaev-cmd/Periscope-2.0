@@ -6,6 +6,12 @@
  * only falls back to speech synthesis when no file is there, so dropping mp3s
  * into `public/audio/` upgrades the section with no code change.
  */
+
+/**
+ * Audio paths are resolved against the app's base URL rather than the domain
+ * root, so recordings also load when the build is hosted in a subdirectory.
+ */
+const AUDIO_BASE = `${(typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL) || '/'}audio/`
 export const tracks = [
   {
     id: 'trainer-instructions',
@@ -14,7 +20,7 @@ export const tracks = [
     level: 'A2',
     seconds: 48,
     speaker: 'Coach Daniyar',
-    audioUrl: '/audio/trainer-instructions.mp3',
+    audioUrl: `${AUDIO_BASE}trainer-instructions.mp3`,
     task: 'Listen and follow the commands. Then answer the questions.',
     script:
       'Right everyone, line up along the wall. We start with two minutes of easy jogging on the spot. Keep your shoulders relaxed. Now stop and roll your shoulders backwards, five times. Next, ten squats — feet apart, knees behind your toes, and breathe out as you stand up. After the squats, hold a plank for thirty seconds. Do not let your hips drop. Finally, stretch your hamstrings for twenty seconds on each leg. Remember: if something hurts sharply, stop immediately and tell me.',
@@ -31,7 +37,7 @@ export const tracks = [
     level: 'B1',
     seconds: 62,
     speaker: 'Dr Aisha Karimova',
-    audioUrl: '/audio/nutrition-advice.mp3',
+    audioUrl: `${AUDIO_BASE}nutrition-advice.mp3`,
     task: 'Listen to the podcast extract and answer the questions.',
     script:
       'The question I am asked most often by teenagers is what they should eat before training. My answer is usually boring: something you have eaten before. A session is not the moment to experiment. Roughly two hours beforehand, have a normal meal with carbohydrates and a little protein — porridge, bread with eggs, rice with chicken. If you only have twenty minutes, a banana is enough. And please drink water throughout the day rather than half a litre five minutes before you start. Hydration is a habit, not an emergency measure.',
