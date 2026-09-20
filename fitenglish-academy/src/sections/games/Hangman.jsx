@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Lightbulb, RotateCcw } from 'lucide-react'
 import { hangmanWords } from '@/data/games'
 import { useAppStore } from '@/store/useAppStore'
-import { useSfx, useSpeak } from '@/hooks/useLesson'
+import { useSfx } from '@/hooks/useLesson'
 import { sample, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -42,7 +42,6 @@ function Gallows({ misses }) {
 
 export default function Hangman() {
   const sfx = useSfx()
-  const speak = useSpeak()
   const setGameScore = useAppStore((s) => s.setGameScore)
   const completeExercise = useAppStore((s) => s.completeExercise)
 
@@ -72,7 +71,6 @@ export default function Hangman() {
       setGameScore('hangman', newTotal)
       completeExercise(points, 2)
       sfx('levelUp')
-      speak(entry.word.toLowerCase())
     }
   }
 

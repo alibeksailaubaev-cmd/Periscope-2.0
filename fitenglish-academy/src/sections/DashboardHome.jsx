@@ -1,8 +1,6 @@
 import { motion } from 'framer-motion'
-import { ArrowRight, Sparkles, Volume2 } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
-import { useSpeak } from '@/hooks/useLesson'
-import { canSpeak } from '@/lib/speech'
 import SectionHeading from '@/components/SectionHeading'
 import {
   BallIllustration, CycleIllustration, DrinkIllustration, EatIllustration, HeartIllustration,
@@ -70,29 +68,10 @@ const GUIDELINES = [
   { value: '6–8', unit: 'glasses of fluid', detail: 'a day, and more when you train or when it is hot', source: 'NHS' },
 ]
 
-/** Small round button that reads a phrase aloud. */
-function Say({ text, label, className }) {
-  const speak = useSpeak()
-  if (!canSpeak) return null
-  return (
-    <button
-      type="button"
-      onClick={() => speak(text)}
-      aria-label={label ?? `Listen to ${text}`}
-      className={cn(
-        'grid h-8 w-8 shrink-0 place-items-center rounded-lg border surface-muted text-muted transition hover:bg-grad-blaze hover:text-white',
-        className,
-      )}
-    >
-      <Volume2 className="h-3.5 w-3.5" />
-    </button>
-  )
-}
 
 /** The landing view: an illustrated introduction to the unit's topic. */
 export default function DashboardHome() {
   const setRoute = useAppStore((s) => s.setRoute)
-  const speak = useSpeak()
 
   return (
     <div>
@@ -119,14 +98,6 @@ export default function DashboardHome() {
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="font-display text-4xl font-bold leading-none md:text-5xl">keep fit</h2>
               <span className="font-mono text-base text-white/60">/kiːp fɪt/</span>
-              <button
-                type="button"
-                onClick={() => speak('keep fit')}
-                aria-label="Listen to keep fit"
-                className="grid h-10 w-10 place-items-center rounded-xl bg-white/15 transition hover:bg-white/30"
-              >
-                <Volume2 className="h-4 w-4" />
-              </button>
             </div>
 
             <p className="mt-4 max-w-xl text-lg leading-snug">
@@ -134,34 +105,12 @@ export default function DashboardHome() {
               drinking sensibly around it.
             </p>
 
-            <dl className="mt-5 grid gap-2 text-[15px] sm:grid-cols-2">
-              <div className="rounded-xl bg-white/10 px-4 py-2.5">
-                <dt className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-white/55">Русский</dt>
-                <dd>поддерживать форму, следить за собой</dd>
-              </div>
-              <div className="rounded-xl bg-white/10 px-4 py-2.5">
-                <dt className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-white/55">Қазақша</dt>
-                <dd>дене шынықтыру, сымбатты болу</dd>
-              </div>
-            </dl>
 
             <div className="mt-5 flex items-start gap-3 border-l-2 border-blaze pl-4">
               <p className="italic text-white/85">
                 “My grandfather is eighty-two and he still swims every morning — he has kept fit all
                 his life.”
               </p>
-              <button
-                type="button"
-                onClick={() =>
-                  speak(
-                    'My grandfather is eighty-two and he still swims every morning. He has kept fit all his life.',
-                  )
-                }
-                aria-label="Listen to the example sentence"
-                className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15 transition hover:bg-white/30"
-              >
-                <Volume2 className="h-3.5 w-3.5" />
-              </button>
             </div>
           </div>
 
@@ -188,21 +137,16 @@ export default function DashboardHome() {
             <Card className="h-full transition hover:shadow-premium-lg">
               <CardContent className="p-5 pt-5">
                 <habit.Art className="mb-3 h-24 w-24" />
-                <div className="mb-2 flex items-start justify-between gap-2">
-                  <h3 className="font-display text-[17px] font-bold leading-tight">{habit.title}</h3>
-                  <Say text={`${habit.title}. ${habit.sentence}`} />
-                </div>
+                <h3 className="mb-2 font-display text-[17px] font-bold leading-tight">{habit.title}</h3>
                 <p className="text-[14px] leading-snug text-muted">{habit.sentence}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {habit.words.map((word) => (
-                    <button
+                    <span
                       key={word}
-                      type="button"
-                      onClick={() => speak(word)}
-                      className="rounded-full border surface-muted px-2.5 py-1 text-[12px] font-semibold transition hover:border-blaze hover:text-blaze"
+                      className="rounded-full border surface-muted px-2.5 py-1 text-[12px] font-semibold"
                     >
                       {word}
-                    </button>
+                    </span>
                   ))}
                 </div>
               </CardContent>
@@ -232,10 +176,7 @@ export default function DashboardHome() {
                 <way.Art className="h-28 w-28" />
               </div>
               <CardContent className="p-4 pt-4">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-display text-[16px] font-bold">{way.phrase}</p>
-                  <Say text={way.phrase} />
-                </div>
+                <p className="font-display text-[16px] font-bold">{way.phrase}</p>
                 <p className="mt-1 text-[13.5px] leading-snug text-muted">{way.line}</p>
               </CardContent>
             </Card>
@@ -246,14 +187,13 @@ export default function DashboardHome() {
       {/* Phrases ---------------------------------------------------- */}
       <h2 className="mb-1 font-display text-xl font-bold">Say it the English way</h2>
       <p className="mb-4 max-w-2xl text-sm text-muted">
-        Six expressions that come up in every essay on this topic. Tap the speaker to hear each one.
+        Six expressions that come up in every essay on this topic.
       </p>
 
       <Card className="mb-10 overflow-hidden">
         <ul className="divide-y">
           {PHRASES.map((item) => (
             <li key={item.phrase} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4">
-              <Say text={item.phrase} />
               <span className="font-display text-[16px] font-bold">{item.phrase}</span>
               <span className="min-w-[200px] flex-1 text-[14.5px] text-muted">{item.meaning}</span>
               <Badge variant="neutral">{item.note}</Badge>

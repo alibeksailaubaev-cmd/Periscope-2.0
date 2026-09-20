@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Mic, Square } from 'lucide-react'
-import { canRecognise, recogniseOnce, pronunciationScore } from '@/lib/speech'
+import { canRecognise, recogniseOnce, pronunciationScore } from '@/lib/recognition'
 import { useSfx } from '@/hooks/useLesson'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

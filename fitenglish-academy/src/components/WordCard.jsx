@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Volume2 } from 'lucide-react'
 import { useAppStore } from '@/store/useAppStore'
-import { useSfx, useSpeak, useT } from '@/hooks/useLesson'
+import { useSfx, useT } from '@/hooks/useLesson'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -15,7 +14,6 @@ export default function WordCard({ word, index = 0 }) {
   const [flipped, setFlipped] = useState(false)
   const t = useT()
   const sfx = useSfx()
-  const speak = useSpeak()
   const learned = useAppStore((s) => s.learnedWords.includes(word.id))
   const toggleWordLearned = useAppStore((s) => s.toggleWordLearned)
 
@@ -65,18 +63,7 @@ export default function WordCard({ word, index = 0 }) {
             <p className="mt-2 text-[13px] leading-snug text-white/80">“{word.example}”</p>
           </button>
 
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                speak(`${word.word}. ${word.example}`)
-              }}
-              className="flex items-center gap-1.5 rounded-lg bg-white/15 px-2.5 py-1.5 text-[11px] font-semibold transition hover:bg-white/25"
-              aria-label={`Listen to ${word.word}`}
-            >
-              <Volume2 className="h-3.5 w-3.5" /> Listen
-            </button>
+          <div className="flex items-center justify-end gap-2">
 
             <label className="flex cursor-pointer items-center gap-2 text-[11px] font-semibold uppercase tracking-wide">
               <Checkbox

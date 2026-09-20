@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { Check, RotateCcw } from 'lucide-react'
 import { matchPairs } from '@/data/games'
 import { useAppStore } from '@/store/useAppStore'
-import { useSfx, useSpeak } from '@/hooks/useLesson'
+import { useSfx } from '@/hooks/useLesson'
 import { shuffle, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge'
  */
 export default function WordMatch() {
   const sfx = useSfx()
-  const speak = useSpeak()
   const setGameScore = useAppStore((s) => s.setGameScore)
   const completeExercise = useAppStore((s) => s.completeExercise)
 
@@ -78,10 +77,7 @@ export default function WordMatch() {
             type="button"
             draggable
             onDragStart={(e) => e.dataTransfer?.setData('text/plain', word.id)}
-            onClick={() => {
-              setSelected(selected === word.id ? null : word.id)
-              speak(word.word)
-            }}
+            onClick={() => setSelected(selected === word.id ? null : word.id)}
             whileHover={{ y: -2 }}
             className={cn(
               'cursor-grab rounded-full border px-4 py-2 text-sm font-semibold transition active:cursor-grabbing',

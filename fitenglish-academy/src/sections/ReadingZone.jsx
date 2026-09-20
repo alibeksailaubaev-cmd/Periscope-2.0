@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BookMarked, Check, Languages, Pause, Volume2, X } from 'lucide-react'
+import { BookMarked, Check, Languages, X } from 'lucide-react'
 import { articles } from '@/data/reading'
 import { vocabulary } from '@/data/vocabulary'
 import { useAppStore } from '@/store/useAppStore'
-import { useSfx, useSpeak } from '@/hooks/useLesson'
-import { stopSpeaking, canSpeak } from '@/lib/speech'
+import { useSfx } from '@/hooks/useLesson'
 import SectionHeading from '@/components/SectionHeading'
 import Confetti from '@/components/Confetti'
 import { Card } from '@/components/ui/card'
@@ -29,7 +28,6 @@ function buildLookup(article) {
 
 /** Section D — three graded articles with tap-to-translate and a quiz. */
 export default function ReadingZone() {
-  const speak = useSpeak()
   const sfx = useSfx()
   const readingScores = useAppStore((s) => s.readingScores)
   const setReadingScore = useAppStore((s) => s.setReadingScore)
@@ -37,7 +35,6 @@ export default function ReadingZone() {
 
   const [articleId, setArticleId] = useState(articles[0].id)
   const [lookup, setLookup] = useState(null)
-  const [reading, setReading] = useState(false)
   const [answers, setAnswers] = useState({})
   const [celebrate, setCelebrate] = useState(false)
 
@@ -47,18 +44,6 @@ export default function ReadingZone() {
   const answeredAll = article.quiz.every((_, i) => quizAnswers[i] !== undefined)
   const score = article.quiz.filter((q, i) => quizAnswers[i] === q.correct).length
 
-  const readAloud = () => {
-    if (reading) {
-      stopSpeaking()
-      setReading(false)
-      return
-    }
-    setReading(true)
-    speak(`${article.title}. ${article.paragraphs.join(' ')}`, {
-      rate: 0.95,
-      onEnd: () => setReading(false),
-    })
-  }
 
   const answerQuiz = (qIndex, optionIndex) => {
     if (quizAnswers[qIndex] !== undefined) return
@@ -89,10 +74,7 @@ export default function ReadingZone() {
           <button
             key={i}
             type="button"
-            onClick={() => {
-              setLookup({ word: clean, translation })
-              speak(clean)
-            }}
+            onClick={() => setLookup({ word: clean, translation })}
             className="rounded-sm underline decoration-blaze decoration-dotted decoration-2 underline-offset-4 transition hover:bg-blaze-50 dark:hover:bg-blaze-900/30"
           >
             {token}
@@ -124,8 +106,6 @@ export default function ReadingZone() {
               type="button"
               whileHover={{ y: -3 }}
               onClick={() => {
-                stopSpeaking()
-                setReading(false)
                 setArticleId(item.id)
                 setLookup(null)
               }}
@@ -150,15 +130,11 @@ export default function ReadingZone() {
       <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
         {/* Article --------------------------------------------------- */}
         <Card className="p-6 md:p-8">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div className="mb-5">
             <div>
               <h2 className="font-display text-2xl font-bold leading-tight">{article.title}</h2>
               <p className="mt-1.5 text-sm italic text-muted">{article.intro}</p>
             </div>
-            <Button variant={reading ? 'ink' : 'outline'} onClick={readAloud} disabled={!canSpeak}>
-              {reading ? <Pause className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              {reading ? 'Stop' : 'Read aloud'}
-            </Button>
           </div>
 
           <article>{article.paragraphs.map((p, i) => renderParagraph(p, i))}</article>
@@ -247,14 +223,6 @@ export default function ReadingZone() {
               <p className="font-display text-base font-bold">{lookup.word}</p>
               <p className="text-sm text-white/75">{lookup.translation}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => speak(lookup.word)}
-              className="grid h-9 w-9 place-items-center rounded-lg bg-white/15 transition hover:bg-white/25"
-              aria-label="Listen"
-            >
-              <Volume2 className="h-4 w-4" />
-            </button>
             <button
               type="button"
               onClick={() => setLookup(null)}

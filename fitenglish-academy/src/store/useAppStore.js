@@ -62,7 +62,6 @@ const initialState = {
 
   theme: 'light',
   lang: 'en',
-  voiceURI: null,
   route: 'dashboard',
   soundOn: true,
 }
@@ -148,12 +147,11 @@ export const useAppStore = create(
       toggleLang: () => set((s) => ({ lang: s.lang === 'en' ? 'ru' : 'en' })),
       toggleTheme: () => set((s) => ({ theme: s.theme === 'light' ? 'dark' : 'light' })),
       toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
-      setVoiceURI: (voiceURI) => set({ voiceURI }),
       setAvatar: (patch) => set((s) => ({ avatar: { ...s.avatar, ...patch } })),
       setName: (name) => set({ name }),
 
       resetProgress: () =>
-        set({ ...initialState, theme: get().theme, lang: get().lang, voiceURI: get().voiceURI }),
+        set({ ...initialState, theme: get().theme, lang: get().lang }),
     }),
     {
       name: 'fitenglish-academy',

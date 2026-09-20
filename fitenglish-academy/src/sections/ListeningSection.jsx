@@ -1,34 +1,29 @@
-import { useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Headphones, Pause, Play, Rewind, ScrollText, X } from 'lucide-react'
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Check, Headphones, Megaphone, X } from 'lucide-react'
 import { tracks, scriptLibrary, speakingLines } from '@/data/listening'
 import { useAppStore } from '@/store/useAppStore'
-import { useSfx, useSpeak } from '@/hooks/useLesson'
-import { stopSpeaking, canSpeak, hasUsableVoice } from '@/lib/speech'
-import { playRecording } from '@/lib/recording'
+import { useSfx } from '@/hooks/useLesson'
 import SectionHeading from '@/components/SectionHeading'
 import WaveformRecorder from '@/components/WaveformRecorder'
-import VoicePicker from '@/components/VoicePicker'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
-/** Section C — five tracks, a script library and microphone practice. */
+/**
+ * Section C — the app plays nothing; the teacher or a student reads the script
+ * aloud and the class answers. The script is therefore the material, printed in
+ * full rather than hidden behind a button.
+ */
 export default function ListeningSection() {
-  const speak = useSpeak()
   const sfx = useSfx()
   const listeningDone = useAppStore((s) => s.listeningDone)
   const markListeningDone = useAppStore((s) => s.markListeningDone)
   const completeExercise = useAppStore((s) => s.completeExercise)
 
   const [activeId, setActiveId] = useState(tracks[0].id)
-  const [playing, setPlaying] = useState(null)
-  // 'recording' while a real mp3 is playing, 'tts' once we fall back to synthesis.
-  const [source, setSource] = useState(null)
-  const stopRecording = useRef(() => {})
-  const [showScript, setShowScript] = useState(false)
   const [answers, setAnswers] = useState({})
   const [lineIndex, setLineIndex] = useState(0)
 
@@ -36,32 +31,6 @@ export default function ListeningSection() {
   const trackAnswers = answers[track.id] ?? {}
   const answeredAll = track.questions.every((_, i) => trackAnswers[i] !== undefined)
   const correctCount = track.questions.filter((q, i) => trackAnswers[i] === q.correct).length
-
-  /**
-   * Prefer a real native-speaker recording; fall back to synthesis only when
-   * no file is published at the track's `audioUrl`.
-   */
-  const play = (rate = 0.95) => {
-    sfx('click')
-    halt()
-    setPlaying(track.id)
-    setSource('recording')
-    stopRecording.current = playRecording(track.audioUrl, {
-      rate,
-      onEnd: () => setPlaying(null),
-      onUnavailable: () => {
-        setSource('tts')
-        speak(track.script, { rate, onEnd: () => setPlaying(null) })
-      },
-    })
-  }
-
-  const halt = () => {
-    stopRecording.current?.()
-    stopRecording.current = () => {}
-    stopSpeaking()
-    setPlaying(null)
-  }
 
   const answer = (qIndex, optionIndex) => {
     if (trackAnswers[qIndex] !== undefined) return
@@ -79,10 +48,10 @@ export default function ListeningSection() {
         eyebrow="Section C"
         icon={Headphones}
         title="Listening & Speaking"
-        description="Listen to the coach and the nutritionist, answer the questions, then record yourself and compare."
+        description="Read each script aloud to the class — twice, at normal speed — then let them answer with the script covered."
         actions={
           <Card className="min-w-[190px] p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Tracks completed</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Scripts completed</p>
             <p className="font-display text-2xl font-bold">
               {listeningDone.length} <span className="text-base text-muted">/ {tracks.length}</span>
             </p>
@@ -90,36 +59,8 @@ export default function ListeningSection() {
         }
       />
 
-      {/* Voice control — quality depends on the device, so make it explicit. */}
-      <Card className="mb-5 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="font-display text-[15px] font-bold">Narrator</p>
-            <p className="text-[13px] text-muted">
-              Tracks play a native-speaker recording when one is published; otherwise the most
-              natural English voice your device offers reads the script.
-            </p>
-          </div>
-          <VoicePicker className="min-w-[280px]" />
-        </div>
-      </Card>
-
-      {canSpeak && !hasUsableVoice() && (
-        <Card className="mb-5 border-blaze-200 bg-blaze-50 p-4 text-sm dark:bg-blaze-900/25">
-          Your device only offers robotic synthetic voices, so playback is disabled. Open the
-          transcript instead — every script is printed in full.
-        </Card>
-      )}
-
-      {!canSpeak && (
-        <Card className="mb-5 border-blaze-200 bg-blaze-50 p-4 text-sm dark:bg-blaze-900/25">
-          This browser has no speech synthesis, so the tracks cannot be played aloud. Open the transcript instead —
-          every script is printed in full.
-        </Card>
-      )}
-
       <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
-        {/* Track list ------------------------------------------------ */}
+        {/* Script list --------------------------------------------- */}
         <div className="flex flex-col gap-2.5">
           {tracks.map((item) => {
             const done = listeningDone.includes(item.id)
@@ -129,11 +70,7 @@ export default function ListeningSection() {
                 key={item.id}
                 type="button"
                 whileHover={{ x: 3 }}
-                onClick={() => {
-                  halt()
-                  setActiveId(item.id)
-                  setShowScript(false)
-                }}
+                onClick={() => setActiveId(item.id)}
                 className={cn(
                   'rounded-xl border p-4 text-left transition',
                   active ? 'border-blaze bg-blaze-50 shadow-premium dark:bg-blaze-900/25' : 'surface hover:border-mint',
@@ -145,14 +82,14 @@ export default function ListeningSection() {
                 </div>
                 <p className="font-display text-[15px] font-semibold leading-tight">{item.title}</p>
                 <p className="mt-1 text-[12px] text-muted">
-                  {item.speaker} · {item.level} · {item.seconds}s
+                  {item.speaker} · {item.level} · about {item.seconds}s to read
                 </p>
               </motion.button>
             )
           })}
         </div>
 
-        {/* Player + tasks -------------------------------------------- */}
+        {/* Script + tasks ------------------------------------------- */}
         <div className="flex flex-col gap-5">
           <Card className="p-6">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -163,41 +100,14 @@ export default function ListeningSection() {
               <Badge variant="mint">{track.level}</Badge>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              {playing === track.id ? (
-                <Button variant="ink" onClick={halt}>
-                  <Pause className="h-4 w-4" /> Stop
-                </Button>
-              ) : (
-                <Button onClick={() => play(0.95)} disabled={!canSpeak}>
-                  <Play className="h-4 w-4" /> Play track
-                </Button>
-              )}
-              <Button variant="outline" onClick={() => play(0.7)} disabled={!canSpeak}>
-                <Rewind className="h-4 w-4" /> Slower
-              </Button>
-              {playing === track.id && (
-                <Badge variant={source === 'recording' ? 'success' : 'neutral'}>
-                  {source === 'recording' ? 'Native recording' : 'Device voice'}
-                </Badge>
-              )}
-              <Button variant="ghost" onClick={() => setShowScript((s) => !s)}>
-                <ScrollText className="h-4 w-4" /> {showScript ? 'Hide' : 'Show'} transcript
-              </Button>
+            <div className="mb-3 flex items-center gap-2 rounded-xl border border-blaze-200 bg-blaze-50 px-3.5 py-2.5 text-[13px] dark:border-blaze-800 dark:bg-blaze-900/25">
+              <Megaphone className="h-4 w-4 shrink-0 text-blaze" />
+              <span>
+                Read aloud by the teacher, or by a student playing <strong>{track.speaker}</strong>.
+              </span>
             </div>
 
-            <AnimatePresence>
-              {showScript && (
-                <motion.p
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-4 overflow-hidden rounded-xl surface-muted p-4 text-sm leading-relaxed"
-                >
-                  {track.script}
-                </motion.p>
-              )}
-            </AnimatePresence>
+            <p className="rounded-xl surface-muted p-4 text-[15.5px] leading-relaxed">{track.script}</p>
           </Card>
 
           <Card className="p-6">
@@ -282,9 +192,6 @@ export default function ListeningSection() {
                         <p className="font-semibold">{item.title}</p>
                         <p className="text-[13px] text-muted">{item.line}</p>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => speak(item.line)} aria-label={`Play ${item.title}`}>
-                        <Play className="h-3.5 w-3.5" />
-                      </Button>
                     </li>
                   ))}
                 </ul>

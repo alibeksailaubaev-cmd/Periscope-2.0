@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Delete, Lightbulb, Timer } from 'lucide-react'
 import { scrambleWords } from '@/data/games'
 import { useAppStore } from '@/store/useAppStore'
-import { useSfx, useSpeak } from '@/hooks/useLesson'
+import { useSfx } from '@/hooks/useLesson'
 import { shuffle, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,6 @@ const ROUND_SECONDS = 45
 /** Rebuild the word from shuffled letter tiles before the clock runs out. */
 export default function WordScramble() {
   const sfx = useSfx()
-  const speak = useSpeak()
   const setGameScore = useAppStore((s) => s.setGameScore)
   const completeExercise = useAppStore((s) => s.completeExercise)
 
@@ -67,7 +66,6 @@ export default function WordScramble() {
         completeExercise(Math.max(10, points), 1)
         setStatus('solved')
         sfx('levelUp')
-        speak(entry.answer)
       } else {
         sfx('wrong')
         setTimeout(() => setPicked([]), 500)

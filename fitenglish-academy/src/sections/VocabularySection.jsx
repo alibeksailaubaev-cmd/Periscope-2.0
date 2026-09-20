@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { BookOpen, Search, Volume2 } from 'lucide-react'
+import { BookOpen, Search } from 'lucide-react'
 import { vocabulary, CATEGORIES, dailyWords } from '@/data/vocabulary'
 import { useAppStore } from '@/store/useAppStore'
-import { useSpeak } from '@/hooks/useLesson'
 import SectionHeading from '@/components/SectionHeading'
 import WordCard from '@/components/WordCard'
 import { Card } from '@/components/ui/card'
@@ -17,7 +16,6 @@ import { cn } from '@/lib/utils'
 export default function VocabularySection() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
-  const speak = useSpeak()
   const learnedWords = useAppStore((s) => s.learnedWords)
   const daily = useMemo(() => dailyWords(), [])
 
@@ -102,14 +100,6 @@ export default function VocabularySection() {
                   <p className="truncate text-[13px] text-muted">{word.translation}</p>
                 </div>
                 {learned && <Badge variant="success">✓</Badge>}
-                <button
-                  type="button"
-                  onClick={() => speak(word.word)}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg surface-muted text-muted transition hover:bg-grad-blaze hover:text-white"
-                  aria-label={`Listen to ${word.word}`}
-                >
-                  <Volume2 className="h-3.5 w-3.5" />
-                </button>
               </motion.div>
             )
           })}

@@ -27,7 +27,7 @@ npm run preview  # serve the production build
 | Charts | Recharts |
 | Icons | lucide-react |
 | State | Zustand + `persist` (localStorage) |
-| Audio | Howler.js for effects, Web Speech API for pronunciation |
+| Audio | Howler.js — short correct/wrong effects only; the app never narrates |
 
 Palette: blaze `#FF6B35`, mint `#00B894`, ink `#2D3436` on a light ground.
 Type: **Poppins** for headings, **Inter** for body. Cards use `border-radius: 16px`
@@ -50,7 +50,7 @@ Footer      animated counters (words / exercises / hours / level) + rotating quo
 | --- | --- | --- |
 | A | **Daily Word Challenge** | 5 rotating words as 3D flip cards, pronunciation button, “Learned” tick worth +5 XP. The full 52-word bank is searchable under **Vocabulary**. |
 | B | **Grammar Gym** | 10 questions across Present Simple/Continuous, Past Simple, future forms, modals, comparatives and conditionals. Instant tick/cross plus the rule in EN or RU. |
-| C | **Listening & Speaking** | 2 scripted tracks (trainer instructions, nutrition podcast) with comprehension questions, a slower playback mode, transcripts, a 20-item script library, and microphone practice with a live waveform and a pronunciation score. Playback prefers a real native-speaker recording and falls back to synthesis. |
+| C | **Listening & Speaking** | 2 scripts (trainer instructions, nutrition podcast) printed in full for the teacher to read aloud, with comprehension questions, a 20-item script library, and microphone practice with a live waveform and a pronunciation score. |
 | D | **Reading Zone** | 3 graded articles (A2 / B1 / B2–C1). Every known word is tappable for an instant translation, each article has a read-aloud button, a glossary and a 5-question quiz. |
 | E | **Vocabulary Games** | Word Match (drag-and-drop with a tap fallback), Hangman with a progressive gallows drawing, timed Word Scramble, an 11×11 Crossword, and the class top-10 leaderboard. |
 | F | **Writing Challenge** | 5 prompts, live word counter against the target range, autosaved drafts, a mock grammar checker built from ten mistakes this class repeats, one-click fixes, and the marking rubric. |
@@ -80,43 +80,16 @@ Everything lives in `src/data/`:
 | `writing.js` | 5 prompts, the rubric, and the grammar-checker rules |
 | `achievements.js`, `quotes.js`, `i18n.js` | badges, quote rotation, EN/RU interface strings |
 
-### Who reads the lessons aloud
-
-Listening quality is the one thing a static prototype cannot fully control, so
-`src/lib/speech.js` does what it can:
-
-- **Real recordings win.** Every track carries an `audioUrl`. Drop an mp3 at
-  `public/audio/<track>.mp3` and the player uses the native-speaker recording,
-  showing a "Native recording" badge. Only when no file is there does it fall
-  back to synthesis.
-- **Voices are ranked, not taken at random.** Neural, native-sounding families
-  (Google UK/US English, Microsoft "Natural", Apple Premium/Enhanced) score
-  highest, native accents (UK, US, AU, IE, CA, NZ) come before second-language
-  ones, and eSpeak plus the macOS novelty voices (Zarvox, Bubbles, Trinoids and
-  friends) are rejected outright. If a device has nothing acceptable, playback
-  is disabled and the transcript is offered instead.
-- **Long text is chunked.** Chrome silently cuts an utterance off after roughly
-  fifteen seconds, which used to truncate a whole article. Text is now split on
-  sentence boundaries and chained, with a watchdog that advances if the engine
-  drops a chunk.
-- **Learners can override the voice** from Listening or Settings; the choice is
-  remembered. The picker groups what the device offers into *Google voices
-  (free, best quality)*, *Other natural voices* and *Basic voices*, so the free
-  Google neural voices Chrome ships are impossible to miss. When a device has
-  nothing better than a basic voice, the page says how to get one: open in
-  Chrome, or enable "Speech Recognition & Synthesis by Google" on Android.
-  Google voices are streamed, so they need the device to be online.
-
 **No binary assets ship with the prototype.** Two consequences worth knowing:
 
-- Vocabulary entries keep `audioUrl` and `image` fields for a future backend, but the UI
-  uses an emoji and the **Web Speech API** for pronunciation. Point those fields at real
-  files and swap `speak()` for an `<audio>` element to go live.
+- Vocabulary entries keep an `image` field for a future backend; the UI uses an emoji.
 - Sound effects are **synthesised into WAV data URIs at runtime** (`src/lib/audio.js`) and
-  played through Howler, so the audio layer is real without committing mp3s.
+  played through Howler, so the audio layer is real without committing mp3s. These are the
+  only sounds in the app: there is **no narration or text-to-speech anywhere**.
 
-Speech-to-text uses the browser's `SpeechRecognition` where it exists and falls back to a
-deterministic mock elsewhere — the badge in the recorder says which one is running.
+Speech-to-text (the learner's own voice, in the pronunciation recorder) uses the browser's
+`SpeechRecognition` where it exists and falls back to a deterministic mock elsewhere — the
+badge in the recorder says which one is running.
 
 ### Crossword map
 
@@ -158,12 +131,12 @@ Components are modular and self-contained: each section is a single file under
 
 ```
 src/
-  components/      Header, Sidebar, FooterStats, WordCard, WaveformRecorder, Confetti, AnimatedCounter
+  components/      Header, Sidebar, FooterStats, WordCard, WaveformRecorder, Confetti, AnimatedCounter, illustrations
     ui/            Button, Card, Badge, Progress, Input, Textarea, Checkbox, Dialog, Tabs
   sections/        one file per dashboard section
     games/         WordMatch, Hangman, WordScramble, Crossword, Leaderboard
   data/            all mock content
   store/           Zustand store, CEFR ladder, badge evaluation
-  lib/             utils, audio synthesis, speech helpers
-  hooks/           useSfx, useSpeak, useT
+  lib/             utils, sound-effect synthesis, speech recognition
+  hooks/           useSfx, useT
 ```
