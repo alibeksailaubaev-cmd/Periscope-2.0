@@ -3,6 +3,7 @@ import { Moon, RotateCcw, Settings as SettingsIcon, Sun, Volume2, VolumeX } from
 import { useAppStore } from '@/store/useAppStore'
 import { useSfx } from '@/hooks/useLesson'
 import SectionHeading from '@/components/SectionHeading'
+import VoicePicker from '@/components/VoicePicker'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -149,6 +150,14 @@ export default function SettingsSection() {
                   {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                   {soundOn ? 'On' : 'Off'}
                 </Button>
+              </div>
+
+              <div>
+                <p className="font-semibold">Reading voice</p>
+                <p className="mb-2.5 text-[13px] text-muted">
+                  Sorted most native-sounding first. Robotic and novelty voices are filtered out.
+                </p>
+                <VoicePicker />
               </div>
             </CardContent>
           </Card>

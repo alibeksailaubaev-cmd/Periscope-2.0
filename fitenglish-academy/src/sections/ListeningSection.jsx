@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Headphones, Pause, Play, Rewind, ScrollText, X } from 'lucide-react'
 import { tracks, scriptLibrary, speakingLines } from '@/data/listening'
 import { useAppStore } from '@/store/useAppStore'
 import { useSfx, useSpeak } from '@/hooks/useLesson'
-import { stopSpeaking, canSpeak } from '@/lib/speech'
+import { stopSpeaking, canSpeak, hasUsableVoice } from '@/lib/speech'
+import { playRecording } from '@/lib/recording'
 import SectionHeading from '@/components/SectionHeading'
 import WaveformRecorder from '@/components/WaveformRecorder'
+import VoicePicker from '@/components/VoicePicker'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +25,9 @@ export default function ListeningSection() {
 
   const [activeId, setActiveId] = useState(tracks[0].id)
   const [playing, setPlaying] = useState(null)
+  // 'recording' while a real mp3 is playing, 'tts' once we fall back to synthesis.
+  const [source, setSource] = useState(null)
+  const stopRecording = useRef(() => {})
   const [showScript, setShowScript] = useState(false)
   const [answers, setAnswers] = useState({})
   const [lineIndex, setLineIndex] = useState(0)
@@ -32,13 +37,28 @@ export default function ListeningSection() {
   const answeredAll = track.questions.every((_, i) => trackAnswers[i] !== undefined)
   const correctCount = track.questions.filter((q, i) => trackAnswers[i] === q.correct).length
 
+  /**
+   * Prefer a real native-speaker recording; fall back to synthesis only when
+   * no file is published at the track's `audioUrl`.
+   */
   const play = (rate = 0.95) => {
-    setPlaying(track.id)
-    speak(track.script, { rate })
     sfx('click')
+    halt()
+    setPlaying(track.id)
+    setSource('recording')
+    stopRecording.current = playRecording(track.audioUrl, {
+      rate,
+      onEnd: () => setPlaying(null),
+      onUnavailable: () => {
+        setSource('tts')
+        speak(track.script, { rate, onEnd: () => setPlaying(null) })
+      },
+    })
   }
 
   const halt = () => {
+    stopRecording.current?.()
+    stopRecording.current = () => {}
     stopSpeaking()
     setPlaying(null)
   }
@@ -59,7 +79,7 @@ export default function ListeningSection() {
         eyebrow="Section C"
         icon={Headphones}
         title="Listening & Speaking"
-        description="Five recorded situations from the gym. Listen, answer the questions, then record yourself and compare."
+        description="Listen to the coach and the nutritionist, answer the questions, then record yourself and compare."
         actions={
           <Card className="min-w-[190px] p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted">Tracks completed</p>
@@ -69,6 +89,27 @@ export default function ListeningSection() {
           </Card>
         }
       />
+
+      {/* Voice control — quality depends on the device, so make it explicit. */}
+      <Card className="mb-5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-display text-[15px] font-bold">Narrator</p>
+            <p className="text-[13px] text-muted">
+              Tracks play a native-speaker recording when one is published; otherwise the most
+              natural English voice your device offers reads the script.
+            </p>
+          </div>
+          <VoicePicker className="min-w-[280px]" />
+        </div>
+      </Card>
+
+      {canSpeak && !hasUsableVoice() && (
+        <Card className="mb-5 border-blaze-200 bg-blaze-50 p-4 text-sm dark:bg-blaze-900/25">
+          Your device only offers robotic synthetic voices, so playback is disabled. Open the
+          transcript instead — every script is printed in full.
+        </Card>
+      )}
 
       {!canSpeak && (
         <Card className="mb-5 border-blaze-200 bg-blaze-50 p-4 text-sm dark:bg-blaze-900/25">
@@ -132,9 +173,14 @@ export default function ListeningSection() {
                   <Play className="h-4 w-4" /> Play track
                 </Button>
               )}
-              <Button variant="outline" onClick={() => play(0.65)} disabled={!canSpeak}>
+              <Button variant="outline" onClick={() => play(0.7)} disabled={!canSpeak}>
                 <Rewind className="h-4 w-4" /> Slower
               </Button>
+              {playing === track.id && (
+                <Badge variant={source === 'recording' ? 'success' : 'neutral'}>
+                  {source === 'recording' ? 'Native recording' : 'Device voice'}
+                </Badge>
+              )}
               <Button variant="ghost" onClick={() => setShowScript((s) => !s)}>
                 <ScrollText className="h-4 w-4" /> {showScript ? 'Hide' : 'Show'} transcript
               </Button>

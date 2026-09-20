@@ -1,9 +1,10 @@
 /**
  * Listening & Speaking.
- * Five featured tracks carry a full script and comprehension questions; the
- * script library below holds the rest of the recorded material the course
- * references. No mp3 files ship with the prototype, so the player reads the
- * script with the Web Speech API — swap `audioUrl` in for real recordings.
+ *
+ * Each featured track carries a full script and comprehension questions.
+ * The player looks for a real native-speaker recording at `audioUrl` first and
+ * only falls back to speech synthesis when no file is there, so dropping mp3s
+ * into `public/audio/` upgrades the section with no code change.
  */
 export const tracks = [
   {
@@ -38,57 +39,6 @@ export const tracks = [
       { q: 'What does the doctor say about eating before training?', options: ['Try something new', 'Eat something familiar', 'Do not eat at all'], correct: 1 },
       { q: 'How long before a session should you eat a normal meal?', options: ['Two hours', 'Ten minutes', 'Six hours'], correct: 0 },
       { q: 'What is her view on drinking water?', options: ['Drink it all just before training', 'Drink steadily through the day', 'Avoid it during exercise'], correct: 1 },
-    ],
-  },
-  {
-    id: 'workout-plan',
-    title: 'Workout plan discussion',
-    kind: 'Dialogue',
-    level: 'B1',
-    seconds: 70,
-    speaker: 'Amir & Kamila',
-    audioUrl: '/audio/workout-plan.mp3',
-    task: 'Two classmates plan their week at the gym. Listen and answer.',
-    script:
-      'Amir: So, how many days a week are you thinking? Kamila: Three. Monday, Wednesday, Friday. I tried five last term and I was exhausted by the end of the month. Amir: Fair enough. Shall we do upper body on Monday and legs on Wednesday? Kamila: Yes, and Friday something lighter — swimming, or a long walk. Amir: Perfect. And no phones between sets, agreed? Kamila: Agreed. Last time you spent longer scrolling than lifting.',
-    questions: [
-      { q: 'How many days a week does Kamila want to train?', options: ['Three', 'Five', 'Seven'], correct: 0 },
-      { q: 'Why did she change from five days?', options: ['It was too expensive', 'She became exhausted', 'The gym closed'], correct: 1 },
-      { q: 'What rule do they agree on?', options: ['No phones between sets', 'No talking', 'No swimming'], correct: 0 },
-    ],
-  },
-  {
-    id: 'gym-reception',
-    title: 'At the gym reception',
-    kind: 'Dialogue',
-    level: 'A2',
-    seconds: 55,
-    speaker: 'Receptionist & student',
-    audioUrl: '/audio/gym-reception.mp3',
-    task: 'A student joins a gym. Listen for prices and times.',
-    script:
-      'Receptionist: Good afternoon. How can I help? Student: Hi, I would like to join, please. Do you have a student rate? Receptionist: We do — four thousand tenge a month with a school card, instead of six thousand. Student: Great. And when is it quietest? Receptionist: Mornings before ten, and after nine in the evening. Between five and eight it is very busy. Student: Then I will come early. Do I need my own towel? Receptionist: Yes, a towel and indoor shoes, please.',
-    questions: [
-      { q: 'What is the student rate per month?', options: ['Four thousand tenge', 'Six thousand tenge', 'Ten thousand tenge'], correct: 0 },
-      { q: 'When is the gym busiest?', options: ['Before ten', 'Between five and eight', 'After nine in the evening'], correct: 1 },
-      { q: 'What must the student bring?', options: ['A towel and indoor shoes', 'A water bottle only', 'Nothing'], correct: 0 },
-    ],
-  },
-  {
-    id: 'injury-advice',
-    title: 'Talking about an injury',
-    kind: 'Dialogue',
-    level: 'B2',
-    seconds: 66,
-    speaker: 'Physiotherapist & athlete',
-    audioUrl: '/audio/injury-advice.mp3',
-    task: 'Listen to the consultation and answer the questions.',
-    script:
-      'Physiotherapist: So when did the knee start bothering you? Athlete: About three weeks ago, after I increased my running from ten to thirty kilometres in one week. Physiotherapist: That is almost certainly the cause. The tissue adapts far more slowly than your enthusiasm. Athlete: Should I stop completely? Physiotherapist: No. Swim and cycle for a fortnight, keep the leg moving, then return to running at fifteen kilometres and build up by ten per cent a week. Athlete: And the pain? Physiotherapist: A little discomfort is acceptable. Sharp pain is not.',
-    questions: [
-      { q: 'What caused the injury?', options: ['A fall', 'Increasing distance too quickly', 'Bad shoes'], correct: 1 },
-      { q: 'What does the physiotherapist recommend for two weeks?', options: ['Complete rest', 'Swimming and cycling', 'Running twice a day'], correct: 1 },
-      { q: 'By how much should the athlete increase distance each week?', options: ['Ten per cent', 'Fifty per cent', 'Double it'], correct: 0 },
     ],
   },
 ]

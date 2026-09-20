@@ -50,10 +50,10 @@ Footer      animated counters (words / exercises / hours / level) + rotating quo
 | --- | --- | --- |
 | A | **Daily Word Challenge** | 5 rotating words as 3D flip cards, pronunciation button, “Learned” tick worth +5 XP. The full 52-word bank is searchable under **Vocabulary**. |
 | B | **Grammar Gym** | 10 questions across Present Simple/Continuous, Past Simple, future forms, modals, comparatives and conditionals. Instant tick/cross plus the rule in EN or RU. |
-| C | **Listening & Speaking** | 5 scripted tracks (instructions, podcast, gym dialogues) with comprehension questions, a slower playback mode, transcripts, a 20-item script library, and microphone practice with a live waveform and a pronunciation score. |
+| C | **Listening & Speaking** | 2 scripted tracks (trainer instructions, nutrition podcast) with comprehension questions, a slower playback mode, transcripts, a 20-item script library, and microphone practice with a live waveform and a pronunciation score. Playback prefers a real native-speaker recording and falls back to synthesis. |
 | D | **Reading Zone** | 3 graded articles (A2 / B1 / B2–C1). Every known word is tappable for an instant translation, each article has a read-aloud button, a glossary and a 5-question quiz. |
 | E | **Vocabulary Games** | Word Match (drag-and-drop with a tap fallback), Hangman with a progressive gallows drawing, timed Word Scramble, an 11×11 Crossword, and the class top-10 leaderboard. |
-| F | **Writing Challenge** | 15 prompts, live word counter against the target range, autosaved drafts, a mock grammar checker built from ten mistakes this class repeats, one-click fixes, and the marking rubric. |
+| F | **Writing Challenge** | 5 prompts, live word counter against the target range, autosaved drafts, a mock grammar checker built from ten mistakes this class repeats, one-click fixes, and the marking rubric. |
 | 📊 | **Progress** | XP area chart, skills bar chart, 10 achievement badges, a six-week activity calendar, share-to-class (mock) and a printable certificate (browser “Save as PDF”). |
 | ⚙️ | **Settings** | Avatar (character, kit colour, background), display name, theme, interface language, sound, and a progress reset. |
 
@@ -75,10 +75,32 @@ Everything lives in `src/data/`:
 | `vocabulary.js` | 52 words across 6 categories, each with translation, IPA, example sentence |
 | `grammar.js` | 10 exercises with bilingual explanations |
 | `reading.js` | 3 articles + glossaries + 15 quiz questions |
-| `listening.js` | 5 full tracks with questions, 20 shorter scripts, 5 speaking lines |
+| `listening.js` | 2 full tracks with questions, 20 shorter scripts, 5 speaking lines |
 | `games.js` | match pairs, 10 hangman words, 10 scramble words, the crossword, the leaderboard |
-| `writing.js` | 15 prompts, the rubric, and the grammar-checker rules |
+| `writing.js` | 5 prompts, the rubric, and the grammar-checker rules |
 | `achievements.js`, `quotes.js`, `i18n.js` | badges, quote rotation, EN/RU interface strings |
+
+### Who reads the lessons aloud
+
+Listening quality is the one thing a static prototype cannot fully control, so
+`src/lib/speech.js` does what it can:
+
+- **Real recordings win.** Every track carries an `audioUrl`. Drop an mp3 at
+  `public/audio/<track>.mp3` and the player uses the native-speaker recording,
+  showing a "Native recording" badge. Only when no file is there does it fall
+  back to synthesis.
+- **Voices are ranked, not taken at random.** Neural, native-sounding families
+  (Google UK/US English, Microsoft "Natural", Apple Premium/Enhanced) score
+  highest, native accents (UK, US, AU, IE, CA, NZ) come before second-language
+  ones, and eSpeak plus the macOS novelty voices (Zarvox, Bubbles, Trinoids and
+  friends) are rejected outright. If a device has nothing acceptable, playback
+  is disabled and the transcript is offered instead.
+- **Long text is chunked.** Chrome silently cuts an utterance off after roughly
+  fifteen seconds, which used to truncate a whole article. Text is now split on
+  sentence boundaries and chained, with a watchdog that advances if the engine
+  drops a chunk.
+- **Learners can override the voice** from Listening or Settings; the choice is
+  remembered.
 
 **No binary assets ship with the prototype.** Two consequences worth knowing:
 

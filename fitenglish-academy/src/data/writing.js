@@ -2,18 +2,8 @@
 export const writingPrompts = [
   { id: 'w1', title: 'My Fitness Routine', min: 100, max: 150, level: 'B1', brief: 'Describe what you do in a typical week. Use Present Simple and frequency adverbs.' },
   { id: 'w2', title: 'Why Healthy Eating is Important', min: 150, max: 200, level: 'B1', brief: 'Give three reasons and support each one with an example.' },
-  { id: 'w3', title: 'Describe Your Favourite Sport', min: 200, max: 250, level: 'B2', brief: 'Explain the rules, why you enjoy it, and what it has taught you.' },
-  { id: 'w4', title: 'Should PE Be Compulsory Until Year 11?', min: 180, max: 220, level: 'B2', brief: 'An opinion essay. State your position in the introduction and defend it.' },
-  { id: 'w5', title: 'A Day I Pushed Myself Too Hard', min: 120, max: 160, level: 'B1', brief: 'A narrative in Past Simple and Past Continuous.' },
   { id: 'w6', title: 'Fast Food Near Schools: For and Against', min: 200, max: 250, level: 'B2', brief: 'A balanced discussion essay with linking words.' },
   { id: 'w7', title: 'My Fitness Goals for This Year', min: 120, max: 160, level: 'B1', brief: 'Use future forms: will, going to, present continuous for arrangements.' },
-  { id: 'w8', title: 'Letter of Advice to a Friend Who Never Exercises', min: 140, max: 180, level: 'B1', brief: 'An informal letter using modal verbs of advice.' },
-  { id: 'w9', title: 'Social Media and Body Image', min: 220, max: 260, level: 'C1', brief: 'Analyse the pressure teenagers face and propose two responses.' },
-  { id: 'w10', title: 'Is Professional Sport Healthy for Athletes?', min: 200, max: 250, level: 'C1', brief: 'Argue a case using evidence and concession clauses.' },
-  { id: 'w11', title: 'A Review of a Sports App', min: 150, max: 190, level: 'B2', brief: 'Describe the app, evaluate it, and recommend it (or not).' },
-  { id: 'w12', title: 'The Best Way to Start Exercising', min: 130, max: 170, level: 'B1', brief: 'Write instructions for a complete beginner.' },
-  { id: 'w13', title: 'Sleep: The Forgotten Part of Training', min: 180, max: 220, level: 'B2', brief: 'Explain the science simply and give practical advice.' },
-  { id: 'w14', title: 'An Email to a Gym About a Problem', min: 120, max: 150, level: 'B1', brief: 'A formal email of complaint with a clear request.' },
   { id: 'w15', title: 'What Keeping Fit Means to Me', min: 200, max: 250, level: 'B2', brief: 'A reflective essay. Avoid clichés; use specific personal detail.' },
 ]
 

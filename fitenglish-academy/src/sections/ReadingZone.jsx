@@ -54,7 +54,10 @@ export default function ReadingZone() {
       return
     }
     setReading(true)
-    speak(`${article.title}. ${article.paragraphs.join(' ')}`, { rate: 0.92 })
+    speak(`${article.title}. ${article.paragraphs.join(' ')}`, {
+      rate: 0.95,
+      onEnd: () => setReading(false),
+    })
   }
 
   const answerQuiz = (qIndex, optionIndex) => {
