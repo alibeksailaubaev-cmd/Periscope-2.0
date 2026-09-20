@@ -4,6 +4,8 @@ import path from 'node:path'
 
 // Vite configuration: React fast refresh + "@" alias pointing at /src.
 export default defineConfig({
+  // Relative base so the build runs from any path, not just the domain root.
+  base: './',
   plugins: [react()],
   resolve: {
     alias: { '@': path.resolve(process.cwd(), 'src') },

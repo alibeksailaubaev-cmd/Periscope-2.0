@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import { achievements } from '@/data/achievements'
 import { isoDay } from '@/lib/utils'
 
@@ -155,6 +155,26 @@ export const useAppStore = create(
     {
       name: 'fitenglish-academy',
       version: 1,
+      /**
+       * localStorage can throw outright in a sandboxed iframe or a private
+       * window. Falling back to an in-memory store keeps the app usable —
+       * progress simply does not survive a reload there.
+       */
+      storage: createJSONStorage(() => {
+        try {
+          const probe = '__fitenglish__'
+          window.localStorage.setItem(probe, probe)
+          window.localStorage.removeItem(probe)
+          return window.localStorage
+        } catch {
+          const memory = new Map()
+          return {
+            getItem: (key) => memory.get(key) ?? null,
+            setItem: (key, value) => memory.set(key, value),
+            removeItem: (key) => memory.delete(key),
+          }
+        }
+      }),
       partialize: (s) => {
         const { setRoute, ...rest } = s
         return rest
