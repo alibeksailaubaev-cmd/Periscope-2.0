@@ -60,6 +60,24 @@ function scoreVoice(voice) {
   return score
 }
 
+/**
+ * Which family a voice belongs to.
+ * 'google'  — Chrome's free Google voices (network, neural, native-sounding)
+ * 'neural'  — Microsoft Natural / Apple Premium & Enhanced
+ * 'basic'   — everything else that survived the reject list
+ */
+export function voiceTier(voice) {
+  const name = `${voice.name} ${voice.voiceURI}`
+  if (/\bgoogle\b/i.test(name)) return 'google'
+  if (/natural|neural|premium|enhanced/i.test(name)) return 'neural'
+  return 'basic'
+}
+
+/** The voice that will actually speak, given the learner's choice (or none). */
+export function activeVoice(uri) {
+  return resolveVoice(uri)
+}
+
 export function accentOf(voice) {
   return ACCENTS[voice.lang?.toLowerCase()] ?? voice.lang ?? ''
 }

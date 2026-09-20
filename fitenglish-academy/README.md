@@ -100,7 +100,12 @@ Listening quality is the one thing a static prototype cannot fully control, so
   sentence boundaries and chained, with a watchdog that advances if the engine
   drops a chunk.
 - **Learners can override the voice** from Listening or Settings; the choice is
-  remembered.
+  remembered. The picker groups what the device offers into *Google voices
+  (free, best quality)*, *Other natural voices* and *Basic voices*, so the free
+  Google neural voices Chrome ships are impossible to miss. When a device has
+  nothing better than a basic voice, the page says how to get one: open in
+  Chrome, or enable "Speech Recognition & Synthesis by Google" on Android.
+  Google voices are streamed, so they need the device to be online.
 
 **No binary assets ship with the prototype.** Two consequences worth knowing:
 
