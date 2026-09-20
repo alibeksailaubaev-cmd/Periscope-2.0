@@ -9,10 +9,24 @@ Everything runs on mock data, so the prototype is a complete, clickable product 
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
-npm run build    # production bundle in dist/
-npm run preview  # serve the production build
+npm run dev               # http://localhost:5173
+npm run build             # production bundle in dist/
+npm run preview           # serve the production build
+npm run build:standalone  # one self-contained FitEnglish-Academy.html
 ```
+
+## Handing it to a teacher
+
+`npm run build:standalone` produces **`FitEnglish-Academy.html`** — a single file
+(~2.2 MB) with the JavaScript, the stylesheet and both fonts embedded. It opens
+with a double click, needs no server, no install and no internet, and can be
+emailed or copied onto a USB stick. Everything works offline: the games, the
+charts, the writing checker and the progress that each browser stores locally.
+
+A normal `dist/` build cannot do this — browsers refuse to load an external
+module over `file://` — which is why the standalone build inlines everything.
+Use `dist/` for hosting (Vercel, GitHub Pages, a school server) and the single
+file for handing over.
 
 ---
 

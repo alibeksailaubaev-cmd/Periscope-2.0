@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext js,jsx"
+    "lint": "eslint src --ext js,jsx",
+    "build:standalone": "vite build --config vite.config.offline.js && node scripts/build-standalone.mjs"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.1.4",
