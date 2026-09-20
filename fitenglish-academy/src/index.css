@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Design tokens. Light is the default; `.dark` on <html> flips them.
+   ------------------------------------------------------------------ */
+@layer base {
+  :root {
+    --surface: 255 255 255;
+    --surface-muted: 248 250 251;
+    --page: 244 247 248;
+    --border: 226 232 234;
+    --text: 45 52 54;
+    --text-muted: 100 116 120;
+  }
+
+  .dark {
+    --surface: 30 37 39;
+    --surface-muted: 38 46 48;
+    --page: 22 27 28;
+    --border: 55 65 68;
+    --text: 237 242 243;
+    --text-muted: 154 168 171;
+  }
+
+  * {
+    border-color: rgb(var(--border));
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: rgb(var(--page));
+    color: rgb(var(--text));
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  /* Keyboard users always get a visible focus ring. */
+  :focus-visible {
+    outline: 2px solid #ff6b35;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .surface {
+    background-color: rgb(var(--surface));
+  }
+  .surface-muted {
+    background-color: rgb(var(--surface-muted));
+  }
+  .text-muted {
+    color: rgb(var(--text-muted));
+  }
+  .card-premium {
+    @apply surface rounded-xl shadow-premium border;
+  }
+  /* 3D flip scaffolding used by the vocabulary cards. */
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+}
+
+/* Thin scrollbars inside panels keep the premium feel on desktop. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgb(var(--border)); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #a4b0b2; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

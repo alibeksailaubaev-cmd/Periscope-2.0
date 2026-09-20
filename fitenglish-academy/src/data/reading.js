@@ -1,0 +1,112 @@
+/**
+ * Reading Zone — three graded articles with a glossary and a five-question
+ * comprehension quiz each. Glossary keys are lower-case so the reader can
+ * look up any clicked word.
+ */
+export const articles = [
+  {
+    id: 'beginner',
+    level: 'A2',
+    levelLabel: 'Beginner',
+    minutes: 3,
+    title: '5 Simple Exercises for Beginners',
+    intro: 'You do not need a gym card to start. These five moves need nothing but the floor.',
+    paragraphs: [
+      'Many students think that getting fit means spending money on a gym. In fact, the five most useful exercises for beginners need no equipment at all. You can do all of them in your bedroom in fifteen minutes.',
+      'Start with squats. Stand with your feet apart, bend your knees and sit back as if there were a chair behind you. Ten squats wake up the biggest muscles in your legs. Then try push-ups. If a normal push-up is too hard, put your knees on the floor — that is not cheating, it is training.',
+      'The third exercise is the plank. Hold your body straight on your forearms for thirty seconds. Your stomach muscles will burn, and that is exactly the point. Number four is the lunge: one big step forward, then bend both knees until the back knee almost touches the floor.',
+      'Finish with stretching. Reach for your toes slowly and hold the position for twenty seconds. Never bounce. Do this short routine three times a week, and after a month you will notice that stairs feel easier and your posture is better.',
+    ],
+    glossary: {
+      squat: 'приседание',
+      'push-up': 'отжимание',
+      plank: 'планка (упражнение)',
+      lunge: 'выпад',
+      forearms: 'предплечья',
+      stretching: 'растяжка',
+      posture: 'осанка',
+      equipment: 'оборудование, инвентарь',
+      bounce: 'пружинить, подпрыгивать',
+      routine: 'режим, комплекс упражнений',
+    },
+    quiz: [
+      { q: 'What does the writer say you need to start exercising?', options: ['A gym card', 'No equipment at all', 'Expensive shoes', 'A personal trainer'], correct: 1 },
+      { q: 'How long should the whole routine take?', options: ['Fifteen minutes', 'One hour', 'Thirty minutes', 'Five minutes'], correct: 0 },
+      { q: 'What does the writer say about push-ups on your knees?', options: ['They are cheating', 'They are dangerous', 'They are still training', 'They are only for children'], correct: 2 },
+      { q: 'How long should you hold the plank?', options: ['Ten seconds', 'Thirty seconds', 'Two minutes', 'Until you fall'], correct: 1 },
+      { q: 'What warning does the writer give about stretching?', options: ['Do not bounce', 'Do not breathe', 'Do it every day', 'Do it before squats'], correct: 0 },
+    ],
+  },
+  {
+    id: 'intermediate',
+    level: 'B1',
+    levelLabel: 'Intermediate',
+    minutes: 5,
+    title: 'How to Build a Healthy Lifestyle',
+    intro: 'Habits, not heroics: why small daily choices beat dramatic January resolutions.',
+    paragraphs: [
+      'Every January millions of people promise themselves that this year will be different. They buy gym memberships, download apps and plan six workouts a week. By March most of them have stopped. The problem is not laziness — it is the size of the promise.',
+      'Researchers who study behaviour say that habits are built by repetition, not by motivation. Motivation is what gets you off the sofa on day one; habit is what moves you on day forty, when the weather is grey and nothing feels exciting. The trick is to make the first version of the habit almost ridiculously small: a ten-minute walk, one glass of water before breakfast, ten push-ups after brushing your teeth.',
+      'Sleep is the part of a healthy lifestyle that teenagers sacrifice first and miss most. During deep sleep the body repairs muscle tissue and the brain files away what you learned during the day. Students who sleep fewer than seven hours consistently perform worse in memory tests, however hard they revise.',
+      'Food works the same way. Nobody needs a perfect diet; almost everyone benefits from a slightly better one. Swapping a fizzy drink for water, adding one vegetable to dinner, or eating breakfast instead of skipping it — these are unglamorous changes that quietly add up over a school year.',
+      'Finally, do not do it alone. People who exercise with a friend are far more likely to continue after the first month. A shared routine turns a private struggle into an appointment you would feel bad about missing.',
+    ],
+    glossary: {
+      membership: 'абонемент',
+      laziness: 'лень',
+      repetition: 'повторение',
+      motivation: 'мотивация',
+      habit: 'привычка',
+      sacrifice: 'жертвовать',
+      tissue: 'ткань (организма)',
+      revise: 'повторять (материал)',
+      unglamorous: 'непривлекательный, будничный',
+      appointment: 'назначенная встреча',
+    },
+    quiz: [
+      { q: 'According to the writer, why do January resolutions fail?', options: ['People are lazy', 'The promises are too big', 'Gyms are expensive', 'The weather is bad'], correct: 1 },
+      { q: 'What keeps people going on "day forty"?', options: ['Motivation', 'Habit', 'A trainer', 'New equipment'], correct: 1 },
+      { q: 'What happens during deep sleep?', options: ['The body repairs muscle and the brain stores learning', 'The heart rate rises', 'Muscles get weaker', 'Calories are stored as fat'], correct: 0 },
+      { q: 'What kind of food changes does the writer recommend?', options: ['A perfect diet', 'Small, slightly better choices', 'No carbohydrates', 'Only protein'], correct: 1 },
+      { q: 'Why does the writer suggest exercising with a friend?', options: ['It is cheaper', 'You are more likely to continue', 'It is safer', 'Friends know more about sport'], correct: 1 },
+    ],
+  },
+  {
+    id: 'advanced',
+    level: 'B2–C1',
+    levelLabel: 'Advanced',
+    minutes: 7,
+    title: 'The Science of Muscle Growth',
+    intro: 'What actually happens between the last repetition and the next session.',
+    paragraphs: [
+      'Muscle growth — hypertrophy, to give it its proper name — is one of the most misunderstood processes in popular fitness culture. Muscles do not grow during a workout. They grow in the hours and days afterwards, provided three conditions are met: mechanical tension, adequate protein and sufficient rest.',
+      'When a muscle contracts against a demanding load, microscopic damage occurs in the fibres. This sounds alarming, but it is the signal the body needs. Satellite cells surrounding the fibre are activated, they donate their nuclei to the damaged cell, and the muscle is rebuilt slightly thicker than before. The process is remarkably conservative: the body invests in extra tissue only when the stimulus is genuinely challenging and repeated.',
+      'This explains why lifting the same comfortable weight for months produces nothing. The principle of progressive overload states that the stimulus must gradually increase — more weight, more repetitions, or less rest between sets. Without progression, the body has no reason to spend energy building tissue it does not need.',
+      'Nutrition is the second condition. Protein supplies the amino acids from which new muscle is literally assembled; roughly 1.6 grams per kilogram of body weight per day is the figure most studies converge on for young athletes. Carbohydrates matter too, because they refill the glycogen that powers the next session.',
+      'The third condition — rest — is the one teenagers neglect. Growth hormone is released predominantly during deep sleep, and chronically sleeping five or six hours suppresses both recovery and performance. Training seven days a week is therefore counter-productive: without recovery the damage accumulates faster than it can be repaired, and the athlete slides towards overtraining, injury and eventual burnout.',
+      'The practical conclusion is unfashionably simple. Train hard enough to create a genuine stimulus, eat enough protein to supply the building materials, and sleep enough to let the construction take place. Anything sold as a shortcut past those three requirements is, almost without exception, marketing rather than physiology.',
+    ],
+    glossary: {
+      hypertrophy: 'гипертрофия, рост мышц',
+      contracts: 'сокращается',
+      fibres: 'волокна',
+      nuclei: 'ядра клеток',
+      stimulus: 'стимул, раздражитель',
+      'progressive overload': 'прогрессирующая нагрузка',
+      'amino acids': 'аминокислоты',
+      glycogen: 'гликоген',
+      suppresses: 'подавляет',
+      'counter-productive': 'контрпродуктивный',
+      physiology: 'физиология',
+    },
+    quiz: [
+      { q: 'When do muscles actually grow?', options: ['During the workout', 'In the hours and days afterwards', 'Only during cardio', 'While stretching'], correct: 1 },
+      { q: 'What role do satellite cells play?', options: ['They burn fat', 'They donate nuclei so the fibre rebuilds thicker', 'They carry oxygen', 'They produce glycogen'], correct: 1 },
+      { q: 'What is progressive overload?', options: ['Training every day', 'Gradually increasing the stimulus', 'Eating more protein', 'Sleeping longer'], correct: 1 },
+      { q: 'How much protein do the studies converge on for young athletes?', options: ['0.5 g per kg', '1.6 g per kg', '3 g per kg', '10 g per kg'], correct: 1 },
+      { q: 'What is the writer’s view of fitness shortcuts?', options: ['They are usually marketing, not physiology', 'They work for teenagers', 'They are safe with supplements', 'They replace sleep'], correct: 0 },
+    ],
+  },
+]
+
+export const articlesById = Object.fromEntries(articles.map((a) => [a.id, a]))

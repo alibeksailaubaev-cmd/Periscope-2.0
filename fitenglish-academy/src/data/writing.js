@@ -1,0 +1,65 @@
+/** Writing Challenge — 15 graded prompts plus the assessment rubric. */
+export const writingPrompts = [
+  { id: 'w1', title: 'My Fitness Routine', min: 100, max: 150, level: 'B1', brief: 'Describe what you do in a typical week. Use Present Simple and frequency adverbs.' },
+  { id: 'w2', title: 'Why Healthy Eating is Important', min: 150, max: 200, level: 'B1', brief: 'Give three reasons and support each one with an example.' },
+  { id: 'w3', title: 'Describe Your Favourite Sport', min: 200, max: 250, level: 'B2', brief: 'Explain the rules, why you enjoy it, and what it has taught you.' },
+  { id: 'w4', title: 'Should PE Be Compulsory Until Year 11?', min: 180, max: 220, level: 'B2', brief: 'An opinion essay. State your position in the introduction and defend it.' },
+  { id: 'w5', title: 'A Day I Pushed Myself Too Hard', min: 120, max: 160, level: 'B1', brief: 'A narrative in Past Simple and Past Continuous.' },
+  { id: 'w6', title: 'Fast Food Near Schools: For and Against', min: 200, max: 250, level: 'B2', brief: 'A balanced discussion essay with linking words.' },
+  { id: 'w7', title: 'My Fitness Goals for This Year', min: 120, max: 160, level: 'B1', brief: 'Use future forms: will, going to, present continuous for arrangements.' },
+  { id: 'w8', title: 'Letter of Advice to a Friend Who Never Exercises', min: 140, max: 180, level: 'B1', brief: 'An informal letter using modal verbs of advice.' },
+  { id: 'w9', title: 'Social Media and Body Image', min: 220, max: 260, level: 'C1', brief: 'Analyse the pressure teenagers face and propose two responses.' },
+  { id: 'w10', title: 'Is Professional Sport Healthy for Athletes?', min: 200, max: 250, level: 'C1', brief: 'Argue a case using evidence and concession clauses.' },
+  { id: 'w11', title: 'A Review of a Sports App', min: 150, max: 190, level: 'B2', brief: 'Describe the app, evaluate it, and recommend it (or not).' },
+  { id: 'w12', title: 'The Best Way to Start Exercising', min: 130, max: 170, level: 'B1', brief: 'Write instructions for a complete beginner.' },
+  { id: 'w13', title: 'Sleep: The Forgotten Part of Training', min: 180, max: 220, level: 'B2', brief: 'Explain the science simply and give practical advice.' },
+  { id: 'w14', title: 'An Email to a Gym About a Problem', min: 120, max: 150, level: 'B1', brief: 'A formal email of complaint with a clear request.' },
+  { id: 'w15', title: 'What Keeping Fit Means to Me', min: 200, max: 250, level: 'B2', brief: 'A reflective essay. Avoid clichés; use specific personal detail.' },
+]
+
+export const rubric = [
+  { id: 'content', label: 'Content', weight: 25, detail: 'Task fully covered, ideas developed with relevant examples.' },
+  { id: 'vocabulary', label: 'Vocabulary', weight: 25, detail: 'Topic vocabulary used accurately; range beyond the obvious words.' },
+  { id: 'grammar', label: 'Grammar', weight: 25, detail: 'Target structures used correctly; errors do not block meaning.' },
+  { id: 'organization', label: 'Organization', weight: 25, detail: 'Clear paragraphs, linking words, logical progression.' },
+]
+
+/**
+ * Mock grammar checker: a list of rules the class gets wrong most often.
+ * Each rule reports a match, a short explanation and a suggested fix.
+ */
+export const checkerRules = [
+  { id: 'r1', pattern: /\bi\b/g, caseSensitive: true, message: 'Capitalise the pronoun "I".', fix: 'I' },
+  { id: 'r2', pattern: /\bmust to\b/gi, message: '"Must" is followed by the bare infinitive — drop "to".', fix: 'must' },
+  { id: 'r3', pattern: /\bshould to\b/gi, message: '"Should" takes the bare infinitive — drop "to".', fix: 'should' },
+  { id: 'r4', pattern: /\badvice me\b/gi, message: 'The verb is "advise"; "advice" is the noun.', fix: 'advise me' },
+  { id: 'r5', pattern: /\bmake sport\b/gi, message: 'We "do sport" or "play a sport", never "make sport".', fix: 'do sport' },
+  { id: 'r6', pattern: /\bmore healthier\b/gi, message: 'Double comparative — choose one.', fix: 'healthier' },
+  { id: 'r7', pattern: /\bin the same time\b/gi, message: 'The fixed phrase is "at the same time".', fix: 'at the same time' },
+  { id: 'r8', pattern: /\bdepends of\b/gi, message: 'The verb takes "on": depend on.', fix: 'depends on' },
+  { id: 'r9', pattern: /\binformations\b/gi, message: '"Information" is uncountable.', fix: 'information' },
+  { id: 'r10', pattern: /\bpeoples\b/gi, message: '"People" is already plural.', fix: 'people' },
+]
+
+/** Run the mock checker over an essay and return the issues it found. */
+export function checkGrammar(text) {
+  const issues = []
+  checkerRules.forEach((rule) => {
+    const regex = new RegExp(rule.pattern.source, rule.pattern.flags)
+    let match = regex.exec(text)
+    while (match) {
+      if (!(rule.caseSensitive && match[0] !== 'i')) {
+        issues.push({
+          id: `${rule.id}-${match.index}`,
+          index: match.index,
+          length: match[0].length,
+          found: match[0],
+          message: rule.message,
+          fix: rule.fix,
+        })
+      }
+      match = regex.lastIndex > match.index ? regex.exec(text) : null
+    }
+  })
+  return issues.sort((a, b) => a.index - b.index)
+}
