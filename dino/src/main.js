@@ -1,6 +1,7 @@
 // Точка входа: сцена, игровой цикл, камера, сохранения.
 import * as THREE from './three.js';
 import { World, LANDMARKS } from './world.js';
+import { GrassField } from './grass.js';
 import { Ecosystem } from './ecosystem.js';
 import { Player } from './player.js';
 import { Input } from './input.js';
@@ -37,23 +38,24 @@ const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: opts.quality !== 'low', powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, opts.quality === 'high' ? 2 : opts.quality === 'medium' ? 1.5 : 1));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 0.95;
 renderer.shadowMap.enabled = opts.quality !== 'low';
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(60, 1, 0.3, 2400);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.2, 2400);
 
 function resize() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  camera.fov = w < h ? 70 : 58;
+  camera.fov = w < h ? 68 : 55;
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
 resize();
 
-const world = new World(scene, opts.quality);
+const world = new World(scene, opts.quality, renderer);
+const grass = opts.quality !== 'low' ? new GrassField(scene, world, opts.quality) : null;
 const eco = new Ecosystem(scene, world);
 const player = new Player(scene, world);
 const sound = new Sound();
@@ -168,6 +170,10 @@ eco.onKill = (c) => {
   player.kills++;
   hud.toast(`Добыча: ${c.sp.name}. Подойдите и ешьте`, 'good');
 };
+eco.onSound = (c) => {
+  if (state !== 'play' || !player.alive) return;
+  sound.roarAt(c.sp.id, c.size, Math.hypot(c.x - player.x, c.z - player.z));
+};
 eco.onPlayerHit = (att) => {
   shake = 0.6;
   sound.hurt();
@@ -249,14 +255,14 @@ function updateCamera(dt, target, size, pitchAuto) {
   if (pitchAuto && performance.now() - input.lastLook > 1800 && player.speed > 1) {
     cam.yaw += wrapAngle(player.yaw - cam.yaw) * Math.min(1, dt * 1.2);
   }
-  const dist = (3.5 + size * 1.25) * (1 + cam.zoom);
+  const dist = (2.6 + size * 1.05) * (1 + cam.zoom);
   const want = new THREE.Vector3(
     target.x - Math.sin(cam.yaw) * Math.cos(cam.pitch) * dist,
     target.y + Math.sin(cam.pitch) * dist,
     target.z - Math.cos(cam.yaw) * Math.cos(cam.pitch) * dist,
   );
   want.y = Math.max(want.y, heightAt(want.x, want.z) + 1.2, 0.8);
-  camera.position.lerp(want, 1 - Math.exp(-dt * 8));
+  if (cam.snap) { camera.position.copy(want); cam.snap = false; } else camera.position.lerp(want, 1 - Math.exp(-dt * 8));
   if (shake > 0) {
     shake = Math.max(0, shake - dt);
     camera.position.x += (Math.random() - 0.5) * shake * 0.6;
@@ -289,7 +295,7 @@ function playUpdate(dt) {
 
   eco.update(dt, player, t, camera);
   world.setTime(world.time + (dt / DAY) * (player.resting ? 4 : 1));
-  sound.ambient(dt, world.night);
+  sound.ambient(dt, world.night, world.day);
 
   for (const L of LANDMARKS) {
     if (know.discovered.includes(L.id)) continue;
@@ -345,6 +351,7 @@ function frame(now) {
     focus = new THREE.Vector3(player.x, player.dino.root.position.y, player.z);
   }
   world.update(state === 'pause' ? 0 : dt, camera, focus);
+  if (grass) grass.update(state === 'play' || state === 'dead' || state === 'pause' ? focus : camera.position);
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -353,3 +360,6 @@ setPreview(selected);
 refreshContinue();
 hud.show('menu');
 requestAnimationFrame(frame);
+
+// Для автотестов: ?debug открывает доступ к состоянию игры из консоли.
+if (location.search.includes('debug')) window.__g = { player, eco, world, cam, camera, setTime: (v) => world.setTime(v) };

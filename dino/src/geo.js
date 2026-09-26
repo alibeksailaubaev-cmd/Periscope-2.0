@@ -10,6 +10,7 @@ export function merge(geos) {
   const pos = new Float32Array(vcount * 3);
   const nor = new Float32Array(vcount * 3);
   const col = new Float32Array(vcount * 3).fill(1);
+  const uvs = new Float32Array(vcount * 2);
   const idx = vcount > 65535 ? new Uint32Array(icount) : new Uint16Array(icount);
   let vo = 0, io = 0;
   for (const g of geos) {
@@ -17,6 +18,7 @@ export function merge(geos) {
     pos.set(p.array, vo * 3);
     if (n) nor.set(n.array, vo * 3);
     if (c) col.set(c.array, vo * 3);
+    if (g.attributes.uv) uvs.set(g.attributes.uv.array, vo * 2);
     if (g.index) {
       for (let i = 0; i < g.index.count; i++) idx[io + i] = g.index.array[i] + vo;
       io += g.index.count;
@@ -30,6 +32,7 @@ export function merge(geos) {
   out.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   out.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
   out.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  out.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   out.setIndex(new THREE.BufferAttribute(idx, 1));
   out.computeBoundingSphere();
   return out;
@@ -90,4 +93,57 @@ export function taper(a, b, r0, r1, seg = 10) {
   const m = va.add(vb).multiplyScalar(0.5);
   g.translate(m.x, m.y, m.z);
   return g;
+}
+
+// Ячейка атласа растительности 2x2: 0 листва, 1 папоротник, 2 хвоя, 3 кора.
+export function cellRect(cell) {
+  const u0 = (cell % 2) * 0.5, v0 = cell < 2 ? 0.5 : 0;
+  return [u0 + 0.004, v0 + 0.004, u0 + 0.496, v0 + 0.496];
+}
+
+export function remapUV(g, cell, su = 1, sv = 1) {
+  const [u0, v0, u1, v1] = cellRect(cell);
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    const fu = su === 1 ? uv.getX(i) : (uv.getX(i) * su) % 1, fv = sv === 1 ? uv.getY(i) : (uv.getY(i) * sv) % 1;
+    uv.setXY(i, u0 + fu * (u1 - u0), v0 + fv * (v1 - v0));
+  }
+  return g;
+}
+
+// Изогнутая лента-карточка вдоль кривой (лист папоротника, пальмы, ветка).
+// pts — точки центральной линии, widths — ширина в каждой точке, side — направление ширины.
+export function ribbon(pts, widths, side, cell, color, normal) {
+  const [u0, v0, u1, v1] = cellRect(cell);
+  const pos = [], uv = [], nor = [], col = [], idx = [];
+  const c = new THREE.Color(color);
+  const n = pts.length;
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1), w = widths[i];
+    const p = pts[i];
+    pos.push(p.x - side.x * w, p.y - side.y * w, p.z - side.z * w, p.x + side.x * w, p.y + side.y * w, p.z + side.z * w);
+    uv.push(u0, v0 + t * (v1 - v0), u1, v0 + t * (v1 - v0));
+    const nn = normal(p);
+    nor.push(nn.x, nn.y, nn.z, nn.x, nn.y, nn.z);
+    col.push(c.r, c.g, c.b, c.r, c.g, c.b);
+    if (i < n - 1) { const k = i * 2; idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx);
+  return g;
+}
+
+// Плоская карточка с текстурой ячейки атласа.
+export function card(center, w, h, quat, cell, color, normal) {
+  const g = new THREE.PlaneGeometry(w, h);
+  g.applyQuaternion(quat);
+  g.translate(center.x, center.y, center.z);
+  remapUV(g, cell);
+  const nor = g.attributes.normal;
+  for (let i = 0; i < nor.count; i++) nor.setXYZ(i, normal.x, normal.y, normal.z);
+  return tint(g, color, 0.15);
 }

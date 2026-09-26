@@ -1,0 +1,16 @@
+{
+  "name": "melovoy-ostrov",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Меловой остров — 3D-выживание за динозавра",
+  "scripts": {
+    "build:web": "node tools/build-web.mjs",
+    "sync": "npm run build:web && npx cap sync android",
+    "serve": "npx http-server . -c-1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0"
+  }
+}

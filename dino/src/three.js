@@ -1,2 +1,2 @@
-// Единая точка импорта three.js (ES-модуль с CDN).
-export * from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+// three.js хранится локально, чтобы игра работала офлайн в APK.
+export * from '../vendor/three.module.js';

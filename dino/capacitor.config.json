@@ -1,0 +1,8 @@
+{
+  "appId": "com.melovoy.ostrov",
+  "appName": "Меловой остров",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#10140f"
+  }
+}

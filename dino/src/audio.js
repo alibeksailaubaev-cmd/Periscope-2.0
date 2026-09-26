@@ -1,6 +1,8 @@
 // Звук: синтез через WebAudio. Если в sounds/sounds.json перечислены файлы,
 // игра использует их вместо синтеза.
 const SAMPLE_NAMES = ['roar-raptor', 'roar-trike', 'roar-rex', 'roar-strut', 'roar-anky', 'bite', 'ambient-day', 'ambient-night'];
+// Взрослый размер вида: детёныши звучат выше.
+const SIZE_REF = { raptor: 5.5, trike: 8.5, rex: 12, strut: 4.3, anky: 7 };
 
 export class Sound {
   constructor() {
@@ -34,18 +36,33 @@ export class Sound {
     } catch { return; }
     for (const n of SAMPLE_NAMES) {
       if (!list[n]) continue;
-      try {
-        const r = await fetch('sounds/' + list[n]);
-        if (r.ok) this.samples[n] = await this.ctx.decodeAudioData(await r.arrayBuffer());
-      } catch { /* файл не загрузился — остаётся синтез */ }
+      const files = Array.isArray(list[n]) ? list[n] : [list[n]];
+      for (const f of files) {
+        try {
+          const r = await fetch('sounds/' + f);
+          if (r.ok) (this.samples[n] = this.samples[n] || []).push(await this.ctx.decodeAudioData(await r.arrayBuffer()));
+        } catch { /* файл не загрузился — остаётся синтез */ }
+      }
     }
+    if (this.samples['ambient-night']) this.startNightLoop();
+  }
+
+  startNightLoop() {
+    const c = this.ctx;
+    const s = c.createBufferSource();
+    s.buffer = this.samples['ambient-night'][0];
+    s.loop = true;
+    this.nightGain = c.createGain();
+    this.nightGain.gain.value = 0;
+    s.connect(this.nightGain).connect(this.master);
+    s.start();
   }
 
   playSample(name, gain = 1, rate = 1) {
-    const b = this.samples[name];
-    if (!b || !this.ctx) return false;
+    const list = this.samples[name];
+    if (!list || !list.length || !this.ctx) return false;
     const s = this.ctx.createBufferSource();
-    s.buffer = b;
+    s.buffer = list[Math.floor(Math.random() * list.length)];
     s.playbackRate.value = rate;
     const g = this.ctx.createGain();
     g.gain.value = gain;
@@ -88,17 +105,30 @@ export class Sound {
     s.start(t, Math.random()); s.stop(t + dur + 0.05);
   }
 
-  // Рёв: низкий пилообразный тон с «хрипом», высота зависит от размера.
-  roar(spId, size) {
+  // Голос животного на расстоянии: тише и глуше издалека.
+  roarAt(spId, size, dist) {
     if (!this.ctx) return;
-    if (this.playSample('roar-' + spId, Math.min(1.2, 0.4 + size * 0.06))) return;
+    const g = Math.max(0, 1 - dist / 170);
+    if (g <= 0.02) return;
+    const base = SIZE_REF[spId] || size;
+    const rate = Math.max(0.75, Math.min(1.5, Math.sqrt(base / Math.max(size, 0.5))));
+    if (this.playSample('roar-' + spId, g * g * 0.9, rate)) return;
+    this.roar(spId, size, g * g);
+  }
+
+  // Рёв: низкий пилообразный тон с «хрипом», высота зависит от размера.
+  roar(spId, size, vol = 1) {
+    if (!this.ctx) return;
+    const base0 = SIZE_REF[spId] || size;
+    const rate = Math.max(0.75, Math.min(1.6, Math.sqrt(base0 / Math.max(size, 0.5))));
+    if (this.playSample('roar-' + spId, vol, rate)) return;
     const c = this.ctx, t = c.currentTime;
     const base = Math.max(38, 190 / Math.sqrt(size));
     const dur = 1.1 + size * 0.07;
     const g = c.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.5, t + 0.15);
-    g.gain.setValueAtTime(0.45, t + dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.5 * vol + 0.0002, t + 0.15);
+    g.gain.setValueAtTime(0.45 * vol + 0.0001, t + dur * 0.6);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     const f = c.createBiquadFilter();
     f.type = 'lowpass'; f.frequency.setValueAtTime(500 + base * 4, t); f.frequency.exponentialRampToValueAtTime(260, t + dur);
@@ -147,8 +177,9 @@ export class Sound {
   }
 
   // Птицы днём, насекомые ночью.
-  ambient(dt, night) {
+  ambient(dt, night, day = 1) {
     if (!this.ctx) return;
+    if (this.nightGain) this.nightGain.gain.value = 0.55 * (1 - day);
     this.ambT = (this.ambT || 0) - dt;
     if (this.ambT > 0) return;
     const c = this.ctx, t = c.currentTime;

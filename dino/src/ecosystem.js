@@ -20,6 +20,8 @@ export class Ecosystem {
     this.onSeen = null;
     this.onKill = null;
     this.onPlayerHit = null;
+    this.onSound = null;
+    this.soundT = 0;
   }
 
   populate(avoid) {
@@ -80,6 +82,7 @@ export class Ecosystem {
     if (c.dead) return false;
     c.hp -= amount;
     c.dino.roar = 0.6;
+    this.voice(c, 0.4);
     if (c.hp <= 0) {
       c.dead = true;
       c.meat = c.sp.len * c.scale * 16;
@@ -123,6 +126,14 @@ export class Ecosystem {
       if (d < 45 && c.size < player.size * 0.6) this.flee(c, player, 5);
       else if (d < 45) c.dino.roar = 0.8;
     }
+  }
+
+  // Голос животного (не чаще раза в пару секунд на весь остров).
+  voice(c, chance) {
+    if (!this.onSound || this.soundT > 0 || this.rand() > chance) return;
+    this.soundT = 2.5;
+    c.dino.roar = 1;
+    this.onSound(c);
   }
 
   // ---- поведение ----
@@ -225,6 +236,7 @@ export class Ecosystem {
         if (d < bs) { bs = d; best = P; }
       }
       if (best) {
+        this.voice(c, 0.7);
         c.state = 'chase'; c.target = best; c.stateT = best.isPlayer ? 14 : 25;
         for (const m of c.herd.members) {
           if (m !== c && !m.dead && m.state !== 'chase' && dist(m, c) < 60) { m.state = 'chase'; m.target = best; m.stateT = 25; }
@@ -236,6 +248,12 @@ export class Ecosystem {
 
   update(dt, player, t, camera) {
     const P = player && player.alive ? player : null;
+    this.soundT -= dt;
+    // изредка кто-то из животных рядом подаёт голос
+    if (P && this.soundT < -6 && this.rand() < dt * 0.08) {
+      const near = this.list.filter((c) => !c.dead && dist(c, P) < 140);
+      if (near.length) this.voice(near[Math.floor(this.rand() * near.length)], 1);
+    }
     const carns = this.list.filter((c) => !c.dead && c.sp.diet === 'carn');
     for (const h of this.herds) {
       h.t -= dt;

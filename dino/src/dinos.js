@@ -2,6 +2,7 @@
 import * as THREE from './three.js';
 import { merge, ell, cone, limb, taper } from './geo.js';
 import { createNoise2D } from './noise.js';
+import { scaleBump } from './textures.js';
 
 const pn = createNoise2D(77);
 const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -13,7 +14,7 @@ export const SPECIES = {
     len: 5.5, hip: 1.35, bodyR: [0.068, 0.082, 0.19], neckR: 0.036, head: [0.036, 0.038, 0.075], headUp: 0.17, headFwd: 0.37,
     tail: 1.05, legT: 0.8, arms: 2.0, teeth: true,
     walk: 3.6, run: 11.5, hp: 240, bite: 32, cool: 0.6, fear: 0, sight: 65,
-    pal: { back: '#5b4430', belly: '#d2c09a', stripe: '#281d15', bands: 9 },
+    pal: { back: '#4a3a2a', belly: '#b9a582', stripe: '#1f1811', bands: 9 },
     stat: { speed: 0.9, power: 0.4, life: 0.3 },
     desc: 'Быстрый и ловкий охотник. Слаб в одиночку против крупной добычи, но догонит почти любого.',
     fact: 'Крупный дромеозаврид из формации Хелл-Крик, около 5,5 м в длину. На руках длинные маховые перья, на ногах серповидный коготь около 19 см. Возможно, охотился группами.',
@@ -23,7 +24,7 @@ export const SPECIES = {
     len: 8.5, hip: 1.75, bodyR: [0.13, 0.11, 0.26], neckR: 0.06, head: [0.06, 0.065, 0.085], headUp: 0.0, headFwd: 0.4,
     tail: 0.7, legT: 1.0, frontH: 0.92,
     walk: 2.8, run: 8.2, hp: 700, bite: 55, cool: 1.1, fear: 25, fights: true, sight: 40,
-    pal: { back: '#6a6a48', belly: '#c4b68c', stripe: '#46432c', bands: 5 },
+    pal: { back: '#57573f', belly: '#a89a76', stripe: '#3a3826', bands: 5 },
     stat: { speed: 0.45, power: 0.75, life: 0.85 },
     desc: 'Живой танк с рогами. Ест папоротники, медленный, но хищники дважды подумают, прежде чем напасть.',
     fact: 'До 9 м в длину и 6–12 тонн. Костяной воротник и три рога служили для защиты и для демонстрации сородичам. Один из последних нептичьих динозавров: жил 68–66 млн лет назад.',
@@ -33,7 +34,7 @@ export const SPECIES = {
     len: 12, hip: 3.1, bodyR: [0.08, 0.095, 0.19], neckR: 0.06, head: [0.042, 0.05, 0.085], headUp: 0.05, headFwd: 0.37,
     tail: 0.95, legT: 1.0, arms: 0.55, teeth: true,
     walk: 3.4, run: 8.8, hp: 950, bite: 120, cool: 1.3, fear: 0, sight: 85,
-    pal: { back: '#4c4a39', belly: '#b7a886', stripe: '#2b2920', bands: 7 },
+    pal: { back: '#454334', belly: '#9d9072', stripe: '#26241c', bands: 7 },
     stat: { speed: 0.5, power: 1.0, life: 1.0 },
     desc: 'Высший хищник острова. Детёнышем уязвим, но взрослым не боится никого.',
     fact: 'До 12–13 м в длину и около 8 тонн. Сила укуса оценивается до 35 000 ньютонов, это больше, чем у любого известного наземного животного. Отличное обоняние и бинокулярное зрение.',
@@ -43,7 +44,7 @@ export const SPECIES = {
     len: 4.3, hip: 1.45, bodyR: [0.07, 0.08, 0.15], neckR: 0.025, head: [0.022, 0.026, 0.045], headUp: 0.33, headFwd: 0.33,
     tail: 1.0, legT: 0.75, arms: 1.6, beak: true,
     walk: 3.8, run: 13.5, hp: 110, bite: 8, cool: 1, fear: 45, flees: true, sight: 45,
-    pal: { back: '#8a7853', belly: '#e2d6b2', stripe: '#5b4d33', bands: 0 },
+    pal: { back: '#76674a', belly: '#cdbf9c', stripe: '#4d412c', bands: 0 },
     desc: 'Пугливый бегун. Лёгкая добыча, если сумеешь догнать.',
     fact: '«Подражающий страусу». Около 4 м в длину, беззубый клюв и длинные ноги. Оценки скорости доходят до 50 км/ч. Вероятно, был всеядным: ел растения, насекомых и мелких животных.',
   },
@@ -52,7 +53,7 @@ export const SPECIES = {
     len: 7, hip: 1.15, bodyR: [0.15, 0.085, 0.27], neckR: 0.05, head: [0.05, 0.04, 0.06], headUp: -0.02, headFwd: 0.38,
     tail: 0.9, legT: 1.0, frontH: 0.95, armor: true,
     walk: 2.2, run: 5.2, hp: 650, bite: 65, cool: 1.4, fear: 18, fights: true, sight: 30,
-    pal: { back: '#5c5a42', belly: '#a89c7a', stripe: '#3f3d2c', bands: 0 },
+    pal: { back: '#4f4d39', belly: '#8e8468', stripe: '#35331f', bands: 0 },
     desc: 'Бронированный травоядный с булавой на хвосте.',
     fact: 'До 8 м в длину, спина покрыта костяными пластинами — остеодермами. Хвостовая булава могла ломать кости нападающим. Самый крупный из анкилозавров.',
   },
@@ -227,7 +228,36 @@ function specParts(sp) {
 }
 
 const cache = {};
-export const DINO_MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78, metalness: 0 });
+export const DINO_MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, metalness: 0, envMapIntensity: 0.3 });
+let scaleTex = null;
+// Чешуя: трипланарная карта высот в координатах модели + рельеф через производные.
+DINO_MAT.onBeforeCompile = (sh) => {
+  scaleTex = scaleTex || scaleBump();
+  sh.uniforms.tScale = { value: scaleTex };
+  sh.vertexShader = 'varying vec3 vObj;\nvarying vec3 vObjN;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+    '#include <begin_vertex>\nvObj = position;\nvObjN = normal;');
+  sh.fragmentShader = 'uniform sampler2D tScale;\nvarying vec3 vObj;\nvarying vec3 vObjN;\n' + sh.fragmentShader.replace('#include <normal_fragment_maps>', `
+    #include <normal_fragment_maps>
+    {
+      vec3 bw = pow(abs(normalize(vObjN)), vec3(4.0));
+      bw /= (bw.x + bw.y + bw.z);
+      vec3 q = vObj * 0.2;
+      float hs = texture2D(tScale, q.yz).r * bw.x + texture2D(tScale, q.xz).r * bw.y + texture2D(tScale, q.xy).r * bw.z;
+      float hl = texture2D(tScale, q.yz * 0.27).r * bw.x + texture2D(tScale, q.xz * 0.27).r * bw.y + texture2D(tScale, q.xy * 0.27).r * bw.z;
+      // вдали чешуя растворяется, чтобы не рябила
+      float fade = 1.0 - smoothstep(0.002, 0.01, length(fwidth(q)));
+      float hgt = mix(0.75, hs * 0.65 + hl * 0.35, fade);
+      vec3 dpdx = dFdx(-vViewPosition), dpdy = dFdy(-vViewPosition);
+      float hx = dFdx(hgt), hy = dFdy(hgt);
+      vec3 r1 = cross(dpdy, normal), r2 = cross(normal, dpdx);
+      float det = dot(dpdx, r1);
+      vec3 grad = sign(det) * (hx * r1 + hy * r2);
+      normal = normalize(abs(det) * normal - grad * 0.5 * fade);
+      diffuseColor.rgb *= 0.9 + 0.12 * hgt;
+      roughnessFactor = clamp(0.68 + 0.3 * (1.0 - hs), 0.0, 1.0);
+    }
+  `);
+};
 
 function template(id) {
   if (cache[id]) return cache[id];
