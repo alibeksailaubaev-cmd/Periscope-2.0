@@ -16,7 +16,7 @@ export class Sound {
     try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return; }
     const c = this.ctx;
     this.master = c.createGain();
-    this.master.gain.value = this.enabled ? 0.7 : 0;
+    this.master.gain.value = this.enabled ? 0.9 : 0;
     this.master.connect(c.destination);
     const len = c.sampleRate * 2;
     this.noise = c.createBuffer(1, len, c.sampleRate);
@@ -31,9 +31,12 @@ export class Sound {
     let list;
     try {
       const r = await fetch('sounds/sounds.json');
-      if (!r.ok) return;
+      if (!r.ok) throw new Error('нет списка');
       list = await r.json();
-    } catch { return; }
+    } catch {
+      this.loaded = true;
+      return;
+    }
     for (const n of SAMPLE_NAMES) {
       if (!list[n]) continue;
       const files = Array.isArray(list[n]) ? list[n] : [list[n]];
@@ -45,6 +48,9 @@ export class Sound {
       }
     }
     if (this.samples['ambient-night']) this.startNightLoop();
+    this.loaded = true;
+    for (const fn of this.readyQ || []) fn();
+    this.readyQ = [];
   }
 
   startNightLoop() {
@@ -58,7 +64,7 @@ export class Sound {
     s.start();
   }
 
-  playSample(name, gain = 1, rate = 1) {
+  playSample(name, gain = 1, rate = 1, muffle = 0) {
     const list = this.samples[name];
     if (!list || !list.length || !this.ctx) return false;
     const s = this.ctx.createBufferSource();
@@ -66,14 +72,33 @@ export class Sound {
     s.playbackRate.value = rate;
     const g = this.ctx.createGain();
     g.gain.value = gain;
-    s.connect(g).connect(this.master);
+    let out = s;
+    // издалека звук глуше: срезаем верхние частоты
+    if (muffle > 0) {
+      const f = this.ctx.createBiquadFilter();
+      f.type = 'lowpass';
+      f.frequency.value = 6000 - muffle * 5300;
+      out = s.connect(f);
+    }
+    out.connect(g).connect(this.master);
     s.start();
     return true;
   }
 
+  // Выполнить, когда звуки из файлов загрузятся.
+  whenReady(fn) {
+    if (this.loaded) fn(); else (this.readyQ = this.readyQ || []).push(fn);
+  }
+
+  // Рёв вида в меню при выборе динозавра.
+  preview(spId) {
+    this.start();
+    this.whenReady(() => this.playSample('roar-' + spId, 1));
+  }
+
   setEnabled(v) {
     this.enabled = v;
-    if (this.master) this.master.gain.value = v ? 0.7 : 0;
+    if (this.master) this.master.gain.value = v ? 0.9 : 0;
   }
 
   wind() {
@@ -108,11 +133,11 @@ export class Sound {
   // Голос животного на расстоянии: тише и глуше издалека.
   roarAt(spId, size, dist) {
     if (!this.ctx) return;
-    const g = Math.max(0, 1 - dist / 170);
+    const g = Math.max(0, 1 - dist / 220);
     if (g <= 0.02) return;
     const base = SIZE_REF[spId] || size;
     const rate = Math.max(0.75, Math.min(1.5, Math.sqrt(base / Math.max(size, 0.5))));
-    if (this.playSample('roar-' + spId, g * g * 0.9, rate)) return;
+    if (this.playSample('roar-' + spId, 0.15 + g * g, rate, 1 - g)) return;
     this.roar(spId, size, g * g);
   }
 
@@ -179,7 +204,17 @@ export class Sound {
   // Птицы днём, насекомые ночью.
   ambient(dt, night, day = 1) {
     if (!this.ctx) return;
-    if (this.nightGain) this.nightGain.gain.value = 0.55 * (1 - day);
+    if (this.nightGain) this.nightGain.gain.value = 0.6 * (1 - day);
+    // далёкие голоса динозавров из видео: остров живёт своей жизнью
+    this.farT = (this.farT ?? 6) - dt;
+    if (this.farT <= 0 && this.loaded) {
+      this.farT = 10 + Math.random() * 18;
+      const keys = Object.keys(this.samples).filter((k) => k.startsWith('roar-'));
+      if (keys.length) {
+        const k = keys[Math.floor(Math.random() * keys.length)];
+        this.playSample(k, 0.2 + Math.random() * 0.25, 0.85 + Math.random() * 0.2, 0.6 + Math.random() * 0.3);
+      }
+    }
     this.ambT = (this.ambT || 0) - dt;
     if (this.ambT > 0) return;
     const c = this.ctx, t = c.currentTime;
@@ -192,9 +227,9 @@ export class Sound {
         g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.03, s + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, s + 0.1);
         o.connect(g).connect(this.master); o.start(s); o.stop(s + 0.12);
       }
-    } else {
+    } else if (!this.nightGain) {
       this.ambT = 0.6 + Math.random() * 1.5;
       for (let i = 0; i < 6; i++) this.noiseBurst(t + i * 0.05, 0.03, 5200, 8, 0.03);
-    }
+    } else this.ambT = 2;
   }
 }

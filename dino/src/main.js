@@ -77,15 +77,16 @@ let preview = null;
 let t = 0, saveT = 0, deathT = 0, saltT = 0, shake = 0;
 const cam = { yaw: 0, pitch: 0.32, zoom: 0, orbit: 0 };
 
-function setPreview(id) {
+function setPreview(id, userPick) {
   selected = id;
+  if (userPick) sound.preview(id);
   if (preview) scene.remove(preview.root);
   preview = createDino(id);
   scene.add(preview.root);
   const c = { dino: preview, sp: SPECIES[id], x: MENU_SPOT.x, z: MENU_SPOT.z, yaw: MENU_SPOT.a + Math.PI / 2, scale: 1 };
   placeDino(c, 1);
   preview.pitch = 0;
-  hud.buildCards(id, setPreview);
+  hud.buildCards(id, (sid) => setPreview(sid, true));
 }
 
 function knowSave() {
@@ -124,6 +125,7 @@ function startLife(id, saved) {
     world.setTime(0.36);
     store.set(KEY_LIFE, { ...player.serialize(), time: world.time });
     hud.toast(`Вы вылупились. Найдите воду и еду.`);
+    sound.whenReady(() => sound.roar(id, player.size, 0.8));
   }
   cam.yaw = player.yaw;
   camera.position.set(player.x - Math.sin(cam.yaw) * 8, heightAt(player.x, player.z) + 5, player.z - Math.cos(cam.yaw) * 8);
@@ -362,4 +364,4 @@ hud.show('menu');
 requestAnimationFrame(frame);
 
 // Для автотестов: ?debug открывает доступ к состоянию игры из консоли.
-if (location.search.includes('debug')) window.__g = { player, eco, world, cam, camera, setTime: (v) => world.setTime(v) };
+if (location.search.includes('debug')) window.__g = { player, eco, world, cam, camera, sound, setTime: (v) => world.setTime(v) };
