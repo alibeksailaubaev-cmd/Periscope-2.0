@@ -1,9 +1,8 @@
-// Игрок: динозавр с голодом, жаждой, выносливостью и ростом.
-import { SPECIES, createDino, animateDino } from './dinos.js';
-import { heightAt, isFresh, volcanoDist } from './terrain.js';
-import { moveCreature, placeDino, wrapAngle } from './creature.js';
+// Игрок — человек, выживший после крушения. Вид от первого лица.
+import { heightAt, isFresh, volcanoDist, coastRadius } from './terrain.js';
 
-export const STAGES = [[0, 'Детёныш'], [0.3, 'Подросток'], [0.65, 'Молодой взрослый'], [0.95, 'Взрослый']];
+const HUMAN = { id: 'human', name: 'Выживший', len: 1.8, hip: 0.9, diet: 'omni' };
+const SPEED = { crouch: 1.3, walk: 2.9, run: 6.6, swim: 1.4 };
 
 export class Player {
   constructor(scene, world) {
@@ -11,159 +10,135 @@ export class Player {
     this.world = world;
     this.isPlayer = true;
     this.alive = false;
-    this.dino = null;
+    this.sp = HUMAN;
   }
 
-  spawn(spId, o = {}) {
-    if (this.dino) this.scene.remove(this.dino.root);
-    this.sp = SPECIES[spId];
-    this.dino = createDino(spId);
-    this.scene.add(this.dino.root);
-    this.growth = o.growth ?? 0.08;
-    this.x = o.x; this.z = o.z; this.yaw = o.yaw ?? 0;
-    this.hp = o.hp ?? this.maxHp;
-    this.hunger = o.hunger ?? 80;
-    this.thirst = o.thirst ?? 80;
+  spawn(o = {}) {
+    this.x = o.x; this.z = o.z; this.yaw = o.yaw ?? 0; this.pitch = 0;
+    this.hp = o.hp ?? 100;
+    this.hunger = o.hunger ?? 75;
+    this.thirst = o.thirst ?? 70;
     this.stamina = o.stamina ?? 100;
     this.age = o.age ?? 0;
-    this.kills = o.kills ?? 0;
-    this.speed = 0; this.turn = 0; this.turnRate = 3.2;
-    this.alive = true; this.resting = false; this.swimming = false;
-    this.cool = 0; this.roarCool = 0; this.actT = 0; this.hitFlash = 0;
+    this.parts = o.parts ?? [];
+    this.alive = true;
+    this.crouch = false;
+    this.flashlight = false;
+    this.speed = 0;
+    this.noise = 0;
+    this.visibility = 1;
+    this.cover = 0;
+    this.swimming = false;
+    this.bob = 0;
+    this.hitFlash = 0;
+    this.actT = 0;
+    this.eye = 1.65;
     this.cause = '';
-    placeDino(this, 0.016);
+    this.y = heightAt(this.x, this.z);
   }
 
-  get scale() { return 0.28 + 0.72 * Math.min(1, this.growth); }
-  get size() { return this.sp.len * this.scale; }
-  get radius() { return this.size * 0.2; }
-  get maxHp() { return this.sp.hp * (0.25 + 0.75 * Math.min(1, this.growth)); }
-  get damage() { return this.sp.bite * (0.2 + 0.8 * Math.min(1, this.growth)); }
-  get stage() { let s = STAGES[0][1]; for (const [g, n] of STAGES) if (this.growth >= g) s = n; return s; }
-  get mouth() {
-    const r = this.size * 0.45;
-    return { x: this.x + Math.sin(this.yaw) * r, z: this.z + Math.cos(this.yaw) * r };
-  }
+  get size() { return 1.8; }
+  get radius() { return 0.4; }
+  get maxHp() { return 100; }
+  get mouth() { return { x: this.x + Math.sin(this.yaw) * 0.8, z: this.z + Math.cos(this.yaw) * 0.8 }; }
 
   hurt(amount, cause) {
     if (!this.alive) return;
     this.hp -= amount;
     this.hitFlash = 1;
-    this.resting = false;
     if (this.hp <= 0) { this.hp = 0; this.alive = false; this.cause = cause; }
   }
 
-  // Что можно сделать прямо сейчас кнопкой действия.
-  context(eco) {
-    const m = this.mouth, reach = 1.5 + this.size * 0.25;
-    if (this.sp.diet === 'carn') {
-      const c = eco.nearestCarcass(m.x, m.z, reach + 1.5);
-      if (c) return { type: 'eat', target: c, label: 'Есть' };
-    } else {
-      const f = this.world.nearestFern(m.x, m.z, reach + 1);
-      if (f) return { type: 'fern', target: f, label: 'Есть' };
+  // Что можно сделать кнопкой действия.
+  context() {
+    for (const p of this.world.parts) {
+      if (!p.taken && Math.hypot(p.x - this.x, p.z - this.z) < 2.6) return { type: 'part', target: p, label: 'Взять' };
     }
+    const m = this.mouth;
+    const f = this.world.nearestFern(m.x, m.z, 1.8);
+    if (f) return { type: 'fern', target: f, label: 'Есть' };
     if (heightAt(m.x, m.z) < 0.15 || heightAt(this.x, this.z) < 0.1) {
       return isFresh(m.x, m.z) ? { type: 'drink', label: 'Пить' } : { type: 'salt', label: 'Пить' };
     }
     return null;
   }
 
-  update(dt, ctrl, eco, t) {
-    const sp = this.sp, g = Math.min(1, this.growth);
-    const slow = this.resting ? 0.5 : 1;
+  update(dt, ctrl, t, day) {
     this.age += dt;
-    this.hunger = Math.max(0, this.hunger - dt * 0.2 * slow);
-    this.thirst = Math.max(0, this.thirst - dt * 0.26 * slow);
-    this.cool -= dt; this.roarCool -= dt;
-    this.hitFlash = Math.max(0, this.hitFlash - dt * 2);
-    const d = this.dino;
-    d.bite = Math.max(0, d.bite - dt * 3);
-    d.roar = Math.max(0, d.roar - dt * 0.7);
+    this.hitFlash = Math.max(0, this.hitFlash - dt * 1.5);
+    this.hunger = Math.max(0, this.hunger - dt * 0.12);
+    this.thirst = Math.max(0, this.thirst - dt * 0.17);
 
-    let target = 0, dx = 0, dz = 0;
-    if (ctrl.mag > 0.08) {
-      this.resting = false;
-      dx = ctrl.dx; dz = ctrl.dz;
-      const running = ctrl.run && this.stamina > 2;
-      target = (running ? sp.run : sp.walk * (0.4 + 0.6 * Math.min(1, ctrl.mag))) * (0.9 + 0.1 * g);
-      if (running && this.speed > sp.walk) this.stamina -= dt * 13;
+    // движение относительно взгляда
+    let mode = this.crouch ? 'crouch' : 'walk';
+    const moving = ctrl.mag > 0.08;
+    if (moving && ctrl.run && this.stamina > 3) { mode = 'run'; this.crouch = false; }
+    const h0 = heightAt(this.x, this.z);
+    this.swimming = h0 < -1.1;
+    if (this.swimming) mode = 'swim';
+    const target = moving ? SPEED[mode] * (mode === 'run' ? 1 : 0.45 + 0.55 * ctrl.mag) : 0;
+    this.speed += (target - this.speed) * Math.min(1, dt * 8);
+    if (moving) {
+      const l = Math.hypot(ctrl.dx, ctrl.dz) || 1;
+      let nx = this.x + (ctrl.dx / l) * this.speed * dt, nz = this.z + (ctrl.dz / l) * this.speed * dt;
+      const grade = (heightAt(nx, nz) - h0) / Math.max(1e-3, this.speed * dt);
+      if (grade > 1.25) { nx = this.x; nz = this.z; }
+      const p = { x: nx, z: nz };
+      this.world.pushOut(p, this.radius);
+      const lim = coastRadius(p.x, p.z) * 1.15, d = Math.hypot(p.x, p.z);
+      if (d > lim) { p.x *= lim / d; p.z *= lim / d; }
+      this.x = p.x; this.z = p.z;
     }
+    if (mode === 'run' && this.speed > 3) this.stamina -= dt * 15;
+    else this.stamina = Math.min(100, this.stamina + dt * (this.crouch ? 11 : moving ? 7 : 13));
     if (this.swimming) {
-      target *= 0.45;
-      this.stamina -= dt * 5;
-      if (this.stamina <= 0) this.hurt(dt * this.maxHp * 0.08, 'Утонул');
+      this.stamina -= dt * 4;
+      if (this.stamina <= 0) this.hurt(dt * 12, 'Утонул');
     }
-    if (!ctrl.run || ctrl.mag < 0.08) this.stamina = Math.min(100, this.stamina + dt * (this.resting ? 22 : 9));
     this.stamina = Math.max(0, this.stamina);
-    moveCreature(this, dx, dz, target, dt, this.world, true);
-    this.swimming = placeDino(this, dt);
 
-    if (this.hunger > 35 && this.thirst > 35) this.hp = Math.min(this.maxHp, this.hp + dt * this.maxHp * 0.005 * (this.resting ? 3 : 1));
-    if (this.hunger <= 0) this.hurt(dt * this.maxHp * 0.012, 'Голод');
-    if (this.thirst <= 0) this.hurt(dt * this.maxHp * 0.016, 'Жажда');
-    if (volcanoDist(this.x, this.z) < 14) this.hurt(dt * this.maxHp * 0.25, 'Лава');
-    if (this.hunger > 50 && this.thirst > 50 && this.growth < 1) this.growth = Math.min(1, this.growth + dt * 0.0016 * (this.resting ? 1.3 : 1));
+    const g = heightAt(this.x, this.z);
+    const eyeH = this.swimming ? 0.35 : this.crouch ? 0.95 : 1.65;
+    this.eye += (eyeH - this.eye) * Math.min(1, dt * 8);
+    this.y = this.swimming ? 0 : g;
+    this.bob += this.speed * dt * (mode === 'run' ? 1.9 : 2.3);
+    this.mode = moving ? mode : 'idle';
 
-    // кнопка действия: есть или пить, пока удерживается
-    const ctx = this.context(eco);
-    this.ctx = ctx;
-    let graze = 0;
-    if (ctrl.act && ctx && this.alive) {
-      this.resting = false;
-      graze = 1;
+    // шум и заметность для хищников
+    this.noise = !moving ? 0 : { crouch: 3, walk: 13, run: 42, swim: 10 }[mode];
+    this.cover = this.world.coverAt(this.x, this.z);
+    const light = 0.3 + 0.7 * day;
+    let v = light;
+    v *= this.crouch ? 1 - this.cover * 0.85 : 1 - this.cover * 0.35;
+    if (this.flashlight && day < 0.6) v = Math.max(v, 1.4);
+    if (moving) v *= mode === 'run' ? 1.4 : 1.1;
+    this.visibility = Math.max(0.03, v);
+
+    if (this.hunger > 30 && this.thirst > 30) this.hp = Math.min(100, this.hp + dt * 0.5);
+    if (this.hunger <= 0) this.hurt(dt * 0.8, 'Голод');
+    if (this.thirst <= 0) this.hurt(dt * 1.1, 'Жажда');
+    if (volcanoDist(this.x, this.z) < 16) this.hurt(dt * 40, 'Лава');
+
+    this.ctx = this.context();
+    this.lastAct = null;
+    if (ctrl.act && this.ctx) {
       this.actT -= dt;
       if (this.actT <= 0) {
-        this.actT = 0.45;
-        const k = 1 / (0.4 + g);
-        if (ctx.type === 'eat') { ctx.target.meat -= 2 + 3 * g; this.hunger = Math.min(100, this.hunger + 8 * k); this.growth = Math.min(1, this.growth + 0.0015); this.lastAct = 'eat'; }
-        if (ctx.type === 'fern') { this.world.eatFern(ctx.target, 0.2); this.hunger = Math.min(100, this.hunger + 6 * k); this.growth = Math.min(1, this.growth + 0.001); this.lastAct = 'eat'; }
-        if (ctx.type === 'drink') { this.thirst = Math.min(100, this.thirst + 9 * k); this.lastAct = 'drink'; }
-        if (ctx.type === 'salt') { this.lastAct = 'salt'; }
+        this.actT = 0.5;
+        const c = this.ctx;
+        if (c.type === 'part') { c.target.taken = true; c.target.mesh.visible = false; this.parts.push(c.target.id); this.lastAct = 'part'; this.lastPart = c.target; }
+        if (c.type === 'fern') { this.world.eatFern(c.target, 0.25); this.hunger = Math.min(100, this.hunger + 7); this.lastAct = 'eat'; }
+        if (c.type === 'drink') { this.thirst = Math.min(100, this.thirst + 9); this.lastAct = 'drink'; }
+        if (c.type === 'salt') this.lastAct = 'salt';
+        this.noise = Math.max(this.noise, 6);
       }
     } else this.actT = 0;
-    d.graze += (graze - d.graze) * Math.min(1, dt * 5);
-    d.rest += ((this.resting ? 1 : 0) - d.rest) * Math.min(1, dt * 3);
-    d.dead += ((this.alive ? 0 : 1) - d.dead) * Math.min(1, dt * 2);
-    animateDino(d, dt, this.speed, t, this.turn);
-  }
-
-  bite(eco) {
-    if (this.cool > 0 || !this.alive) return null;
-    this.cool = this.sp.cool;
-    this.dino.bite = 1;
-    this.resting = false;
-    const reach = this.size * 0.5 + 1.2;
-    let best = null, bd = Infinity;
-    for (const c of eco.list) {
-      if (c.dead) continue;
-      const dx = c.x - this.x, dz = c.z - this.z, dd = Math.hypot(dx, dz) - c.radius;
-      if (dd > reach) continue;
-      if (Math.abs(wrapAngle(Math.atan2(dx, dz) - this.yaw)) > 1.0) continue;
-      if (dd < bd) { bd = dd; best = c; }
-    }
-    if (best) eco.damage(best, this.damage, this);
-    return best;
-  }
-
-  roar(eco) {
-    if (this.roarCool > 0 || !this.alive) return false;
-    this.roarCool = 5;
-    this.dino.roar = 1;
-    this.resting = false;
-    eco.onRoar(this);
-    return true;
-  }
-
-  toggleRest() {
-    if (!this.alive || this.swimming) return;
-    this.resting = !this.resting;
   }
 
   serialize() {
     return {
-      sp: this.sp.id, growth: this.growth, x: this.x, z: this.z, yaw: this.yaw, hp: this.hp,
-      hunger: this.hunger, thirst: this.thirst, stamina: this.stamina, age: this.age, kills: this.kills,
+      x: this.x, z: this.z, yaw: this.yaw, hp: this.hp, hunger: this.hunger, thirst: this.thirst,
+      stamina: this.stamina, age: this.age, parts: this.parts,
     };
   }
 }

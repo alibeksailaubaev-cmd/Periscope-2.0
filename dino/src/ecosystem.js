@@ -5,7 +5,7 @@ import { moveCreature, placeDino, wrapAngle } from './creature.js';
 import { mulberry32 } from './noise.js';
 
 // вид, размер группы, число групп
-const POPULATION = [['strut', 6, 2], ['trike', 3, 2], ['anky', 2, 2], ['raptor', 3, 2], ['rex', 1, 2]];
+const POPULATION = [['strut', 6, 2], ['trike', 3, 2], ['anky', 2, 2], ['raptor', 3, 3], ['rex', 1, 2]];
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
 export class Ecosystem {
@@ -22,6 +22,9 @@ export class Ecosystem {
     this.onPlayerHit = null;
     this.onSound = null;
     this.soundT = 0;
+    this.night = false;
+    this.threat = 0;
+    this.quake = 0;
   }
 
   populate(avoid) {
@@ -53,7 +56,7 @@ export class Ecosystem {
       sp, dino, x, z, yaw: this.rand() * Math.PI * 2, speed: 0, turn: 0, turnRate: Math.max(1.2, 3.4 - sp.len * 0.15),
       scale, growth, size: sp.len * scale, radius: sp.len * scale * 0.2, hp: maxHp, maxHp,
       state: 'wander', stateT: this.rand() * 5, target: null, herd, cool: 0, hunger: 30 + this.rand() * 50,
-      dead: false, meat: 0, decay: 0, off: { a: this.rand() * Math.PI * 2, r: 3 + this.rand() * 10 },
+      dead: false, meat: 0, decay: 0, aware: 0, unseen: 99, last: null, off: { a: this.rand() * Math.PI * 2, r: 3 + this.rand() * 10 },
     };
     herd.members.push(c);
     this.list.push(c);
@@ -114,7 +117,7 @@ export class Ecosystem {
     att.cool = att.sp.cool * 1.5;
     att.dino.bite = 1;
     if (tg === player) {
-      player.hurt(dmg * 0.5, att.sp.name);
+      player.hurt(dmg, att.sp.name);
       if (this.onPlayerHit) this.onPlayerHit(att);
     } else this.damage(tg, dmg, att);
   }
@@ -129,11 +132,11 @@ export class Ecosystem {
   }
 
   // Голос животного (не чаще раза в пару секунд на весь остров).
-  voice(c, chance) {
-    if (!this.onSound || this.soundT > 0 || this.rand() > chance) return;
+  voice(c, chance, force = false) {
+    if (!this.onSound || (!force && this.soundT > 0) || this.rand() > chance) return;
     this.soundT = 2.5;
     c.dino.roar = 1;
-    this.onSound(c);
+    this.onSound(c, 'roar');
   }
 
   // ---- поведение ----
@@ -178,12 +181,14 @@ export class Ecosystem {
       const d = dist(q, c);
       if (d < td && q.size > c.size * 0.4) { threat = q; td = d; }
     }
-    if (P && P.sp.diet === 'carn' && P.size > c.size * 0.4) {
+    if (P) {
       const d = dist(P, c);
-      if (d < td * (P.resting ? 0.5 : 1)) { threat = P; td = d; }
+      // трицератопс и анкилозавр защищают территорию, струтиомимы пугаются
+      if (c.sp.fights && d < 7 && !P.crouch && c.state !== 'fight') { c.state = 'fight'; c.target = P; c.stateT = 5; this.voice(c, 1, true); }
+      else if (c.sp.flees && d < 22 * Math.min(1, P.visibility + 0.3)) { threat = P; td = d; }
     }
     if (threat) {
-      if (c.sp.fights && threat.size < c.size * 1.3) {
+      if (c.sp.fights && threat.size < c.size * 1.3 && !threat.isPlayer) {
         if (td < c.size * 0.8 + 5) { c.state = 'fight'; c.target = threat; c.stateT = 10; }
         return { dx: threat.x - c.x, dz: threat.z - c.z, speed: 0.3 };
       }
@@ -193,14 +198,79 @@ export class Ecosystem {
     return this.wander(c);
   }
 
+  // Восприятие человека: зрение (конус обзора, укрытие, темнота) и слух (шум шагов).
+  perceive(c, P, dt) {
+    if (!P) { c.aware = Math.max(0, c.aware - dt * 0.2); return; }
+    const dx = P.x - c.x, dz = P.z - c.z, d = Math.hypot(dx, dz);
+    const ang = Math.abs(wrapAngle(Math.atan2(dx, dz) - c.yaw));
+    const sight = c.sp.sight * P.visibility * (this.night ? 0.85 : 1);
+    let gain = 0;
+    if (d < sight && (ang < 1.15 || d < 7)) gain += (1 - d / sight) * 2.4;
+    const ear = P.noise * (c.sp.id === 'raptor' ? 1.35 : 1);
+    if (d < ear) gain += (1 - d / ear) * 1.8;
+    if (gain > 0) {
+      c.aware = Math.min(1.3, c.aware + gain * dt);
+      c.last = { x: P.x, z: P.z };
+      c.unseen = 0;
+    } else {
+      c.aware = Math.max(0, c.aware - dt * (c.state === 'hunt' ? 0.05 : 0.09));
+      c.unseen += dt;
+    }
+  }
+
   carnivore(c, P, dt) {
     const k = 0.75 + 0.25 * c.growth;
     c.hunger = Math.min(100, c.hunger + dt * 0.7);
+    this.perceive(c, P, dt);
+    const d = c.dino;
+    d.stalk += ((c.state === 'stalk' || c.state === 'search' ? 1 : 0) - d.stalk) * Math.min(1, dt * 3);
     if (c.state === 'flee') { const f = this.fleeIntent(c); if (f) return f; }
-    if (P && P.sp.diet === 'carn' && P.size > c.size * 1.8 && dist(P, c) < 28 && c.state !== 'chase') {
-      this.flee(c, P, 5);
-      return this.fleeIntent(c) || this.wander(c);
+
+    // охота на человека
+    if (P && c.aware >= 0.8 && c.state !== 'hunt') {
+      c.state = 'hunt'; c.stateT = 30;
+      this.voice(c, 1, true);
+      for (const m of c.herd.members) {
+        if (m !== c && !m.dead && dist(m, c) < 80) { m.aware = Math.max(m.aware, 0.9); m.last = { ...c.last }; m.state = 'hunt'; m.stateT = 30; }
+      }
     }
+    if (c.state === 'hunt') {
+      if (!P || c.stateT < 0 || (c.unseen > 3 && c.aware < 0.5)) { c.state = 'search'; c.stateT = 14; }
+      else {
+        const seen = c.unseen < 1.5;
+        const tx = seen ? P.x : c.last.x, tz = seen ? P.z : c.last.z;
+        const dx = tx - c.x, dz = tz - c.z, dd = Math.hypot(dx, dz);
+        d.look = 0;
+        if (seen && dd < c.size * 0.45 + 1.1) {
+          if (c.cool <= 0 && Math.abs(wrapAngle(Math.atan2(dx, dz) - c.yaw)) < 0.8) this.hit(c, P, P);
+          return { dx, dz, speed: 0.6 };
+        }
+        if (!seen && dd < 3) { c.state = 'search'; c.stateT = 14; }
+        return { dx, dz, speed: c.sp.run * k };
+      }
+    }
+    if (P && c.aware >= 0.3 && c.state !== 'search' && c.state !== 'eat') c.state = 'stalk';
+    if (c.state === 'stalk') {
+      if (!P || c.aware < 0.2) { c.state = 'wander'; }
+      else {
+        const dx = c.last.x - c.x, dz = c.last.z - c.z, dd = Math.hypot(dx, dz);
+        if (this.rand() < dt * 0.25) this.growl(c);
+        d.look = Math.max(-0.5, Math.min(0.5, wrapAngle(Math.atan2(P.x - c.x, P.z - c.z) - c.yaw))) * 0.8;
+        if (dd < 3) return { dx: P.x - c.x, dz: P.z - c.z, speed: 0.3 };
+        return { dx, dz, speed: c.sp.walk * 0.7 };
+      }
+    }
+    if (c.state === 'search') {
+      if (c.stateT < 0 || !c.last) { c.state = 'wander'; c.aware = Math.min(c.aware, 0.25); }
+      else {
+        if (this.rand() < dt * 0.15) this.growl(c);
+        c.searchA = (c.searchA || 0) + dt * 0.5;
+        const tx = c.last.x + Math.cos(c.searchA) * 10, tz = c.last.z + Math.sin(c.searchA) * 10;
+        return { dx: tx - c.x, dz: tz - c.z, speed: c.sp.walk * 0.8 };
+      }
+    }
+    d.look *= 0.95;
+
     if (c.state === 'eat') {
       const cc = c.target;
       if (!cc || !cc.dead || cc.meat <= 0 || c.hunger < 5) { c.state = 'wander'; c.target = null; }
@@ -214,36 +284,32 @@ export class Ecosystem {
     }
     if (c.state === 'chase') {
       const tg = c.target;
-      const ok = tg && (tg.isPlayer ? tg.alive : !tg.dead) && c.stateT > 0 && dist(c, tg) < c.sp.sight * 1.5;
-      if (ok) {
-        if (!tg.isPlayer && tg.dead) { c.state = 'eat'; return { dx: 0, dz: 0, speed: 0 }; }
-        return this.attackIntent(c, tg, P, k);
-      }
-      if (tg && tg.dead && !tg.isPlayer) { c.state = 'eat'; return { dx: 0, dz: 0, speed: 0 }; }
+      if (tg && !tg.dead && c.stateT > 0 && dist(c, tg) < c.sp.sight * 1.5) return this.attackIntent(c, tg, P, k);
+      if (tg && tg.dead) { c.state = 'eat'; return { dx: 0, dz: 0, speed: 0 }; }
       c.state = 'wander'; c.target = null; c.hunger = Math.max(0, c.hunger - 15);
     }
-    if (c.hunger > 40) {
+    if (c.hunger > 55) {
       const carcass = this.nearestCarcass(c.x, c.z, c.sp.sight);
       if (carcass) { c.state = 'eat'; c.target = carcass; return { dx: 0, dz: 0, speed: 0 }; }
       let best = null, bs = c.sp.sight;
       for (const q of this.list) {
         if (q.dead || q.sp.diet !== 'herb' || q.size > c.size * (c.sp.id === 'rex' ? 2.5 : 1.2)) continue;
-        const d = dist(q, c);
-        if (d < bs) { bs = d; best = q; }
-      }
-      if (P && P.alive && P.size < c.size * 1.3) {
-        const d = dist(P, c) * (P.resting ? 1.3 : 0.85);
-        if (d < bs) { bs = d; best = P; }
+        const dd = dist(q, c);
+        if (dd < bs) { bs = dd; best = q; }
       }
       if (best) {
-        this.voice(c, 0.7);
-        c.state = 'chase'; c.target = best; c.stateT = best.isPlayer ? 14 : 25;
+        this.voice(c, 0.5);
+        c.state = 'chase'; c.target = best; c.stateT = 25;
         for (const m of c.herd.members) {
-          if (m !== c && !m.dead && m.state !== 'chase' && dist(m, c) < 60) { m.state = 'chase'; m.target = best; m.stateT = 25; }
+          if (m !== c && !m.dead && m.state === 'wander' && dist(m, c) < 60) { m.state = 'chase'; m.target = best; m.stateT = 25; }
         }
       }
     }
     return this.wander(c);
+  }
+
+  growl(c) {
+    if (this.onSound) this.onSound(c, 'growl');
   }
 
   update(dt, player, t, camera) {
@@ -268,9 +334,16 @@ export class Ecosystem {
       h.t = 20 + this.rand() * 35;
     }
 
+    this.threat = 0;
+    this.quake = 0;
     for (let i = this.list.length - 1; i >= 0; i--) {
       const c = this.list[i];
       const d = c.dino;
+      if (P && !c.dead) {
+        const dd = dist(c, P);
+        if (c.sp.diet === 'carn') this.threat = Math.max(this.threat, Math.min(1, c.aware) * (1 - Math.min(1, dd / 120)) + (c.state === 'hunt' ? 0.3 : 0));
+        if (c.sp.id === 'rex' && c.speed > 1) this.quake = Math.max(this.quake, (1 - Math.min(1, dd / 70)) * Math.min(1, c.speed / 6));
+      }
       const camD = Math.hypot(c.x - camera.position.x, c.z - camera.position.z);
       d.root.visible = camD < 420;
       if (c.dead) {

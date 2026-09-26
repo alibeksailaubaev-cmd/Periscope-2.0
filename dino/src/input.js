@@ -47,7 +47,7 @@ export class Input {
     addEventListener('keydown', (e) => {
       if (e.repeat) return;
       this.keys.add(e.code);
-      const map = { Space: 'bite', KeyR: 'roar', KeyC: 'rest', KeyM: 'map', Escape: 'pause', KeyJ: 'journal' };
+      const map = { KeyC: 'crouch', ControlLeft: 'crouch', KeyF: 'light', KeyM: 'map', Escape: 'pause', KeyJ: 'journal' };
       if (map[e.code]) { this.pressed[map[e.code]] = true; e.preventDefault(); }
     });
     addEventListener('keyup', (e) => this.keys.delete(e.code));

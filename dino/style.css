@@ -67,7 +67,7 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 #clock { grid-column: 1 / -1; font-size: 12px; color: var(--ink); background: var(--panel); padding: 2px 8px; border-radius: 6px;
   font-variant-numeric: tabular-nums; }
 
-#toasts { position: absolute; left: 50%; top: calc(150px + var(--safe-t)); transform: translateX(-50%); display: grid; gap: 6px;
+#toasts { position: absolute; left: 50%; top: calc(80px + var(--safe-t)); transform: translateX(-50%); display: grid; gap: 6px;
   width: min(360px, calc(100vw - 32px)); justify-items: center; }
 .toast { background: var(--panel-solid); border: 1px solid var(--line); border-left: 3px solid var(--muted); padding: 7px 12px;
   border-radius: 8px; font-size: 14px; animation: in .25s ease-out; transition: opacity .5s, transform .5s; text-align: center; }
@@ -80,8 +80,19 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 
 /* кнопки действий */
 .controls { position: absolute; right: calc(14px + var(--safe-r)); bottom: calc(16px + var(--safe-b)); display: grid;
-  grid-template-columns: repeat(3, auto); grid-template-areas: "rest roar ." "run act bite"; gap: 10px; align-items: end; justify-items: center; }
-#b-rest { grid-area: rest; } #b-roar { grid-area: roar; } #b-run { grid-area: run; } #b-act { grid-area: act; } #b-bite { grid-area: bite; }
+  grid-template-columns: repeat(2, auto); grid-template-areas: "light crouch" "act run"; gap: 10px; align-items: end; justify-items: center; }
+#b-light { grid-area: light; } #b-crouch { grid-area: crouch; } #b-run { grid-area: run; } #b-act { grid-area: act; }
+.btn.big { background: rgba(18, 22, 16, 0.55); border-color: rgba(239, 230, 207, 0.5); }
+.btn.on { background: rgba(224, 160, 66, 0.45); border-color: var(--amber); }
+.top-center { position: absolute; left: 50%; top: calc(10px + var(--safe-t)); transform: translateX(-50%); display: grid; gap: 4px; justify-items: center; }
+#detect { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; background: var(--panel); font-size: 13px; white-space: nowrap; }
+#detect svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+#detect[data-level="hidden"] { color: #b7d68f; }
+#detect[data-level="alert"] { color: var(--amber); }
+#detect[data-level="hunt"] { color: #ff7a60; background: rgba(120, 20, 10, 0.7); animation: pulse 0.6s infinite; }
+#objective { font-size: 13px; color: var(--ink); background: var(--panel); padding: 3px 10px; border-radius: 6px; white-space: nowrap; }
+.rules { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 60ch; }
+.rules li { font-size: 15px; }
 .btn { border-radius: 50%; border: 1.5px solid rgba(239, 230, 207, 0.35); background: rgba(18, 22, 16, 0.62); display: grid; place-items: center;
   align-content: center; gap: 1px; touch-action: none; transition: transform .08s, background .08s; }
 .btn svg { stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -167,7 +178,7 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--amber); 
   .map-btn { width: 88px; height: 88px; }
   .btn.big { width: 70px; height: 70px; }
   .brand .lede { display: none; }
-  .card .desc { display: none; }
+  .rules li { font-size: 13px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .toast, .bar.low svg { animation: none; }

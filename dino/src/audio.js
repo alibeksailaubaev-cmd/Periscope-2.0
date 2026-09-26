@@ -188,6 +188,71 @@ export class Sound {
     o.connect(g).connect(this.master); o.start(t); o.stop(t + 0.2);
   }
 
+  // Низкое рычание крадущегося хищника: тот же голос, замедленный и приглушённый.
+  growlAt(spId, size, dist) {
+    if (!this.ctx) return;
+    const g = Math.max(0, 1 - dist / 90);
+    if (g <= 0.03) return;
+    if (this.playSample('roar-' + spId, 0.25 + g * 0.6, 0.62, 0.55 + (1 - g) * 0.4)) return;
+    this.roar(spId, size * 1.5, g * 0.5);
+  }
+
+  // Сердцебиение: чем ближе охота, тем чаще и громче.
+  heart(dt, threat, hp) {
+    if (!this.ctx) return;
+    const k = Math.max(threat, hp < 35 ? 0.6 : 0);
+    if (k < 0.15) return;
+    this.heartT = (this.heartT || 0) - dt;
+    if (this.heartT > 0) return;
+    this.heartT = 60 / (70 + 90 * Math.min(1, k));
+    const t = this.ctx.currentTime;
+    for (const [off, v] of [[0, 1], [0.16, 0.7]]) {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.frequency.setValueAtTime(62, t + off); o.frequency.exponentialRampToValueAtTime(38, t + off + 0.12);
+      g.gain.setValueAtTime(0.0001, t + off); g.gain.exponentialRampToValueAtTime(0.5 * v * Math.min(1, k + 0.2), t + off + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + off + 0.16);
+      o.connect(g).connect(this.master); o.start(t + off); o.stop(t + off + 0.2);
+    }
+  }
+
+  // Тяжёлое дыхание после бега.
+  breath(dt, stamina) {
+    if (!this.ctx || stamina > 35) return;
+    this.breathT = (this.breathT || 0) - dt;
+    if (this.breathT > 0) return;
+    this.breathT = 0.55 + stamina / 60;
+    this.noiseBurst(this.ctx.currentTime, 0.35, 900, 0.6, 0.12 * (1 - stamina / 40));
+  }
+
+  step(mode) {
+    if (!this.ctx) return;
+    const v = { crouch: 0.04, walk: 0.09, run: 0.17, swim: 0.06 }[mode] || 0.08;
+    this.noiseBurst(this.ctx.currentTime, mode === 'run' ? 0.09 : 0.12, mode === 'swim' ? 700 : 1600 + Math.random() * 900, 0.9, v);
+  }
+
+  // Удар земли под шагом тираннозавра.
+  thud(k) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime, o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.frequency.setValueAtTime(55, t); o.frequency.exponentialRampToValueAtTime(28, t + 0.35);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.9 * k, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+    o.connect(g).connect(this.master); o.start(t); o.stop(t + 0.5);
+    this.noiseBurst(t, 0.25, 120, 0.7, 0.5 * k, 'lowpass');
+  }
+
+  click() { if (this.ctx) this.noiseBurst(this.ctx.currentTime, 0.03, 3000, 3, 0.2); }
+
+  pickup() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    [660, 880].forEach((f, i) => {
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = 'square'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.06, t + i * 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.1 + 0.09);
+      o.connect(g).connect(this.master); o.start(t + i * 0.1); o.stop(t + i * 0.1 + 0.1);
+    });
+  }
+
   hurt() { if (this.ctx) this.noiseBurst(this.ctx.currentTime, 0.25, 500, 0.7, 0.4); }
   eat() { if (this.ctx) this.noiseBurst(this.ctx.currentTime, 0.09, 2400 + Math.random() * 800, 2, 0.25); }
 

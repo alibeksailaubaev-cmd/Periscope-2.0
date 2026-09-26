@@ -2,7 +2,7 @@
 import * as THREE from './three.js';
 import { SIZE, heightAt } from './terrain.js';
 import { terrainColor, LANDMARKS } from './world.js';
-import { SPECIES, PLAYABLE } from './dinos.js';
+import { SPECIES } from './dinos.js';
 
 const $ = (id) => document.getElementById(id);
 const N = 256;
@@ -13,7 +13,8 @@ export class Hud {
     this.el = {};
     for (const id of ['hud', 'menu', 'pause', 'death', 'loading', 'toasts', 'vignette', 'h-name', 'h-stage', 'h-growth',
       'f-hp', 'f-food', 'f-water', 'f-stam', 'clock', 'minimap', 'b-act', 'act-label', 'cards', 'bigmap', 'journal-places',
-      'journal-species', 'death-cause', 'death-stats', 'food-icon', 'btn-continue', 'continue-info', 'status']) this.el[id] = $(id);
+      'journal-species', 'death-cause', 'death-stats', 'death-title', 'btn-continue', 'continue-info', 'status', 'objective',
+      'detect', 'detect-label']) this.el[id] = $(id);
     this.buildMapBase();
     this.fog = document.createElement('canvas');
     this.fog.width = this.fog.height = FOG;
@@ -62,7 +63,7 @@ export class Hud {
     ctx.putImageData(img, 0, 0);
   }
 
-  drawMap(canvas, player, know, full) {
+  drawMap(canvas, player, know, full, parts = []) {
     const dpr = Math.min(2, devicePixelRatio || 1);
     const W = Math.round(canvas.clientWidth * dpr), H = Math.round(canvas.clientHeight * dpr);
     if (!W || !H) return;
@@ -95,6 +96,13 @@ export class Hud {
         ctx.fillText(found ? L.name : '?', x, y - 8 * dpr);
       }
     }
+    // найденные части рации отмечаем галочкой, остальные — на открытых местах
+    for (const p of parts) {
+      if (!know.discovered.includes(p.id) && !p.taken) continue;
+      const [x, y] = toPx(p.x, p.z);
+      ctx.fillStyle = p.taken ? '#86a95c' : '#ff5a3a';
+      ctx.fillRect(x - 3 * dpr, y - 3 * dpr, 6 * dpr, 6 * dpr);
+    }
     const [px, py] = toPx(player.x, player.z);
     ctx.translate(px, py);
     ctx.rotate(Math.atan2(Math.cos(player.yaw), Math.sin(player.yaw)));
@@ -106,30 +114,40 @@ export class Hud {
     ctx.restore();
   }
 
-  update(dt, p, know, clock) {
+  update(dt, p, know, clock, objective, eco, parts) {
     const e = this.el;
-    e['h-name'].textContent = p.sp.name;
-    e['h-stage'].textContent = `${p.stage} · ${Math.round(Math.min(1, p.growth) * 100)}%`;
-    e['h-growth'].style.width = `${Math.min(1, p.growth) * 100}%`;
-    e['f-hp'].style.width = `${(p.hp / p.maxHp) * 100}%`;
+    e['h-stage'].textContent = p.crouch ? 'Пригнулись' : p.mode === 'run' ? 'Бег' : 'Идёте';
+    e['h-growth'].style.width = `${Math.min(1, p.visibility / 1.4) * 100}%`;
+    e['f-hp'].style.width = `${p.hp}%`;
     e['f-food'].style.width = `${p.hunger}%`;
     e['f-water'].style.width = `${p.thirst}%`;
     e['f-stam'].style.width = `${p.stamina}%`;
     e['f-food'].parentElement.parentElement.classList.toggle('low', p.hunger < 20);
     e['f-water'].parentElement.parentElement.classList.toggle('low', p.thirst < 20);
-    e['f-hp'].parentElement.parentElement.classList.toggle('low', p.hp / p.maxHp < 0.25);
+    e['f-hp'].parentElement.parentElement.classList.toggle('low', p.hp < 30);
     e.clock.textContent = clock;
-    e.vignette.style.opacity = String(Math.max(p.hitFlash * 0.9, p.hp / p.maxHp < 0.25 ? 0.35 : 0));
+    e.objective.textContent = objective;
+    e.vignette.style.opacity = String(Math.max(p.hitFlash * 0.95, p.hp < 30 ? 0.45 : 0, eco.threat > 0.8 ? 0.25 : 0));
+    // глаз: насколько вас заметили
+    const hunted = eco.list.some((c) => !c.dead && c.state === 'hunt');
+    const level = hunted ? 'hunt' : eco.threat > 0.25 ? 'alert' : 'hidden';
+    if (this.level !== level) {
+      this.level = level;
+      e.detect.dataset.level = level;
+      e['detect-label'].textContent = { hidden: 'Вас не заметили', alert: 'Вас ищут', hunt: 'Охота!' }[level];
+    }
+    $('b-light').classList.toggle('on', p.flashlight);
+    $('b-crouch').classList.toggle('on', p.crouch);
     const ctx = p.ctx;
     e['b-act'].hidden = !ctx;
     if (ctx) e['act-label'].textContent = ctx.label;
     let status = '';
-    if (p.resting) status = 'Отдых: здоровье и силы восстанавливаются быстрее';
-    else if (p.swimming) status = 'Вы плывёте — следите за выносливостью';
+    if (p.swimming) status = 'Вы плывёте — следите за силами';
+    else if (p.crouch && p.cover > 0.5) status = 'Вы укрыты в зарослях';
     e.status.textContent = status;
     e.status.hidden = !status;
     this.mapT -= dt;
-    if (this.mapT <= 0) { this.mapT = 0.2; this.drawMap(e.minimap, p, know, false); }
+    if (this.mapT <= 0) { this.mapT = 0.2; this.drawMap(e.minimap, p, know, false, parts); }
   }
 
   toast(text, kind = '') {
@@ -140,25 +158,6 @@ export class Hud {
     setTimeout(() => d.classList.add('out'), 3200);
     setTimeout(() => d.remove(), 3800);
     while (this.el.toasts.children.length > 3) this.el.toasts.firstChild.remove();
-  }
-
-  buildCards(selected, onPick) {
-    const box = this.el.cards;
-    box.innerHTML = '';
-    for (const id of PLAYABLE) {
-      const sp = SPECIES[id];
-      const b = document.createElement('button');
-      b.className = 'card' + (id === selected ? ' sel' : '');
-      b.type = 'button';
-      b.id = 'card-' + id;
-      const bar = (label, v) => `<div class="stat"><span>${label}</span><i><b style="width:${v * 100}%"></b></i></div>`;
-      b.innerHTML = `<div class="card-top"><h3>${sp.name}</h3><span class="chip ${sp.diet}">${sp.diet === 'carn' ? 'Хищник' : 'Травоядный'}</span></div>
-        <p class="latin">${sp.latin}</p><p class="desc">${sp.desc}</p>
-        ${bar('Скорость', sp.stat.speed)}${bar('Сила', sp.stat.power)}${bar('Живучесть', sp.stat.life)}
-        <p class="meta">${sp.len} м во взрослом возрасте</p>`;
-      b.addEventListener('click', () => onPick(id));
-      box.appendChild(b);
-    }
   }
 
   buildJournal(know) {

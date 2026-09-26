@@ -14,7 +14,7 @@ export const SPECIES = {
     len: 5.5, hip: 1.35, bodyR: [0.068, 0.082, 0.19], neckR: 0.036, head: [0.036, 0.038, 0.075], headUp: 0.17, headFwd: 0.37,
     tail: 1.05, legT: 0.8, arms: 2.0, teeth: true,
     walk: 3.6, run: 11.5, hp: 240, bite: 32, cool: 0.6, fear: 0, sight: 65,
-    pal: { back: '#4a3a2a', belly: '#b9a582', stripe: '#1f1811', bands: 9 },
+    pal: { back: '#2e271f', belly: '#6f6250', stripe: '#120e0a', bands: 9 },
     stat: { speed: 0.9, power: 0.4, life: 0.3 },
     desc: 'Быстрый и ловкий охотник. Слаб в одиночку против крупной добычи, но догонит почти любого.',
     fact: 'Крупный дромеозаврид из формации Хелл-Крик, около 5,5 м в длину. На руках длинные маховые перья, на ногах серповидный коготь около 19 см. Возможно, охотился группами.',
@@ -24,7 +24,7 @@ export const SPECIES = {
     len: 8.5, hip: 1.75, bodyR: [0.13, 0.11, 0.26], neckR: 0.06, head: [0.06, 0.065, 0.085], headUp: 0.0, headFwd: 0.4,
     tail: 0.7, legT: 1.0, frontH: 0.92,
     walk: 2.8, run: 8.2, hp: 700, bite: 55, cool: 1.1, fear: 25, fights: true, sight: 40,
-    pal: { back: '#57573f', belly: '#a89a76', stripe: '#3a3826', bands: 5 },
+    pal: { back: '#3c3c2e', belly: '#77705a', stripe: '#24231a', bands: 5 },
     stat: { speed: 0.45, power: 0.75, life: 0.85 },
     desc: 'Живой танк с рогами. Ест папоротники, медленный, но хищники дважды подумают, прежде чем напасть.',
     fact: 'До 9 м в длину и 6–12 тонн. Костяной воротник и три рога служили для защиты и для демонстрации сородичам. Один из последних нептичьих динозавров: жил 68–66 млн лет назад.',
@@ -34,7 +34,7 @@ export const SPECIES = {
     len: 12, hip: 3.1, bodyR: [0.08, 0.095, 0.19], neckR: 0.06, head: [0.042, 0.05, 0.085], headUp: 0.05, headFwd: 0.37,
     tail: 0.95, legT: 1.0, arms: 0.55, teeth: true,
     walk: 3.4, run: 8.8, hp: 950, bite: 120, cool: 1.3, fear: 0, sight: 85,
-    pal: { back: '#454334', belly: '#9d9072', stripe: '#26241c', bands: 7 },
+    pal: { back: '#2a2922', belly: '#6a6252', stripe: '#141310', bands: 7 },
     stat: { speed: 0.5, power: 1.0, life: 1.0 },
     desc: 'Высший хищник острова. Детёнышем уязвим, но взрослым не боится никого.',
     fact: 'До 12–13 м в длину и около 8 тонн. Сила укуса оценивается до 35 000 ньютонов, это больше, чем у любого известного наземного животного. Отличное обоняние и бинокулярное зрение.',
@@ -44,7 +44,7 @@ export const SPECIES = {
     len: 4.3, hip: 1.45, bodyR: [0.07, 0.08, 0.15], neckR: 0.025, head: [0.022, 0.026, 0.045], headUp: 0.33, headFwd: 0.33,
     tail: 1.0, legT: 0.75, arms: 1.6, beak: true,
     walk: 3.8, run: 13.5, hp: 110, bite: 8, cool: 1, fear: 45, flees: true, sight: 45,
-    pal: { back: '#76674a', belly: '#cdbf9c', stripe: '#4d412c', bands: 0 },
+    pal: { back: '#4d4535', belly: '#8f8570', stripe: '#2c261c', bands: 0 },
     desc: 'Пугливый бегун. Лёгкая добыча, если сумеешь догнать.',
     fact: '«Подражающий страусу». Около 4 м в длину, беззубый клюв и длинные ноги. Оценки скорости доходят до 50 км/ч. Вероятно, был всеядным: ел растения, насекомых и мелких животных.',
   },
@@ -53,7 +53,7 @@ export const SPECIES = {
     len: 7, hip: 1.15, bodyR: [0.15, 0.085, 0.27], neckR: 0.05, head: [0.05, 0.04, 0.06], headUp: -0.02, headFwd: 0.38,
     tail: 0.9, legT: 1.0, frontH: 0.95, armor: true,
     walk: 2.2, run: 5.2, hp: 650, bite: 65, cool: 1.4, fear: 18, fights: true, sight: 30,
-    pal: { back: '#4f4d39', belly: '#8e8468', stripe: '#35331f', bands: 0 },
+    pal: { back: '#36352a', belly: '#66604e', stripe: '#1f1e16', bands: 0 },
     desc: 'Бронированный травоядный с булавой на хвосте.',
     fact: 'До 8 м в длину, спина покрыта костяными пластинами — остеодермами. Хвостовая булава могла ломать кости нападающим. Самый крупный из анкилозавров.',
   },
@@ -118,16 +118,23 @@ function specParts(sp) {
   nk.push(skin(limb(neckBase, hp, sp.neckR * L, sp.neckR * L * 1.15, 12, 1.2)));
   nk.push(skin(ell(hx, hy, hz, 0, hp[1], hp[2] + hz * 0.3, 0, 0, 14)));
   nk.push(skin(ell(hx * 0.72, hy * 0.7, hz * 0.85, 0, hp[1] - hy * 0.12, hp[2] + hz * 1.05)));
+  parts.neck.eyes = [];
+  parts.neck.eyePos = [];
   for (const s of [-1, 1]) {
-    nk.push(solid(ell(hx * 0.2, hx * 0.2, hx * 0.2, s * hx * 0.78, hp[1] + hy * 0.35, hp[2] + hz * 0.5, 0, 0, 8), '#140f0a', 0));
+    parts.neck.eyePos.push([s * hx * 0.86, hp[1] + hy * 0.33, hp[2] + hz * 0.55]);
+    parts.neck.eyes.push(ell(hx * 0.17, hx * 0.14, hx * 0.17, s * hx * 0.8, hp[1] + hy * 0.33, hp[2] + hz * 0.5, 0, 0, 8));
+    // тяжёлая надбровная дуга делает взгляд злее
+    nk.push(skin(ell(hx * 0.3, hx * 0.12, hx * 0.36, s * hx * 0.7, hp[1] + hy * 0.5, hp[2] + hz * 0.48, 0.25, 0, 8)));
   }
   const jawP = [0, hp[1] - hy * 0.35, hp[2] - hz * 0.2];
   add('jaw', 'neck', jawP);
   parts.jaw.geos.push(skin(ell(hx * 0.62, hy * 0.28, hz * 0.95, 0, hp[1] - hy * 0.55, hp[2] + hz * 0.75)));
   if (sp.teeth) {
-    for (let k = 0; k < 6; k++) {
+    for (let k = 0; k < 9; k++) {
       for (const s of [-1, 1]) {
-        nk.push(solid(cone(hx * 0.06, hy * 0.28, s * hx * 0.5, hp[1] - hy * 0.52, hp[2] + hz * (0.35 + k * 0.26), Math.PI), '#e6dcc2', 0.05));
+        const big = 1 + 0.6 * Math.sin((k / 8) * Math.PI);
+        nk.push(solid(cone(hx * 0.06, hy * 0.34 * big, s * hx * 0.52, hp[1] - hy * 0.5, hp[2] + hz * (0.3 + k * 0.19), Math.PI), '#d8ceb0', 0.1));
+        parts.jaw.geos.push(solid(cone(hx * 0.05, hy * 0.26 * big, s * hx * 0.46, hp[1] - hy * 0.62, hp[2] + hz * (0.35 + k * 0.17)), '#d8ceb0', 0.1));
       }
     }
   }
@@ -141,6 +148,17 @@ function specParts(sp) {
   }
   if (sp.id === 'anky') {
     for (const s of [-1, 1]) nk.push(solid(cone(hx * 0.18, hx * 0.5, s * hx * 0.8, hp[1] + hy * 0.4, hp[2] - hz * 0.2, -0.9, s * -0.6), '#4a4535', 0.1));
+  }
+
+  if (sp.id === 'raptor') {
+    for (let i = 0; i < 16; i++) {
+      const t = i / 15;
+      const x = 0, y = neckBase[1] + (hp[1] - neckBase[1]) * (1 - t) * 0.9 + by * 0.5 * t, z = neckBase[2] + (hp[2] - neckBase[2]) * (1 - t) * 0.85 - bz * 0.9 * t;
+      nk.push(solid(cone(0.012 * L, (0.07 - t * 0.03) * L, x, y + sp.neckR * L * 0.6, z, -0.9), '#16120d', 0.2));
+    }
+    for (const s of [-1, 1]) for (let i = 0; i < 5; i++) {
+      rig.push(solid(ell(0.006 * L, 0.05 * L, 0.018 * L, s * bx * 0.85, bodyY - by * 0.35 - i * 0.012 * L, bz * 0.55 + i * 0.02 * L, 0.3, 0, 6), '#1a1510', 0.2));
+    }
   }
 
   // руки у двуногих
@@ -228,6 +246,18 @@ function specParts(sp) {
 }
 
 const cache = {};
+// Глаза отражают свет в темноте, как у настоящих ночных хищников.
+export const EYE_MAT = new THREE.MeshStandardMaterial({ color: 0x1a1408, emissive: 0xe8c860, emissiveIntensity: 0.1, roughness: 0.15 });
+function glowTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,240,190,1)'); g.addColorStop(0.2, 'rgba(255,200,90,0.8)'); g.addColorStop(1, 'rgba(255,160,40,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+export const EYE_GLOW = new THREE.SpriteMaterial({ map: glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0, fog: false });
 export const DINO_MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, metalness: 0, envMapIntensity: 0.3 });
 let scaleTex = null;
 // Чешуя: трипланарная карта высот в координатах модели + рельеф через производные.
@@ -269,7 +299,13 @@ function template(id) {
       geo = merge(p.geos);
       geo.translate(-p.pivot[0], -p.pivot[1], -p.pivot[2]);
     }
-    list.push({ name, parent: p.parent, pivot: p.pivot, geo });
+    let eyes = null;
+    if (p.eyes) {
+      eyes = merge(p.eyes);
+      eyes.translate(-p.pivot[0], -p.pivot[1], -p.pivot[2]);
+    }
+    const eyePos = p.eyePos ? p.eyePos.map((e) => [e[0] - p.pivot[0], e[1] - p.pivot[1], e[2] - p.pivot[2]]) : null;
+    list.push({ name, parent: p.parent, pivot: p.pivot, geo, eyes, eyePos, glow: SPECIES[id].len * 0.06 });
   }
   cache[id] = { list, bodyY, bx };
   return cache[id];
@@ -287,11 +323,21 @@ export function createDino(id) {
     (part.parent ? objs[part.parent] : root).add(o);
     objs[part.name] = o;
     pivots[part.name] = part.pivot;
+    if (part.eyes) {
+      o.add(new THREE.Mesh(part.eyes, EYE_MAT));
+      // ореол глаз, видимый в темноте издалека
+      for (const e of part.eyePos) {
+        const g = new THREE.Sprite(EYE_GLOW);
+        g.position.set(...e);
+        g.scale.setScalar(part.glow);
+        o.add(g);
+      }
+    }
   }
   return {
     root, parts: objs, sp: SPECIES[id], bodyY: t.bodyY, bx: t.bx,
     phase: Math.random() * 6, seed: Math.random() * 10, amp: 0,
-    bite: 0, roar: 0, graze: 0, rest: 0, dead: 0, swim: 0, pitch: 0, scale: 1,
+    bite: 0, roar: 0, graze: 0, rest: 0, dead: 0, swim: 0, pitch: 0, scale: 1, stalk: 0, look: 0,
   };
 }
 
@@ -327,8 +373,11 @@ export function animateDino(d, dt, speed, t, turn = 0) {
   }
   const breath = Math.sin(t * 1.3 + d.seed) * 0.025;
   P.neck.rotation.x = breath + d.bite * 0.2 + d.graze * 0.55 - d.roar * 0.35 + R * 0.2;
-  P.neck.rotation.y = Math.sin(t * 0.37 + d.seed) * 0.12 * (1 - A) * (1 - D);
-  P.jaw.rotation.x = d.bite * 0.5 + d.roar * 0.65 + d.graze * Math.max(0, Math.sin(t * 9)) * 0.25;
+  P.neck.rotation.y = (Math.sin(t * 0.37 + d.seed) * 0.12 * (1 - A) + d.look) * (1 - D);
+  // крадущийся хищник опускает голову и приоткрывает пасть
+  P.neck.rotation.x += d.stalk * 0.22;
+  P.rig.position.y -= d.stalk * H * 0.08;
+  P.jaw.rotation.x = d.bite * 0.5 + d.roar * 0.65 + d.graze * Math.max(0, Math.sin(t * 9)) * 0.25 + d.stalk * (0.18 + Math.sin(t * 2.3 + d.seed) * 0.05) + 0.04;
 }
 
 // Птерозавры кружат над островом ради атмосферы.

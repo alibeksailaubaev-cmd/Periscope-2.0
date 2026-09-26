@@ -227,6 +227,7 @@ export class World {
     this.buildVegetation();
     this.buildLandmarks();
     this.buildVolcanoFx();
+    this.buildMission();
     this.buildClouds();
     this.setTime(this.time);
   }
@@ -300,7 +301,7 @@ export class World {
     this.stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 1.4, sizeAttenuation: false, transparent: true, fog: false, depthWrite: false }));
     this.stars.frustumCulled = false;
     this.scene.add(this.stars);
-    this.scene.fog = new THREE.Fog(0xa9bccb, 60, 520);
+    this.scene.fog = new THREE.FogExp2(0xa9bccb, 0.006);
 
     if (this.quality !== 'low' && this.renderer) {
       this.pmrem = new THREE.PMREMGenerator(this.renderer);
@@ -363,10 +364,11 @@ export class World {
     this.sky.material.uniforms.skyExposure.value = 0.42 * Math.max(0.02, this.day);
     this.lightDir = this.night ? this.sunDir.clone().negate() : this.sunDir.clone();
     this.sun.color.copy(this.night ? new THREE.Color('#8fa6d8') : sunCol);
-    this.sun.intensity = this.night ? 0.3 : Math.max(0.1, sunI);
-    this.hemi.intensity = hemiI * (this.pmrem ? 0.6 : 1.6);
+    this.sun.intensity = this.night ? 0.18 : Math.max(0.1, sunI);
+    this.hemi.intensity = hemiI * (this.pmrem ? 0.6 : 1.6) * (this.night ? 0.6 : 1);
     this.hemi.color.copy(fog).lerp(new THREE.Color('#9fc0e0'), 0.4);
     this.scene.fog.color.copy(fog);
+    this.scene.fog.density = 0.0045 + (1 - this.day) * 0.009;
     this.scene.background = this.scene.fog.color;
     this.stars.material.opacity = smoothstep(0.0, -0.25, elev);
     this.fogColor = fog;
@@ -438,7 +440,9 @@ export class World {
           w.w *= 0.7 + dot(cs, vec3(0.6));
           w /= max(w.x + w.y + w.z + w.w, 1e-4);
           float macro = 0.82 + 0.36 * texture2D(tLitter, wuv * 0.0045).g * 3.0;
-          vec3 texc = (cg * w.x + cl * w.y + cr * w.z + cs * w.w) * macro;
+          vec3 near = texture2D(tGrass, wuv * 0.93).rgb * w.x + texture2D(tLitter, wuv * 1.07).rgb * w.y + texture2D(tSand, wuv * 0.8).rgb * w.w + cr * w.z;
+          float nd = 1.0 - smoothstep(4.0, 22.0, length(vWPos - cameraPosition));
+          vec3 texc = mix(cg * w.x + cl * w.y + cr * w.z + cs * w.w, near, nd * 0.55) * macro;
           diffuseColor.rgb *= texc * 1.35;
         `);
     };
@@ -710,6 +714,84 @@ export class World {
     }
   }
 
+  // Обломки вертолёта — место старта — и пять частей рации в опасных местах.
+  buildMission() {
+    const metal = new THREE.MeshStandardMaterial({ color: 0x4a4f48, roughness: 0.55, metalness: 0.6, envMapIntensity: 0.8 });
+    const paint = new THREE.MeshStandardMaterial({ color: 0x7a2a1c, roughness: 0.6, metalness: 0.3 });
+    const glass = new THREE.MeshStandardMaterial({ color: 0x223038, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.6 });
+    // место крушения: открытая поляна недалеко от озера
+    let best = null;
+    for (let a = 0; a < Math.PI * 2; a += 0.2) for (let d = 70; d < 130; d += 10) {
+      const x = LAKES[0].x + Math.cos(a) * d, z = LAKES[0].z + Math.sin(a) * d, h = heightAt(x, z);
+      if (h < 4 || h > 25) continue;
+      const n = this.obstaclesNear(x, z, 14);
+      const sl = Math.abs(heightAt(x + 4, z) - heightAt(x - 4, z)) + Math.abs(heightAt(x, z + 4) - heightAt(x, z - 4));
+      const score = n * 3 + sl;
+      if (!best || score < best.s) best = { x, z, s: score, a };
+    }
+    this.crash = best;
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(1.3, 3.6, 6, 14), paint);
+    body.rotation.z = Math.PI / 2 + 0.25; body.rotation.y = 0.2; body.position.set(0, 1.1, 0);
+    const cab = new THREE.Mesh(new THREE.SphereGeometry(1.25, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), glass);
+    cab.position.set(2.2, 1.5, 0.2); cab.rotation.z = -1.2;
+    const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.45, 5.5, 8), paint);
+    boom.rotation.z = Math.PI / 2 - 0.35; boom.rotation.y = 0.6; boom.position.set(-4.6, 0.9, 1.4);
+    g.add(body, cab, boom);
+    for (let i = 0; i < 3; i++) {
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.06, 0.35), metal);
+      blade.position.set(-1 + i * 2.5, 0.25 + i * 0.3, -2.5 + i * 2.2);
+      blade.rotation.set(0.1 * i, i * 1.3, 0.25 * (i - 1));
+      g.add(blade);
+    }
+    g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    g.position.set(best.x, heightAt(best.x, best.z) - 0.3, best.z);
+    g.rotation.y = best.a;
+    this.scene.add(g);
+    this.addObstacle(best.x, best.z, 2.6);
+    this.crashFire = new THREE.PointLight(0xff7a30, 8, 22, 1.8);
+    this.crashFire.position.set(best.x, g.position.y + 1.5, best.z);
+    this.scene.add(this.crashFire);
+    this.smokeSources = [{ x: best.x, y: g.position.y + 1.5, z: best.z, k: 0.35 }];
+
+    // ящики с деталями рации
+    const caseMat = new THREE.MeshStandardMaterial({ color: 0xc25a18, roughness: 0.5, metalness: 0.1 });
+    const lampMat = new THREE.MeshBasicMaterial({ color: 0xff2a1a, toneMapped: false });
+    this.parts = [];
+    const spots = ['nest', 'bones', 'pillars', 'tree', 'cape'];
+    for (const id of spots) {
+      const L = LANDMARKS.find((l) => l.id === id);
+      let px = L.x + 5, pz = L.z + 4;
+      for (let k = 0; k < 20 && heightAt(px, pz) < 1; k++) { px = L.x + (this.rand() - 0.5) * 16; pz = L.z + (this.rand() - 0.5) * 16; }
+      const box = new THREE.Group();
+      const c = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.5), caseMat);
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), lampMat);
+      lamp.position.set(0.25, 0.25, 0);
+      const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.6, 4), metal);
+      ant.position.set(-0.25, 0.5, 0);
+      box.add(c, lamp, ant);
+      c.castShadow = true;
+      box.position.set(px, heightAt(px, pz) + 0.2, pz);
+      box.rotation.y = this.rand() * 6;
+      this.scene.add(box);
+      this.parts.push({ id, x: px, z: pz, mesh: box, lamp, taken: false, name: L.name });
+    }
+  }
+
+  // Насколько хорошо укрыт человек в этой точке: 0 — открыто, 1 — густые заросли.
+  coverAt(x, z) {
+    const h = heightAt(x, z);
+    if (h < 1.8) return 0;
+    const e = 2;
+    const sl = Math.hypot(heightAt(x + e, z) - heightAt(x - e, z), heightAt(x, z + e) - heightAt(x, z - e)) / (2 * e);
+    const [gr, li] = splatAt(x, z, h, sl);
+    let c = Math.min(1, gr * 1.1 + li * 0.35) * 0.55;
+    const f = this.nearestFern(x, z, 1.6);
+    if (f) c += 0.45 * f.food;
+    if (this.obstaclesNear(x, z, 2.5)) c += 0.15;
+    return Math.min(1, c);
+  }
+
   buildVolcanoFx() {
     const y = heightAt(VOLCANO.x, VOLCANO.z);
     const lava = new THREE.Mesh(new THREE.CircleGeometry(12, 32), new THREE.MeshBasicMaterial({ color: 0xff6a20, fog: false, toneMapped: false }));
@@ -769,6 +851,30 @@ export class World {
       s.material.opacity = Math.sin(t * Math.PI) * 0.8;
     }
     this.lavaLight.intensity = 50 + Math.sin(this.uTime.value * 3) * 12;
+    if (this.crashFire) this.crashFire.intensity = 6 + Math.sin(this.uTime.value * 11) * 1.5 + Math.sin(this.uTime.value * 23) * 1;
+    for (const p of this.parts || []) {
+      if (p.taken) continue;
+      p.lamp.visible = Math.sin(this.uTime.value * 4) > 0;
+      p.mesh.rotation.y += dt * 0.2;
+    }
+    if (this.crashSmoke === undefined && this.smokeSources) {
+      this.crashSmoke = [];
+      const tex = TX.cloudSprite(128);
+      for (let i = 0; i < 10; i++) {
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0x2a2826, transparent: true, depthWrite: false }));
+        sp.userData.t = i / 10;
+        this.crashSmoke.push(sp);
+        this.scene.add(sp);
+      }
+    }
+    for (const sp of this.crashSmoke || []) {
+      const src = this.smokeSources[0];
+      sp.userData.t = (sp.userData.t + dt * 0.05) % 1;
+      const t = sp.userData.t;
+      sp.position.set(src.x + t * 8, src.y + t * 30, src.z + Math.sin(t * 6) * 2);
+      sp.scale.setScalar(2 + t * 14);
+      sp.material.opacity = Math.sin(t * Math.PI) * 0.6;
+    }
     for (const c of this.clouds) {
       c.position.x += dt * 2.5;
       if (c.position.x > 950) c.position.x = -950;
