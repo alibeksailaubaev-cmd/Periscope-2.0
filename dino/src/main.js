@@ -10,10 +10,11 @@ import { Hud, FOG } from './hud.js';
 import { SPECIES, createDino, animateDino, EYE_MAT, EYE_GLOW } from './dinos.js';
 import { heightAt, SIZE } from './terrain.js';
 import { placeDino } from './creature.js';
+import { Mission, NOTES } from './mission.js';
 
-const DAY = 600; // секунд на игровые сутки
+const DAY = 900; // секунд на игровые сутки (ночь идёт быстрее)
 const RESCUE_TIME = 90; // сколько продержаться после вызова помощи
-const KEY_LIFE = 'melovoy-ostrov:survivor';
+const KEY_LIFE = 'melovoy-ostrov:survivor2';
 const KEY_KNOW = 'melovoy-ostrov:know';
 const KEY_OPTS = 'melovoy-ostrov:opts';
 
@@ -23,9 +24,10 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch { /* хранилище недоступно */ } },
 };
 
-const opts = Object.assign({ quality: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high', sound: true }, store.get(KEY_OPTS) || {});
+const opts = Object.assign({ quality: /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ? 'medium' : 'high', sound: true, diff: 'normal' }, store.get(KEY_OPTS) || {});
+const DIFF = { easy: { sight: 0.7, dmg: 0.6 }, normal: { sight: 1, dmg: 1 }, hard: { sight: 1.3, dmg: 1.5 } };
 const knowSaved = store.get(KEY_KNOW) || {};
-const know = { discovered: knowSaved.discovered || [], seen: knowSaved.seen || [], explored: new Uint8Array(FOG * FOG) };
+const know = { discovered: knowSaved.discovered || [], seen: knowSaved.seen || [], notes: knowSaved.notes || [], explored: new Uint8Array(FOG * FOG) };
 if (knowSaved.explored) knowSaved.explored.forEach((v, i) => { know.explored[i] = v; });
 
 const hud = new Hud();
@@ -56,18 +58,26 @@ resize();
 const world = new World(scene, opts.quality, renderer);
 const grass = opts.quality !== 'low' ? new GrassField(scene, world, opts.quality) : null;
 const eco = new Ecosystem(scene, world);
+const mission = new Mission(scene, world);
+eco.blocker = (x, z, m) => !!mission.inHut(x, z, m);
+eco.diff = DIFF[opts.diff] || DIFF.normal;
 const player = new Player(scene, world);
 const sound = new Sound();
 sound.setEnabled(opts.sound);
 const input = new Input(document.getElementById('touch'), document.getElementById('joy-knob'), document.getElementById('joy-base'));
 input.bindButton(document.getElementById('b-act'), 'act', true);
-input.bindButton(document.getElementById('b-run'), 'run', true);
+input.bindButton(document.getElementById('b-run'), 'runToggle');
 input.bindButton(document.getElementById('b-crouch'), 'crouch');
 input.bindButton(document.getElementById('b-light'), 'light');
+input.bindButton(document.getElementById('b-jump'), 'jump');
+input.bindButton(document.getElementById('b-throw'), 'throw');
 
 // фонарик в руке
-const flash = new THREE.SpotLight(0xfff1d8, 0, 55, 0.42, 0.55, 1.4);
+const flash = new THREE.SpotLight(0xfff4e0, 0, 90, 0.5, 0.45, 1.1);
 flash.position.set(0.25, -0.2, 0);
+// слабая подсветка вокруг от отражённого света фонаря
+const flashFill = new THREE.PointLight(0xfff0d8, 0, 14, 1.5);
+camera.add(flashFill);
 flash.target.position.set(0, -0.45, -12);
 camera.add(flash, flash.target);
 if (opts.quality === 'high') { flash.castShadow = true; flash.shadow.mapSize.set(512, 512); }
@@ -80,7 +90,9 @@ let state = 'menu';
 let preview = null;
 let t = 0, saveT = 0, deathT = 0, saltT = 0, stepPhase = 0, thudT = 0;
 const cam = { yaw: 0, pitch: 0, orbit: 0 };
-const mission = { rescueT: -1 };
+const stones = [];
+const stoneGeo = new THREE.DodecahedronGeometry(0.08);
+const stoneMat = new THREE.MeshStandardMaterial({ color: 0x77716a, roughness: 0.9, flatShading: true });
 
 // заставка меню: тираннозавр у озера в сумерках
 function setPreview() {
@@ -94,40 +106,48 @@ function setPreview() {
 }
 
 function knowSave() {
-  store.set(KEY_KNOW, { discovered: know.discovered, seen: know.seen, explored: Array.from(know.explored) });
+  store.set(KEY_KNOW, { discovered: know.discovered, seen: know.seen, notes: know.notes, explored: Array.from(know.explored) });
 }
 function lifeSave() {
   if (!player.alive || state === 'won') return;
-  store.set(KEY_LIFE, { ...player.serialize(), time: world.time, rescueT: mission.rescueT });
+  store.set(KEY_LIFE, { ...player.serialize(), time: world.time, mission: mission.serialize() });
 }
 function refreshContinue() {
   const s = store.get(KEY_LIFE);
   hud.el['btn-continue'].hidden = !s;
-  if (s) hud.el['continue-info'].textContent = `день ${Math.floor(s.age / DAY) + 1}, части рации ${s.parts.length}/5`;
+  if (s) hud.el['continue-info'].textContent = `день ${Math.floor(s.age / DAY) + 1}`;
 }
 
 function startLife(saved) {
   sound.start();
   if (preview) { scene.remove(preview.root); preview = null; }
-  for (const p of world.parts) { p.taken = false; p.mesh.visible = true; }
   if (saved) {
     player.spawn(saved);
-    for (const p of world.parts) if (saved.parts.includes(p.id)) { p.taken = true; p.mesh.visible = false; }
-    world.setTime(saved.time ?? 0.55);
-    mission.rescueT = saved.rescueT ?? -1;
+    mission.reset(saved.mission);
+    player.flashlight = false;
+    world.setTime(saved.time ?? 0.3);
   } else {
     const c = world.crash;
+    mission.reset(null);
     player.spawn({ x: c.x + Math.cos(c.a) * 7, z: c.z + Math.sin(c.a) * 7, yaw: c.a + Math.PI });
-    world.setTime(0.58);
-    mission.rescueT = -1;
-    store.set(KEY_LIFE, { ...player.serialize(), time: world.time, rescueT: -1 });
-    hud.toast('Вы пережили крушение. Найдите 5 частей рации и вызовите помощь.');
+    world.setTime(0.3);
+    store.set(KEY_LIFE, { ...player.serialize(), time: world.time, mission: mission.serialize() });
+    hud.toast('Вы пережили крушение. Обыщите обломки вертолёта.');
   }
   for (const c of eco.list) { c.aware = 0; if (c.state === 'hunt' || c.state === 'stalk' || c.state === 'search') c.state = 'wander'; }
   cam.yaw = player.yaw; cam.pitch = 0;
   state = 'play';
   hud.show(null);
   try { navigator.wakeLock?.request('screen').catch(() => {}); } catch { /* не поддерживается */ }
+}
+
+function showNote(id) {
+  const n = NOTES[id];
+  if (!know.notes.includes(id)) { know.notes.push(id); knowSave(); }
+  hud.el['note-title'].textContent = n.title;
+  hud.el['note-text'].textContent = n.text;
+  state = 'note';
+  hud.show('note');
 }
 
 function showDeath() {
@@ -138,7 +158,7 @@ function showDeath() {
   const killer = Object.values(SPECIES).find((s) => s.name === player.cause);
   hud.el['death-cause'].textContent = causes[player.cause] || (killer ? `Вас настиг ${killer.name.toLowerCase()}.` : 'Вы погибли.');
   hud.el['death-stats'].innerHTML = `<div><b>${days}</b><span>${days === 1 ? 'день' : days < 5 ? 'дня' : 'дней'}</span></div>
-    <div><b>${player.parts.length}/5</b><span>части рации</span></div>
+    <div><b>${mission.partsFound}/5</b><span>части рации</span></div>
     <div><b>${know.discovered.length}</b><span>мест открыто</span></div>`;
   hud.el['death-title'].textContent = 'Конец пути';
   hud.show('death');
@@ -159,14 +179,14 @@ function showWin() {
 function openPause(tab) {
   if (state !== 'play') return;
   state = 'pause';
-  hud.buildJournal(know);
+  hud.buildJournal(know, NOTES);
   hud.show('pause');
   selectTab(tab || 'journal');
 }
 function selectTab(tab) {
   for (const b of document.querySelectorAll('[data-tab]')) b.setAttribute('aria-selected', String(b.dataset.tab === tab));
   for (const p of document.querySelectorAll('.tabpane')) p.hidden = p.id !== 'tab-' + tab;
-  if (tab === 'map') requestAnimationFrame(() => hud.drawMap(hud.el.bigmap, player, know, true, world.parts));
+  if (tab === 'map') requestAnimationFrame(() => hud.drawMap(hud.el.bigmap, player, know, true, mapMarks()));
 }
 
 eco.onSeen = (id) => {
@@ -182,6 +202,11 @@ eco.onSound = (c, kind) => {
   else sound.roarAt(c.sp.id, c.size, d);
 };
 eco.onPlayerHit = () => { sound.hurt(); };
+eco.onScratch = (c) => { sound.scratch(Math.hypot(c.x - player.x, c.z - player.z)); };
+
+function mapMarks() {
+  return { huts: mission.huts, objective: mission.objective(), mast: mission.mast };
+}
 
 document.getElementById('btn-start').addEventListener('click', () => { store.del(KEY_LIFE); startLife(null); });
 document.getElementById('btn-continue').addEventListener('click', () => { const s = store.get(KEY_LIFE); if (s) startLife(s); });
@@ -192,6 +217,17 @@ document.getElementById('btn-tomenu').addEventListener('click', () => { lifeSave
 document.getElementById('btn-again').addEventListener('click', () => { store.del(KEY_LIFE); startLife(null); });
 document.getElementById('btn-other').addEventListener('click', () => toMenu());
 document.getElementById('menu-listen').addEventListener('click', () => sound.preview('rex'));
+document.getElementById('btn-note-close').addEventListener('click', () => { state = 'play'; hud.show(null); });
+const dSel = document.getElementById('opt-diff');
+dSel.value = opts.diff;
+const dMenu = document.getElementById('opt-diff-menu');
+dMenu.value = opts.diff;
+for (const el of [dSel, dMenu]) {
+  el.addEventListener('change', () => {
+    opts.diff = el.value; dSel.value = dMenu.value = opts.diff;
+    eco.diff = DIFF[opts.diff]; store.set(KEY_OPTS, opts);
+  });
+}
 for (const b of document.querySelectorAll('[data-tab]')) b.addEventListener('click', () => selectTab(b.dataset.tab));
 
 const qSel = document.getElementById('opt-quality');
@@ -234,14 +270,70 @@ function clockText() {
   return `День ${day} · ${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
 }
 
-function objective() {
-  const n = player.parts.length;
-  if (mission.rescueT >= 0) {
-    const s = Math.ceil(mission.rescueT);
-    return `Продержитесь до вертолёта: ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+function throwStone() {
+  if (player.stones <= 0) return;
+  player.stones--;
+  const dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  const m = new THREE.Mesh(stoneGeo, stoneMat);
+  m.position.copy(camera.position).addScaledVector(dir, 0.6);
+  m.castShadow = true;
+  scene.add(m);
+  stones.push({ m, v: dir.multiplyScalar(17).add(new THREE.Vector3(0, 4.5, 0)), t: 0, landed: false });
+  sound.whoosh();
+}
+
+function updateStones(dt) {
+  for (let i = stones.length - 1; i >= 0; i--) {
+    const s = stones[i];
+    s.t += dt;
+    if (!s.landed) {
+      s.v.y -= 9.8 * dt;
+      s.m.position.addScaledVector(s.v, dt);
+      s.m.rotation.x += dt * 8;
+      const g = Math.max(heightAt(s.m.position.x, s.m.position.z), 0);
+      if (s.m.position.y <= g + 0.05) {
+        s.landed = true;
+        s.m.position.y = g + 0.05;
+        // хищники идут на звук упавшего камня
+        eco.noiseAt(s.m.position.x, s.m.position.z, 34);
+        sound.thunk(Math.hypot(s.m.position.x - player.x, s.m.position.z - player.z), heightAt(s.m.position.x, s.m.position.z) < 0);
+      }
+    }
+    if (s.t > 8) { scene.remove(s.m); stones.splice(i, 1); }
   }
-  if (n < 5) return `Части рации: ${n}/5`;
-  return 'Все части собраны. Идите к Мысу заката';
+}
+
+function handleAction(a) {
+  if (!a) return;
+  if (a.kind === 'eat') sound.eat();
+  if (a.kind === 'drink') sound.drink();
+  if (a.kind === 'salt' && saltT <= 0) { hud.toast('Морская вода солёная. Ищите озеро внутри острова.', 'warn'); saltT = 5; }
+  if (a.kind === 'hint' && saltT <= 0) { hud.toast(a.text, 'warn'); saltT = 4; }
+  if (a.kind === 'crank') sound.crank();
+  if (a.kind === 'note') { sound.pickup(); showNote(a.item.note); }
+  if (a.kind === 'flashlight') { sound.pickup(); hud.toast('Фонарик найден. Ночью он выручит, но и выдаст вас.', 'good'); }
+  if (a.kind === 'medkit') { sound.pickup(); hud.toast('Аптечка: +55 здоровья', 'good'); }
+  if (a.kind === 'stones') { sound.pickup(); hud.toast('Камни: бросьте, чтобы отвлечь хищника шумом', 'good'); }
+  if (a.kind === 'fuel') { sound.pickup(); hud.toast(`Канистра с топливом найдена: ${a.item.place}`, 'good'); }
+  if (a.kind === 'part') {
+    sound.pickup();
+    const n = mission.partsFound;
+    hud.toast(n < 5 ? `Часть рации ${n}/5: ${a.item.place}` : 'Все детали рации собраны!', 'good');
+  }
+  if (a.kind === 'generator') {
+    mission.setGenerator(true);
+    mission.genHold = 0;
+    sound.generator(true);
+    hud.toast('Генератор завёлся! Его слышно издалека — бегите к мачте на Мысе заката.', 'warn');
+    eco.noiseAt(player.x, player.z, 160, true);
+  }
+  if (a.kind === 'radio') {
+    mission.rescueT = RESCUE_TIME;
+    hud.toast('Сигнал принят! Вертолёт будет через полторы минуты. Продержитесь!', 'good');
+    eco.noiseAt(mission.mast.x, mission.mast.z, 600, true);
+  }
+  if (a.kind !== 'eat' && a.kind !== 'drink' && a.kind !== 'crank') lifeSave();
 }
 
 function playUpdate(dt) {
@@ -252,43 +344,32 @@ function playUpdate(dt) {
   cam.pitch = Math.max(-1.3, Math.min(1.25, cam.pitch - look.y * 0.004));
   player.yaw = cam.yaw;
   if (input.consume('crouch') || input.consume('rest')) player.crouch = !player.crouch;
-  if (input.consume('light')) { player.flashlight = !player.flashlight; sound.click(); }
+  if (input.consume('light') && mission.flags.flashlight) { player.flashlight = !player.flashlight; sound.click(); }
+  if (input.consume('runToggle')) player.running = !player.running;
+  if (input.consume('jump') && player.jump()) sound.jump();
+  if (input.consume('throw')) throwStone();
   const mv = input.move;
   const fx = Math.sin(cam.yaw), fz = Math.cos(cam.yaw);
   const ctrl = { dx: fx * mv.y - fz * mv.x, dz: fz * mv.y + fx * mv.x, mag: mv.mag, run: input.run, act: input.act };
-
-  // вызов помощи на мысе
-  const cape = LANDMARKS.find((l) => l.id === 'cape');
-  const atCape = Math.hypot(player.x - cape.x, player.z - cape.z) < 40;
-  player.update(dt, ctrl, t, world.day);
-  if (player.parts.length === 5 && atCape && mission.rescueT < 0) {
-    player.ctx = { type: 'radio', label: 'Вызвать' };
-    if (ctrl.act) {
-      mission.rescueT = RESCUE_TIME;
-      hud.toast('Сигнал принят! Вертолёт будет через полторы минуты. Продержитесь!', 'good');
-      sound.roarAt('rex', 12, 60);
-      // шум рации слышат все хищники острова
-      for (const c of eco.list) if (!c.dead && c.sp.diet === 'carn') { c.aware = Math.max(c.aware, 0.6); c.last = { x: player.x, z: player.z }; }
-    }
-  }
+  player.update(dt, ctrl, t, world.day, mission, world.rain);
+  if (player.landed) sound.land();
+  saltT -= dt;
+  handleAction(player.lastAct);
+  if (state !== 'play') return null;
   if (mission.rescueT >= 0) {
     mission.rescueT -= dt;
     if (mission.rescueT <= 0 && player.alive) { showWin(); return null; }
   }
-  if (player.lastAct === 'part') {
-    const n = player.parts.length;
-    hud.toast(n < 5 ? `Часть рации ${n}/5 найдена: ${player.lastPart.name}` : 'Рация собрана! Идите к Мысу заката на западе.', 'good');
-    sound.pickup();
-    lifeSave();
-  }
-  if (player.lastAct === 'eat') sound.eat();
-  if (player.lastAct === 'drink') sound.drink();
-  saltT -= dt;
-  if (player.lastAct === 'salt' && saltT <= 0) { hud.toast('Морская вода солёная. Ищите озеро внутри острова.', 'warn'); saltT = 5; }
+  updateStones(dt);
+  mission.update(dt, t, player);
+  if (mission.flags.generator) sound.generatorLevel(Math.hypot(player.x - mission.station.generator.x, player.z - mission.station.generator.z));
 
   eco.night = world.night;
+  eco.rain = world.rain;
   eco.update(dt, player, t, camera);
-  world.setTime(world.time + dt / DAY);
+  world.setTime(world.time + (dt / DAY) * (world.night ? 1.8 : 1));
+  if (world.thunder) sound.thunder();
+  sound.rain(world.rain);
 
   // звуки тела и мира
   sound.ambient(dt, world.night, world.day);
@@ -319,9 +400,10 @@ function playUpdate(dt) {
     player.z - Math.sin(cam.yaw) * Math.sin(player.bob) * 0.035 * bobK + (Math.random() - 0.5) * shake,
   );
   camera.rotation.set(cam.pitch + Math.sin(t * 1.1) * 0.004, cam.yaw + Math.PI, Math.sin(player.bob) * 0.006 * bobK);
-  flash.intensity = player.flashlight ? 38 : 0;
+  flash.intensity = player.flashlight ? 140 : 0;
+  flashFill.intensity = player.flashlight ? 2.5 : 0;
 
-  hud.update(dt, player, know, clockText(), objective(), eco, world.parts);
+  hud.update(dt, player, know, clockText(), mission.objective().text, eco, mapMarks(), mission);
   saveT -= dt;
   if (saveT <= 0) { saveT = 5; lifeSave(); knowSave(); }
   if (!player.alive) {
@@ -339,6 +421,7 @@ function frame(now) {
   last = now;
   t += dt;
   let focus = new THREE.Vector3(MENU_SPOT.x, heightAt(MENU_SPOT.x, MENU_SPOT.z), MENU_SPOT.z);
+  if (state !== 'play') sound.rain(0);
   EYE_MAT.emissiveIntensity = 0.12 + (1 - world.day) * 4 + (player.flashlight ? 2 : 0);
   EYE_GLOW.opacity = Math.min(1, (1 - world.day) * 0.9 + (player.flashlight && world.day < 0.6 ? 0.3 : 0));
   if (state === 'play') focus = playUpdate(dt) || focus;
@@ -350,11 +433,11 @@ function frame(now) {
     camera.position.set(tg.x + Math.sin(cam.orbit) * r, heightAt(tg.x + Math.sin(cam.orbit) * r, tg.z + Math.cos(cam.orbit) * r) + 1.7, tg.z + Math.cos(cam.orbit) * r);
     camera.lookAt(tg);
     eco.update(dt, null, t, camera);
-  } else if (state === 'pause' || state === 'dead' || state === 'won') {
+  } else if (state === 'pause' || state === 'dead' || state === 'won' || state === 'note') {
     focus = new THREE.Vector3(player.x, player.y, player.z);
-    if (state !== 'pause') eco.update(dt, null, t, camera);
+    if (state === 'dead' || state === 'won') eco.update(dt, null, t, camera);
   }
-  world.update(state === 'pause' ? 0 : dt, camera, focus);
+  world.update(state === 'pause' || state === 'note' ? 0 : dt, camera, focus);
   if (grass) grass.update(state === 'menu' ? camera.position : focus);
   renderer.render(scene, camera);
   requestAnimationFrame(frame);

@@ -14,7 +14,7 @@ export class Hud {
     for (const id of ['hud', 'menu', 'pause', 'death', 'loading', 'toasts', 'vignette', 'h-name', 'h-stage', 'h-growth',
       'f-hp', 'f-food', 'f-water', 'f-stam', 'clock', 'minimap', 'b-act', 'act-label', 'cards', 'bigmap', 'journal-places',
       'journal-species', 'death-cause', 'death-stats', 'death-title', 'btn-continue', 'continue-info', 'status', 'objective',
-      'detect', 'detect-label']) this.el[id] = $(id);
+      'detect', 'detect-label', 'note', 'note-title', 'note-text', 'journal-notes', 'b-throw', 'throw-count', 'b-light']) this.el[id] = $(id);
     this.buildMapBase();
     this.fog = document.createElement('canvas');
     this.fog.width = this.fog.height = FOG;
@@ -22,7 +22,7 @@ export class Hud {
   }
 
   show(name) {
-    for (const k of ['menu', 'pause', 'death', 'loading']) this.el[k].hidden = k !== name;
+    for (const k of ['menu', 'pause', 'death', 'loading', 'note']) this.el[k].hidden = k !== name;
     this.el.hud.hidden = name === 'menu' || name === 'loading';
   }
 
@@ -63,7 +63,7 @@ export class Hud {
     ctx.putImageData(img, 0, 0);
   }
 
-  drawMap(canvas, player, know, full, parts = []) {
+  drawMap(canvas, player, know, full, marks = {}) {
     const dpr = Math.min(2, devicePixelRatio || 1);
     const W = Math.round(canvas.clientWidth * dpr), H = Math.round(canvas.clientHeight * dpr);
     if (!W || !H) return;
@@ -96,12 +96,26 @@ export class Hud {
         ctx.fillText(found ? L.name : '?', x, y - 8 * dpr);
       }
     }
-    // найденные части рации отмечаем галочкой, остальные — на открытых местах
-    for (const p of parts) {
-      if (!know.discovered.includes(p.id) && !p.taken) continue;
-      const [x, y] = toPx(p.x, p.z);
-      ctx.fillStyle = p.taken ? '#86a95c' : '#ff5a3a';
-      ctx.fillRect(x - 3 * dpr, y - 3 * dpr, 6 * dpr, 6 * dpr);
+    // домики-укрытия
+    for (const h of marks.huts || []) {
+      const [x, y] = toPx(h.x, h.z), k = (full ? 6 : 4) * dpr;
+      ctx.fillStyle = h.station ? '#9fc8e8' : '#d9cfb4';
+      ctx.beginPath(); ctx.moveTo(x - k, y + k * 0.6); ctx.lineTo(x - k, y - k * 0.2); ctx.lineTo(x, y - k); ctx.lineTo(x + k, y - k * 0.2); ctx.lineTo(x + k, y + k * 0.6); ctx.closePath(); ctx.fill();
+      if (full) { ctx.fillStyle = 'rgba(239,230,207,0.8)'; ctx.fillText(h.name, x, y + k * 2.4); }
+    }
+    // текущая цель задания
+    const o = marks.objective || {};
+    ctx.setLineDash([4 * dpr, 4 * dpr]);
+    ctx.strokeStyle = '#e0a042'; ctx.lineWidth = 2 * dpr;
+    for (const a of o.areas || []) {
+      const [x, y] = toPx(a.x, a.z);
+      ctx.beginPath(); ctx.arc(x, y, (a.r / span) * W, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    if (o.target) {
+      const [x, y] = toPx(o.target.x, o.target.z), k = 6 * dpr;
+      ctx.fillStyle = '#e0a042'; ctx.strokeStyle = '#231806'; ctx.lineWidth = 1.5 * dpr;
+      ctx.beginPath(); ctx.moveTo(x, y - k); ctx.lineTo(x + k, y); ctx.lineTo(x, y + k); ctx.lineTo(x - k, y); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
     const [px, py] = toPx(player.x, player.z);
     ctx.translate(px, py);
@@ -114,7 +128,7 @@ export class Hud {
     ctx.restore();
   }
 
-  update(dt, p, know, clock, objective, eco, parts) {
+  update(dt, p, know, clock, objective, eco, marks, mission) {
     const e = this.el;
     e['h-stage'].textContent = p.crouch ? 'Пригнулись' : p.mode === 'run' ? 'Бег' : 'Идёте';
     e['h-growth'].style.width = `${Math.min(1, p.visibility / 1.4) * 100}%`;
@@ -137,17 +151,23 @@ export class Hud {
       e['detect-label'].textContent = { hidden: 'Вас не заметили', alert: 'Вас ищут', hunt: 'Охота!' }[level];
     }
     $('b-light').classList.toggle('on', p.flashlight);
+    e['b-light'].hidden = !mission.flags.flashlight;
+    e['b-throw'].hidden = p.stones <= 0;
+    e['throw-count'].textContent = `Камень ×${p.stones}`;
+    $('b-run').classList.toggle('on', p.running);
     $('b-crouch').classList.toggle('on', p.crouch);
     const ctx = p.ctx;
     e['b-act'].hidden = !ctx;
     if (ctx) e['act-label'].textContent = ctx.label;
     let status = '';
-    if (p.swimming) status = 'Вы плывёте — следите за силами';
+    if (p.inHut) status = `${p.hut.name}: сюда хищники не пролезут`;
+    else if (p.swimming) status = 'Вы плывёте — следите за силами';
+    else if (mission.genHold > 0 && !mission.flags.generator) status = `Заводите генератор… ${Math.min(100, Math.round(mission.genHold / 4 * 100))}%`;
     else if (p.crouch && p.cover > 0.5) status = 'Вы укрыты в зарослях';
     e.status.textContent = status;
     e.status.hidden = !status;
     this.mapT -= dt;
-    if (this.mapT <= 0) { this.mapT = 0.2; this.drawMap(e.minimap, p, know, false, parts); }
+    if (this.mapT <= 0) { this.mapT = 0.2; this.drawMap(e.minimap, p, know, false, marks); }
   }
 
   toast(text, kind = '') {
@@ -160,7 +180,15 @@ export class Hud {
     while (this.el.toasts.children.length > 3) this.el.toasts.firstChild.remove();
   }
 
-  buildJournal(know) {
+  buildJournal(know, NOTES) {
+    const nl = this.el['journal-notes'];
+    nl.innerHTML = '';
+    if (!know.notes.length) nl.innerHTML = '<li class="locked"><h4>Записок пока нет</h4><p>Ищите их в домиках и у достопримечательностей.</p></li>';
+    for (const id of know.notes) {
+      const li = document.createElement('li');
+      li.innerHTML = `<h4>${NOTES[id].title}</h4><p>${NOTES[id].text}</p>`;
+      nl.appendChild(li);
+    }
     const places = this.el['journal-places'];
     places.innerHTML = '';
     for (const L of LANDMARKS) {

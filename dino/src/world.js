@@ -229,6 +229,7 @@ export class World {
     this.buildVolcanoFx();
     this.buildMission();
     this.buildClouds();
+    this.buildRain();
     this.setTime(this.time);
   }
 
@@ -292,13 +293,13 @@ export class World {
     this.scene.add(this.sky);
 
     const sp = [];
-    for (let i = 0; i < 1200; i++) {
+    for (let i = 0; i < 450; i++) {
       const a = this.rand() * Math.PI * 2, v = Math.acos(this.rand() * 0.95);
       sp.push(Math.cos(a) * Math.sin(v) * 1300, Math.cos(v) * 1300, Math.sin(a) * Math.sin(v) * 1300);
     }
     const sg = new THREE.BufferGeometry();
     sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
-    this.stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 1.4, sizeAttenuation: false, transparent: true, fog: false, depthWrite: false }));
+    this.stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xc8d0e0, size: 1.1, sizeAttenuation: false, transparent: true, fog: false, depthWrite: false }));
     this.stars.frustumCulled = false;
     this.scene.add(this.stars);
     this.scene.fog = new THREE.FogExp2(0xa9bccb, 0.006);
@@ -368,9 +369,14 @@ export class World {
     this.hemi.intensity = hemiI * (this.pmrem ? 0.6 : 1.6) * (this.night ? 0.6 : 1);
     this.hemi.color.copy(fog).lerp(new THREE.Color('#9fc0e0'), 0.4);
     this.scene.fog.color.copy(fog);
-    this.scene.fog.density = 0.0045 + (1 - this.day) * 0.009;
+    const rain = this.rain || 0, flash = this.flash || 0;
+    this.scene.fog.density = 0.0045 + (1 - this.day) * 0.009 + rain * 0.008;
+    this.scene.fog.color.multiplyScalar(1 - rain * 0.35);
+    this.sun.intensity *= 1 - rain * 0.65;
+    this.hemi.intensity = this.hemi.intensity * (1 - rain * 0.3) + flash * 3;
+    this.sky.material.uniforms.skyExposure.value *= 1 - rain * 0.55;
     this.scene.background = this.scene.fog.color;
-    this.stars.material.opacity = smoothstep(0.0, -0.25, elev);
+    this.stars.material.opacity = smoothstep(-0.05, -0.3, elev) * 0.45 * (1 - (this.rain || 0));
     this.fogColor = fog;
     this.sunColor = sunCol;
     if (this.waterU) {
@@ -564,7 +570,31 @@ export class World {
     mesh.castShadow = shadow;
     mesh.receiveShadow = true;
     this.scene.add(mesh);
+    (this.sets = this.sets || []).push({ mesh, items });
     return mesh;
+  }
+
+  // Убирает растения и препятствия в круге (под домики и мачту).
+  clearArea(x, z, r) {
+    const zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    for (const { mesh, items } of this.sets || []) {
+      let changed = false;
+      items.forEach((it, i) => {
+        if (Math.hypot(it.x - x, it.z - z) < r + (it.scale || 1) * 1.5) { mesh.setMatrixAt(i, zero); changed = true; it.removed = true; }
+      });
+      if (changed) mesh.instanceMatrix.needsUpdate = true;
+    }
+    for (const f of this.ferns) if (Math.hypot(f.x - x, f.z - z) < r) { f.food = 0; f.removed = true; }
+    // и траву: обнуляем плотность в карте высот
+    const d = this.heightTex.image.data, zero = THREE.DataUtils.toHalfFloat(0);
+    const i0 = Math.floor(((x - r) / HM + 0.5) * HM_RES), i1 = Math.ceil(((x + r) / HM + 0.5) * HM_RES);
+    const j0 = Math.floor(((z - r) / HM + 0.5) * HM_RES), j1 = Math.ceil(((z + r) / HM + 0.5) * HM_RES);
+    for (let j = Math.max(0, j0); j <= Math.min(HM_RES - 1, j1); j++) for (let i = Math.max(0, i0); i <= Math.min(HM_RES - 1, i1); i++) {
+      const wx = ((i + 0.5) / HM_RES - 0.5) * HM, wz = ((j + 0.5) / HM_RES - 0.5) * HM;
+      if (Math.hypot(wx - x, wz - z) < r) d[(j * HM_RES + i) * 4 + 1] = zero;
+    }
+    this.heightTex.needsUpdate = true;
+    for (const [k, list] of this.obstacles) this.obstacles.set(k, list.filter((o) => Math.hypot(o.x - x, o.z - z) > r));
   }
 
   buildVegetation() {
@@ -615,7 +645,7 @@ export class World {
       const list = this.fernGrid.get(`${cx + i},${cz + j}`);
       if (!list) continue;
       for (const f of list) {
-        if (f.food < 0.15) continue;
+        if (f.food < 0.15 || f.removed) continue;
         const d = Math.hypot(f.x - x, f.z - z);
         if (d < bd) { bd = d; best = f; }
       }
@@ -754,28 +784,6 @@ export class World {
     this.scene.add(this.crashFire);
     this.smokeSources = [{ x: best.x, y: g.position.y + 1.5, z: best.z, k: 0.35 }];
 
-    // ящики с деталями рации
-    const caseMat = new THREE.MeshStandardMaterial({ color: 0xc25a18, roughness: 0.5, metalness: 0.1 });
-    const lampMat = new THREE.MeshBasicMaterial({ color: 0xff2a1a, toneMapped: false });
-    this.parts = [];
-    const spots = ['nest', 'bones', 'pillars', 'tree', 'cape'];
-    for (const id of spots) {
-      const L = LANDMARKS.find((l) => l.id === id);
-      let px = L.x + 5, pz = L.z + 4;
-      for (let k = 0; k < 20 && heightAt(px, pz) < 1; k++) { px = L.x + (this.rand() - 0.5) * 16; pz = L.z + (this.rand() - 0.5) * 16; }
-      const box = new THREE.Group();
-      const c = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.4, 0.5), caseMat);
-      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), lampMat);
-      lamp.position.set(0.25, 0.25, 0);
-      const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.6, 4), metal);
-      ant.position.set(-0.25, 0.5, 0);
-      box.add(c, lamp, ant);
-      c.castShadow = true;
-      box.position.set(px, heightAt(px, pz) + 0.2, pz);
-      box.rotation.y = this.rand() * 6;
-      this.scene.add(box);
-      this.parts.push({ id, x: px, z: pz, mesh: box, lamp, taken: false, name: L.name });
-    }
   }
 
   // Насколько хорошо укрыт человек в этой точке: 0 — открыто, 1 — густые заросли.
@@ -834,7 +842,58 @@ export class World {
     }
   }
 
+  // Дождь: отрезки-капли, которые шейдер переносит вслед за камерой.
+  buildRain() {
+    this.rain = 0; this.rainTarget = 0; this.weatherT = 90; this.flash = 0; this.thunder = false;
+    const N = this.quality === 'low' ? 1500 : 4000;
+    const pos = new Float32Array(N * 6), tip = new Float32Array(N * 2);
+    for (let i = 0; i < N; i++) {
+      const x = (this.rand() - 0.5) * 60, y = this.rand() * 30, z = (this.rand() - 0.5) * 60;
+      pos.set([x, y, z, x, y, z], i * 6);
+      tip[i * 2 + 1] = 1;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('aTip', new THREE.BufferAttribute(tip, 1));
+    this.rainU = { uTime: { value: 0 }, uCam: { value: new THREE.Vector3() }, uRain: { value: 0 } };
+    this.rainMesh = new THREE.LineSegments(g, new THREE.ShaderMaterial({
+      uniforms: this.rainU, transparent: true, depthWrite: false,
+      vertexShader: `uniform float uTime; uniform vec3 uCam; attribute float aTip; varying float vA;
+        void main() {
+          vec3 w;
+          w.x = uCam.x + mod(position.x - uCam.x, 60.0) - 30.0;
+          w.z = uCam.z + mod(position.z - uCam.z, 60.0) - 30.0;
+          w.y = uCam.y - 10.0 + mod(position.y - uTime * 17.0, 30.0);
+          w += vec3(0.1, 0.75, 0.05) * aTip;
+          vA = 1.0 - aTip * 0.6;
+          gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
+        }`,
+      fragmentShader: `uniform float uRain; varying float vA;
+        void main() { gl_FragColor = vec4(0.72, 0.77, 0.82, 0.32 * uRain * vA); }`,
+    }));
+    this.rainMesh.frustumCulled = false;
+    this.rainMesh.visible = false;
+    this.scene.add(this.rainMesh);
+  }
+
+  updateWeather(dt, camera) {
+    this.weatherT -= dt;
+    if (this.weatherT <= 0) {
+      this.weatherT = 120 + this.rand() * 220;
+      this.rainTarget = this.rand() < 0.4 ? 0.45 + this.rand() * 0.55 : 0;
+    }
+    this.rain += (this.rainTarget - this.rain) * Math.min(1, dt * 0.04);
+    this.rainU.uTime.value += dt;
+    this.rainU.uCam.value.copy(camera.position);
+    this.rainU.uRain.value = this.rain;
+    this.rainMesh.visible = this.rain > 0.02;
+    this.flash = Math.max(0, this.flash - dt * 3);
+    this.thunder = false;
+    if (this.rain > 0.6 && Math.random() < dt * 0.03) { this.flash = 1; this.thunder = true; }
+  }
+
   update(dt, camera, focus) {
+    this.updateWeather(dt, camera);
     this.uTime.value += dt;
     if (this.waterU) this.waterU.uTime.value += dt;
     this.sky.position.copy(camera.position);
@@ -852,11 +911,6 @@ export class World {
     }
     this.lavaLight.intensity = 50 + Math.sin(this.uTime.value * 3) * 12;
     if (this.crashFire) this.crashFire.intensity = 6 + Math.sin(this.uTime.value * 11) * 1.5 + Math.sin(this.uTime.value * 23) * 1;
-    for (const p of this.parts || []) {
-      if (p.taken) continue;
-      p.lamp.visible = Math.sin(this.uTime.value * 4) > 0;
-      p.mesh.rotation.y += dt * 0.2;
-    }
     if (this.crashSmoke === undefined && this.smokeSources) {
       this.crashSmoke = [];
       const tex = TX.cloudSprite(128);
@@ -882,7 +936,7 @@ export class World {
     this.regrowT = (this.regrowT || 0) + dt;
     if (this.regrowT > 1) {
       for (const f of this.ferns) {
-        if (f.food < 1) {
+        if (f.food < 1 && !f.removed) {
           f.food = Math.min(1, f.food + this.regrowT / 120);
           if (f.food - f.shown > 0.1 || f.food === 1) this.setFernScale(f);
         }

@@ -253,6 +253,64 @@ export class Sound {
     });
   }
 
+  // Дождь: шумовая петля, громкость по силе дождя.
+  rain(level) {
+    if (!this.ctx) return;
+    if (!this.rainGain) {
+      const src = this.ctx.createBufferSource();
+      src.buffer = this.noise; src.loop = true;
+      const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 900;
+      const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 7000;
+      this.rainGain = this.ctx.createGain(); this.rainGain.gain.value = 0;
+      src.connect(hp).connect(lp).connect(this.rainGain).connect(this.master);
+      src.start();
+    }
+    this.rainGain.gain.value = level * 0.22;
+  }
+
+  thunder() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime + 0.4 + Math.random() * 1.5;
+    this.noiseBurst(t, 2.8, 90, 0.5, 0.9, 'lowpass');
+    this.noiseBurst(t + 0.1, 1.2, 300, 0.6, 0.35, 'lowpass');
+  }
+
+  // Мотор генератора: низкое тарахтение, тише с расстоянием.
+  generator(on) {
+    if (!this.ctx || !on || this.genGain) return;
+    const o = this.ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 48;
+    const lfo = this.ctx.createOscillator(), lg = this.ctx.createGain();
+    lfo.frequency.value = 11; lg.gain.value = 6; lfo.connect(lg).connect(o.frequency);
+    const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 420;
+    this.genGain = this.ctx.createGain(); this.genGain.gain.value = 0;
+    o.connect(f).connect(this.genGain).connect(this.master);
+    o.start(); lfo.start();
+  }
+
+  generatorLevel(dist) {
+    if (!this.genGain) this.generator(true);
+    if (this.genGain) this.genGain.gain.value = Math.max(0, 1 - dist / 90) * 0.25;
+  }
+
+  crank() { if (this.ctx) { this.noiseBurst(this.ctx.currentTime, 0.2, 400, 1.5, 0.25); } }
+  whoosh() { if (this.ctx) this.noiseBurst(this.ctx.currentTime, 0.18, 1200, 0.8, 0.12); }
+  jump() { if (this.ctx) this.noiseBurst(this.ctx.currentTime, 0.1, 800, 0.8, 0.08); }
+  land() { if (this.ctx) this.noiseBurst(this.ctx.currentTime, 0.14, 500, 0.7, 0.2); }
+
+  thunk(dist, water) {
+    if (!this.ctx) return;
+    const g = Math.max(0.05, 1 - dist / 60);
+    this.noiseBurst(this.ctx.currentTime, water ? 0.25 : 0.08, water ? 900 : 1800, 1.2, 0.35 * g);
+  }
+
+  // Когти скребут по двери домика.
+  scratch(dist) {
+    if (!this.ctx) return;
+    const g = Math.max(0, 1 - dist / 25);
+    const t = this.ctx.currentTime;
+    for (let i = 0; i < 4; i++) this.noiseBurst(t + i * 0.07, 0.12, 2600 + i * 400, 6, 0.25 * g);
+  }
+
   hurt() { if (this.ctx) this.noiseBurst(this.ctx.currentTime, 0.25, 500, 0.7, 0.4); }
   eat() { if (this.ctx) this.noiseBurst(this.ctx.currentTime, 0.09, 2400 + Math.random() * 800, 2, 0.25); }
 

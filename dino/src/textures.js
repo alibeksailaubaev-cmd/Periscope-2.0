@@ -355,3 +355,41 @@ export function scaleBump(size = 256) {
   ctx.putImageData(img, 0, 0);
   return toTexture(c, true, false);
 }
+
+// Доски для домиков: вертикальные потёртые планки.
+export function planks(size = 256) {
+  const c = makeCanvas(size, size), ctx = c.getContext('2d'), rand = mulberry32(71);
+  const f = fbmField(size, 72, 4, 4);
+  paintField(ctx, size, f, [[0, '#3a2c1e'], [0.5, '#5a4630'], [1, '#735c40']], 1.4);
+  const n = 8, w = size / n;
+  for (let i = 0; i < n; i++) {
+    ctx.fillStyle = `rgba(${rand() > 0.5 ? '255,240,210' : '20,12,6'},${0.05 + rand() * 0.1})`;
+    ctx.fillRect(i * w, 0, w, size);
+    ctx.fillStyle = 'rgba(15,10,5,0.75)';
+    ctx.fillRect(i * w, 0, 2, size);
+    for (let k = 0; k < 14; k++) {
+      ctx.strokeStyle = `rgba(20,12,6,${0.15 + rand() * 0.2})`;
+      ctx.lineWidth = 1;
+      const x = i * w + rand() * w;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.bezierCurveTo(x + 3, size * 0.3, x - 3, size * 0.6, x + 1, size); ctx.stroke();
+    }
+    ctx.fillStyle = '#1a120a';
+    for (const y of [size * 0.1, size * 0.9]) { ctx.beginPath(); ctx.arc(i * w + w / 2, y, 1.6, 0, Math.PI * 2); ctx.fill(); }
+  }
+  grain(ctx, size, rand, 8000, 0.15);
+  return toTexture(c);
+}
+
+// Ржавое рифлёное железо для крыш.
+export function rustMetal(size = 256) {
+  const c = makeCanvas(size, size), ctx = c.getContext('2d'), rand = mulberry32(73);
+  const f = fbmField(size, 74, 4, 5);
+  paintField(ctx, size, f, [[0, '#3b2a20'], [0.4, '#6a3d22'], [0.6, '#5a5550'], [1, '#7a766e']], 1.6);
+  for (let x = 0; x < size; x += 12) {
+    const g = ctx.createLinearGradient(x, 0, x + 12, 0);
+    g.addColorStop(0, 'rgba(0,0,0,0.35)'); g.addColorStop(0.5, 'rgba(255,255,255,0.12)'); g.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = g; ctx.fillRect(x, 0, 12, size);
+  }
+  grain(ctx, size, rand, 6000, 0.2);
+  return toTexture(c);
+}

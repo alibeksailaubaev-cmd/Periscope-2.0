@@ -80,8 +80,13 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 
 /* кнопки действий */
 .controls { position: absolute; right: calc(14px + var(--safe-r)); bottom: calc(16px + var(--safe-b)); display: grid;
-  grid-template-columns: repeat(2, auto); grid-template-areas: "light crouch" "act run"; gap: 10px; align-items: end; justify-items: center; }
-#b-light { grid-area: light; } #b-crouch { grid-area: crouch; } #b-run { grid-area: run; } #b-act { grid-area: act; }
+  grid-template-columns: repeat(3, auto); grid-template-areas: "light throw crouch" "act jump run"; gap: 10px; align-items: end; justify-items: center; }
+#b-light { grid-area: light; } #b-throw { grid-area: throw; } #b-crouch { grid-area: crouch; } #b-run { grid-area: run; } #b-act { grid-area: act; } #b-jump { grid-area: jump; }
+.sheet.paper { background: #e9dfc6; color: #2a2116; border-color: #b8a67e; }
+.paper .eyebrow { color: #8a5a1c; }
+.paper h2 { color: #2a2116; }
+.note-text { margin: 0; font-size: 17px; line-height: 1.55; font-style: italic; max-width: 60ch; }
+.diff { display: flex; align-items: center; gap: 10px; font-size: 15px; }
 .btn.big { background: rgba(18, 22, 16, 0.55); border-color: rgba(239, 230, 207, 0.5); }
 .btn.on { background: rgba(224, 160, 66, 0.45); border-color: var(--amber); }
 .top-center { position: absolute; left: 50%; top: calc(10px + var(--safe-t)); transform: translateX(-50%); display: grid; gap: 4px; justify-items: center; }

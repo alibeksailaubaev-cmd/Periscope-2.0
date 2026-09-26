@@ -23,6 +23,9 @@ export class Ecosystem {
     this.onSound = null;
     this.soundT = 0;
     this.night = false;
+    this.rain = 0;
+    this.diff = { sight: 1, dmg: 1 };
+    this.blocker = null;
     this.threat = 0;
     this.quake = 0;
   }
@@ -113,7 +116,7 @@ export class Ecosystem {
   }
 
   hit(att, tg, player) {
-    const dmg = att.sp.bite * (0.2 + 0.8 * att.growth);
+    const dmg = att.sp.bite * (0.2 + 0.8 * att.growth) * (tg === player ? this.diff.dmg : 1);
     att.cool = att.sp.cool * 1.5;
     att.dino.bite = 1;
     if (tg === player) {
@@ -203,10 +206,10 @@ export class Ecosystem {
     if (!P) { c.aware = Math.max(0, c.aware - dt * 0.2); return; }
     const dx = P.x - c.x, dz = P.z - c.z, d = Math.hypot(dx, dz);
     const ang = Math.abs(wrapAngle(Math.atan2(dx, dz) - c.yaw));
-    const sight = c.sp.sight * P.visibility * (this.night ? 0.85 : 1);
+    const sight = c.sp.sight * P.visibility * (this.night ? 0.85 : 1) * this.diff.sight;
     let gain = 0;
     if (d < sight && (ang < 1.15 || d < 7)) gain += (1 - d / sight) * 2.4;
-    const ear = P.noise * (c.sp.id === 'raptor' ? 1.35 : 1);
+    const ear = P.noise * (c.sp.id === 'raptor' ? 1.35 : 1) * this.diff.sight;
     if (d < ear) gain += (1 - d / ear) * 1.8;
     if (gain > 0) {
       c.aware = Math.min(1.3, c.aware + gain * dt);
@@ -236,12 +239,21 @@ export class Ecosystem {
     }
     if (c.state === 'hunt') {
       if (!P || c.stateT < 0 || (c.unseen > 3 && c.aware < 0.5)) { c.state = 'search'; c.stateT = 14; }
-      else {
+      else if (P.inHut && c.unseen > 0.5) {
+        const door = P.hut.door, dx = door.x - c.x, dz = door.z - c.z, dd = Math.hypot(dx, dz);
+        if (dd < c.size * 0.4 + 1.5) {
+          c.doorT = (c.doorT || 0) + dt;
+          if (this.rand() < dt * 0.6) { this.growl(c); if (this.onScratch) this.onScratch(c); }
+          if (c.doorT > 12) { c.state = 'search'; c.stateT = 10; c.aware = 0.4; c.doorT = 0; }
+          return { dx: P.x - c.x, dz: P.z - c.z, speed: 0.4 };
+        }
+        return { dx, dz, speed: c.sp.run * k * 0.7 };
+      } else {
         const seen = c.unseen < 1.5;
         const tx = seen ? P.x : c.last.x, tz = seen ? P.z : c.last.z;
         const dx = tx - c.x, dz = tz - c.z, dd = Math.hypot(dx, dz);
         d.look = 0;
-        if (seen && dd < c.size * 0.45 + 1.1) {
+        if (seen && !P.inHut && dd < c.size * 0.45 + 1.1) {
           if (c.cool <= 0 && Math.abs(wrapAngle(Math.atan2(dx, dz) - c.yaw)) < 0.8) this.hit(c, P, P);
           return { dx, dz, speed: 0.6 };
         }
@@ -308,6 +320,19 @@ export class Ecosystem {
     return this.wander(c);
   }
 
+  noiseAt(x, z, r, strong = false) {
+    for (const c of this.list) {
+      if (c.dead || c.sp.diet !== 'carn') continue;
+      const d = Math.hypot(c.x - x, c.z - z);
+      if (d > r) continue;
+      c.last = { x, z };
+      c.unseen = 5;
+      c.aware = Math.max(c.aware, strong ? 0.85 : 0.35 + 0.3 * (1 - d / r));
+      if (!strong && c.state !== 'hunt') { c.state = 'stalk'; }
+      if (strong) { c.state = 'hunt'; c.stateT = 30; }
+    }
+  }
+
   growl(c) {
     if (this.onSound) this.onSound(c, 'growl');
   }
@@ -358,7 +383,9 @@ export class Ecosystem {
       d.bite = Math.max(0, d.bite - dt * 3);
       d.roar = Math.max(0, d.roar - dt * 0.9);
       const it = c.sp.diet === 'herb' ? this.herbivore(c, P, carns) : this.carnivore(c, P, dt);
+      const px = c.x, pz = c.z;
       moveCreature(c, it.dx, it.dz, it.speed, dt, this.world, false);
+      if (this.blocker && this.blocker(c.x, c.z, c.radius * 0.6)) { c.x = px; c.z = pz; c.speed *= 0.5; }
       // не даём телам проходить друг сквозь друга
       for (const o of this.list) {
         if (o === c || o.dead) continue;

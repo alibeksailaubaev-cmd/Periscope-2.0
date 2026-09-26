@@ -41,9 +41,11 @@
   <div id="toasts" aria-live="polite"></div>
   <div id="status" hidden></div>
   <div class="controls">
-    <button id="b-light" class="btn small" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6v5l-2 3v12h-2V10L9 7z M8 7h8"/></svg><span>Фонарь</span></button>
+    <button id="b-light" class="btn small" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6v5l-2 3v12h-2V10L9 7z M8 7h8"/></svg><span>Фонарь</span></button>
+    <button id="b-throw" class="btn small" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c3-8 8-12 14-13M15 5l4 1-1 4"/><circle cx="6" cy="18" r="2.2"/></svg><span id="throw-count">Камень ×0</span></button>
     <button id="b-crouch" class="btn small" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 8v5l-4 3v5M12 13l4 3v5M8 11h8"/></svg><span>Присесть</span></button>
     <button id="b-act" class="btn mid act" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M7 9l5 5 5-5M5 20h14"/></svg><span id="act-label">Взять</span></button>
+    <button id="b-jump" class="btn mid" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6M5 21h14"/></svg><span>Прыжок</span></button>
     <button id="b-run" class="btn big" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="14" cy="4" r="2"/><path d="M13 7l-4 4 3 3-2 7M13 7l3 4h4M9 11l-4 1"/></svg><span>Бег</span></button>
   </div>
 </section>
@@ -56,16 +58,24 @@
   </header>
   <div class="menu-panel">
     <ol class="rules">
-      <li><b>Найдите 5 частей рации</b> — ящики с мигающей лампой разбросаны по опасным местам острова.</li>
-      <li><b>Прячьтесь.</b> Присядьте в высокой траве и папоротниках, и хищник пройдёт мимо. Бег слышно издалека.</li>
-      <li><b>Вызовите помощь</b> на Мысе заката и продержитесь до прилёта вертолёта.</li>
+      <li><b>Обыщите обломки</b> и доберитесь до заброшенной станции «Мезозой-4».</li>
+      <li><b>Соберите рацию и топливо.</b> В каждой игре детали лежат в новых местах.</li>
+      <li><b>Прячьтесь.</b> В домики хищники не пролезают, в траве пригнувшись вас не видно, камнем можно отвлечь.</li>
+      <li><b>Заведите генератор и вызовите помощь</b> на Мысе заката. Продержитесь до вертолёта.</li>
     </ol>
+    <label class="diff" for="opt-diff-menu">Сложность
+      <select id="opt-diff-menu">
+        <option value="easy">Лёгкая</option>
+        <option value="normal">Нормальная</option>
+        <option value="hard">Кошмар</option>
+      </select>
+    </label>
     <div class="menu-actions">
       <button id="btn-start" class="primary" type="button">Новая игра</button>
       <button id="btn-continue" class="secondary" type="button" hidden>Продолжить <small id="continue-info"></small></button>
       <button id="menu-listen" class="secondary" type="button">Послушать остров</button>
     </div>
-    <p class="hint">Левый палец — идти, правый — осматриваться. На компьютере: WASD, мышь, Shift, C, F, E, M. Играйте в наушниках.</p>
+    <p class="hint">Левый палец — идти, правый — осматриваться. На компьютере: WASD, мышь, Shift, пробел — прыжок, C — присесть, F — фонарь, Q — камень, E — действие, M — карта. Играйте в наушниках.</p>
   </div>
 </section>
 
@@ -81,6 +91,8 @@
     </div>
     <div id="tab-journal" class="tabpane">
       <p class="count" id="j-count"></p>
+      <h3>Записки</h3>
+      <ul id="journal-notes" class="entries"></ul>
       <h3>Места</h3>
       <ul id="journal-places" class="entries"></ul>
       <h3>Виды</h3>
@@ -96,6 +108,13 @@
           <option value="low">Низкое — для слабых телефонов</option>
           <option value="medium">Среднее</option>
           <option value="high">Высокое</option>
+        </select>
+      </label>
+      <label class="row" for="opt-diff">Сложность
+        <select id="opt-diff">
+          <option value="easy">Лёгкая — хищники видят и кусают слабее</option>
+          <option value="normal">Нормальная</option>
+          <option value="hard">Кошмар — видят дальше, бьют больнее</option>
         </select>
       </label>
       <label class="row" for="opt-sound">Звук <input id="opt-sound" type="checkbox"></label>
@@ -117,6 +136,15 @@
       <button id="btn-again" class="primary" type="button">Играть снова</button>
       <button id="btn-other" class="secondary" type="button">В меню</button>
     </div>
+  </div>
+</section>
+
+<section id="note" class="screen modal" hidden>
+  <div class="sheet narrow paper">
+    <p class="eyebrow">Записка экспедиции</p>
+    <h2 id="note-title">Дневник смотрителя</h2>
+    <p id="note-text" class="note-text"></p>
+    <div class="menu-actions"><button id="btn-note-close" class="primary" type="button">Дальше</button></div>
   </div>
 </section>
 
