@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#10140f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<!--ARTIFACT-START-->
+<title>Меловой остров</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<link rel="stylesheet" href="style.css">
+<!--HEAD-END-->
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="touch" aria-hidden="true"></div>
+<div id="joy-base" hidden><div id="joy-knob"></div></div>
+<div id="vignette"></div>
+
+<section id="hud" hidden>
+  <div class="vitals">
+    <div class="who"><span id="h-name">Дакотараптор</span><span id="h-stage">Детёныш · 8%</span></div>
+    <div class="growth"><i id="h-growth"></i></div>
+    <div class="bar hp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.3-9.2C1.3 8.2 3.6 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.8 1.2-1.7 2.8-2.8 4.8-2.8 3.6 0 5.9 3.7 4.5 7.3C19.5 16.4 12 21 12 21z"/></svg><span class="track"><i id="f-hp"></i></span><span class="lbl">Здоровье</span></div>
+    <div class="bar food"><svg id="food-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.5c3 0 5 2.2 5 5 0 3.6-3.3 5.4-6.4 5.4l-2.3 2.3c.6 1.4-.3 3.3-2 3.3-.6 0-1.1-.2-1.5-.6-.4.8-1.2 1.4-2.2 1.4-1.4 0-2.5-1.1-2.5-2.5 0-1 .6-1.8 1.4-2.2-.4-.4-.6-.9-.6-1.5 0-1.7 1.9-2.6 3.3-2l2.3-2.3C10 6.8 12 3.5 15.5 3.5z"/></svg><span class="track"><i id="f-food"></i></span><span class="lbl">Сытость</span></div>
+    <div class="bar water"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5s6.5 7.2 6.5 12a6.5 6.5 0 0 1-13 0c0-4.8 6.5-12 6.5-12z"/></svg><span class="track"><i id="f-water"></i></span><span class="lbl">Вода</span></div>
+    <div class="bar stam"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4.5 13.5h6L9.5 22l9-11.5h-6z"/></svg><span class="track"><i id="f-stam"></i></span><span class="lbl">Силы</span></div>
+  </div>
+  <div class="corner">
+    <button id="btn-pause" class="icon-btn" type="button" aria-label="Журнал и меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <button id="btn-mapopen" class="map-btn" type="button" aria-label="Открыть карту"><canvas id="minimap"></canvas></button>
+    <div id="clock">День 1 · 07:12</div>
+  </div>
+  <div id="toasts" aria-live="polite"></div>
+  <div id="status" hidden></div>
+  <div class="controls">
+    <button id="b-rest" class="btn small" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg><span>Лечь</span></button>
+    <button id="b-roar" class="btn small" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9zM16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg><span>Рёв</span></button>
+    <button id="b-run" class="btn mid" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18l4-6 3 2 3-7M15 7l4 1-1 4"/></svg><span>Бег</span></button>
+    <button id="b-act" class="btn mid act" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11M7 9l5 5 5-5M5 20h14"/></svg><span id="act-label">Есть</span></button>
+    <button id="b-bite" class="btn big" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l3 5 3-5 3 5 3-5 3 5 3-5M3 16l3-3 3 3 3-3 3 3 3-3 3 3"/></svg><span>Атака</span></button>
+  </div>
+</section>
+
+<section id="menu" class="screen">
+  <header class="brand">
+    <p class="eyebrow">Поздний мел · 66 млн лет назад</p>
+    <h1>Меловой остров</h1>
+    <p class="lede">Вылупитесь, вырастите и выживите. Ешьте, пейте, прячьтесь от хищников и исследуйте остров.</p>
+  </header>
+  <div class="menu-panel">
+    <h2>Выберите вид</h2>
+    <div id="cards" class="cards"></div>
+    <div class="menu-actions">
+      <button id="btn-start" class="primary" type="button">Начать новую жизнь</button>
+      <button id="btn-continue" class="secondary" type="button" hidden>Продолжить <small id="continue-info"></small></button>
+    </div>
+    <p class="hint">Левый палец двигает динозавра, правый поворачивает камеру. На компьютере: WASD, Shift, пробел, E, R, C, M.</p>
+  </div>
+</section>
+
+<section id="pause" class="screen modal" hidden>
+  <div class="sheet">
+    <div class="sheet-head">
+      <div role="tablist" class="tabs">
+        <button type="button" role="tab" data-tab="journal" aria-selected="true">Журнал</button>
+        <button type="button" role="tab" data-tab="map" aria-selected="false">Карта</button>
+        <button type="button" role="tab" data-tab="settings" aria-selected="false">Настройки</button>
+      </div>
+      <button id="btn-resume" class="primary" type="button">Играть</button>
+    </div>
+    <div id="tab-journal" class="tabpane">
+      <p class="count" id="j-count"></p>
+      <h3>Места</h3>
+      <ul id="journal-places" class="entries"></ul>
+      <h3>Виды</h3>
+      <ul id="journal-species" class="entries"></ul>
+    </div>
+    <div id="tab-map" class="tabpane" hidden>
+      <canvas id="bigmap"></canvas>
+      <p class="hint">Оранжевые точки — открытые места, знаки «?» — ещё не найденные.</p>
+    </div>
+    <div id="tab-settings" class="tabpane" hidden>
+      <label class="row" for="opt-quality">Качество графики
+        <select id="opt-quality">
+          <option value="low">Низкое — для слабых телефонов</option>
+          <option value="medium">Среднее</option>
+          <option value="high">Высокое</option>
+        </select>
+      </label>
+      <label class="row" for="opt-sound">Звук <input id="opt-sound" type="checkbox"></label>
+      <div class="row buttons">
+        <button id="btn-tomenu" class="secondary" type="button">Сохранить и выйти в меню</button>
+        <button id="btn-reset" class="danger" type="button">Стереть весь прогресс</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="death" class="screen modal" hidden>
+  <div class="sheet narrow">
+    <p class="eyebrow">Конец пути</p>
+    <h2 id="death-cause">Вас убил хищник.</h2>
+    <div id="death-stats" class="death-stats"></div>
+    <p class="hint">Открытые места и изученные виды остаются в журнале.</p>
+    <div class="menu-actions">
+      <button id="btn-again" class="primary" type="button">Новая жизнь</button>
+      <button id="btn-other" class="secondary" type="button">Выбрать другой вид</button>
+    </div>
+  </div>
+</section>
+
+<section id="loading" class="screen" hidden><p>Остров поднимается из моря…</p></section>
+
+<script type="module" src="src/main.js"></script>
+<!--ARTIFACT-END-->
+</body>
+</html>
